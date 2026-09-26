@@ -42,12 +42,9 @@
   };
   if (document.readyState !== "loading") stampDemo(); else document.addEventListener("DOMContentLoaded", stampDemo);
 
-  // ---- updates for testers -------------------------------------------------
-  // A tab left open learns about a new build from the page's own ETag check
-  // (index.html); here the notice says it in the demo's words and reloads on a
-  // click. A tester who comes back after an update gets a short "what's new"
-  // note in the corner, once, that never blocks the table.
-  const BUILD = "202609261959", WHATS_NEW = ["The tutorial is back to the version you played before, with its two AI opponents and the dice guided from the start.", "A clearer main menu: Play vs AI, Learn to Play, and a way back to the menu from anywhere, even mid-match.", "The game's hand is your cursor in the menu too, in your colour.", "Text size and an accessible interface option in the menu and in Settings.", "Messages stay until you have read them, and the cursor stays on top of everything.", "HELA's brain is the one you can spin again, with bigger dots: press L.", "HELA's messages wear your colour, in comic style.", "Sounds land together with their animations."];
+  // ---- a new build while the tab is open -----------------------------------
+  // The page's own ETag check (index.html) notices a new build; here the notice
+  // says it in the demo's words and reloads on a click.
   const noticeUpdate = () => {
     const b = document.getElementById("stale-banner");
     if (!b) return;
@@ -56,34 +53,7 @@
     b.style.pointerEvents = "auto";
     b.addEventListener("click", () => location.reload());
   };
-  const showWhatsNew = () => {
-    let seen = null;
-    try { seen = localStorage.getItem("pdx-demo-build"); localStorage.setItem("pdx-demo-build", BUILD); } catch (e) {}
-    if (!seen || seen === BUILD || !WHATS_NEW.length) return;
-    const note = document.createElement("div");
-    note.id = "whats-new";
-    note.setAttribute("role", "status");
-    const head = document.createElement("b");
-    head.textContent = "Updated since your last visit";
-    const list = document.createElement("ul");
-    for (const line of WHATS_NEW) { const li = document.createElement("li"); li.textContent = line; list.appendChild(li); }
-    const hint = document.createElement("i");
-    hint.textContent = "Click to close";
-    note.append(head, list, hint);
-    note.addEventListener("click", () => note.remove());
-    document.body.appendChild(note);
-    setTimeout(() => note.remove(), 30000);
-  };
-  const whatsNewCss = document.createElement("style");
-  whatsNewCss.textContent =
-    "#whats-new{position:fixed;left:16px;bottom:40px;z-index:9998;max-width:380px;padding:12px 14px;" +
-    "background:#1c1711;color:#efe6d0;border:2px solid #c9a227;box-shadow:4px 4px 0 #000;" +
-    "font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;cursor:pointer}" +
-    "#whats-new b{display:block;color:#c9a227;margin-bottom:6px;letter-spacing:.04em}" +
-    "#whats-new ul{margin:0;padding-left:18px}#whats-new i{display:block;margin-top:6px;opacity:.6;font-size:12px}";
-  document.head.appendChild(whatsNewCss);
-  const onReady = () => { noticeUpdate(); showWhatsNew(); };
-  if (document.readyState !== "loading") onReady(); else document.addEventListener("DOMContentLoaded", onReady);
+  if (document.readyState !== "loading") noticeUpdate(); else document.addEventListener("DOMContentLoaded", noticeUpdate);
 
   worker.onmessage = (e) => {
     const m = JSON.parse(e.data);
