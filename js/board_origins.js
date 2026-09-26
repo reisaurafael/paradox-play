@@ -123,7 +123,7 @@
 
   /* ═══ ART, ships, worlds, the void ═══ */
   function shipSVG(kind,col,{ghost=false,dead=false,plate=false}={}){
-    // on an ink plate (window.__pdxPlate) the lance is drawn in light ink, or it would vanish
+    // plate: the lance in light ink (for a dark backing)
     const ink=dead?"#8a7a5a":plate?"#f3e8c8":"#2a2012", body=ghost?"none":col, dash=ghost?' stroke-dasharray="2 2"':"";
     // a knight's PENNON on a lance + a small heraldic shield in the house colour
     return `<g class="cm-ship${dead?" cm-dead":""}"><line x1="0" y1="-12" x2="0" y2="8" stroke="${ink}" stroke-width="1.2"/><path d="M0 -12 L11 -9 L2 -6 Z" fill="${body}" stroke="${ink}" stroke-width=".7"${dash}/><path d="M-5 -3 H5 V2 Q5 7 0 9 Q-5 7 -5 2 Z" fill="${body}" stroke="${ink}" stroke-width="1"${dash}/>${ghost?"":`<path d="M0 -3 V9 M-5 0 H5" stroke="rgba(255,255,255,.55)" stroke-width=".7"/>`}</g>`;
@@ -458,14 +458,14 @@
       const tip=`THE PEDDLER'S WAGON: halted at ${rom(mc)}\nwanders ${dice}d3 · barter when near\n${cargo?"WARES FOR SALE:\n"+cargo:"the cart stands bare"}`;
       const [hx,hy]=haulerAt2(mc); R.mAnchor=[hx,hy];
       g+=(window.__pdxPieceDefs?window.__pdxPieceDefs("cm",false):"");
-      g+=`<g class="cm-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:52,h:38,cy:1,pfx:"cm",dark:false}):""}<g transform="scale(${side<0?-1.1:1.1} 1.1) translate(-5 -1)"><g class="cm-bob">
+      g+=`<g class="cm-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:40,base:16,dark:false}):""}<g transform="scale(${side<0?-1.1:1.1} 1.1) translate(-5 -1)"><g class="cm-bob">${window.__pdxOutline(`
         <circle cx="-7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="-7" cy="7" r="1" fill="#241810"/><circle cx="7" cy="7" r="1" fill="#241810"/>
         <rect x="-11" y="-1" width="22" height="8" fill="#6e4e2a" stroke="#241810" stroke-width="1"/>
         <path d="M-11 -1 Q-11 -11 0 -11 Q11 -11 11 -1 Z" fill="#b0472e" stroke="#241810" stroke-width="1"/>
         <path d="M-6 -9.6 V-1 M0 -11 V-1 M6 -9.6 V-1" stroke="#ecd6a6" stroke-width="1.3" opacity=".85"/>
         <path d="M11 3 q8 -1 10 -7 q1 -3 -2.5 -3 q-1 3.5 -4.5 3.5 q-3 2 -3 6.5 z" fill="#5a4028" stroke="#241810" stroke-width=".8"/><circle cx="18" cy="-4" r=".9" fill="#241810"/>
         ${Array.from({length:Math.min(3,dice)},(_,i)=>`<rect x="${-5+i*4}" y="10.5" width="3.2" height="4" rx="1" fill="#8a6a3a" stroke="#241810" stroke-width=".5"/>`).join("")}
-      </g></g>${window.__pdxMerchTag?window.__pdxMerchTag(-28):""}</g>`; }
+      `,{gold:true})}</g></g>${window.__pdxMerchTag?window.__pdxMerchTag(-28):""}</g>`; }
     // milestone beacons X / XX
     for(const c of [10,20]){ if(!POS[c]) continue; const [x,y]=POS[c]; const claim=view.travelers.filter(t=>c===10?t.scored_century_x:t.scored_century_xx); g+=`<g class="cm-beacon" data-tip="${esc(`the waymark cross at ${rom(c)}, ${claim.length?"claimed by "+claim.map(t=>t.name).join(", "):"unclaimed"} · end an Hour here for +1 CP`)}" transform="translate(${(x-worldR(c)*0.5).toFixed(0)} ${(y+worldR(c)*0.2).toFixed(0)})"><path d="M-3 6 L0 -8 L3 6 Z" fill="#c9a45c" stroke="#e8c05a" stroke-width=".7"/><circle cx="0" cy="-8" r="2.2" fill="#ffe9b0" class="cm-beam"/>${claim.map((t,i)=>`<circle cx="${-3+i*3}" cy="9" r="1.3" fill="${seatColor(t.name)}"/>`).join("")}</g>`; }
     // the Grail Chapel of Corbenic (secret market, XI)
@@ -507,19 +507,20 @@
       //   2. a LEASH, a short line, in their colour, from the century to them. Even when
       //      two centuries crowd, the line says whose they are. You do not read it.
       const SLOTS=[[0,-1.34],[-1.34,0.10],[1.34,0.10],[-1.0,-1.0],[1.0,-1.0]];
-      // THE PLATES (window.__pdxPlate, board_draft.js): each piece stands on an ink disc,
-      // so the berths are FANNED until the discs clear each other, inside the chart.
-      const PR=t=>(t.is_self?19:16);
-      const berth=ts.map((t,i)=>{ const [dx,dy]=SLOTS[i%SLOTS.length]; return { x:x+dx*(R0*0.40+10), y:y+dy*(R0*0.40+10), r:PR(t)+5 }; });
-      if(window.__pdxFan) window.__pdxFan(berth,2,[24,34,W-24,H-24]);
+      // THE OUTLINES (window.__pdxOutline / __pdxPlate, board_draft.js): each piece is
+      // ringed tight by its own silhouette on a small seat-coloured foot; the berths are
+      // FANNED until the pieces clear each other, inside the chart.
+      const PR=t=>(t.is_self?15:12);
+      const berth=ts.map((t,i)=>{ const [dx,dy]=SLOTS[i%SLOTS.length]; return { x:x+dx*(R0*0.40+10), y:y+dy*(R0*0.40+10), r:PR(t)+4 }; });
+      if(window.__pdxFan) window.__pdxFan(R.mAnchor?berth.concat([{x:R.mAnchor[0],y:R.mAnchor[1],r:24,fixed:true}]):berth,2,[24,34,W-24,H-24]);   // the Merchant is a fixed obstacle
       const chase=view.merchant_plan&&view.merchant_plan.target_seat;
       ts.forEach((t,i)=>{ const col=seatColor(t.name); const bx=Math.round(berth[i].x), by=Math.round(berth[i].y); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=chase===t.name&&view.merchant_century!==t.century;
         const pr=PR(t), pcy=-1; R.pcPos[t.name]=[bx,by+pcy];
         const memo=R.pcAt||(R.pcAt={}); const pulse=t.is_self&&memo[t.name]!=null&&memo[t.name]!==c; if(t.is_self) memo[t.name]=c;
         const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-34):{cls:"",g:""};
-        const plate=window.__pdxPlate?window.__pdxPlate({col,self:t.is_self,r:pr,cy:pcy,pfx:"cm",dark:false,pulse}):"";
-        const tag=window.__pdxTag?window.__pdxTag(t.is_self?"YOU":esc(initials(t.name)),col,pcy+pr+(t.is_self?12:8),{self:t.is_self,dark:false}):"";
-        g+=`<g class="cm-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cm-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cm-aura">${plate}</g>${hunted?`<circle class="pc-hunted" cy="${pcy}" r="${pr+(t.is_self?10:5)}" fill="none" stroke="#e8c05a" stroke-width="2" stroke-dasharray="4 3"/>`:""}<g transform="scale(${t.is_self?1.6:1.42})">${shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost,plate:true})}</g>${tag}</g>${em.g}</g>`;
+        const sc=t.is_self?1.6:1.42, keel=9*sc; const plate=window.__pdxPlate({col,self:t.is_self,base:keel,w:8*sc,dark:false,pulse});
+        const tag=window.__pdxTag(t.is_self?"YOU":esc(initials(t.name)),col,keel+11,{self:t.is_self,dark:false,chased:hunted});
+        g+=`<g class="cm-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cm-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cm-aura">${plate}</g><g transform="scale(${sc})">${window.__pdxOutline(shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost}))}</g>${tag}</g>${em.g}</g>`;
       });
     }
     // WHEN / HOW / WHY beside the Merchant, the chase line and his reach (board_draft.js)

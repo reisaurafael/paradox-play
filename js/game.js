@@ -11,19 +11,19 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609261656";
-import { audio } from "./audio.js?202609261656";
+import { icon } from "./icons.js?202609261959";
+import { audio } from "./audio.js?202609261959";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609261656";
-import { comic } from "./comic.js?202609261656";
-import { CatEngine } from "./cat.js?202609261656";
-import { tutorials } from "./tutorial.js?202609261656";
-import { profile } from "./profile.js?202609261656";
-import { Camera } from "./camera.js?202609261656";
+import { juice } from "./juice.js?202609261959";
+import { comic } from "./comic.js?202609261959";
+import { CatEngine } from "./cat.js?202609261959";
+import { tutorials } from "./tutorial.js?202609261959";
+import { profile } from "./profile.js?202609261959";
+import { Camera } from "./camera.js?202609261959";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609261656";
+} from "./util.js?202609261959";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -104,14 +104,7 @@ const PACE = {
 // each step; Slow stretches further, Fast is for veterans who know the flow.
 // Deliberately unhurried so events are easy to follow; Slow is a big stretch for
 // first-timers, Fast stays snappy for veterans.
-// SLOW IS GENUINELY SLOW: every consequence plays out and rests before the next
-// (it was 3.2, which players read as fast).
-const SPEED_FACTOR = { slow: 6, normal: 1.9, fast: 0.7 };
-// On Slow, the events that change something the player must watch hold the table
-// for a beat after they finish, so one thing happens, then the next.
-const CONSEQUENCES = new Set(["recharged", "paradox_resolved", "heated", "exploded", "traveled",
-  "merchant_moved", "delivered", "card_bought", "card_renewed", "overloaded", "cp_earned",
-  "reward_resolved", "terminated", "respawned", "wanted", "activated", "recycled", "allocations_revealed"]);
+const SPEED_FACTOR = { slow: 3.2, normal: 1.9, fast: 0.7 };
 
 export class Game {
   constructor(conn, seat) {
@@ -253,13 +246,10 @@ export class Game {
   // queue has backed up. Zero-delay sleeps resolve on a microtask, which is not
   // throttled in background tabs, so a hidden client always catches up instantly.
   _ms(kind) {
-    if (this._skip) return 0;
-    // on Slow the lead-up to a decision still plays at its pace: the next action is
-    // offered only after the consequences before it have been seen
-    if (this.pendingDecision && this.speed !== "slow") return 0;
+    if (this.pendingDecision || this._skip) return 0;
     if (typeof document !== "undefined" && document.hidden) return 0;
-    if (this.queue.length > (this.speed === "slow" ? 40 : 6)) return 0;
-    return Math.min((PACE[kind] ?? 200) * SPEED_FACTOR[this.speed], 7000);
+    if (this.queue.length > 6) return 0;
+    return (PACE[kind] ?? 200) * SPEED_FACTOR[this.speed];
   }
   _sleep(ms) {
     if (this._skip) ms = Math.min(ms, 20);   // SKIP (F): the replay races to the present
@@ -270,7 +260,7 @@ export class Game {
   _scale() { return SPEED_FACTOR[this.speed] || 1; }
   // Motion multiplier for the card-flight engine, honours Slow/Normal/Fast but
   // stays snappier than event lingers (a flying card should feel light, not slow).
-  _motion() { return ({ slow: 3.2, normal: 1.0, fast: 0.7 })[this.speed] || 1; }
+  _motion() { return ({ slow: 1.5, normal: 1.0, fast: 0.7 })[this.speed] || 1; }
 
   /* ---- message intake: route everything through the paced queue ---- */
   onMessage(kind, msg) {
@@ -289,11 +279,7 @@ export class Game {
         // strand the next decision and lock a player out, the non-host bug).
         try {
           if (kind === "event") {
-            // HELA reads each moment before the next one plays (comic.js gate, 12 s at most)
-            try { await comic.gate(msg.kind); } catch (e) {}
             await this.playEvent(msg);
-            if (this.speed === "slow" && CONSEQUENCES.has(msg.kind) && !document.hidden)
-              await this._sleep(1100);           // the beat after a consequence (F skips it)
           } else {                   // state
             this.applyState(msg.view);
             await this._sleep(this._ms("state"));
@@ -1966,7 +1952,6 @@ export class Game {
         } else {
           cell.innerHTML += `<span class="mod-ico">${icon(glyph)}</span><span class="mod-cap">${caption}</span>`;
         }
-        this._paintModFx(cell, r, c, matrix || (this.alloc ? this.alloc.matrix : null));
         if (interactive) {
           this.wireCell(cell, r, c);
           cell.addEventListener("click", () => this.onCellClick(r, c));
@@ -2124,7 +2109,7 @@ export class Game {
         if (!cell) return;
         cell.classList.toggle("locked", rowSealed);
         const val = this.alloc.matrix[r][c];
-        if (+(cell.dataset.val || 0) === val) { this._paintModFx(cell, r, c, this.alloc.matrix); return; }   // unchanged: hands off
+        if (+(cell.dataset.val || 0) === val) return;   // unchanged: hands off
         cell.dataset.val = val;
         const modNum = r * 3 + c + 1;
         const buff = cell.classList.contains("buffed")
@@ -2134,33 +2119,8 @@ export class Game {
         if (val) cell.appendChild(this.dieEl(val, { placed: true, r, c }));
         else cell.innerHTML += `<span class="mod-ico">${icon(glyph)}</span>`
           + `<span class="mod-cap">${caption}</span>`;
-        this._paintModFx(cell, r, c, this.alloc.matrix);
       });
     });
-  }
-
-  // WHAT EACH MODULE DOES, IN WORDS AND NUMBERS, always readable on the cell: its
-  // job while empty ("HEAT", "TRAVEL x1"), the result once a die sits on it
-  // ("+2 HEAT", "MOVE 2"), and, while placing, which module must be filled first
-  // ("AFTER 7"): linear progression you can see.
-  _paintModFx(cell, r, c, m) {
-    const JOB = [["ENERGY", "GOLD", "ENERGY+GOLD"], ["FUTURE", "PRESENT", "PAST"], ["HEAT", "TRAVEL x1", "TRAVEL x2"]];
-    const buffEl = cell.querySelector(".mod-buff");
-    const buff = buffEl ? parseInt(buffEl.textContent.replace("+", ""), 10) || 0 : 0;
-    const raw = m ? m[r][c] : 0, v = raw ? raw + buff : 0;
-    let text = JOB[r][c], cls = "";
-    if (v) {
-      text = [[`+${v} ENERGY`, `+${v} GOLD`, `+${v}E +${v}G`], [`-${v} AHEAD`, `-${v} HERE`, `-${v} BEHIND`],
-        [`+${v} HEAT`, `MOVE ${v}`, `MOVE ${2 * v}`]][r][c];
-      cls = "fx-set";
-    } else if (this.alloc && c > 0 && m && !m[r][c - 1]) {
-      text = `AFTER ${r * 3 + c}`;
-      cls = "fx-wait";
-    }
-    let fx = cell.querySelector(".mod-fx");
-    if (!fx) { fx = document.createElement("span"); cell.appendChild(fx); }
-    fx.className = "mod-fx" + (cls ? " " + cls : "");
-    if (fx.textContent !== text) fx.textContent = text;
   }
 
   // The cockpit toolbar is a horizontal strip: Generators · Escape valve ·
@@ -4557,9 +4517,10 @@ export class Game {
       }
       case "card_renewed":
         // Fresh stock rides in from the merchant deck into the wagon.
+        // its sound is the card SETTLING in the wagon (onLand), not the event's arrival
         this.flyCard(payload.card, this._deckRect(), this._marketRowRect(),
-          { tone: "place", spin: "flip", endScale: 0.9, duration: 600 });
-        this.marketCardFx(payload.card); audio.play("place"); break;
+          { tone: "place", spin: "flip", endScale: 0.9, duration: 600, onLand: () => audio.play("place") });
+        this.marketCardFx(payload.card); break;
       case "declared": this.flashPanel(payload.seat, "fx-pulse"); audio.play("coin"); break;
       case "delivered": if (window.__room) window.__room.beat("deliver");
         // Reverent: the artifact arcs from the owner's panel back to its home
@@ -4569,8 +4530,8 @@ export class Game {
           (window.__seaIslandRect && window.__seaIslandRect(payload.century))
             || this.archPointRect(payload.century) || this._marketRowRect(),
           { tone: "deliver", spin: "flip", endScale: 0.32, duration: 780,
-            onLand: () => { this._deliverSeal(payload.century); juice.flash("gold", { intensity: 0.34 }); juice.hitPause(70); this.flashPanel(payload.seat, "fx-pulse"); } });
-        audio.play("deliver");
+            onLand: () => { audio.play("deliver");   // the seal lands with its sound, not before it
+              this._deliverSeal(payload.century); juice.flash("gold", { intensity: 0.34 }); juice.hitPause(70); this.flashPanel(payload.seat, "fx-pulse"); } });
         this.breakingNews(`RELIC RESTORED AT CENTURY ${roman(payload.century)}`,
           `${payload.seat} lands the ${this.nameEn(payload.card)}, ${this._eraName(payload.century)} takes back its own`,
           { kind: "delivered", name: payload.seat, century: payload.century });

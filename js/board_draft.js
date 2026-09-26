@@ -106,23 +106,29 @@
     else if (mr) { r = +mr[1]; g = +mr[2]; b = +mr[3]; }
     return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#140e06" : "#fffaf0";
   };
-  // one knockout gradient per chart (ids carry the chart's prefix: a gradient that lives
-  // in a hidden chart does not paint in the visible one)
-  window.__pdxPieceDefs = window.__pdxPieceDefs || function (pfx, dark) {
-    const h = dark ? "#03050c" : "#fdf7e6";
-    return `<defs><radialGradient id="${pfx}Knock"><stop offset="0" stop-color="${h}" stop-opacity="${dark ? .92 : .86}"/>`
-      + `<stop offset=".6" stop-color="${h}" stop-opacity="${dark ? .62 : .5}"/><stop offset="1" stop-color="${h}" stop-opacity="0"/></radialGradient></defs>`;
+  // (the knockout gradient went with the big plates: the owner found the discs made the
+  // chart illegible around a piece; kept as a no-op so every chart can still call it)
+  window.__pdxPieceDefs = window.__pdxPieceDefs || function () { return ""; };
+  /* THE OUTLINE: the piece's own silhouette drawn twice beneath it, a light rim and then
+     an ink line (app.css .pc-ol), so it hugs the drawing by a few px and nothing around
+     it is covered. o = { gold } (the Merchant's rim is gold, a traveller's is light). */
+  window.__pdxOutline = window.__pdxOutline || function (inner, o) {
+    o = o || {};
+    return `<g class="pc-ol pc-ol-rim${o.gold ? " pc-ol-gold" : ""}" aria-hidden="true">${inner}</g>`
+      + `<g class="pc-ol pc-ol-ink" aria-hidden="true">${inner}</g>${inner}`;
   };
-  // o = { col, self, r, cy, pfx, dark, pulse }
+  // the small base under a piece: a ground shadow and a seat-coloured foot, the size of
+  // the hull (no disc). o = { col, self, base: keel y, w: half width, dark, pulse }
   window.__pdxPlate = window.__pdxPlate || function (o) {
-    const r = o.r, cy = o.cy || 0, ink = o.dark ? "#070a16" : "#1c150c", rim = o.dark ? "#e9f1ff" : "#fff8e4";
-    let s = `<circle class="pc-knock" cy="${cy}" r="${(r * 1.95).toFixed(1)}" fill="url(#${o.pfx}Knock)"/>`
-      + `<circle class="pc-shadow" cx="1.6" cy="${(cy + 3.4).toFixed(1)}" r="${(r + (o.self ? 6.5 : 1.2)).toFixed(1)}" fill="#000" fill-opacity="${o.dark ? .6 : .34}"/>`;
-    if (o.self) s += `<circle class="pc-crown" cy="${cy}" r="${(r + 5).toFixed(1)}" fill="none" stroke="${rim}" stroke-width="5"/>`
-      + `<circle class="pc-crown-c" cy="${cy}" r="${(r + 5).toFixed(1)}" fill="none" stroke="${o.col}" stroke-width="2.6"/>`;
-    if (o.self && o.pulse) s += `<circle class="pc-pulse" cy="${cy}" r="${(r + 5).toFixed(1)}" fill="none" stroke="${o.col}" stroke-width="3"/>`;
-    s += `<circle class="pc-disc" cy="${cy}" r="${r}" fill="${ink}" fill-opacity=".9" stroke="${rim}" stroke-width="1.7"/>`
-      + `<circle class="pc-ring" cy="${cy}" r="${(r - 2.4).toFixed(1)}" fill="none" stroke="${o.col}" stroke-width="3.2"/>`;
+    const ink = o.dark ? "#070a16" : "#1c150c", rim = o.dark ? "#e9f1ff" : "#fff8e4";
+    // tolerant of an older caller (r / cy) or a missing value: never throw mid-render
+    const by = Number.isFinite(+o.base) ? +o.base : (+o.cy || 0) + (+o.r || 12);
+    const hw = Number.isFinite(+o.w) ? +o.w : (+o.r || 12) * .7;
+    const rx = hw * (o.self ? 1.05 : .95), ry = Math.max(3, rx * .3);
+    let s = `<ellipse class="pc-shadow" cx="1.2" cy="${(by + 2.2).toFixed(1)}" rx="${(rx + 1).toFixed(1)}" ry="${(ry + .8).toFixed(1)}" fill="#000" fill-opacity="${o.dark ? .55 : .3}"/>`;
+    if (o.self && o.pulse) s += `<ellipse class="pc-pulse" cy="${by.toFixed(1)}" rx="${(rx + 3).toFixed(1)}" ry="${(ry + 2).toFixed(1)}" fill="none" stroke="${o.col}" stroke-width="2.4"/>`;
+    s += `<ellipse class="pc-ring pc-base" cy="${by.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${o.col}" stroke="${o.self ? rim : ink}" stroke-width="${o.self ? 2.2 : 1.6}"/>`;
+    if (o.self) s += `<ellipse class="pc-crown" cy="${by.toFixed(1)}" rx="${(rx + 2.2).toFixed(1)}" ry="${(ry + 1.6).toFixed(1)}" fill="none" stroke="${ink}" stroke-width="1.4"/>`;
     return `<g class="pc-plate">${s}</g>`;
   };
   // the name tag under a piece: YOU on mine (in my colour), initials on a rival's
@@ -130,21 +136,16 @@
     o = o || {};
     const fs = o.fs || 9, w = Math.max(20, String(text).length * fs * .7 + 9), h = fs + 5;
     const ink = o.dark ? "#070a16" : "#1c150c";
-    const fill = o.self ? col : ink, stroke = o.self ? ink : col;
+    const fill = o.self ? col : ink, stroke = o.chased ? "#e8c05a" : o.self ? ink : col;
     const txt = o.self ? window.__pdxInkOn(col) : "#fff8e4";
     return `<g class="pc-tag${o.self ? " pc-tag-self" : ""}" transform="translate(0 ${y})" pointer-events="none">`
       + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="${(h / 2).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`
       + `<text y="${(fs * .36).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="${fs}" letter-spacing=".8" fill="${txt}">${text}</text></g>`;
   };
-  // the Merchant's gold cartouche. o = { w, h, cy, pfx, dark }
+  // under the Merchant: only a small ground shadow (his gold outline is __pdxOutline). o = { w, base, dark }
   window.__pdxMerchPlate = window.__pdxMerchPlate || function (o) {
-    const w = o.w, h = o.h, cy = o.cy || 0, x = -w / 2, y = cy - h / 2, rx = Math.min(h / 2, 9);
-    return `<g class="pc-plate pc-merch-plate">`
-      + `<ellipse class="pc-knock" cy="${cy}" rx="${(w * .82).toFixed(1)}" ry="${(h * 1.05).toFixed(1)}" fill="url(#${o.pfx}Knock)"/>`
-      + `<rect class="pc-shadow" x="${(x + 1.6).toFixed(1)}" y="${(y + 3.4).toFixed(1)}" width="${w}" height="${h}" rx="${rx}" fill="#000" fill-opacity="${o.dark ? .6 : .34}"/>`
-      + `<rect class="pc-disc" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${h}" rx="${rx}" fill="#e2b545" stroke="#2a1c08" stroke-width="2.4"/>`
-      + `<rect class="pc-ring pc-merch-ring" x="${(x + 3.2).toFixed(1)}" y="${(y + 3.2).toFixed(1)}" width="${(w - 6.4).toFixed(1)}" height="${(h - 6.4).toFixed(1)}" rx="${Math.max(2, rx - 3)}" fill="none" stroke="#fff0c0" stroke-width="1.6"/>`
-      + `</g>`;
+    const w = +o.w || 40, base = Number.isFinite(+o.base) ? +o.base : 14;
+    return `<ellipse class="pc-shadow pc-merch-plate" cx="1.2" cy="${base}" rx="${(w / 2).toFixed(1)}" ry="${Math.max(3, w * .12).toFixed(1)}" fill="#000" fill-opacity="${o.dark ? .55 : .3}"/>`;
   };
   window.__pdxMerchTag = window.__pdxMerchTag || function (y) {
     return `<g class="pc-tag pc-tag-merch" transform="translate(0 ${y})" pointer-events="none">`
@@ -163,10 +164,13 @@
         const need = a.r + b.r + gap;
         if (d >= need) continue;
         if (d < .01) { dx = (j - i) % 2 ? 1 : -1; dy = .3; d = Math.hypot(dx, dy); }
-        const push = (need - d) / 2 + .1;
-        a.x -= dx / d * push; a.y -= dy / d * push; b.x += dx / d * push; b.y += dy / d * push; moved = true;
+        if (a.fixed && b.fixed) continue;
+        const push = (need - d) / (a.fixed || b.fixed ? 1 : 2) + .1;
+        if (!a.fixed) { a.x -= dx / d * push; a.y -= dy / d * push; }
+        if (!b.fixed) { b.x += dx / d * push; b.y += dy / d * push; }
+        moved = true;
       }
-      if (box) for (const p of pts) { p.x = cl(p.x, box[0] + p.r, box[2] - p.r); p.y = cl(p.y, box[1] + p.r, box[3] - p.r); }
+      if (box) for (const p of pts) if (!p.fixed) { p.x = cl(p.x, box[0] + p.r, box[2] - p.r); p.y = cl(p.y, box[1] + p.r, box[3] - p.r); }
       if (!moved) break;
     }
     return pts;
@@ -185,9 +189,10 @@
     const n = p.dice || (v && v.merchant_movement_dice) || 1;
     const me = v && (v.travelers || []).find(t => t.is_self);
     const who = p.target_seat ? (me && me.name === p.target_seat ? "you" : p.target_seat) : null;
-    const how = [`Rolls ${n} ${n === 1 ? "die" : "dice"} (1 to 3 each), moves up to the total,`,
-      "and stops early if he reaches his target.",
-      `Dice: 1 at the start, 2 once anyone ends an Hour on XX, 3 on X${p.harald ? ", +1 while anyone has Harald's Bluetooth" : ""}.`];
+    const how = [`Rolls ${n} ${n === 1 ? "die" : "dice"} (1 to 3 each) and moves up to the total,`,
+      "stopping early if he reaches his target.",
+      "1 die at the start, 2 once anyone ends an Hour on XX,",
+      `3 once anyone ends an Hour on X${p.harald ? "; +1 while anyone has Harald's Bluetooth" : ""}.`];
     let why, short;
     if (p.why === "secret") { why = ["Everyone is in his century, so he heads", "to the Secret Market at XI."]; short = "heads to XI"; }
     else if (p.why === "future") { why = ["Everyone is with him at the Secret Market,", "so he heads to XXX."]; short = "heads to XXX"; }
@@ -212,6 +217,9 @@
      piece or null, pos: c => [x,y] or null, W, H, dark, avoid: [[x,y],...] piece centres } */
   window.__pdxMerchantHUD = window.__pdxMerchantHUD || function (o) {
     const esc2 = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+    const hidden = window.__pdxMerchantHiddenNow();
+    document.body.classList.toggle("pc-merch-hidden", hidden);
+    if (hidden) return "";
     const v = o.v, rule = window.__pdxMerchantRule(v), p = v.merchant_plan || {};
     const [mx, my] = o.m, ink = o.dark ? "#070a16" : "#1c150c";
     let s = `<g class="pc-mhud" pointer-events="none">`;
@@ -234,8 +242,10 @@
     // the readout: a one-line summary that never leaves, and the full rule that opens
     const lines = [["WHEN", [rule.when]], ["HOW", rule.how], ["WHY", rule.why]];
     if (rule.last) lines.push(["LAST", [rule.last.replace(/^Last move: /, "")]]);
-    const FS = 8.8, LH = 11.2, PW = 268;
-    let rows = 0; for (const [, ls] of lines) rows += ls.length;
+    const FS = 8.8, LH = 11.2;
+    let rows = 0, longest = 0;
+    for (const [, ls] of lines) { rows += ls.length; for (const ln of ls) longest = Math.max(longest, ln.length); }
+    const PW = Math.max(250, Math.round(longest * FS * .5 + 62));
     const PH = 12 + rows * LH + (lines.length - 1) * 3 + 8;
     // pick the side that covers the fewest pieces
     const cand = [[mx + 40, my - PH / 2], [mx - 40 - PW, my - PH / 2], [mx - PW / 2, my + 44], [mx - PW / 2, my - 44 - PH]];
@@ -293,21 +303,30 @@
     let ended = false;
     window.__pdxTripBusy = true; window.__pdxTripPending = false;
     document.body.classList.add("pc-mtrip");
+    // HANDOVER: the real piece takes his new berth, the game moves on (no empty wait);
+    // only the static trail, counts and STOP mark linger a while and fade
+    let tok = null;
+    const handover = () => {
+      try { o.onLand && o.onLand(); } catch (e) {}
+      o.onLand = null;
+      if (tok) tok.remove();
+      document.body.classList.remove("pc-mtrip");
+      window.__pdxTripBusy = false;
+      try { o.onDone && o.onDone(); } catch (e) {}
+      o.onDone = null;
+    };
     const finish = () => {
       if (ended) return; ended = true;
       timers.forEach(clearTimeout);
-      try { o.onLand && o.onLand(); } catch (e) {}
-      document.body.classList.remove("pc-mtrip");
+      handover();
       root.remove();
-      window.__pdxTripBusy = false;
-      try { o.onDone && o.onDone(); } catch (e) {}
     };
-    if (from == null || to == null || !o.pos(from) || !o.pos(to) || skip()) { finish(); return; }
+    if (from == null || to == null || !o.pos(from) || !o.pos(to) || skip() || window.__pdxMerchantHiddenNow()) { finish(); return; }
     const [x0, y0] = o.m0, cdy = o.cdy || 0;
     const off = [x0 - o.pos(from)[0], y0 - o.pos(from)[1]];   // his berth sits off the century's centre
     const at = c => { if (o.anchor) return o.anchor(c); const q = o.pos(c); return q ? [q[0] + off[0], q[1] + off[1]] : null; };
     // his token travels as a clone (the live chart may redraw under it at any time)
-    const tok = document.createElementNS(NS, "g");
+    tok = document.createElementNS(NS, "g");
     tok.setAttribute("class", "pc-mtrip-tok");
     if (o.piece) {
       const cl = o.piece.cloneNode(true);
@@ -316,10 +335,10 @@
       tok.appendChild(cl);
     }
     // 1. attention: a ring at his berth, and the target ringed
-    add(`<circle cx="${x0}" cy="${y0 + cdy}" r="34" fill="none" stroke="#e8c05a" stroke-width="3" class="pc-mtrip-call"/>`);
-    if (o.tpos) add(`<circle cx="${o.tpos[0]}" cy="${o.tpos[1] - (o.tdy || 0)}" r="31" fill="none" stroke="${ink}" stroke-width="6" opacity=".5"/>`
-      + `<circle cx="${o.tpos[0]}" cy="${o.tpos[1] - (o.tdy || 0)}" r="31" fill="none" stroke="#e8c05a" stroke-width="2.6" stroke-dasharray="6 4"/>`
-      + `<g transform="translate(${o.tpos[0]} ${o.tpos[1] - (o.tdy || 0) - 42})"><rect x="-30" y="-8" width="60" height="16" rx="8" fill="#e8c05a" stroke="${ink}" stroke-width="1.5"/>`
+    add(`<circle cx="${x0}" cy="${y0 + cdy}" r="26" fill="none" stroke="#e8c05a" stroke-width="3" class="pc-mtrip-call"/>`);
+    if (o.tpos) add(`<circle cx="${o.tpos[0]}" cy="${o.tpos[1] - (o.tdy || 0)}" r="23" fill="none" stroke="${ink}" stroke-width="5" opacity=".5"/>`
+      + `<circle cx="${o.tpos[0]}" cy="${o.tpos[1] - (o.tdy || 0)}" r="23" fill="none" stroke="#e8c05a" stroke-width="2.6" stroke-dasharray="6 4"/>`
+      + `<g transform="translate(${o.tpos[0]} ${o.tpos[1] - (o.tdy || 0) - 36})"><rect x="-30" y="-8" width="60" height="16" rx="8" fill="#e8c05a" stroke="${ink}" stroke-width="1.5"/>`
       + `<text y="3.6" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="9" letter-spacing="1" fill="#1c1206">CHASED</text></g>`);
     // 2. the roll: each die, then the total
     const rolls = (p.rolls && p.rolls.length) ? p.rolls : (p.roll ? [p.roll] : []);
@@ -327,7 +346,9 @@
     const dist = Math.abs(to - from);
     let dice = null;
     if (rolls.length && !p.teleport) {
-      const dw = rolls.length * 22 + 50, dx = Math.max(8, Math.min((o.W || 900) - dw - 8, x0 - dw / 2)), dy = Math.max(8, y0 + cdy - 76);
+      // beside him, on the side away from the chart's edge (HELA speaks from the other side)
+      const dw = rolls.length * 22 + 50, rightSide = x0 + 44 + dw < (o.W || 900) - 8;
+      const dx = rightSide ? x0 + 44 : x0 - 44 - dw, dy = Math.max(8, y0 + cdy - 14);
       let faces = "";
       rolls.forEach((r2, i) => {
         const pips = { 1: [[0, 0]], 2: [[-3.4, -3.4], [3.4, 3.4]], 3: [[-4, -4], [0, 0], [4, 4]] }[r2] || [[0, 0]];
@@ -357,7 +378,7 @@
         + `<line x1="${prev[0]}" y1="${prev[1] + cdy}" x2="${q[0]}" y2="${q[1] + cdy}" stroke="#e8c05a" stroke-width="3" stroke-linecap="round"/>`);
       root.insertBefore(seg, root.firstChild);
       const n = p.teleport ? "" : String(i + 1);
-      if (n) add(`<g transform="translate(${q[0] + 26} ${q[1] + cdy - 26})"><circle r="9" fill="#e8c05a" stroke="${ink}" stroke-width="1.6"/>`
+      if (n) add(`<g transform="translate(${q[0] + 34} ${q[1] + cdy + 24})"><circle r="9" fill="#e8c05a" stroke="${ink}" stroke-width="1.6"/>`
         + `<text y="3.6" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="10.5" fill="#1c1206">${n}</text></g>`);
       if (calm) tok.setAttribute("transform", `translate(${q[0]} ${q[1]})`);
       else {
@@ -374,25 +395,35 @@
       if (skip()) { finish(); return; }
       const q = at(to) || prev;
       const why = p.teleport ? "sent here by a Chaos reward"
-        : (dist < total ? (p.target ? `stopped: reached ${p.target}` : "stopped: reached his target") : `stopped: used all ${total}`);
-      const tw = why.length * 5.4 + 44;
-      add(`<circle cx="${q[0]}" cy="${q[1] + cdy}" r="36" fill="none" stroke="${ink}" stroke-width="6" opacity=".5"/><circle cx="${q[0]}" cy="${q[1] + cdy}" r="36" fill="none" stroke="#e8c05a" stroke-width="3"/>`
-        + `<g transform="translate(${q[0]} ${q[1] + cdy + (o.stopDy || 54)})"><rect x="${(-tw / 2).toFixed(1)}" y="-9" width="${tw.toFixed(1)}" height="18" rx="9" fill="#e8c05a" stroke="${ink}" stroke-width="1.6"/>`
-        + `<text y="3.8" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="9.6" fill="#1c1206">STOP ${MROM(to)} · ${why}</text></g>`);
+        : (dist < total ? `reached ${p.target || "his target"}` : `rolled ${total}, moved ${dist}`);
+      const tw = (`STOP ${MROM(to)}: ${why}`).length * 6.3 + 22;
+      add(`<circle cx="${q[0]}" cy="${q[1] + cdy}" r="27" fill="none" stroke="${ink}" stroke-width="5" opacity=".5"/><circle cx="${q[0]}" cy="${q[1] + cdy}" r="27" fill="none" stroke="#e8c05a" stroke-width="3"/>`
+        + `<g transform="translate(${q[0]} ${q[1] + cdy + (o.stopDy || 54)})"><rect x="${(-tw / 2).toFixed(1)}" y="-11" width="${tw.toFixed(1)}" height="22" rx="11" fill="${ink}" fill-opacity=".94" stroke="#e8c05a" stroke-width="2"/>`
+        + `<text y="4.2" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="11.5" fill="#f6e6b4">STOP ${MROM(to)}: ${why}</text></g>`);
       try { window.__audio && window.__audio.play && window.__audio.play("merchant_teleport"); } catch (e) {}
     }, landAt);
-    // 5. hold, then the trail fades and the real piece takes over
+    // 5. the STOP mark is read, the real piece takes over and the game moves on; the
+    //    marks stay a little longer and fade gently
+    later(() => { if (skip()) { finish(); return; } handover(); }, landAt + 1600 * k);
     later(() => {
-      if (skip()) { finish(); return; }
-      try { o.onLand && o.onLand(); } catch (e) {}
-      o.onLand = null;
-      tok.remove();
-      document.body.classList.remove("pc-mtrip");
-      const f = root.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 1400 * k, easing: "ease-in", fill: "forwards" });
+      const f = root.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 1600 * k, easing: "ease-in", fill: "forwards" });
       f.onfinish = finish;
-      later(finish, 1400 * k + 300);
-    }, landAt + 2800 * k);
-    later(finish, landAt + 4600 * k + 1500);   // hard cap: a stuck frame never strands the flag
+      later(finish, 1600 * k + 300);
+    }, landAt + 3400 * k);
+    later(finish, landAt + 5000 * k + 1500);   // hard cap: a stuck frame never strands the flag
+  };
+  /* THE TUTORIAL'S HOOK. The Merchant stays off the chart until his story beat: while the
+     tutorial runs (body.tut, or window.__helaMute) he, his readout and his voyage are
+     hidden, until the tutorial calls window.__pdxMerchantReveal(true). false hides him
+     again; null returns to the default. Any chart repaint applies it. */
+  window.__pdxMerchantRevealed = window.__pdxMerchantRevealed === undefined ? null : window.__pdxMerchantRevealed;
+  window.__pdxMerchantHiddenNow = window.__pdxMerchantHiddenNow || function () {
+    const r = window.__pdxMerchantRevealed;
+    return r === false || (r == null && (document.body.classList.contains("tut") || !!window.__helaMute));
+  };
+  window.__pdxMerchantReveal = window.__pdxMerchantReveal || function (on) {
+    window.__pdxMerchantRevealed = on == null ? null : !!on;
+    document.body.classList.toggle("pc-merch-hidden", window.__pdxMerchantHiddenNow());
   };
   // the event queue waits for the voyage (capped; F or a hidden tab release it at once)
   window.__pdxTripWait = window.__pdxTripWait || async function () {
@@ -1304,10 +1335,11 @@
       // three rivals in one port stay three rivals.
       const SLOTS = [96, 40, 152, 6, 180];    // beach berths, southern shores first
       const RING  = [0, 1, 1, 0, 1];          // ...at two depths, so neighbours never touch
-      // THE PLATES (window.__pdxPlate): each piece stands on an ink disc, so the berths are
-      // FANNED until the discs clear each other, and clamped inside the chart (a berth
-      // near the edge used to hang off the frame).
-      const PR = t => (t.is_self ? 22 : 19);
+      // THE OUTLINES (window.__pdxOutline / __pdxPlate): each piece is ringed tight by its
+      // own silhouette and stands on a small seat-coloured foot; the berths are FANNED until
+      // the pieces clear each other, inside the chart (a berth near the edge used to hang
+      // off the frame) and clear of the Merchant.
+      const PR = t => (t.is_self ? 17 : 14);
       const berth = ts.map((t, i) => {
         let deg = SLOTS[i % SLOTS.length];
         if (x > W - 76) deg = 180 - deg;        // near an edge the berths face INLAND
@@ -1319,9 +1351,11 @@
         // boats for a fleet of orphans. They come back to the SHORE; the second ring
         // is now a step, not a swim, and the mooring line carries the rest.
         const rg = RING[i % RING.length];
-        return { x: x + Math.cos(a) * (rx + 3 + rg * 13), y: y + Math.sin(a) * (ry + 5 + rg * 12) + 2, r: PR(t) + 6 };
+        return { x: x + Math.cos(a) * (rx + 3 + rg * 13), y: y + Math.sin(a) * (ry + 5 + rg * 12) + 2, r: PR(t) + 4 };
       });
-      window.__pdxFan(berth, 2, [30, 40, W - 34, H - 26]);   // clear of the torn frame
+      const mcNow = R.merchantShown != null ? R.merchantShown : view.merchant_century;
+      const obst = POS[mcNow] ? [{ x: POS[mcNow][0], y: POS[mcNow][1] - 47 + 10, r: 28, fixed: true }] : [];
+      window.__pdxFan(berth.concat(obst), 2, [30, 40, W - 34, H - 26]);   // clear of the torn frame and of the Merchant
       const pcPos = R.pcPos || (R.pcPos = {});
       const chase = view.merchant_plan && view.merchant_plan.target_seat;
       ts.forEach((t, i) => {
@@ -1340,10 +1374,9 @@
         const em = window.__pdxEmanata(t, col, R.em || (R.em = {}), -44);   // above the plate
         g += `<g class="sea-fixg pc-piece-g${t.is_self ? " pc-self" : ""}${ghost ? " sea-ghost": ""}${em.cls}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self ? " (you)": ""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.booms}/12 booms${t.is_wanted ? " · WANTED": ""}${hunted ? " · the Merchant is chasing you (richest traveller not in his century)": ""}${burst ? " · boiler burst, cannot sail or activate this hour": ""}${ghost ? " · sheltered beyond time, the Reaches spare the terminated": ""}${dead && !ghost ? " · lost at sea (respawning)": ""}`)}" opacity="${dead && !ghost ? .5: 1}">
           <g transform="translate(${bx} ${by})"><line x1="${(x - bx).toFixed(1)}" y1="${(y - by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="1.8" stroke-linecap="round" opacity=".7" stroke-dasharray="2.6 2.4"/><g class="sea-fix-boat"><g class="pc-piece">
-            <g class="sea-aura">${window.__pdxPlate({ col, self: t.is_self, r: pr, cy: pcy, pfx: "sea", dark: false, pulse })}</g>
-            ${hunted ? `<circle class="pc-hunted" cy="${pcy}" r="${pr + (t.is_self ? 10 : 5)}" fill="none" stroke="#e8c05a" stroke-width="2" stroke-dasharray="4 3"/>` : ""}
-            <g transform="scale(${t.is_self ? 1.62 : 1.45})${dead && !ghost ? " rotate(-24)" : ""}">${rigSVG(0, col, { ghost, burst, plate: true })}</g>
-            ${window.__pdxTag(t.is_self ? "YOU" : esc(window.__pdxInitials(t.name)), col, pcy + pr + (t.is_self ? 13 : 9), { self: t.is_self })}
+            <g class="sea-aura">${window.__pdxPlate({ col, self: t.is_self, base: t.is_self ? 17.5 : 15.5, w: t.is_self ? 14.6 : 13, dark: false, pulse })}</g>
+            <g transform="scale(${t.is_self ? 1.62 : 1.45})${dead && !ghost ? " rotate(-24)" : ""}">${window.__pdxOutline(rigSVG(0, col, { ghost, burst }))}</g>
+            ${window.__pdxTag(t.is_self ? "YOU" : esc(window.__pdxInitials(t.name)), col, t.is_self ? 30 : 27, { self: t.is_self, chased: hunted })}
           </g></g>${em.g}</g></g>`;
       });
     }
@@ -1432,9 +1465,9 @@
       for (let i = 0; i < bands; i++)
         stripes += `<rect x="-9.5" y="${(-18 + (i + .5) * 19 / bands).toFixed(1)}" width="19.5" height="${(19 / bands * .42).toFixed(1)}" rx="1" fill="#8c3b2a" opacity=".9"/>`;
       g += `<g class="sea-shipg pc-merch-live" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${x} ${y - 47})">
-        ${window.__pdxMerchPlate({ w: 58, h: 52, cy: 13, pfx: "sea", dark: false })}
+        ${window.__pdxMerchPlate({ w: 46, base: 33, dark: false })}
         <g class="sh-slide"><g transform="scale(${dir < 0 ? -1 : 1} 1)" class="sea-ship"><g class="sh-bob">
-        <g transform="translate(0 12) scale(.8)">
+        ${window.__pdxOutline(`        <g transform="translate(0 12) scale(.8)">
         <path d="M -21 14 Q -23 22 -14 25 L 9 25 Q 19 23 21 14 L 17 12 Q 0 17 -17 12 Z" fill="#6a4522" stroke="#241708" stroke-width="1.1"/>
         <path d="M -18 17 Q 0 21 18 16" fill="none" stroke="#3a2510" stroke-width=".7" opacity=".65"/>
         <path d="M -16 21 Q 0 24 15 20" fill="none" stroke="#3a2510" stroke-width=".7" opacity=".5"/>
@@ -1451,7 +1484,7 @@
         <path d="M -12 -22 L -19 12 M 13 -22 L 19 12" stroke="#3a2510" stroke-width=".6" opacity=".5"/>
         <circle cx="15" cy="4" r="1.7" fill="#ffd98a" class="sea-lantern"/>
         <path d="M -23 22 q -8 3 -14 1 M 22 21 q 7 3 12 1" fill="none" stroke="#eaf4f6" stroke-width="1.1" opacity=".55"/>
-        </g>
+        </g>`, { gold: true })}
         ${(() => {
           const last = R.merchantHist.length ? R.merchantHist[R.merchantHist.length - 1] : null;
           const dist = last ? Math.abs(last.to - last.from) : 0;

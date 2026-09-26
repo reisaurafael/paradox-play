@@ -12,10 +12,10 @@
      - HELA speaks one line at a time from her eye (cabin.js say queue). Every
        line, caption and note stays at least max(4 s, 75 ms per character),
        twice that on Slow; Fast never shortens it. Only F (skip) cuts it short.
-     - The replay waits for her: before an event she will narrate plays, the
-       game waits until her waiting line has been shown (gate()).
-     - An impact appears WITH the line about it (the line's onShow), holds like
-       a printed panel and fades slowly. One on screen at a time.
+     - The game never waits for her: the table keeps playing and a line too old
+       to be news is dropped from her queue.
+     - An impact hits on the event's own beat, with its sound, then holds like a
+       printed panel and fades slowly. One on screen at a time.
      - While the tutorial runs (window.__helaMute) it owns every message: this
        layer stays silent and only marks the table.
    Also here: the MEANWHILE reveal grid, emanata on the case files, the phase
@@ -24,9 +24,9 @@
    why are the chart's own readout (the map); HELA points at it, never repeats it.
    Costs: no loops and no intervals; small DOM nodes animated on transform and
    opacity, each removed when it ends. Server-sent text only via textContent.
-   game.js calls: init, gate, onEvent, onDecision, onRespond, emanata, preview.
+   game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609261656";
+import { roman } from "./util.js?202609261959";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, fast: 1 };     // Fast never shortens a reading time
@@ -68,11 +68,6 @@ function travelCost(from, to) {
   const over = Math.max(0, Math.min(from, 10) - to);
   return normal + 2 * over;
 }
-
-// events HELA narrates at priority 1 or more: the replay waits for her before them
-const PACED = new Set(["paradox_resolved", "exploded", "terminated", "delivered", "merchant_moved",
-  "card_bought", "wanted", "milestone", "reward_resolved", "card_stolen", "card_destroyed",
-  "secret_market_opened", "traveled", "allocations_revealed"]);
 
 class Comic {
   constructor() {
@@ -220,9 +215,11 @@ class Comic {
      line), onShow (called with the line's time on screen). */
   say(parts, opts = {}) {
     if (this._quiet()) return;
+    // the impact lands NOW, on the event's own beat (its sound plays now too); only
+    // her eye waits for her line to come up before crossing to the thing
+    if (opts.impact) { const [k, rf, o] = opts.impact; this.impact(k, typeof rf === "function" ? rf() : rf, o || {}); }
     const run = (ms) => {
       if (opts.at) this._goTo(typeof opts.at === "function" ? opts.at() : opts.at, ms);
-      if (opts.impact) { const [k, rf, o] = opts.impact; this.impact(k, typeof rf === "function" ? rf() : rf, o || {}); }
       if (opts.onShow) { try { opts.onShow(ms); } catch (e) {} }
     };
     const E = this._eye();
@@ -230,23 +227,10 @@ class Comic {
     const n = document.createElement("span");
     n.className = "cx-say" + (opts.tone ? " cx-" + opts.tone : "");
     this._parts(n, parts);
-    E.say(n, { prio: opts.prio == null ? 1 : opts.prio,
+    const prio = opts.prio == null ? 1 : opts.prio;
+    E.say(n, { prio, ttl: prio >= 2 ? 9000 : prio === 1 ? 6500 : 4000,   // a line too old to be news is dropped
       ms: Math.round(Math.max(opts.ms || 0, readMs(this._len(parts))) * this._slow()),
       onShow: (ms) => run(ms) });
-  }
-
-  /* ---- THE REPLAY WAITS FOR HER: called by game.js before each event plays. If
-     HELA will narrate this event and a line of hers is still waiting, or the
-     MEANWHILE grid is up, the replay holds (at most 12 s). Never when a decision is
-     waiting, never while skipping, never in a background tab, never in the tutorial. */
-  async gate(kind) {
-    if (!PACED.has(kind) || !this.root) return;
-    const g = this.game, t0 = performance.now();
-    while (performance.now() - t0 < 12000) {
-      if (this._quiet() || !g || g.pendingDecision) return;
-      if (this._backlog() < 2 && !this.gridEl) return;
-      await new Promise((r) => setTimeout(r, 160));
-    }
   }
 
   // she crosses to what she talks about, but never while a decision of mine is open
@@ -369,24 +353,25 @@ class Comic {
     const dur = Math.round((big ? 3400 : 2800) * this._slow());
     const rot = (Math.random() * 8 - 4).toFixed(1);
     const fin = { duration: dur, easing: "linear", fill: "both" };
+    const pop = Math.min(0.12, 150 / dur);         // it hits on the beat (with its sound), then holds
     if (reduced) {
-      h.animate([{ opacity: 0 }, { opacity: 1, offset: 0.14 }, { opacity: 1, offset: 0.72 }, { opacity: 0 }], fin);
+      h.animate([{ opacity: 0 }, { opacity: 1, offset: pop }, { opacity: 1, offset: 0.72 }, { opacity: 0 }], fin);
     } else {
       word.animate([
         { transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1.5)`, opacity: 0, easing: "cubic-bezier(.2,.8,.3,1)" },
-        { transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1)`, opacity: 1, offset: 0.12 },
+        { transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1)`, opacity: 1, offset: pop },
         { transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1.02)`, opacity: 1, offset: 0.72 },
         { transform: `translate(-50%,-54%) rotate(${rot}deg) scale(1.04)`, opacity: 0 },
       ], fin);
       burst.animate([
         { transform: "translate(-50%,-50%) scale(.4) rotate(0deg)", opacity: 0, easing: "cubic-bezier(.2,.8,.3,1)" },
-        { transform: "translate(-50%,-50%) scale(1) rotate(6deg)", opacity: 1, offset: 0.12 },
+        { transform: "translate(-50%,-50%) scale(1) rotate(6deg)", opacity: 1, offset: pop },
         { transform: "translate(-50%,-50%) scale(1) rotate(7deg)", opacity: 1, offset: 0.72 },
         { transform: "translate(-50%,-50%) scale(1.05) rotate(8deg)", opacity: 0 },
       ], fin);
       if (lines) lines.animate([
         { transform: "translate(-50%,-50%) scale(.85)", opacity: 0 },
-        { transform: "translate(-50%,-50%) scale(1)", opacity: 0.8, offset: 0.14 },
+        { transform: "translate(-50%,-50%) scale(1)", opacity: 0.8, offset: pop },
         { transform: "translate(-50%,-50%) scale(1.04)", opacity: 0.7, offset: 0.7 },
         { transform: "translate(-50%,-50%) scale(1.1)", opacity: 0 },
       ], fin);
@@ -397,7 +382,7 @@ class Comic {
   /* ---- MEANWHILE...: the simultaneous reveal as a comic grid. One panel per
      traveler, in their colour, their revealed machine as a 3x3 of dice (public the
      moment allocations are revealed). The panels arrive one by one and the page
-     stays long enough to read; the replay waits for it (gate). F skips it. ---- */
+     stays long enough to read, beside the table that keeps playing. F skips it. ---- */
   revealGrid(allocs) {
     this._killGrid();
     const g = this.game;
@@ -406,7 +391,9 @@ class Comic {
     const order = (g && g.priority && g.priority.length ? g.priority.filter((n) => seats.includes(n)) : []);
     seats.forEach((n) => { if (!order.includes(n)) order.push(n); });
     const w = document.createElement("div");
-    w.className = "cx-grid cx-g-" + this._gfx();
+    // it lies on free wood: beside the briefcase on the main desk, mid-desk elsewhere
+    const scene = (g && g.camera && g.camera.scene) || "main";
+    w.className = "cx-grid cx-g-" + this._gfx() + (scene === "main" ? "" : " cx-grid-mid");
     const tag = document.createElement("div");
     tag.className = "cx-grid-tag";
     tag.textContent = "MEANWHILE, EVERY MACHINE AT ONCE...";
@@ -753,13 +740,13 @@ class Comic {
         const ph = PHASE[p.phase]; if (!ph) return;
         const hour = this.game && this.game.view ? this.game.view.hour : "";
         // the chapter title only; what the phase is for and who acts is the phase line
-        this.caption("chapter", [{ b: ph[0] + (p.solo ? " (SOLO)" : "") }, " begins."], { tag: "HOUR " + hour, fresh: true });
+        this.caption("chapter", [{ b: ph[0] + (p.solo ? " (SOLO)" : "") }, " begins."], { tag: "HOUR " + hour, now: true });
         return;
       }
       case "phase_skipped": {
         const ph = PHASE[p.phase]; if (!ph) return;
         this.caption("chapter", [{ b: ph[0] + " SKIPPED" }, p.reason ? `: ${p.reason}.` : "."],
-          { tag: "HOUR " + (this.game && this.game.view ? this.game.view.hour : ""), fresh: true });
+          { tag: "HOUR " + (this.game && this.game.view ? this.game.view.hour : ""), now: true });
         return;
       }
       case "allocations_revealed":

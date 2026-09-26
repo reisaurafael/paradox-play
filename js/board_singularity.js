@@ -447,7 +447,7 @@
     // paradox rifts
     for(const c of R.monsters){ if(!POS[c]||R.restored.has(c)) continue; const [x,y]=POS[c]; g+=`<g class="cc-rift" transform="translate(${x+worldR(c)+8} ${y-6})" data-tip="${esc(`a rift tore open near ${rom(c)}, the Paradix bleeds through`)}"><path d="M0 -8 l3 6 l-4 3 l4 5" stroke="#b3402e" stroke-width="1.4" fill="none"/><path d="M0 -8 l-3 6 l4 3 l-4 5" stroke="#8f6fd6" stroke-width="1" fill="none" opacity=".7"/></g>`; }
     // merchant hauler (on the gold MERCHANT plate, window.__pdxMerchPlate)
-    const haulerAt=c=>{ const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*(worldR(c)*0.55+8)), Math.round(y-worldR(c)*0.15)]; };
+    const haulerAt=c=>haulerAt2(c);
     const mc = R.merchantShown!=null?R.merchantShown:view.merchant_century;
     R.mAnchor=null;
     if(POS[mc]){ const [x,y]=POS[mc]; const dice=view.merchant_movement_dice||1; const side=x>W*0.82?-1:1;
@@ -456,13 +456,13 @@
       let str=""; for(let i=0;i<Math.min(3,dice);i++) str+=`<rect x="-10" y="${-7+i*3}" width="20" height="1.7" fill="#b3402e" opacity=".85"/>`;
       const [hx,hy]=haulerAt(mc); R.mAnchor=[hx,hy];
       g+=(window.__pdxPieceDefs?window.__pdxPieceDefs("cc",true):"");
-      g+=`<g class="cc-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:58,h:36,cy:1,pfx:"cc",dark:true}):""}<g transform="scale(${side<0?-1.2:1.2} 1.2) translate(3.5 0)"><g class="cc-bob">
+      g+=`<g class="cc-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:40,base:14,dark:true}):""}<g transform="scale(${side<0?-1.2:1.2} 1.2) translate(3.5 0)"><g class="cc-bob">${window.__pdxOutline(`
         <path d="M-16 0 L-7 -6 L9 -6 L16 0 L9 6 L-7 6 Z" fill="#2c2414" stroke="#d4b02a" stroke-width="1.2"/>
         <rect x="-9" y="-7" width="5" height="14" rx="1.4" fill="#3a2c16" stroke="#d4b02a" stroke-width=".7"/><rect x="-3" y="-6.5" width="5" height="13" rx="1.4" fill="#463414" stroke="#d4b02a" stroke-width=".6"/>
         <path d="M4 -6 L11 -3 L11 3 L4 6 Z" fill="#4a3a1c" stroke="#d4b02a" stroke-width=".6"/><circle cx="8" cy="0" r="1.8" fill="#e8c05a"/>
         <path d="M-16 -3 L-23 0 L-16 3 Z" fill="#ff9a5a" class="cc-beam"/><path d="M-16 -1.4 L-20 0 L-16 1.4 Z" fill="#ffe0a0"/>
         <path d="M2 -6 L6 -10 L8 -6 Z M2 6 L6 10 L8 6 Z" fill="#c9a45c"/>
-        ${Array.from({length:Math.min(3,dice)},(_,i)=>`<circle cx="${-4+i*4}" cy="11" r="1.4" fill="#e0c478"/>`).join("")}</g></g>${window.__pdxMerchTag?window.__pdxMerchTag(-26):""}</g>`; }
+        ${Array.from({length:Math.min(3,dice)},(_,i)=>`<circle cx="${-4+i*4}" cy="11" r="1.4" fill="#e0c478"/>`).join("")}`,{gold:true})}</g></g>${window.__pdxMerchTag?window.__pdxMerchTag(-26):""}</g>`; }
     // milestone beacons X / XX
     for(const c of [10,20]){ if(!POS[c]) continue; const [x,y]=POS[c]; const claim=view.travelers.filter(t=>c===10?t.scored_century_x:t.scored_century_xx); g+=`<g class="cc-beacon" data-tip="${esc(`millennium ${rom(c)} beacon, ${claim.length?"claimed by "+claim.map(t=>t.name).join(", "):"unclaimed"} · end an Hour here for +1 CP`)}" transform="translate(${(x-worldR(c)*0.5).toFixed(0)} ${(y+worldR(c)*0.2).toFixed(0)})"><path d="M-3 6 L0 -8 L3 6 Z" fill="#c9a45c" stroke="#e8c05a" stroke-width=".7"/><circle cx="0" cy="-8" r="2.2" fill="#ffe9b0" class="cc-beam"/>${claim.map((t,i)=>`<circle cx="${-3+i*3}" cy="9" r="1.3" fill="${seatColor(t.name)}"/>`).join("")}</g>`; }
     // secret ghost-station (XI)
@@ -504,19 +504,20 @@
       //   2. a LEASH, a short line, in their colour, from the century to them. Even when
       //      two centuries crowd, the line says whose they are. You do not read it.
       const SLOTS=[[0,-1.34],[-1.34,0.10],[1.34,0.10],[-1.0,-1.0],[1.0,-1.0]];
-      // THE PLATES (window.__pdxPlate, board_draft.js): each piece stands on an ink disc,
-      // so the berths are FANNED until the discs clear each other, inside the chart.
-      const PR=t=>(t.is_self?19:16);
-      const berth=ts.map((t,i)=>{ const [dx,dy]=SLOTS[i%SLOTS.length]; return { x:x+dx*(R0*0.40+10), y:y+dy*(R0*0.40+10), r:PR(t)+5 }; });
-      if(window.__pdxFan) window.__pdxFan(berth,2,[24,34,W-24,H-24]);
+      // THE OUTLINES (window.__pdxOutline / __pdxPlate, board_draft.js): each piece is
+      // ringed tight by its own silhouette on a small seat-coloured foot; the berths are
+      // FANNED until the pieces clear each other, inside the chart.
+      const PR=t=>(t.is_self?15:12);
+      const berth=ts.map((t,i)=>{ const [dx,dy]=SLOTS[i%SLOTS.length]; return { x:x+dx*(R0*0.40+10), y:y+dy*(R0*0.40+10), r:PR(t)+4 }; });
+      if(window.__pdxFan) window.__pdxFan(R.mAnchor?berth.concat([{x:R.mAnchor[0],y:R.mAnchor[1],r:24,fixed:true}]):berth,2,[24,34,W-24,H-24]);   // the Merchant is a fixed obstacle
       const chase=view.merchant_plan&&view.merchant_plan.target_seat;
       ts.forEach((t,i)=>{ const col=seatColor(t.name); const bx=Math.round(berth[i].x), by=Math.round(berth[i].y); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=chase===t.name&&view.merchant_century!==t.century;
         const pr=PR(t), pcy=-1; R.pcPos[t.name]=[bx,by+pcy];
         const memo=R.pcAt||(R.pcAt={}); const pulse=t.is_self&&memo[t.name]!=null&&memo[t.name]!==c; if(t.is_self) memo[t.name]=c;
         const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-34):{cls:"",g:""};
-        const plate=window.__pdxPlate?window.__pdxPlate({col,self:t.is_self,r:pr,cy:pcy,pfx:"cc",dark:true,pulse}):"";
-        const tag=window.__pdxTag?window.__pdxTag(t.is_self?"YOU":esc(initials(t.name)),col,pcy+pr+(t.is_self?12:8),{self:t.is_self,dark:true}):"";
-        g+=`<g class="cc-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cc-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cc-aura">${plate}</g>${hunted?`<circle class="pc-hunted" cy="${pcy}" r="${pr+(t.is_self?10:5)}" fill="none" stroke="#e8c05a" stroke-width="2" stroke-dasharray="4 3"/>`:""}<g transform="scale(${t.is_self?1.6:1.42})">${shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost,plate:true})}</g>${tag}</g>${em.g}</g>`;
+        const sc=t.is_self?1.6:1.42, keel=7*sc; const plate=window.__pdxPlate({col,self:t.is_self,base:keel,w:7*sc,dark:true,pulse});
+        const tag=window.__pdxTag(t.is_self?"YOU":esc(initials(t.name)),col,keel+11,{self:t.is_self,dark:true,chased:hunted});
+        g+=`<g class="cc-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cc-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cc-aura">${plate}</g><g transform="scale(${sc})">${window.__pdxOutline(shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost}))}</g>${tag}</g>${em.g}</g>`;
       });
     }
     // WHEN / HOW / WHY beside the Merchant, the chase line and his reach (board_draft.js)
@@ -585,7 +586,7 @@
       if(c) c.innerHTML=""; }catch(e){} R.fx.length=0; if(fxGuard){clearTimeout(fxGuard); fxGuard=null;}
     fxBusy=false; renderPending=false; R.sailing=false; }
   function fxG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-sing .cc-fx"); }
-  function haulerAt2(c){ const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*(worldR(c)*0.55+8)), Math.round(y-worldR(c)*0.15)]; }
+  function haulerAt2(c){ const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*(worldR(c)*0.55+16)), Math.round(y-worldR(c)*0.15-14)]; }   // clear of the century's label
   function liveG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-sing .cc-live"); }
   function drainFx(){ if(REDUCED){ R.fx.length=0; return; } if(fxBusy) return; const f=R.fx.shift(); if(!f) return; fxBusy=true;
     if(fxGuard) clearTimeout(fxGuard);

@@ -9,7 +9,7 @@
   // before the first paint.
   window.PARADOX_DEMO = true;
   document.documentElement.classList.add("pdx-demo");
-  const worker = new Worker("play-worker.js?202609261656", { type: "module" });
+  const worker = new Worker("play-worker.js?202609261959", { type: "module" });
   let nextId = 1;
   const httpWaiters = new Map();
   const sockets = new Map();
@@ -47,7 +47,7 @@
   // (index.html); here the notice says it in the demo's words and reloads on a
   // click. A tester who comes back after an update gets a short "what's new"
   // note in the corner, once, that never blocks the table.
-  const BUILD = "202609261656", WHATS_NEW = ["A clearer main menu: Play vs AI, Learn to Play, and a way back to the menu from anywhere, even mid-match.", "Text size and an accessible interface option in the menu and in Settings.", "Messages stay until you have read them; tutorial lines wait for you.", "Slow pace is really slow now, and the tutorial starts on it.", "The cursor stays on top of everything.", "The tutorial starts over: HELA wakes you up. More of the story is on its way.", "HELA's memory is a comic book on your desk: press L to open it.", "A line under the phases says what the current phase is for and who can act.", "Every traveller has their own colour."];
+  const BUILD = "202609261959", WHATS_NEW = ["The tutorial is back to the version you played before, with its two AI opponents and the dice guided from the start.", "A clearer main menu: Play vs AI, Learn to Play, and a way back to the menu from anywhere, even mid-match.", "The game's hand is your cursor in the menu too, in your colour.", "Text size and an accessible interface option in the menu and in Settings.", "Messages stay until you have read them, and the cursor stays on top of everything.", "HELA's brain is the one you can spin again, with bigger dots: press L.", "HELA's messages wear your colour, in comic style.", "Sounds land together with their animations."];
   const noticeUpdate = () => {
     const b = document.getElementById("stale-banner");
     if (!b) return;

@@ -7503,6 +7503,16 @@ body.gfx-low .cx-em .cx-new { animation: none; }
    the one-shot arrival pulse, the Merchant's WHEN / HOW / WHY readout (open on hover, in
    the Market phase and while he sails), and stronger plates in the accessible interface. */
 #timeline-rail .pc-piece-g .pc-tag rect, #timeline-rail .pc-merch-live .pc-tag rect { vector-effect: non-scaling-stroke; }
+/* THE OUTLINE: the silhouette drawn twice beneath the piece (window.__pdxOutline), a light
+   rim then an ink line, hugging it by a few px; nothing moves inside a copy */
+#timeline-rail .pc-ol * { stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: none !important;
+  opacity: 1 !important; animation: none !important; }
+#timeline-rail .pc-ol-rim * { fill: #fff8e4 !important; stroke: #fff8e4 !important; stroke-width: 4.2px !important; }
+#timeline-rail .pc-ol-ink * { fill: #1c150c !important; stroke: #1c150c !important; stroke-width: 2px !important; }
+#timeline-rail .pc-ol-rim.pc-ol-gold * { fill: #e8c05a !important; stroke: #e8c05a !important; stroke-width: 5px !important; }
+#timeline-rail .cplot-sing .pc-ol-ink * { fill: #05060e !important; stroke: #05060e !important; }
+/* the tutorial keeps the Merchant off the chart until his story beat (__pdxMerchantReveal) */
+body.pc-merch-hidden #timeline-rail .pc-merch-live, body.pc-merch-hidden #timeline-rail .pc-mhud { display: none; }
 /* the arrival pulse: once, the render my piece lands (never a loop) */
 #timeline-rail .pc-pulse { transform-box: fill-box; transform-origin: center;
   animation: pcPulse 1.8s ease-out 1 both !important; }
@@ -7516,17 +7526,14 @@ html.pdx-a11y #timeline-rail .pc-pulse { display: none; }
 #timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-full,
 #timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-key,
 body[data-phase="market"] #timeline-rail .pc-mhud-full,
-body[data-phase="market"] #timeline-rail .pc-mhud-key,
-body.pc-mtrip #timeline-rail .pc-mhud-full,
-body.pc-mtrip #timeline-rail .pc-mhud-key { display: inline; }
+body[data-phase="market"] #timeline-rail .pc-mhud-key { display: inline; }
 /* while he sails, his clone travels; the live piece waits out of sight */
 body.pc-mtrip #timeline-rail .pc-merch-live { visibility: hidden; }
 /* the ACCESSIBLE INTERFACE: thicker rings and rims, larger pieces and tags */
-html.pdx-a11y #timeline-rail .pc-ring { stroke-width: 4.6px; }
-html.pdx-a11y #timeline-rail .pc-disc { stroke-width: 2.6px; fill-opacity: 1; }
-html.pdx-a11y #timeline-rail .pc-crown { stroke-width: 6.5px; }
-html.pdx-a11y #timeline-rail .pc-crown-c { stroke-width: 3.6px; }
-html.pdx-a11y #timeline-rail .pc-knock { opacity: 1; }
+html.pdx-a11y #timeline-rail .pc-ring { stroke-width: 2.6px; }
+html.pdx-a11y #timeline-rail .pc-crown { stroke-width: 2.2px; }
+html.pdx-a11y #timeline-rail .pc-ol-rim * { stroke-width: 5.6px !important; }
+html.pdx-a11y #timeline-rail .pc-ol-ink * { stroke-width: 3px !important; }
 html.pdx-a11y #timeline-rail .pc-piece { transform: scale(1.14); }
 html.pdx-a11y #timeline-rail .pc-tag rect { stroke-width: 2.2px; }
 html.pdx-a11y #timeline-rail .pc-mhud-full text { font-weight: bold; }
@@ -7581,81 +7588,146 @@ body.cx-on #hela-eye .he-chip { transition: opacity .5s ease, transform .6s cubi
 #cx-phaseline .cx-name { margin: 0 2px; font-size: .74rem; }
 @media (prefers-reduced-motion: reduce) { #cx-phaseline { transition: opacity .6s ease; } }
 
-/* ═══ HELA'S MEMORY: her memory as a comic book on the paperwork desk (cabin.js) ═══
-   Closed it is one cover strip (her eye, the Hour, new entries, the L key); open it
-   fills the free desk below the drawers: one page per Hour, entries as panels, the
-   Herald's notices as clippings, the ledger of loose rolls in the margin. */
-#hela-brain-full.hbk { inset: auto; left: 18%; top: 5%; right: auto; bottom: auto; width: auto; height: auto;
-  z-index: 40; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; cursor: default;
-  font-family: var(--f-display, "Oswald", sans-serif); }
-#hela-brain-full.hbk.open { left: 18%; top: 3%; right: 2%; bottom: 3%; }
-/* (the gauntlet parks on the desk's left edge, so the book starts clear of it; open,
-   the book lies on top of whatever wanders the desk, the cat included) */
-body.cabin-on #log-zone:has(#hela-brain-full.open) { z-index: 30; }
-/* HELA pointing the way (her direction chip) and speaking at once: the words sit above */
-#hela-eye.he-directs .he-chip { top: auto; bottom: 30px; }
-.hbk-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.hbk-toggle { display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px 10px 10px; cursor: pointer;
-  font: 500 1rem/1 var(--f-display, "Oswald", sans-serif); color: #1d1409; letter-spacing: .03em;
-  background: radial-gradient(circle, rgba(120,84,20,.14) 1px, transparent 1.4px) 0 0 / 5px 5px, var(--cx-paper);
-  border: 3px solid var(--cx-ink); box-shadow: 0 0 0 3px var(--vz, #c9a45c), 5px 5px 0 3px var(--cx-ink);
-  transition: transform .25s ease, box-shadow .25s ease; }
-.hbk-toggle:hover { transform: translate(-1px, -2px); box-shadow: 0 0 0 3px var(--vz, #c9a45c), 7px 7px 0 3px var(--cx-ink); }
-.hbk-eye { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--cx-ink); flex: 0 0 34px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M-9 0 Q0 -7 9 0 Q0 7 -9 0 Z' fill='%23fff8e8' stroke='%23140d06' stroke-width='1.8'/%3E%3Ccircle r='2.8' fill='%23140d06'/%3E%3C/svg%3E") center / 26px no-repeat, var(--vz, #c9a45c); }
-.hbk-name { font-size: 1.25rem; letter-spacing: .06em; }
-.hbk-state { font-size: .9rem; color: #5a4526; }
-.hbk-state::before { content: "\00b7  "; }
-.hbk-new:not(:empty) { padding: 3px 9px; background: #b3261a; color: #fff4dc; border: 2px solid var(--cx-ink);
-  font: 700 .78rem/1 var(--f-mono, monospace); letter-spacing: .08em; }
-.hbk-toggle kbd { font: 700 .8rem/1 var(--f-mono, monospace); padding: 4px 7px; border: 2px solid var(--cx-ink);
-  background: #fffbe8; box-shadow: 2px 2px 0 var(--cx-ink); color: var(--cx-ink); }
-.hbk-nav { display: none; align-items: center; gap: 8px; }
-.hbk.open .hbk-nav { display: flex; }
-.hbk-prev, .hbk-next { width: 44px; height: 40px; font: 700 1rem/1 var(--f-mono, monospace); cursor: pointer; color: var(--cx-paper);
-  background: var(--cx-ink); border: 2.5px solid var(--cx-paper); box-shadow: 3px 3px 0 rgba(0,0,0,.6); }
-.hbk-prev:disabled, .hbk-next:disabled { opacity: .35; cursor: default; }
-.hbk-hours { display: flex; gap: 5px; flex-wrap: wrap; max-width: 560px; }
-.hbk-hours button { padding: 5px 9px; cursor: pointer; font: 700 .82rem/1 var(--f-mono, monospace); color: var(--cx-ink);
-  background: #fffbe8; border: 2px solid var(--cx-ink); box-shadow: 2px 2px 0 var(--cx-ink); }
-.hbk-hours button.on { background: var(--vz, #c9a45c); transform: translateY(-2px); box-shadow: 2px 4px 0 var(--cx-ink); }
-.hbk-body { display: none; flex: 1; min-height: 0; gap: 14px; }
-.hbk.open .hbk-body { display: flex; animation: hbkOpen .55s ease-out both; }
-@keyframes hbkOpen { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.hbk-page { flex: 1; min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 18px;
+/* ═══ HELA'S BRAIN: the core you spin and play with, easier to steer (cabin.js) ═══
+   Bigger, clear of the parked gauntlet; big labelled dots that light on hover; the
+   Hour page as a comic page with arrows; a hint until the first touch. The rings
+   only breathe while she is being handled (.live), otherwise she rests. */
+#hela-brain-full { inset: 3% 30% 4% 15%; }
+#hela-brain-full .hb-r1 { width: 540px; height: 190px; margin: -95px 0 0 -270px; }
+#hela-brain-full .hb-r2 { width: 420px; height: 200px; margin: -100px 0 0 -210px; }
+#hela-brain-full .hb-r3 { width: 300px; height: 110px; margin: -55px 0 0 -150px; }
+#hela-brain-full .hb-heart { width: 26px; height: 26px; left: -13px; top: -13px; }
+#hela-brain-full:not(.live) .hb-ring, #hela-brain-full:not(.live) .hb-heart { animation-play-state: paused; }
+#hela-brain-full .hb-node { width: 46px; height: 46px; margin: -23px 0 0 -23px; cursor: pointer; }
+#hela-brain-full .hb-node::before { inset: 9px; border: 2.5px solid var(--cx-ink, #15100a); transition: transform .2s ease; }
+#hela-brain-full .hb-node.hb-turn { text-indent: 44px; font: 700 1rem/46px var(--f-mono, monospace); letter-spacing: .06em;
+  color: var(--vz-hot, #eafff8); }
+#hela-brain-full .hb-node:hover::before, #hela-brain-full .hb-node.pinned::before { transform: scale(1.35);
+  box-shadow: 0 0 0 3px var(--vz, #6fe8c8), 0 0 18px currentColor; }
+#hela-brain-full .hb-node.hb-turn.pinned { color: #fff; }
+#hela-brain-full .hb-node.hb-sat { width: 38px; height: 38px; margin: -19px 0 0 -19px; }
+#hela-brain-full .hb-node.hb-sat::before { inset: 6px; }
+#hela-brain-full .hb-node.hb-sat::after { content: "!"; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  text-align: center; font: 700 .95rem/1 var(--f-display, "Oswald", sans-serif); color: var(--cx-ink, #15100a); pointer-events: none; }
+#hela-brain-full .hb-link { height: 2px; }
+/* the hint: what to do with her, until the first touch */
+#hela-brain-full .hb-hint { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 6px 6px; white-space: nowrap; pointer-events: none;
+  font: 500 .9rem/1.2 var(--f-display, "Oswald", sans-serif); color: #1d1409;
+  background: var(--hela-hot, #eafff8); border: 2.5px solid var(--cx-ink, #15100a);
+  box-shadow: 0 0 0 3px var(--vz, #6fe8c8), 4px 4px 0 3px var(--cx-ink, #15100a); transition: opacity .6s ease; }
+#hela-brain-full .hb-hint::before { content: ""; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--cx-ink, #15100a);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M-9 0 Q0 -7 9 0 Q0 7 -9 0 Z' fill='%23fff8e8' stroke='%23140d06' stroke-width='1.8'/%3E%3Ccircle r='2.8' fill='%23140d06'/%3E%3C/svg%3E") center / 14px no-repeat, var(--vz, #6fe8c8); flex: 0 0 22px; }
+#hela-brain-full .hb-hint b { letter-spacing: .08em; }
+#hela-brain-full .hb-hint kbd { font: 700 .72rem/1 var(--f-mono, monospace); padding: 2px 5px; border: 1.5px solid var(--cx-ink, #15100a);
+  background: #fffbe8; box-shadow: 1.5px 1.5px 0 var(--cx-ink, #15100a); }
+#hela-brain-full.hint-seen .hb-hint { opacity: 0; }
+/* the Hour page: a comic page with arrows, readable entries, the Herald's notices */
+#hela-brain-full .hb-page { right: -52%; top: 2%; width: 440px; max-height: 94%; overflow-y: auto; overscroll-behavior: contain;
+  padding: 10px 14px 12px; font: 500 .95rem/1.32 var(--f-display, "Oswald", sans-serif); color: #1d1409; opacity: 0;
   background: radial-gradient(circle, rgba(120,84,20,.12) 1px, transparent 1.4px) 0 0 / 6px 6px, #f7eed2;
-  border: 3px solid var(--cx-ink); box-shadow: 6px 6px 0 var(--cx-ink); }
-.hbk-page::-webkit-scrollbar { width: 10px; } .hbk-page::-webkit-scrollbar-thumb { background: var(--cx-ink); }
-.hbk-title { display: inline-block; margin: 0 0 12px; padding: 5px 14px; font: 700 1.3rem/1 var(--f-display, "Oswald", sans-serif);
-  letter-spacing: .12em; color: var(--cx-paper); background: var(--cx-ink); box-shadow: 4px 4px 0 var(--vz, #c9a45c); }
-.hbk-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; align-items: start; }
-.hbk-panel { display: flex; flex-direction: column; gap: 4px; padding: 7px 10px 9px; color: #1d1409;
-  font: 500 .95rem/1.3 var(--f-display, "Oswald", sans-serif); background: #fffdf3;
-  border: 2.5px solid var(--cx-ink); box-shadow: 3px 3px 0 var(--cx-ink); }
-.hbk-panel .hbk-tag { align-self: flex-start; padding: 2px 7px; font: 700 .64rem/1.2 var(--f-mono, monospace); letter-spacing: .14em;
-  color: #fff8e4; background: #5a4526; }
-.hbk-panel.k-danger .hbk-tag { background: #9e1e14; } .hbk-panel.k-paradox .hbk-tag { background: #5b3f99; }
-.hbk-panel.k-market .hbk-tag { background: #8a5a12; } .hbk-panel.k-cp .hbk-tag { background: #2f6b3a; }
-.hbk-panel.k-travel .hbk-tag { background: #245a86; }
-.hbk-panel .hbk-text svg { vertical-align: -3px; }
-.hbk-quiet { font-style: italic; color: #6a5638; }
-.hbk-chapter { grid-column: 1 / -1; padding: 4px 12px; font: 700 .8rem/1.2 var(--f-mono, monospace); letter-spacing: .3em;
-  color: var(--cx-paper); background: var(--cx-ink); }
-.hbk-clip { grid-column: span 2; display: flex; flex-direction: column; gap: 4px; padding: 10px 14px 12px; text-align: left; cursor: pointer;
-  font: 400 .92rem/1.3 Georgia, "Times New Roman", serif; color: #1e160b; background: #efe4c6;
-  border: 1.5px solid #6a5638; box-shadow: 3px 4px 0 rgba(0,0,0,.35); transform: rotate(-.8deg);
-  clip-path: polygon(0 3%, 4% 0, 12% 2%, 22% 0, 35% 3%, 48% 0, 60% 2%, 74% 0, 86% 3%, 100% 1%, 99% 96%, 90% 100%, 76% 97%, 60% 100%, 45% 97%, 30% 100%, 15% 97%, 3% 100%, 1% 60%);
-  transition: transform .3s ease; }
-.hbk-clip:nth-child(even) { transform: rotate(.7deg); }
-.hbk-clip:hover { transform: rotate(0) translateY(-2px); }
-.hbk-clip-kick { font: 700 .64rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: #7a2a1a; }
-.hbk-clip b { font-size: 1.15rem; line-height: 1.15; }
-.hbk-clip-sub { font-style: italic; }
-.hbk-clip-read { align-self: flex-end; font: 700 .72rem/1 var(--f-mono, monospace); letter-spacing: .1em; text-decoration: underline; }
-.hbk-side { display: flex; flex-direction: column; gap: 6px; width: 200px; flex: 0 0 200px; }
-.hbk-side-tag { padding: 4px 8px; font: 700 .62rem/1.3 var(--f-mono, monospace); letter-spacing: .12em; color: var(--cx-paper); background: var(--cx-ink); }
-.hbk-side:not(:has(.ledger)) { display: none; }
-@media (prefers-reduced-motion: reduce) { .hbk.open .hbk-body { animation: none; } .hbk-toggle, .hbk-clip { transition: none; } }
+  border: 3px solid var(--cx-ink, #15100a); box-shadow: 0 0 0 3px var(--vz, #6fe8c8), 6px 6px 0 3px var(--cx-ink, #15100a);
+  transition: opacity .45s ease, transform .45s ease; }
+#hela-brain-full .hb-page::after { display: none; }
+#hela-brain-full .hbp-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 8px;
+  font: 700 1.2rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .14em; color: var(--cx-ink, #15100a); border: 0; }
+#hela-brain-full .hbp-arrow { width: 40px; height: 34px; cursor: pointer; font: 700 .95rem/1 var(--f-mono, monospace);
+  color: var(--cx-paper, #f4e6b0); background: var(--cx-ink, #15100a); border: 2px solid var(--vz, #6fe8c8); }
+#hela-brain-full .hbp-arrow:disabled { opacity: .3; cursor: default; }
+#hela-brain-full .hbp-line { margin: 0 0 6px; padding: 5px 8px 6px; color: #1d1409; background: #fffdf3;
+  border: 2px solid var(--cx-ink, #15100a); border-left: 6px solid #5a4526; box-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
+#hela-brain-full .hbp-line.k-danger { border-left-color: #9e1e14; color: #1d1409; }
+#hela-brain-full .hbp-line.k-paradox { border-left-color: #5b3f99; color: #1d1409; }
+#hela-brain-full .hbp-line.k-market, #hela-brain-full .hbp-line.k-cp { border-left-color: #8a5a12; color: #1d1409; }
+#hela-brain-full .hbp-line.k-travel { border-left-color: #245a86; }
+#hela-brain-full .hbp-line svg { vertical-align: -3px; }
+#hela-brain-full .hbp-quiet { font-style: italic; opacity: .7; }
+#hela-brain-full .hbp-clip { display: flex; flex-direction: column; gap: 3px; width: 100%; margin: 0 0 8px; padding: 8px 12px 9px;
+  text-align: left; cursor: pointer; font: 400 .95rem/1.25 Georgia, "Times New Roman", serif; color: #1e160b;
+  background: #efe4c6; border: 1.5px solid #6a5638; box-shadow: 3px 3px 0 rgba(0,0,0,.35); transform: rotate(-.6deg); }
+#hela-brain-full .hbp-clip span { font: 700 .62rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: #7a2a1a; }
+#hela-brain-full .hbp-clip:hover { transform: rotate(0) translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { #hela-brain-full .hb-page, #hela-brain-full .hb-hint { transition: none; } }
 /* the waiting line lives in HELA's YOUR MOVE box now; the old chip would say it twice */
 body.cx-on #waiting-chip { display: none !important; }
 .cx-cap.cx-wait .cx-tag { background: #5a4526; }
+/* while he sails, the voyage tells itself: the readout (next move's plan) steps aside */
+body.pc-mtrip #timeline-rail .pc-mhud { display: none; }
+/* HELA pointing the way (her direction chip) and speaking at once: the words sit above */
+#hela-eye.he-directs .he-chip { top: auto; bottom: 30px; }
+
+/* ═══ HELA'S VOICE, COMIC AND MACHINE AT ONCE, IN THE PLAYER'S COLOUR ═════════════════
+   Why her lines turned purple: the Learn to Play callout (#tut-callout) is drawn in a
+   fixed magenta-violet of its own (tutorial.css), and the plain-table fallback of her
+   voice (.hela-msg.hela-note) was violet too. Both now wear what the owner liked: the
+   comic balloon (ink outline, halftone, hard shadow, her eye as speaker mark) blended
+   with her AI interface (a ring and glow in her colour, faint scan lines), always from
+   the --hela tokens (the player's colour), never a fixed purple. The tutorial's own
+   layout, timing and arrows are untouched; only the colours and the ink change. */
+html body #tut-callout {
+  border-radius: 14px; color: #140d06;
+  background:
+    repeating-linear-gradient(0deg, rgb(var(--hela-rgb, 102 240 200) / .09) 0 1px, transparent 1px 4px),
+    radial-gradient(circle, rgb(var(--hela-rgb, 102 240 200) / .22) 1px, transparent 1.4px) 0 0 / 5px 5px,
+    var(--hela-hot, #eafff8);
+  border: 2.5px solid var(--cx-ink, #15100a);
+  box-shadow: 0 0 0 3px var(--hela, #66f0c8), 5px 5px 0 3px var(--cx-ink, #15100a), 0 0 24px rgb(var(--hela-rgb, 102 240 200) / .45);
+  font: 400 16px/1.38 var(--f-display, "Oswald", sans-serif); letter-spacing: .015em; }
+html body #tut-callout .tc-sigil { width: 24px; height: 24px; padding: 3px; border-radius: 50%; color: var(--cx-ink, #15100a);
+  background: var(--hela, #66f0c8); border: 2px solid var(--cx-ink, #15100a); box-sizing: border-box; }
+html body #tut-callout .tc-name { color: var(--cx-ink, #15100a); }
+html body #tut-callout .tc-text b, html body #tut-callout .tc-sub b { color: #000; font-weight: 700;
+  background: linear-gradient(transparent 58%, rgb(var(--hela-rgb, 102 240 200) / .55) 58%); }
+html body #tut-callout .tc-sub { color: #3a2c18; }
+html body #tut-callout kbd { color: var(--cx-ink, #15100a); background: #fffbe8; border: 1.5px solid var(--cx-ink, #15100a);
+  box-shadow: 1.5px 1.5px 0 var(--cx-ink, #15100a); }
+html body #tut-callout .tc-next { color: var(--cx-paper, #f4e6b0); background: var(--cx-ink, #15100a); border: 2px solid var(--hela, #66f0c8);
+  border-radius: 6px; font-family: var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; animation: none;
+  box-shadow: 3px 3px 0 rgb(var(--hela-rgb, 102 240 200) / .7); }
+html body #tut-callout .tc-next:hover { background: #2c2114; }
+html body #tut-callout .tc-next kbd { color: var(--cx-ink, #15100a); }
+html body #tut-callout.tone-warn { box-shadow: 0 0 0 3px #d6452f, 5px 5px 0 3px var(--cx-ink, #15100a), 0 0 24px rgba(214,69,47,.4); }
+html body #tut-callout .tc-arrow { background: var(--hela-hot, #eafff8); border: 2.5px solid var(--cx-ink, #15100a); width: 16px; height: 16px; }
+html body #tut-callout[data-side="below"] .tc-arrow { border-top: 0; border-left: 0; }
+html body #tut-callout[data-side="above"] .tc-arrow { border-bottom: 0; border-right: 0; background: var(--hela-hot, #eafff8); }
+html body #tut-callout[data-side="left"] .tc-arrow { border-top: 0; border-right: 0; }
+html body #tut-callout[data-side="right"] .tc-arrow { border-bottom: 0; border-left: 0; }
+/* her plain-table voice (outside the cabin) and its "note" tone: her colour, not violet */
+.hela-msg.hela-note { border-color: rgb(var(--hela-rgb, 102 240 200) / .55); }
+.hela-msg.hela-note .vz-sigil { color: var(--hela, #66f0c8); filter: drop-shadow(0 0 5px rgb(var(--hela-rgb, 102 240 200) / .6)); }
+.hela-msg.hela-note .hm-line { color: var(--hela-hot, #eafff8); }
+/* the eye's balloon gets the same machine touch: faint scan lines and a glow in her colour */
+body.cx-on #hela-eye .he-chip {
+  background:
+    repeating-linear-gradient(0deg, rgb(var(--vz-rgb) / .09) 0 1px, transparent 1px 4px),
+    radial-gradient(circle, rgb(var(--vz-rgb) / .24) 1px, transparent 1.4px) 0 0 / 5px 5px,
+    var(--hela-hot, #eafff8);
+  box-shadow: 0 0 0 3px var(--vz), 4px 4px 0 3px var(--cx-ink), 0 0 20px rgb(var(--vz-rgb) / .45); }
+body.cx-on #hela-eye .he-chip.flip-x { box-shadow: 0 0 0 3px var(--vz), -4px 4px 0 3px var(--cx-ink), 0 0 20px rgb(var(--vz-rgb) / .45); }
+
+/* HELA's narrator boxes at Normal text size hold the same line as the larger sizes
+   (access.css): they stop before the case files' column at every screen, their text
+   scales with the table (never below a readable 0.74rem), and their slots step down
+   with it, so on 1366x768 YOUR MOVE no longer covers the first case file. */
+html:not([data-ts="2"]):not([data-ts="3"]):not(.pdx-a11y) :is(.cx-slot-chapter, .cx-slot-turn, .cx-slot-event) {
+  left: calc(40px + 120px * var(--fit, 1));
+  max-width: min(600px, 44vw, calc(var(--fit, 1) * 760px - 60px - 120px * var(--fit, 1)));
+  font-size: clamp(.74rem, calc(1.04rem * var(--fit, 1)), .9rem); }
+html:not([data-ts="2"]):not([data-ts="3"]):not(.pdx-a11y) .cx-slot-turn { top: calc(14px + 46px * max(var(--fit, 1), .8)); }
+html:not([data-ts="2"]):not([data-ts="3"]):not(.pdx-a11y) .cx-slot-event { top: calc(14px + 100px * max(var(--fit, 1), .8)); }
+/* the MEANWHILE page lies on the free wood between the briefcase and the gauntlet, so
+   it never covers a piece on the map or a case file; it scales with the table */
+.cx-grid { left: calc(24px + 20px * var(--fit, 1)); top: 48%; transform: none; zoom: clamp(.72, var(--fit, 1), 1);
+  animation-name: cxGridIn2; }
+.cx-grid.out { animation: cxGridOut2 .8s ease-in both; }
+@keyframes cxGridIn2 { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes cxGridOut2 { from { opacity: 1; } to { opacity: 0; transform: translateY(-6px); } }
+.cx-grid.cx-grid-mid { left: 52%; top: 50%; }
+/* her dots, bigger and plainly clickable (the desk is scaled with the table) */
+#hela-brain-full .hb-node::before { inset: 5px; }
+#hela-brain-full .hb-node.hb-turn { font-size: 1.15rem; }
+#hela-brain-full .hb-node.hb-sat::before { inset: 3px; }
+#hela-brain-full .hb-page.on { opacity: 1; transform: none; pointer-events: auto; }
+#hela-brain-full .hb-node.hb-turn { text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 12px currentColor; }
+/* an open Hour page lies ON the desk, above whatever wanders it (the cat included) */
+body.cabin-on #log-zone:has(#hela-brain-full .hb-page.on), body.cabin-on #log-zone:has(.hb-read.open) { z-index: 30; }

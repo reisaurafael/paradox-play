@@ -425,6 +425,8 @@
     <path d="M 60 2 v7 M 60 111 v7 M 2 60 h7 M 111 60 h7"/></g>
 </svg>`;
   }
+  // the main menu wears the same pointer as the match (js/menu-cursor.js)
+  window.__cursorArt = { radar: helaRadarSVG, hand: rightHandSVG };
 
   function setPhase(hull,key){
     const PH=phases(), idx=PH.findIndex(p=>p[0]===key); if(idx<0) return;
@@ -1918,7 +1920,7 @@
     const f = Math.max(.6, Math.min(1.25, fit()));
     let x = cx + sx * GAP_X * f, y = cy + sy * GAP_Y * f;
     x = Math.max(30, Math.min(innerWidth - 30, x));
-    y = Math.max(56, Math.min(innerHeight - 34, y));
+    y = Math.max(150, Math.min(innerHeight - 34, y));   // below the top strip (her boxes, the phase line)
     return catFear({ x, y });
   }
   // ── SHE FEARS THE CAT. The eye will not come near the animal; pushed close, it
@@ -2054,7 +2056,8 @@
   function say(html, opt){
     opt = opt || {}; if (!html) return;
     if (window.__helaMute && !opt.force) return;   // the tutorial silences her ambient barks; only its own lines pass
-    sayQ.push({ html, prio: opt.prio || 0, onShow: opt.onShow || null, ms: Math.max(readMs(html), opt.ms || 0) });
+    sayQ.push({ html, prio: opt.prio || 0, onShow: opt.onShow || null, ms: Math.max(readMs(html), opt.ms || 0),
+      born: performance.now(), ttl: opt.ttl || 0 });
     while (sayQ.length > 2){   // keep two waiting at most: drop the least important older one
       let k = 0; for (let i = 1; i < sayQ.length - 1; i++) if (sayQ[i].prio < sayQ[k].prio) k = i;
       sayQ.splice(k, 1);
@@ -2093,7 +2096,9 @@
     } catch (e) {}
   }
   function nextSay(){
-    const it = sayQ.shift();
+    // a line that waited longer than its ttl is no longer news: the table has moved on
+    let it = sayQ.shift();
+    while (it && it.ttl && performance.now() - it.born > it.ttl) it = sayQ.shift();
     if (!it || !eye){ saying = null; return; }
     saying = it;
     whisper();   // she clears her throat, two low notes, until the real voice ships
@@ -2175,7 +2180,7 @@
 
   // she stands where she is SENT, arriving, as always, on a blink
   function setPost(x, y, opt){
-    const np = { x: Math.max(30, Math.min(innerWidth - 30, x)), y: Math.max(56, Math.min(innerHeight - 34, y)),
+    const np = { x: Math.max(30, Math.min(innerWidth - 30, x)), y: Math.max(150, Math.min(innerHeight - 34, y)),
       orbit: (opt && opt.orbit) || 0, side: (opt && opt.side) || "" };
     if (standAt && Math.hypot(np.x - standAt.x, np.y - standAt.y) < 8){ standAt = np; return; }
     if (opt && opt.glide && eye){
@@ -2360,6 +2365,7 @@
   function stopPatrol(){ clearTimeout(patrolTimer); patrolTimer = 0; }
   function stepPatrol(){
     stopPatrol();
+    if (document.body.classList.contains("tut-story")) return;
     patrolTimer = setTimeout(stepPatrol, 1900);
     const E = eye(); if (!E) return;
     const app = window.__game;
@@ -2380,6 +2386,9 @@
 
   let n = 0;
   setInterval(() => {
+    // during the tutorial's story the eye belongs to the story: it speaks from beside
+    // her balloon, and the guide does not move her anywhere else
+    if (document.body.classList.contains("tut-story")) { stopPatrol(); return; }
     const app = window.__game;
     const presenting = (typeof window.__seaPresenting === "function") && window.__seaPresenting();
     const req = (!presenting && app && app.pendingReq && (app.pendingReq.seat == null || app.pendingReq.seat === app.seat)) ? app.pendingReq : null;
@@ -2452,160 +2461,334 @@
     if (win && win.el) win.el.addEventListener("click", () => win.close());
   }
 
-  /* ══ HER MEMORY, AS A COMIC BOOK (#hela-brain-full, kept for the tutorial) ══════════
-     The rotating core was small, cryptic and hard to steer. Her memory is now a comic
-     book lying on the paperwork desk:
-       closed : one strip, HELA'S MEMORY, the Hour, how many new entries, and the key (L)
-       open   : one page per Hour; every entry is a panel, every Herald notice a clipping
-                (click it to read the full edition); arrows or the Hour tabs turn pages
-     Keys: L opens or closes it (and turns the camera to the desk), Left and Right turn
-     the pages, Esc closes. Nothing here runs per frame: the page is rebuilt only when
-     it is open and something changed. Entries arrive as markup that game.js already
-     escaped (humanize); Herald headlines are read back as plain text. ══ */
-  const book = { el: null, open: false, hour: 0, follow: true, seen: 0, dirty: true, raf: 0 };
-  const plain = (html) => { const t = document.createElement("template"); t.innerHTML = String(html || ""); return t.content.textContent || ""; };
-  const KIND_TAG = { cp: "CONTRACT", market: "MARKET", danger: "DANGER", paradox: "PARADOX", travel: "VOYAGE", "": "LOG" };
-  function totalEntries(){ let n = 0; for (const t of turns.values()) n += t.logs.length + t.sats.length; return n; }
-  function hoursList(){ return [...turns.keys()].filter(h => h > 0).sort((a, b) => a - b); }
-  function buildBook(){
-    if (book.el || !document.body) return;
-    const lz = document.getElementById("log-zone"); if (!lz) return;
-    const root = document.createElement("section");
-    root.id = "hela-brain-full"; root.className = "hbk"; root.setAttribute("aria-label", "HELA's memory");
+  /* ══ HER BRAIN (#hela-brain-full): the core you spin and play with ════════════════
+     The Hours orbit her heart as dots you can grab: drag anywhere to spin her (she
+     keeps a little momentum), click an Hour to read its page, click a Herald dot to
+     read the edition, click the heart for the ledger of loose rolls. The dots are big,
+     labelled and lit on hover, and a hint says what to do until the first touch.
+     Keys: L opens her (turns the camera to the desk and opens the latest Hour),
+     Left and Right turn the Hours, Esc closes. She only moves while she is being
+     handled, just opened, or given a new memory; still, she costs nothing per frame
+     (the loop stops itself and anything that needs her wakes it). ══ */
+  function makeCore(id, R, mount){
+    const root = document.createElement("div");
+    root.id = id; root.className = "hb-core";
     root.innerHTML = `
-      <div class="hbk-bar">
-        <button type="button" class="hbk-toggle" aria-expanded="false">
-          <i class="hbk-eye" aria-hidden="true"></i><b class="hbk-name">HELA'S MEMORY</b>
-          <span class="hbk-state"></span><span class="hbk-new"></span><kbd>L</kbd>
-        </button>
-        <nav class="hbk-nav" aria-label="Hours">
-          <button type="button" class="hbk-prev" aria-label="Previous Hour">&#9664;</button>
-          <div class="hbk-hours"></div>
-          <button type="button" class="hbk-next" aria-label="Next Hour">&#9654;</button>
-        </nav>
+      <div class="hb-armature">
+        <i class="hb-ring hb-r1"></i><i class="hb-ring hb-r2"></i><i class="hb-ring hb-r3"></i>
+        <i class="hb-heart" title="The ledger of rolls outside the machine"></i>
       </div>
-      <div class="hbk-body">
-        <div class="hbk-page"></div>
-        <aside class="hbk-side"><div class="hbk-side-tag">DICE ROLLED OUTSIDE THE MACHINE</div></aside>
-      </div>`;
-    lz.appendChild(root);
-    book.el = root;
-    root.querySelector(".hbk-toggle").addEventListener("click", (e) => { e.stopPropagation(); setOpen(!book.open); });
-    root.querySelector(".hbk-prev").addEventListener("click", (e) => { e.stopPropagation(); turnPage(-1); });
-    root.querySelector(".hbk-next").addEventListener("click", (e) => { e.stopPropagation(); turnPage(1); });
-    root.querySelector(".hbk-hours").addEventListener("click", (e) => {
-      const b = e.target.closest("[data-h]"); if (!b) return; e.stopPropagation();
-      book.hour = +b.dataset.h; book.follow = book.hour === hoursList().slice(-1)[0]; book.dirty = true; schedule(); });
-    root.querySelector(".hbk-page").addEventListener("click", (e) => {
-      const c = e.target.closest("[data-di]"); if (!c) return; e.stopPropagation(); newsBloom(+c.dataset.di); });
-    // the pages scroll inside the book; the desk must not steal the wheel
-    root.addEventListener("wheel", (e) => e.stopPropagation(), { passive: true });
-    schedule();
+      <div class="hb-nodes"></div>
+      <div class="hb-page"></div>
+      <div class="hb-hint"><b>HELA'S MEMORY</b><span>drag to spin her &middot; click an Hour to read it &middot; <kbd>L</kbd></span></div>`;
+    mount.appendChild(root);
+    const inst = { root, R, ry: Math.PI * .3, rx: -.18, vy: 0, hover: null, drag: null, over: false,
+      spinUntil: 0, dirty: true,
+      nodes: root.querySelector(".hb-nodes"), page: root.querySelector(".hb-page"), els: new Map() };
+    const touched = () => {
+      if (root.classList.contains("hint-seen")) return;
+      root.classList.add("hint-seen");
+      try { localStorage.setItem("pdx-brain-hint", "1"); } catch (e) {}
+    };
+    try { if (localStorage.getItem("pdx-brain-hint")) root.classList.add("hint-seen"); } catch (e) {}
+    root.addEventListener("pointerenter", () => { inst.over = true; wake(); });
+    root.addEventListener("pointerleave", () => { inst.over = false; });
+    // drag to rotate, BOTH axes; she is maleable, and she keeps a little momentum
+    root.addEventListener("pointerdown", (e) => {
+      // nodes are CLICK targets, capturing them for drag would eat their clicks
+      if (e.target.closest(".hb-node") || e.target.closest(".hb-page") || e.target.closest(".hb-read") || e.target.closest(".ledger") || e.target.closest(".hb-heart")) return;
+      inst.drag = { x: e.clientX, y: e.clientY, ry: inst.ry, rx: inst.rx, lx: e.clientX, lt: performance.now() };
+      inst.vy = 0; root.classList.add("grabbing"); touched(); wake();
+      root.setPointerCapture && root.setPointerCapture(e.pointerId);
+    });
+    root.addEventListener("pointermove", (e) => {
+      if (!inst.drag) return;
+      inst.ry = inst.drag.ry + (e.clientX - inst.drag.x) * 0.011;
+      inst.rx = Math.max(-1.1, Math.min(1.1, inst.drag.rx + (e.clientY - inst.drag.y) * 0.009));
+      const now = performance.now(), dt = Math.max(8, now - inst.drag.lt);
+      inst.vy = Math.max(-.08, Math.min(.08, (e.clientX - inst.drag.lx) * 0.011 * (16 / dt)));
+      inst.drag.lx = e.clientX; inst.drag.lt = now;
+    });
+    const drop = () => { if (!inst.drag) return; inst.drag = null; root.classList.remove("grabbing"); wake(); };
+    root.addEventListener("pointerup", drop); root.addEventListener("pointercancel", drop);
+    root.addEventListener("click", touched);
+    return inst;
   }
-  function setOpen(on){
-    buildBook(); if (!book.el) return;
-    book.open = !!on;
-    if (book.open){
-      book.seen = totalEntries();
-      if (book.follow || !book.hour) book.hour = hoursList().slice(-1)[0] || 0;
-      if (!greeted){ greeted = true;
-        try { window.__helaSay && window.__helaVoice && window.__helaSay(window.__helaVoice("brain_greeting"), { ms: 5200 }); } catch (e) {} }
+
+  /* ── projection: hours on a golden spiral band, satellites in tow ── */
+  function project(inst, t){
+    const hours = [...turns.keys()].sort((a, b) => a - b);
+    const N = Math.max(hours.length, 1);
+    const seen = new Set();
+    const cp = Math.cos(inst.rx || 0), sp = Math.sin(inst.rx || 0);
+    hours.forEach((h, i) => {
+      const th = i * 2.399963 + inst.ry;                       // golden angle spacing
+      const band = N > 1 ? (i / (N - 1) - .5) : 0;             // vertical band -.5..+.5
+      const x3 = Math.cos(th) * inst.R, z0 = Math.sin(th) * inst.R;
+      const y0 = band * inst.R * .78;
+      const y3 = y0 * cp - z0 * sp, z3 = y0 * sp + z0 * cp;    // PITCH, she turns on both axes
+      const depth = (z3 / inst.R + 1) / 2;                     // 0 far .. 1 near
+      const sc = .7 + .3 * depth, op = .5 + .5 * depth;
+      const tn = turnOf(h);
+      placeNode(inst, "t" + h, {
+        x: x3, y: y3 - z3 * .12, sc, op, z: Math.round(depth * 40),
+        col: TURN_COL, cls: "hb-turn" + (inst.pinnedHour === h ? " pinned" : ""), label: "H" + h,
+        title: `Hour ${h}: ${tn.logs.length} ${tn.logs.length === 1 ? "entry" : "entries"}${tn.sats.length ? `, ${tn.sats.length} Herald ${tn.sats.length === 1 ? "notice" : "notices"}` : ""}. Click to read.`,
+        hour: h, sat: null });
+      seen.add("t" + h);
+      // satellites orbit their hour, small, bright, clickable: the Herald's notices
+      tn.sats.forEach((di, k) => {
+        const phi = inst.ry * 1.7 + k * (Math.PI * 2 / Math.max(tn.sats.length, 3));
+        const it = disp[di];
+        const hx = x3, hy = y3 - z3 * .12;                       // the hour it belongs to
+        const sx2 = hx + Math.cos(phi) * 46, sy2 = hy + Math.sin(phi) * 30 - 3;
+        // the TETHER, the dispatch is chained to its hour, visibly, moving as one
+        placeLink(inst, "l" + di, hx, hy, sx2, sy2, KIND_COL[it.kind] || "#e2c078", op * .55, Math.round(depth * 40));
+        seen.add("l" + di);
+        placeNode(inst, "d" + di, {
+          x: sx2, y: sy2,
+          sc: sc * .9, op: Math.min(1, op + .2), z: Math.round(depth * 40) + 1,
+          col: KIND_COL[it.kind] || "#e2c078", cls: "hb-sat", label: "",
+          title: "The Temporal Herald: " + plain(it.headline) + ". Click to read.",
+          hour: h, sat: di });
+        seen.add("d" + di);
+      });
+    });
+    for (const [key, el2] of inst.els) if (!seen.has(key)){ el2.remove(); inst.els.delete(key); }
+  }
+  const plain = (html) => { const t = document.createElement("template"); t.innerHTML = String(html || ""); return t.content.textContent || ""; };
+  function placeLink(inst, key, x1, y1, x2, y2, col, op, z){
+    let el2 = inst.els.get(key);
+    if (!el2){ el2 = document.createElement("i"); el2.className = "hb-link";
+      inst.nodes.appendChild(el2); inst.els.set(key, el2); }
+    const dx = x2 - x1, dy = y2 - y1;
+    el2.style.transform = `translate(${x1.toFixed(1)}px, ${y1.toFixed(1)}px) rotate(${Math.atan2(dy, dx).toFixed(4)}rad)`;
+    el2.style.width = Math.hypot(dx, dy).toFixed(1) + "px";
+    el2.style.opacity = op.toFixed(3); el2.style.zIndex = z; el2.style.color = col;
+  }
+  function placeNode(inst, key, p){
+    let el2 = inst.els.get(key);
+    if (!el2){
+      el2 = document.createElement("button");
+      el2.type = "button"; el2.className = "hb-node " + p.cls;
+      el2.dataset.key = key;
+      inst.nodes.appendChild(el2); inst.els.set(key, el2);
+      // hover only FREEZES the orbit for the hand; pages open on CLICK alone
+      el2.addEventListener("pointerenter", () => { inst.hover = key; });
+      el2.addEventListener("pointerleave", () => { if (inst.hover === key) inst.hover = null; });
+      if (p.sat != null){
+        el2.addEventListener("click", (e) => { e.stopPropagation();
+          if (el2._dragged){ el2._dragged = false; return; }   // a drag is not a click
+          toggleArticle(inst, p.sat); });
+        // drag a memory OUT of the core: the article PINS where you drop it
+        el2.addEventListener("pointerdown", (e) => {
+          const sx2 = e.clientX, sy2 = e.clientY; let moved = false;
+          const mv = (ev) => { if (Math.hypot(ev.clientX - sx2, ev.clientY - sy2) > 55) moved = true; };
+          const up = (ev) => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up);
+            if (!moved) return; el2._dragged = true;
+            const it = disp[p.sat]; if (!it || !window.__helaEye) return;
+            const node = document.createElement("div");
+            node.className = "hb-newsread"; node.innerHTML = it.html || "";
+            const win = window.__helaEye.manifest({ x: ev.clientX, y: ev.clientY, node, cls: "he-news he-pinnedclip" });
+            if (win && win.el){ win.el.addEventListener("click", () => win.close());
+              armAnyClose(() => win.close()); }
+          };
+          window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+        });
+      }
+      else el2.addEventListener("click", (e) => { e.stopPropagation();   // an HOUR pins its page open
+        if (inst.pinnedHour === p.hour) closePage(inst);
+        else openPage(inst, p.hour); });
     }
-    book.el.classList.toggle("open", book.open);
-    book.el.querySelector(".hbk-toggle").setAttribute("aria-expanded", String(book.open));
-    book.dirty = true; schedule();
+    el2.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) scale(${p.sc.toFixed(3)})`;
+    el2.style.opacity = p.op.toFixed(3);
+    el2.style.zIndex = p.z;
+    el2.style.color = p.col;
+    if (el2.className !== "hb-node " + p.cls) el2.className = "hb-node " + p.cls;
+    if (p.title && el2.title !== p.title) el2.title = p.title;
+    if (p.label && el2.textContent !== p.label) el2.textContent = p.label;
   }
-  function turnPage(d){
-    const hs = hoursList(); if (!hs.length) return;
-    let i = hs.indexOf(book.hour); if (i < 0) i = hs.length - 1;
-    i = Math.max(0, Math.min(hs.length - 1, i + d));
-    book.hour = hs[i]; book.follow = i === hs.length - 1; book.dirty = true; schedule();
+
+  // ONE law for everything the core opens: the NEXT click anywhere closes it
+  // (exactly how the traveler files close). Armed after the opening click settles.
+  function armAnyClose(fn){
+    setTimeout(() => document.addEventListener("click", (e) => {
+      // clicks on her (spinning her, her page, its arrows, its notices) are not "elsewhere"
+      if (e.target.closest && e.target.closest("#hela-brain-full")) { armAnyClose(fn); return; }
+      try { fn(); } catch (err) {}
+    }, { once: true, capture: true }), 0);
+  }
+  /* ── the HOUR PAGE: a comic page for one Hour, pinned open by a click ── */
+  function openPage(inst, hour){
+    inst.pinnedHour = hour; showPage(inst, hour);
+    inst.dirty = true; wake();
+    if (!inst._closeArmed){ inst._closeArmed = true;
+      armAnyClose(() => { inst._closeArmed = false; closePage(inst); }); }
+  }
+  function closePage(inst){
+    inst.pinnedHour = null; inst.page.classList.remove("on"); inst.dirty = true; wake();
+  }
+  function showPage(inst, hour){
+    const tn = turns.get(hour); if (!tn) return;
+    if (!greeted){ greeted = true;
+      try { window.__helaSay && window.__helaSay(window.__helaVoice ? window.__helaVoice("brain_greeting") : "", { ms: 5200 }); } catch (e) {}
+    }
+    const hs = window.__helaBrainHours();
+    const pg = inst.page;
+    pg.textContent = "";
+    const head = document.createElement("div"); head.className = "hbp-head";
+    const prev = document.createElement("button"); prev.type = "button"; prev.className = "hbp-arrow"; prev.innerHTML = "&#9664;";
+    prev.disabled = hs.indexOf(hour) <= 0; prev.title = "Previous Hour";
+    const next = document.createElement("button"); next.type = "button"; next.className = "hbp-arrow"; next.innerHTML = "&#9654;";
+    next.disabled = hs.indexOf(hour) >= hs.length - 1; next.title = "Next Hour";
+    const ttl = document.createElement("b"); ttl.textContent = "HOUR " + hour;
+    prev.addEventListener("click", (e) => { e.stopPropagation(); turn(-1); });
+    next.addEventListener("click", (e) => { e.stopPropagation(); turn(1); });
+    head.append(prev, ttl, next);
+    pg.appendChild(head);
+    // the Herald's notices of this Hour first, each one opens its edition
+    for (const di of tn.sats){ const it = disp[di]; if (!it) continue;
+      const c = document.createElement("button"); c.type = "button"; c.className = "hbp-clip";
+      const k = document.createElement("span"); k.textContent = "THE TEMPORAL HERALD";
+      const h2 = document.createElement("b"); h2.textContent = plain(it.headline);
+      c.append(k, h2);
+      c.addEventListener("click", (e) => { e.stopPropagation(); openArticle(inst, di, {}); });
+      pg.appendChild(c); }
+    const logs = tn.logs.slice(-12);
+    if (!logs.length && !tn.sats.length){
+      const q = document.createElement("div"); q.className = "hbp-line hbp-quiet"; q.textContent = "A quiet Hour, nothing worth ink."; pg.appendChild(q); }
+    for (const l of logs){
+      const d = document.createElement("div"); d.className = "hbp-line k-" + (l.cls || "log");
+      d.innerHTML = l.text;   // escaped by game.js humanize
+      pg.appendChild(d); }
+    pg.classList.add("on");
+  }
+  function turn(d){
+    const inst = full; if (!inst) return;
+    const hs = window.__helaBrainHours(); if (!hs.length) return;
+    let i = hs.indexOf(inst.pinnedHour); if (i < 0) i = hs.length - 1; else i = Math.max(0, Math.min(hs.length - 1, i + d));
+    openPage(inst, hs[i]);
+    // she turns to face the Hour being read
+    inst.spinUntil = performance.now() + 900;
     try { window.__audio && window.__audio.play("click"); } catch (e) {}
   }
-  function schedule(){ if (book.raf) return; book.raf = requestAnimationFrame(() => { book.raf = 0; render(); }); }
-  function render(){
-    const r = book.el; if (!r) return;
-    const hs = hoursList(), last = hs.slice(-1)[0] || 0;
-    const fresh = Math.max(0, totalEntries() - book.seen);
-    r.querySelector(".hbk-state").textContent = book.open ? "close" : (last ? "Hour " + last : "empty so far");
-    r.querySelector(".hbk-new").textContent = !book.open && fresh ? fresh + " new" : "";
-    if (!book.open){ book.dirty = true; return; }
-    if (book.follow) book.hour = last;
-    book.seen = totalEntries();
-    // Hour tabs: the last twelve, the one on show inked
-    const tabs = r.querySelector(".hbk-hours");
-    const want = hs.slice(-12).map(h => h + (h === book.hour ? "*" : "")).join(",");
-    if (tabs.dataset.k !== want){ tabs.dataset.k = want; tabs.textContent = "";
-      for (const h of hs.slice(-12)){ const b = document.createElement("button"); b.type = "button";
-        b.dataset.h = h; b.textContent = "H" + h; if (h === book.hour) b.className = "on"; tabs.appendChild(b); } }
-    r.querySelector(".hbk-prev").disabled = !hs.length || book.hour <= hs[0];
-    r.querySelector(".hbk-next").disabled = !hs.length || book.hour >= last;
-    // the ledger of rolls outside the machine rides in the side column
-    const led = document.querySelector("#log-zone .ledger");
-    const side = r.querySelector(".hbk-side");
-    if (led && led.parentNode !== side) side.appendChild(led);
-    if (!book.dirty) return;
-    book.dirty = false;
-    const page = r.querySelector(".hbk-page");
-    page.textContent = "";
-    const tn = turns.get(book.hour);
-    const title = document.createElement("div"); title.className = "hbk-title";
-    title.textContent = book.hour ? "HOUR " + book.hour : "BEFORE THE FIRST HOUR";
-    page.appendChild(title);
-    const grid = document.createElement("div"); grid.className = "hbk-panels"; page.appendChild(grid);
-    if (!tn || (!tn.logs.length && !tn.sats.length)){
-      const q = document.createElement("div"); q.className = "hbk-panel hbk-quiet";
-      q.textContent = "A quiet Hour. Nothing worth ink."; grid.appendChild(q); return;
-    }
-    // the Herald's clippings first, pinned at the top of the page
-    for (const di of tn.sats){ const it = disp[di]; if (!it) continue;
-      const c = document.createElement("button"); c.type = "button"; c.className = "hbk-clip"; c.dataset.di = di;
-      const k = document.createElement("span"); k.className = "hbk-clip-kick"; k.textContent = "THE TEMPORAL HERALD";
-      const h = document.createElement("b"); h.textContent = plain(it.headline);
-      const sub = document.createElement("span"); sub.className = "hbk-clip-sub"; sub.textContent = plain(it.sub);
-      const rd = document.createElement("span"); rd.className = "hbk-clip-read"; rd.textContent = "read the edition";
-      c.append(k, h, sub, rd); grid.appendChild(c); }
-    // then every entry of the Hour, one panel each, in the order it happened
-    tn.logs.slice(-40).forEach((l, i) => {
-      if (/^\s*-\s/.test(plain(l.text)) && !l.cls) {   // a phase marker becomes a chapter strip
-        const ch = document.createElement("div"); ch.className = "hbk-chapter";
-        ch.textContent = plain(l.text).replace(/-/g, " ").trim().toUpperCase(); grid.appendChild(ch); return; }
-      const p = document.createElement("div"); p.className = "hbk-panel k-" + (l.cls || "log");
-      const tg = document.createElement("span"); tg.className = "hbk-tag"; tg.textContent = KIND_TAG[l.cls || ""] || "LOG";
-      const tx = document.createElement("span"); tx.className = "hbk-text"; tx.innerHTML = l.text;   // escaped by game.js humanize
-      p.append(tg, tx); grid.appendChild(p);
-    });
-    if (book.follow) page.scrollTop = page.scrollHeight;
+
+  /* ── the ARTICLE: clicked open, clicked shut. It grows out of the core. ── */
+  function toggleArticle(inst, di){
+    const ex = document.querySelector(".hb-read");
+    if (ex && +ex.dataset.di === di){ foldArticle(ex); return; }
+    if (ex) foldArticle(ex);
+    openArticle(inst, di, {});
   }
-  // new memory: mark the book (the page itself only rebuilds while it is open)
+  function openArticle(inst, di, opt){
+    const it = disp[di]; if (!it) return;
+    const ex = document.querySelector(".hb-read"); if (ex) foldArticle(ex);
+    const rd = document.createElement("div");
+    rd.className = "hb-read"; rd.dataset.di = di;
+    rd.innerHTML = `<div class="hb-read-inner">${it.html || ""}</div>`;
+    inst.root.appendChild(rd);
+    requestAnimationFrame(() => requestAnimationFrame(() => rd.classList.add("open")));
+    rd.addEventListener("click", () => foldArticle(rd));    // click it shut, no X
+    armAnyClose(() => foldArticle(rd));                      // ANY click anywhere folds it
+    if (opt.auto){ rd.classList.add("auto"); rd._t = setTimeout(() => foldArticle(rd), 8200); }
+  }
+  function foldArticle(rd){ clearTimeout(rd._t); rd.classList.remove("open"); setTimeout(() => rd.remove(), 320); }
+
+  /* ── the body, and the loop that only runs while she is being handled ── */
+  let full = null, raf = 0;
+  function ensureBodies(){
+    if (!document.body || full) return;
+    const lz = document.getElementById("log-zone");
+    if (lz) full = makeCore("hela-brain-full", 240, lz);
+  }
+  function onDesk(){
+    const cam = window.__game && window.__game.camera;
+    const camEl = document.getElementById("cam");
+    return !(cam && cam.scene !== "drawer" && !(camEl && camEl.classList.contains("is-panning")));
+  }
+  function wake(){ if (!raf && full) raf = requestAnimationFrame(frame); }
+  function frame(t){
+    raf = 0;
+    if (!document.body || !document.body.classList.contains("cabin-on") || !full) return;
+    const inst = full;
+    // THE HEART IS THE REGISTRY: the ledger mounts LATE (market render), adopt it
+    // the moment it exists; the game keeps writing into it after the move
+    if (!inst._ledger){
+      const led = document.querySelector("#log-zone .ledger");
+      if (led){ inst._ledger = led;
+        const plate = document.createElement("div"); plate.className = "hb-heartplate";
+        plate.appendChild(led);
+        inst.root.appendChild(plate);
+        const heart = inst.root.querySelector(".hb-heart");
+        if (heart){
+          heart.addEventListener("pointerenter", () => plate.classList.add("peek"));
+          heart.addEventListener("pointerleave", () => plate.classList.remove("peek"));
+          heart.addEventListener("click", (e) => { e.stopPropagation();
+            const on = plate.classList.toggle("pinned");
+            if (on) armAnyClose(() => plate.classList.remove("pinned", "peek")); });
+          plate.addEventListener("click", (e) => { e.stopPropagation(); plate.classList.remove("pinned", "peek"); });
+        } }
+    }
+    if (!onDesk()){ if (inst._live){ inst._live = false; inst.root.classList.remove("live"); } return; }   // off the desk: rest; the camera wakes her
+    const handled = inst.drag || inst.over || inst.hover;
+    const coasting = Math.abs(inst.vy) > .0004;
+    const spinning = t < inst.spinUntil;
+    if (!inst.drag){
+      if (coasting){ inst.ry += inst.vy; inst.vy *= .94; }
+      else if ((spinning || (inst.over && !inst.hover)) && !RM) inst.ry += .004;   // the slow turning of memory
+    }
+    if (handled || coasting || spinning || inst.dirty){
+      inst.dirty = false;
+      project(inst, t);
+    }
+    const live = !!(handled || coasting || spinning);
+    if (inst._live !== live){ inst._live = live; inst.root.classList.toggle("live", live); }   // the rings breathe only now
+    if (live) raf = requestAnimationFrame(frame);
+  }
+  // new memory: she turns a moment to show it, if anyone is looking
   const _log = window.__helaBrainLog, _file = window.__helaBrainFile;
   window.__helaBrainLog = function(hour, cls, text){ _log(hour, cls, text);
-    if (book.open && (book.follow || hour === book.hour)) book.dirty = true; schedule(); };
-  window.__helaBrainFile = function(item){ _file(item); if (book.open) book.dirty = true; schedule(); };
-  // the tutorial and the keyboard pilot her memory through this
+    if (full){ full.dirty = true; if (full.pinnedHour === hour) showPage(full, hour); wake(); } };
+  window.__helaBrainFile = function(item){ _file(item);
+    if (full){ full.dirty = true; full.spinUntil = performance.now() + 2500; wake(); } };
+  // the camera arriving at the desk wakes her (one draw, then rest)
+  try {
+    const camEl = document.getElementById("cam");
+    if (camEl) new MutationObserver(() => { if (full){ full.dirty = true; wake(); } })
+      .observe(camEl, { attributes: true, attributeFilter: ["data-scene"] });
+  } catch (e) {}
+  // the tutorial and the keyboard pilot her through this (open = an Hour's page is open)
+  function openBrain(hour){
+    ensureBodies(); if (!full) return;
+    const g = window.__game;
+    if (g && g.camera && g.camera.scene !== "drawer"){
+      try { g.camera._engage(); g.camera.setScene("drawer"); g.updateBeacon && g.updateBeacon(); } catch (err) {}
+    }
+    const hs = window.__helaBrainHours();
+    const h = hour != null ? +hour : hs[hs.length - 1];
+    full.spinUntil = performance.now() + 4000;
+    full.root.classList.add("hint-seen");
+    if (h) openPage(full, h); else { full.dirty = true; wake(); }
+  }
   window.__helaBrain = {
-    open(hour){ if (hour){ book.hour = +hour; book.follow = false; } setOpen(true); },
-    close(){ setOpen(false); }, toggle(){ setOpen(!book.open); }, isOpen(){ return book.open; }, turn: turnPage,
+    open: openBrain,
+    close(){ if (full){ closePage(full); const rd = document.querySelector(".hb-read"); if (rd) foldArticle(rd); } },
+    toggle(){ if (full && full.pinnedHour != null) this.close(); else openBrain(); },
+    isOpen(){ return !!(full && full.pinnedHour != null); },
+    turn,
   };
   window.addEventListener("keydown", (e) => {
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
     if (!document.body.classList.contains("cabin-on")) return;
     const t = e.target || {}; if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || "") || t.isContentEditable) return;
     const k = (e.key || "").toLowerCase();
-    if (k === "l"){
-      e.preventDefault();
-      const g = window.__game;
-      if (!book.open && g && g.camera && g.camera.scene !== "drawer"){
-        try { g.camera._engage(); g.camera.setScene("drawer"); g.updateBeacon && g.updateBeacon(); } catch (err) {}
-      }
-      setOpen(!book.open); return;
-    }
-    if (!book.open) return;
-    if (k === "escape"){ e.preventDefault(); setOpen(false); }
-    else if (k === "arrowleft"){ e.preventDefault(); turnPage(-1); }
-    else if (k === "arrowright"){ e.preventDefault(); turnPage(1); }
+    if (k === "l"){ e.preventDefault(); window.__helaBrain.toggle(); return; }
+    if (!window.__helaBrain.isOpen()) return;
+    if (k === "escape"){ e.preventDefault(); window.__helaBrain.close(); }
+    else if (k === "arrowleft"){ e.preventDefault(); turn(-1); }
+    else if (k === "arrowright"){ e.preventDefault(); turn(1); }
   });
-  function ensure(){ buildBook(); if (!book.el) setTimeout(ensure, 600); }
+  function ensure(){ ensureBodies(); if (full){ full.dirty = true; wake(); } else setTimeout(ensure, 600); }
   ensure();
 })();
 
