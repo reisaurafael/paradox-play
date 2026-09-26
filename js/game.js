@@ -11,19 +11,19 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609261421";
-import { audio } from "./audio.js?202609261421";
+import { icon } from "./icons.js?202609261536";
+import { audio } from "./audio.js?202609261536";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609261421";
-import { comic } from "./comic.js?202609261421";
-import { CatEngine } from "./cat.js?202609261421";
-import { tutorials } from "./tutorial.js?202609261421";
-import { profile } from "./profile.js?202609261421";
-import { Camera } from "./camera.js?202609261421";
+import { juice } from "./juice.js?202609261536";
+import { comic } from "./comic.js?202609261536";
+import { CatEngine } from "./cat.js?202609261536";
+import { tutorials } from "./tutorial.js?202609261536";
+import { profile } from "./profile.js?202609261536";
+import { Camera } from "./camera.js?202609261536";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609261421";
+} from "./util.js?202609261536";
 
 // O LEILAO E A FASE 1 DO TURNO NORMAL, e nao um modo a parte (arquitetura
 // fixada em 2026-07-31): uma janela dimensional que precede Delivery, do
@@ -374,6 +374,8 @@ export class Game {
     room.seats.forEach((s) => {
       if (s && s.name && Number.isInteger(s.colour)) this._seatColours[s.name] = s.colour;
     });
+    // which seats are bots (the comic layer lets only bots speak up, comic.js rivalSay)
+    this._bots = new Set(room.seats.filter((s) => s && s.kind === "bot" && s.name).map((s) => s.name));
   }
 
   /* ====================== STATE -> FULL RENDER ======================== */
@@ -1046,6 +1048,7 @@ export class Game {
     this.view.travelers.forEach((t) =>
       (nm[t.name] = { energy: t.energy, gold: t.gold, cp: t.contract_points, booms: t.booms }));
     this._prevStats = nm;
+    try { comic.emanata(this.view); } catch (e) {}   // the comic marks on the fresh case files
   }
 
   _hidePaper() { if (this._paperEl) { this._paperEl.remove(); this._paperEl = null; } }
@@ -2955,6 +2958,7 @@ export class Game {
 
   afterPlace() {
     this.dragging = null;
+    setTimeout(() => { try { comic.preview(); } catch (e) {} }, 0);   // what this machine will do
     const bounced = this.normalizeAllocation();
     this.clearHighlights();
     this.renderMachineAlloc();
@@ -4565,7 +4569,7 @@ export class Game {
         audio.play("heat"); break;
       }
       case "exploded": if (window.__room) window.__room.beat("danger");
-        this.toast(`${esc(payload.seat)}'s motor exploded`, "alert");
+        // (HELA says it from her eye now, comic.js; the old toast would repeat her)
         if (payload.seat === this.seat) this.shake("lg");
         juice.flash("danger", { intensity: 0.55 }); juice.hitPause(120); this.catStartle();
         this.flashPanel(payload.seat, "fx-hit"); audio.play("explode"); break;

@@ -1,15 +1,15 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609261421";
-import { hydrateIcons, icon } from "./icons.js?202609261421";
-import { seatColor, initials, el } from "./util.js?202609261421";
-import { Game } from "./game.js?202609261421";
-import { audio } from "./audio.js?202609261421";
-import { tutorials } from "./tutorial.js?202609261421";
-import { profile } from "./profile.js?202609261421";
-import { launchTutorial } from "./tutorial-drive.js?202609261421";
-import { Controle } from "./controle.js?202609261421";
+import { api, Connection } from "./net.js?202609261536";
+import { hydrateIcons, icon } from "./icons.js?202609261536";
+import { seatColor, initials, el } from "./util.js?202609261536";
+import { Game } from "./game.js?202609261536";
+import { audio } from "./audio.js?202609261536";
+import { tutorials } from "./tutorial.js?202609261536";
+import { profile } from "./profile.js?202609261536";
+import { launchTutorial } from "./tutorial-drive.js?202609261536";
+import { Controle } from "./controle.js?202609261536";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -100,7 +100,9 @@ window.addEventListener("pointerdown", unlockAudio, { once: false });
   const uiSel = document.getElementById("sel-ui-scale");
   function applyGfx() {
     const q = ["high", "medium", "low"].includes(lsGet(GFX_KEY)) ? lsGet(GFX_KEY) : "high";
-    const still = q === "low" || lsGet(AMB_KEY) === "off";
+    // Medium stills the chart's ambient loops too: measured on an awake table they cost about
+    // a quarter of the frame rate (their layers and overlaps), the biggest single item left
+    const still = q !== "high" || lsGet(AMB_KEY) === "off";
     const b = document.body;
     b.classList.toggle("gfx-medium", q === "medium");
     b.classList.toggle("gfx-low", q === "low");
@@ -313,9 +315,9 @@ function enterRoom(name, code, seat, room) {
   });
   // Game-phase messages flow through the Game's paced event queue so the turn
   // is legible (events animate one at a time; decisions wait for their lead-up).
-  conn.on("state", (m) => { show("game"); state.game.onMessage("state", m); });
-  conn.on("event", (m) => state.game.onMessage("event", m));
-  conn.on("decision_request", (m) => state.game.onMessage("decision", m));
+  conn.on("state", (m) => { pdxWake(); show("game"); state.game.onMessage("state", m); });
+  conn.on("event", (m) => { pdxWake(); state.game.onMessage("event", m); });
+  conn.on("decision_request", (m) => { pdxWake(); state.game.onMessage("decision", m); });
   conn.on("error", (m) => console.warn("server error:", m.detail));
   // Apply any saved presentation speed.
   const savedSpeed = localStorage.getItem("paradoxo.speed");
@@ -432,6 +434,61 @@ window.pdxRefit = pdxRefit;
 // the raster to commit). The hour seal no longer blurs the table (app.css .hh-veil), so
 // nothing leaves it on a soft raster between resizes.
 window.pdxApplyFit = pdxApplyFit;
+
+// ── THE NAP: an idle table costs nothing ─────────────────────────────────────────────
+// Thirty-odd ambient loops (HELA's rings and eye, the cat, gears, vents, heartbeats, the
+// chart's waves) plus five rAF loops kept every frame busy while nothing was happening:
+// measured on a table waiting for the player's decision, the GPU process near 90% busy and
+// the page's main thread near 45%, forever, which is what made the whole computer lag.
+// The table naps when nothing is happening: no input for 12s and no game message (sooner,
+// 2.5s, when the window has lost focus; at once when it is hidden). Napping pauses the
+// CSS animations where they stand and holds every requestAnimationFrame callback; the
+// first mouse move, key, message or focus plays them on from the same frame. One-shot
+// effects are never paused, and the table never naps while the game is still presenting.
+const NAP_IDLE_MS = 12000, NAP_BLUR_MS = 2500;
+let _napping = false, _napLast = performance.now(), _napHeld = [], _napId = -1;
+const _rawRAF = window.requestAnimationFrame.bind(window);
+const _rawCancelRAF = window.cancelAnimationFrame.bind(window);
+window.requestAnimationFrame = (cb) => {
+  if (!_napping) return _rawRAF(cb);
+  const id = _napId--; _napHeld.push([id, cb]); return id;
+};
+window.cancelAnimationFrame = (id) => {
+  if (id < 0) { _napHeld = _napHeld.filter((h) => h[0] !== id); return; }
+  _rawCancelRAF(id);
+};
+function pdxWake() {
+  _napLast = performance.now();
+  if (!_napping) return;
+  _napping = false;
+  document.body.classList.remove("pdx-nap");
+  const held = _napHeld; _napHeld = [];
+  if (held.length) _rawRAF((t) => { for (const h of held) { try { h[1](t); } catch (e) { console.error(e); } } });
+}
+function pdxNap() {
+  if (_napping) return;
+  _napping = true;
+  document.body.classList.add("pdx-nap");   // app.css: every CSS animation holds still
+}
+function _napBusy() {
+  const g = state.game;
+  if (g && (g.busy || (g.queue && g.queue.length))) return true;
+  // a one-shot effect still playing (a stamp, a flight, the seal) keeps the table awake
+  return document.getAnimations().some((a) => a.playState === "running" && a.effect
+    && a.effect.getTiming().iterations !== Infinity);
+}
+setInterval(() => {
+  if (_napping) return;
+  const quiet = performance.now() - _napLast;
+  if (document.hidden) { pdxNap(); return; }
+  if (quiet > (document.hasFocus() ? NAP_IDLE_MS : NAP_BLUR_MS) && !_napBusy()) pdxNap();
+}, 500);
+["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach((t) =>
+  window.addEventListener(t, pdxWake, { passive: true, capture: true }));
+window.addEventListener("focus", pdxWake);
+document.addEventListener("visibilitychange", () => { if (document.hidden) pdxNap(); else pdxWake(); });
+window.__pdxWake = pdxWake;
+window.__pdxNapping = () => _napping;
 window.addEventListener("resize", pdxApplyFit);
 pdxApplyFit();
 

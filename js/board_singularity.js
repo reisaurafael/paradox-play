@@ -695,11 +695,14 @@
     const r=document.getElementById("timeline-rail"); const lg=r&&r.querySelector(".cplot-sing .cc-live"); if(!lg||!lg.isConnected) return;
     if(fxBusy&&!force){ renderPending=true; return; }
     if(!fxBusy&&!R.sailing&&R.fx.length===0&&app&&app.view){ app.view.travelers.forEach(t=>{ if(t.is_self&&R.pendingSelf!=null){ if(t.century===R.pendingSelf) R.pendingSelf=null; else return; } R.shown[t.name]=t.century; }); R.merchantShown=app.view.merchant_century; }
-    lg.innerHTML=liveLayer();
-    const top=r.querySelector(".cplot-sing .cc-top"); if(top){ top.replaceChildren(); const ord=lg.querySelector(".cc-ord"); if(ord) top.appendChild(ord); }
-    const cmd=r.querySelector(".cplot-sing .cc-cmd"); if(cmd){ const t=commandText(); cmd.innerHTML=t; cmd.classList.toggle("on",!!t); }
+    // the live layer is rewritten only when it changed (the 300ms poll calls this forever;
+    // rebuilding it each time re-rastered the chart three times a second at rest)
+    const liveHTML=liveLayer(), liveSame=!force&&lg.__pdxHTML===liveHTML;
+    if(!liveSame){ lg.innerHTML=liveHTML; lg.__pdxHTML=liveHTML; }
+    const top=r.querySelector(".cplot-sing .cc-top"); if(top&&!liveSame){ top.replaceChildren(); const ord=lg.querySelector(".cc-ord"); if(ord) top.appendChild(ord); }
+    const cmd=r.querySelector(".cplot-sing .cc-cmd"); if(cmd){ const t=commandText(); if(cmd.__pdxHTML!==t){ cmd.innerHTML=t; cmd.__pdxHTML=t; } cmd.classList.toggle("on",!!t); }
     const svg=r.querySelector(".cplot-sing .pc-star"); if(svg) svg.classList.toggle("mode-pick",!!mode);
-    const h=app&&app.view?app.view.hour:null; const hh=r.querySelector(".cplot-sing .cc-hour"); if(hh&&h!=null) hh.textContent=`HOUR ${h}`;
+    const h=app&&app.view?app.view.hour:null; const hh=r.querySelector(".cplot-sing .cc-hour"); if(hh&&h!=null&&hh.textContent!==`HOUR ${h}`) hh.textContent=`HOUR ${h}`;
     if(h!=null&&prevHour!=null&&h!==prevHour&&r.classList.contains("skin-sing")){ /* new hour pulse */ svg&&svg.querySelectorAll(".cc-world .cc-worldbody").forEach((el,i)=>{ if(REDUCED) return; el.animate([{opacity:.5},{opacity:1}],{duration:400,delay:(i%8)*30}); }); }
     prevHour=h;
     applyFocus(); refreshAudio(); drainFx();   // updateSkin now runs at the TOP, see above

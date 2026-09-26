@@ -1993,8 +1993,29 @@
     return { x: Math.max(30, Math.min(innerWidth - 30, ccx + dx * k)),
              y: Math.max(56, Math.min(innerHeight - 34, ccy + dy * k)) };
   }
+  // HER BALLOON (comic.js speaks through .he-chip) sits on the side AWAY from the
+  // cursor, so it never covers what the hand is reaching for, and flips at the screen
+  // edges. It only changes side on a blink or at an edge, never mid-read.
+  let chipSide = "", chipEl = null;
+  function sideFor(x, y){
+    const post = (glide && glide.np) || standAt;
+    let right = post && post.side ? post.side === "r" : (post || mx < 0) ? x < innerWidth - 400 : sx === 1;
+    if (right && x > innerWidth - 400) right = false;
+    if (!right && x < 400) right = true;
+    return (right ? "r" : "l") + (y > innerHeight - 150 ? "u" : "d");
+  }
+  function applySide(x, y){
+    const sd = sideFor(x, y);
+    if (sd === chipSide) return;
+    chipSide = sd;
+    if (!chipEl && eye) chipEl = eye.querySelector(".he-chip");
+    if (!chipEl) return;
+    chipEl.classList.toggle("flip-x", sd[0] === "l");
+    chipEl.classList.toggle("flip-y", sd[1] === "u");
+  }
   function place(x, y){
     if (eye) eye.style.transform = `translate(${x - 30}px, ${y - 30}px)`;
+    applySide(x, y);
     if (assumed){ // the journal is not NEAR the eye, it IS the eye, and it moves like it
       assumed.style.left = Math.max(250, Math.min(innerWidth - 260, x)) + "px";
       assumed.style.top  = Math.max(200, Math.min(innerHeight - 220, y)) + "px";
@@ -2071,7 +2092,7 @@
     opt = opt || {}; if (!html) return;
     if (window.__helaMute && !opt.force) return;   // the tutorial silences her ambient barks; only its own lines pass
     if (opt.jump) { sayQ.length = 0; clearTimeout(sayT); saying = false; }  // reactive line: clear the queue, show now
-    sayQ.push({ html, ms: Math.max(2300, opt.ms || 4600) });
+    sayQ.push({ html, ms: Math.max(opt.minMs || 2300, opt.ms || 4600) });
     if (sayQ.length > 3) sayQ.splice(0, sayQ.length - 3);   // keep only the freshest three
     if (!saying) nextSay();
   }
@@ -2110,11 +2131,11 @@
     saying = true;
     whisper();   // she clears her throat, two low notes, until the real voice ships
     const chip = eye.querySelector(".he-chip"); if (!chip){ saying = false; return; }
-    chip.innerHTML = it.html;
-    const r = eye.getBoundingClientRect();
-    chip.classList.toggle("flip-x", r.left > innerWidth - 340);
-    chip.classList.toggle("flip-y", r.top > innerHeight - 120);
-    eye.classList.remove("he-says"); void eye.offsetWidth; eye.classList.add("he-says");
+    // a DOM node (comic.js lines, built with textContent) or her own trusted markup
+    if (it.html && it.html.nodeType === 1){ chip.textContent = ""; chip.appendChild(it.html); }
+    else chip.innerHTML = it.html;
+    // already speaking: the words swap in place (comic.js fades them in); else she opens
+    if (!eye.classList.contains("he-says")){ void eye.offsetWidth; eye.classList.add("he-says"); }
     clearTimeout(sayT);
     sayT = setTimeout(() => { if (eye) eye.classList.remove("he-says");
       setTimeout(nextSay, 340); }, it.ms);
@@ -2183,7 +2204,7 @@
   // she stands where she is SENT, arriving, as always, on a blink
   function setPost(x, y, opt){
     const np = { x: Math.max(30, Math.min(innerWidth - 30, x)), y: Math.max(56, Math.min(innerHeight - 34, y)),
-      orbit: (opt && opt.orbit) || 0 };
+      orbit: (opt && opt.orbit) || 0, side: (opt && opt.side) || "" };
     if (standAt && Math.hypot(np.x - standAt.x, np.y - standAt.y) < 8){ standAt = np; return; }
     if (opt && opt.glide && eye){
       // guided attention: she is SEEN crossing, the motion is the pointing finger
@@ -2219,6 +2240,7 @@
   }
 
   window.__helaEye = { say, manifest, aimSplit, clearSplit, blink, setPost, clearPost, direct,
+    live(){ return !!(eye && eye._live); }, posted(){ return !!(standAt || glide); },
     pos(){ if (!eye) return { x: 64, y: 96 }; const r = eye.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 30 }; } };
   window.__helaSay = (html, opt) => say(html, opt);   // she owns her voice now
 

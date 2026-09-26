@@ -7,7 +7,7 @@ let server = null;
 
 async function boot() {
   const pyodide = await loadPyodide();
-  const zip = await (await fetch("game.zip?202609261421")).arrayBuffer();
+  const zip = await (await fetch("game.zip?202609261536")).arrayBuffer();
   pyodide.FS.writeFile("/game.zip", new Uint8Array(zip));
   pyodide.runPython("import sys; sys.path.insert(0, '/game.zip')");
   server = pyodide.pyimport("play_server");

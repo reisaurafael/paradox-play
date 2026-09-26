@@ -49,6 +49,7 @@
     cp.insertBefore(d, cp.firstChild);
   };
 
+
   /* ── the five torn seams between the six era sheets ── */
   const SEAMS = [
     x => 208 + 14 * x / W,   // timeless | contemporary   (XXIII lives here)
@@ -1749,8 +1750,13 @@
         R.shown[t.name] = t.century;
       });
     if (!fxBusy && R.fx.length === 0 && app && app.view) R.merchantShown = app.view.merchant_century;
-    liveG.innerHTML = liveLayer() + highlights();
-    if (R.ordFlip && R.ordFlip.prev && !REDUCED) {   // the slate re-orders with a slide
+    // THE LIVE LAYER IS REWRITTEN ONLY WHEN IT CHANGED. The 300ms poll below calls this
+    // forever, and it used to rebuild the whole layer every time: a style, layout, paint
+    // and tile raster of the chart three times a second on a table where nothing moved.
+    const liveHTML = liveLayer() + highlights();
+    const liveSame = !force && liveG.__pdxHTML === liveHTML;
+    if (!liveSame) { liveG.innerHTML = liveHTML; liveG.__pdxHTML = liveHTML; }
+    if (!liveSame && R.ordFlip && R.ordFlip.prev && !REDUCED) {   // the slate re-orders with a slide
       const { prev, next } = R.ordFlip;
       liveG.querySelectorAll("[data-ordrow]").forEach(row => {
         const s = row.getAttribute("data-ordrow");
@@ -1766,7 +1772,7 @@
       });
     }
     R.ordFlip = null;
-    if (topG) {   // the Sailing Order rides ABOVE every object (opaque, never see-through)
+    if (topG && !liveSame) {   // the Sailing Order rides ABOVE every object (opaque, never see-through)
       topG.replaceChildren();
       const ord = liveG.querySelector(".sea-ord");
       if (ord) topG.appendChild(ord);
@@ -1778,11 +1784,11 @@
     const cmd = document.querySelector(".sea-cmd");
     if (cmd) {
       const t = commandText();
-      cmd.innerHTML = t;
+      if (cmd.__pdxHTML !== t) { cmd.innerHTML = t; cmd.__pdxHTML = t; }
       cmd.classList.toggle("on", !!t);
     }
     const hourEl = document.querySelector(".sea-hour");
-    if (hourEl && app && app.view) hourEl.textContent = `TUESDAY 31 DEC 2999 · HOUR ${app.view.hour}`;
+    if (hourEl && app && app.view) { const ht = `TUESDAY 31 DEC 2999 · HOUR ${app.view.hour}`; if (hourEl.textContent !== ht) hourEl.textContent = ht; }
     for (const c of [10, 20]) {
       const pipG = document.querySelector(`.sea-pips[data-c="${c}"]`);
       if (!pipG || !app || !app.view) continue;
@@ -1791,7 +1797,7 @@
         const claimed = c === 10 ? t.scored_century_x : t.scored_century_xx;
         if (claimed) pips += `<circle cx="${i * 8 - 4}" cy="37" r="3" fill="${seatColor(t.name)}" stroke="#2a1c0c" stroke-width=".6"/>`;
       });
-      pipG.innerHTML = pips;
+      if (pipG.__pdxHTML !== pips) { pipG.innerHTML = pips; pipG.__pdxHTML = pips; }
     }
     const well = document.querySelector(".sea-well");
     if (well) well.classList.toggle("well-reach", !!(mode && mode.kind === "travel" && mode.self <= mode.max && mode.locked !== 1));
