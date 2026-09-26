@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" width="1100" height="700">
+<defs>
+  <linearGradient id="pt-stone" x1="0" y1="0" x2="0.2" y2="1">
+    <stop offset="0" stop-color="#636c7a"/><stop offset=".55" stop-color="#4a515e"/><stop offset="1" stop-color="#353b47"/>
+  </linearGradient>
+  <linearGradient id="pt-stoneD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4a515e"/><stop offset="1" stop-color="#2b303a"/>
+  </linearGradient>
+  <linearGradient id="pt-brass" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e8c473"/><stop offset=".5" stop-color="#a67e3c"/><stop offset="1" stop-color="#6a4e26"/>
+  </linearGradient>
+  <radialGradient id="pt-dusk" cx="0.5" cy="0.15" r="1.1">
+    <stop offset="0" stop-color="#43304a"/><stop offset=".55" stop-color="#2e2136"/><stop offset="1" stop-color="#1d1524"/>
+  </radialGradient>
+  <radialGradient id="pt-lamp" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#ffd68a" stop-opacity=".4"/><stop offset="1" stop-color="#ffd68a" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="pt-wood" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8a6540"/><stop offset="1" stop-color="#61462a"/>
+  </linearGradient>
+  <linearGradient id="pt-woodD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#54401f"/><stop offset="1" stop-color="#38291a"/>
+  </linearGradient>
+  <linearGradient id="pt-paper" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d8cbb0"/><stop offset="1" stop-color="#b3a488"/>
+  </linearGradient>
+  <clipPath id="pt-opening">
+    <path d="M 128 600 L 128 420 A 422 342 0 0 1 972 420 L 972 600 Z"/>
+  </clipPath>
+</defs>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     A JANELA, SO A MOLDURA.
+
+     Este arquivo e o portal.svg sem o miolo. O portal.svg desenha DUAS
+     coisas no mesmo arquivo: a banca do mercador (um grupo recortado pela
+     abertura) e a pedra do arco. Enquanto isso foi um so desenho, qualquer
+     outro conteudo que a janela mostrasse ficava brigando com uma banca
+     pintada por baixo, e era ela que aparecia nas frestas.
+
+     Aqui a abertura e TRANSPARENTE. A parede e do quarto, a moldura e desta
+     pedra, e o que aparece no vao e conteudo, que troca: a banca numa hora,
+     a sala de apreensoes na outra. Tres coisas separadas, cada uma no seu
+     arquivo e na sua camada.
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<!-- ═══ ENERGY hugging the mouth ═══ -->
+<g fill="none">
+  <path d="M 138 600 L 138 424 A 412 332 0 0 1 962 424 L 962 600" stroke="#5fd08a" stroke-width="20" opacity=".16"/>
+  <path d="M 133 600 L 133 422 A 417 337 0 0 1 967 422 L 967 600" stroke="#7ff0b0" stroke-width="7" opacity=".75"/>
+  <path d="M 128 600 L 128 420 A 422 342 0 0 1 972 420 L 972 600" stroke="#d8ffe8" stroke-width="2.8"/>
+  <path class="pt-bolt" d="M 196 250 l 17 -9 -7 16 18 -7" stroke="#aef7c9" stroke-width="3.2" stroke-linejoin="round" opacity=".9"/>
+  <path class="pt-bolt" d="M 880 210 l 15 11 -17 3 12 14" stroke="#aef7c9" stroke-width="3.2" stroke-linejoin="round" opacity=".75"/>
+</g>
+
+
+<!-- ═══ THE MEGALITH ARCH: wide ellipse, 11 hewn stones ═══ -->
+<g stroke="#14161c" stroke-width="4">
+  <path d="M 64 644 L 62 440 L 76 420 L 130 428 L 128 640 L 110 644 Z" fill="url(#pt-stone)"/>
+  <path d="M 62 440 L 84 330 L 102 318 L 158 348 L 132 432 L 76 420 Z" fill="url(#pt-stoneD)"/>
+  <path d="M 84 330 L 148 226 L 172 220 L 222 264 L 158 348 L 102 318 Z" fill="url(#pt-stone)"/>
+  <path d="M 148 226 L 254 138 L 280 142 L 310 202 L 222 264 L 172 220 Z" fill="url(#pt-stoneD)"/>
+  <path d="M 254 138 L 396 84 L 416 94 L 428 158 L 310 202 L 280 142 Z" fill="url(#pt-stone)"/>
+  <path d="M 396 84 L 540 78 L 552 146 L 428 158 L 416 94 Z" fill="url(#pt-stone)"/>
+  <path d="M 540 78 L 690 90 L 696 112 L 664 162 L 552 146 Z" fill="url(#pt-stoneD)"/>
+  <path d="M 690 90 L 826 140 L 832 162 L 780 210 L 664 162 L 696 112 Z" fill="url(#pt-stone)"/>
+  <path d="M 826 140 L 936 228 L 938 252 L 874 288 L 780 210 L 832 162 Z" fill="url(#pt-stoneD)"/>
+  <path d="M 936 228 L 1010 334 L 1004 356 L 936 368 L 874 288 L 938 252 Z" fill="url(#pt-stone)"/>
+  <path d="M 1010 334 L 1036 444 L 1022 462 L 970 452 L 936 368 L 1004 356 Z" fill="url(#pt-stoneD)"/>
+  <path d="M 1036 444 L 1038 644 L 990 644 L 972 640 L 970 452 L 1022 462 Z" fill="url(#pt-stone)"/>
+</g>
+<!-- deep joints -->
+<g stroke="#14161c" stroke-width="5.5" fill="none" stroke-linecap="round">
+  <path d="M 62 440 L 132 432 M 84 330 L 158 348 M 148 226 L 222 264 M 254 138 L 310 202 M 396 84 L 428 158"/>
+  <path d="M 540 78 L 552 146 M 690 90 L 664 162 M 826 140 L 780 210 M 936 228 L 874 288 M 1010 334 L 936 368 M 1036 444 L 970 452"/>
+</g>
+<!-- tone variation -->
+<g stroke="none" opacity=".15">
+  <path d="M 148 226 L 254 138 L 280 142 L 310 202 L 222 264 L 172 220 Z" fill="#0c0f14"/>
+  <path d="M 396 84 L 540 78 L 552 146 L 428 158 L 416 94 Z" fill="#c8d2e0"/>
+  <path d="M 826 140 L 936 228 L 938 252 L 874 288 L 780 210 L 832 162 Z" fill="#0c0f14"/>
+  <path d="M 1036 444 L 1038 644 L 990 644 L 972 640 L 970 452 L 1022 462 Z" fill="#c8d2e0"/>
+</g>
+<!-- chips + top highlights -->
+<g stroke="#14161c" stroke-width="2.2" fill="none" opacity=".7">
+  <path d="M 84 500 l 20 -8 M 116 300 l -18 12 M 190 210 l 14 16 M 330 130 l 8 22 M 470 100 l 18 8"/>
+  <path d="M 620 108 l -10 18 M 760 172 l -18 8 M 900 262 l -20 6 M 990 420 l -20 -4"/>
+</g>
+<g stroke="#8892a2" stroke-width="2.4" fill="none" opacity=".55">
+  <path d="M 258 142 L 396 88 M 400 88 L 536 82 M 546 82 L 686 94"/>
+  <path d="M 88 334 L 150 230 M 830 144 L 932 230"/>
+</g>
+<!-- brass conduit + rivets -->
+<path d="M 76 636 Q 60 320 210 176 Q 366 60 550 56 Q 734 60 890 176 Q 1040 320 1024 636"
+      stroke="url(#pt-brass)" stroke-width="4" fill="none" opacity=".55"/>
+<g fill="#a67e3c" stroke="#3a2a12" stroke-width="1.6">
+  <circle cx="72" cy="452" r="5"/><circle cx="112" cy="286" r="5"/><circle cx="230" cy="176" r="5"/>
+  <circle cx="410" cy="100" r="5"/><circle cx="562" cy="94" r="5"/><circle cx="716" cy="112" r="5"/>
+  <circle cx="872" cy="196" r="5"/><circle cx="978" cy="310" r="5"/><circle cx="1022" cy="470" r="5"/>
+</g>
+<!-- ═══ FOOTING: sill + stylobate, the window LANDS on the desk line ═══ -->
+<g stroke="#14161c" stroke-width="4">
+  <path d="M 120 598 L 980 598 L 986 616 L 984 642 L 116 642 L 114 616 Z" fill="url(#pt-stone)"/>
+  <path d="M 40 640 L 1060 640 L 1064 700 L 36 700 Z" fill="url(#pt-stoneD)"/>
+</g>
+<path d="M 120 598 L 980 598 L 978 606 L 122 606 Z" fill="#c8d2e0" opacity=".25"/>
+<g stroke="#14161c" stroke-width="3.4" fill="none" stroke-linecap="round">
+  <path d="M 352 600 L 350 640 M 700 600 L 703 640"/>
+  <path d="M 236 644 L 232 698 M 512 646 L 514 698 M 780 644 L 784 698 M 948 642 L 952 698"/>
+</g>
+<g stroke="#8892a2" stroke-width="2.2" fill="none" opacity=".5">
+  <path d="M 130 602 L 560 601 M 48 646 L 430 645"/>
+</g>
+<g stroke="#14161c" stroke-width="2.2" fill="none" opacity=".6">
+  <path d="M 92 668 l 22 -6 M 620 688 l 18 -8 M 1002 664 l -20 8"/>
+</g>
+<g fill="#7ff0b0">
+  <path d="M 190 606 q -4 16 5 26 q 8 -10 2 -26 Z" opacity=".8"/>
+  <path d="M 545 606 q -3 12 4 20 q 6 -8 1 -20 Z" opacity=".55"/>
+  <path d="M 912 606 q -4 15 5 24 q 8 -9 2 -24 Z" opacity=".75"/>
+</g>
+<g fill="#7ff0b0" opacity=".4">
+  <ellipse cx="140" cy="601" rx="15" ry="3.4"/><ellipse cx="960" cy="601" rx="13" ry="3"/>
+</g>
+<!-- carved runes -->
+<g stroke="#7ff0b0" stroke-width="3.2" fill="none" opacity=".95" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M 92 388 v -28 l 22 13 l -22 15 Z"/>
+  <path d="M 178 274 l 13 -26 l 13 26 m -19.5 -11 h 13"/>
+  <path d="M 330 158 l 10 -28 m 0 28 l 10 -28 m -24 11 h 28"/>
+  <path d="M 606 104 v 30 m -11 -24 l 22 18 m 0 -18 l -22 18"/>
+  <path d="M 810 190 h 26 m -13 -13 v 26 m -9 -22 l 18 18"/>
+  <path d="M 962 344 h 22 l -16 18 h 20 m -16 -29 v 40"/>
+</g>
+<!-- keystone core -->
+<g>
+  <circle cx="550" cy="102" r="21" fill="#221808" stroke="#14161c" stroke-width="3.2"/>
+  <circle cx="550" cy="102" r="15" fill="none" stroke="url(#pt-brass)" stroke-width="3"/>
+  <circle cx="550" cy="102" r="8" fill="#7ff0b0" opacity=".9"/>
+</g>
+</svg>

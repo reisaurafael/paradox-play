@@ -1,0 +1,2102 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE PARADOX SEA: six era charts, assembled (the DEFAULT timeline)
+   Six sheets of different ages and inks, one per era, interlock as a puzzle
+   covering the whole panel. The four centuries that belong to TWO eras
+   (V, XV, XIX, XXIII) sit exactly ON the torn seams, ringed in both colors.
+   Islands are real islands: irregular coasts, highlands, an era landmark.
+   A pinned CHART KEY explains every glyph. The survey route, a faint dotted
+   scrawl, threads all thirty centuries down to the Wellspring.
+   Fully functional against the live game + Balatro-grade juice:
+   course lines draw themselves, serpents lunge on paradoxes, lightning on
+   explosions, the Merchant's ship sails, the sea idles alive.
+   Layout is computed; a programmatic audit must return ZERO violations.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  let W = 780;             // set from the rail's real box at mount, the chart FILLS its frame
+  const H = 950;
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  // scale the x of every coordinate pair in an authored path (M/C absolute, x y alternating)
+  function scalePathX(d, fn) {
+    let ix = 0;
+    return d.replace(/-?\d+(?:\.\d+)?/g, n => {
+      const isX = ix % 2 === 0; ix++;
+      return isX ? String(Math.round(fn(parseFloat(n)) * 10) / 10) : n;
+    });
+  }
+  const ROM = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV",
+    "XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX"];
+  const rom = c => c === 0 ? "0" : ROM[c - 1];
+  const rnd = (a, b) => { const x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); };
+  const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ── the five torn seams between the six era sheets ── */
+  const SEAMS = [
+    x => 208 + 14 * x / W,   // timeless | contemporary   (XXIII lives here)
+    x => 338 - 12 * x / W,   // contemporary | modern     (XIX)
+    x => 462 + 10 * x / W,   // modern | low medieval     (XV)
+    x => 596 - 16 * x / W,   // low medieval | high medieval, THE PERIOD TEAR
+    x => 772 + 12 * x / W,   // high medieval | antiquity (V)
+  ];
+  const BANDS = [
+    { id: "tim", name: "THE TIMELESS REACHES", span: "XXIII: XXX", islands: [30,29,28,27,26,25,24],
+      top: () => 0, bottom: SEAMS[0],
+      paper: ["#c9c7d6", "#57508022"], ink: "#3a3458", accent: "#5a4fa0",
+      font: "'Courier New', monospace",
+      guide: "M 712 64 C 560 22, 452 96, 486 148 C 512 188, 352 76, 238 112 C 142 140, 66 148, 98 178",
+      fracs: [0, .15, .3, .46, .62, .8, 1], amp: 14 },
+    { id: "con", name: "CONTEMPORARY ISLES", span: "XIX: XXIII", islands: [22,21,20],
+      top: SEAMS[0], bottom: SEAMS[1],
+      paper: ["#c5cede", "#3a62a822"], ink: "#2c3f58", accent: "#3a62a8",
+      font: "'Trebuchet MS', sans-serif",
+      guide: "M 130 268 C 250 240, 380 298, 512 258", fracs: [0, .5, 1], amp: 12 },
+    { id: "mod", name: "MODERN ISLES", span: "XV, XIX", islands: [18,17,16],
+      top: SEAMS[1], bottom: SEAMS[2],
+      paper: ["#c2d6d6", "#2e8a8a22"], ink: "#26494a", accent: "#2e8a8a",
+      font: "Georgia, serif",
+      guide: "M 528 412 C 420 372, 300 444, 184 391", fracs: [0, .5, 1], amp: 12 },
+    { id: "lma", name: "LOW MEDIEVAL CHAIN", span: "XI, XV", islands: [14,13,12,11],
+      top: SEAMS[2], bottom: SEAMS[3],
+      paper: ["#c8d6c3", "#3f8a3a22"], ink: "#2f4a26", accent: "#43883a",
+      font: "Georgia, serif",
+      guide: "M 196 526 C 296 554, 366 500, 448 538 C 494 556, 532 532, 556 542", fracs: [0, .34, .66, 1], amp: 12 },
+    { id: "hma", name: "HIGH MEDIEVAL CHAIN", span: "V, X", islands: [10,9,8,7,6],
+      top: SEAMS[3], bottom: SEAMS[4],
+      paper: ["#e2d0b4", "#c0762a22"], ink: "#5a3a14", accent: "#c0762a",
+      font: "Georgia, serif",
+      guide: "M 636 650 C 505 706, 420 638, 330 700 C 252 748, 175 686, 128 716", fracs: [0, .26, .5, .75, 1], amp: 12 },
+    { id: "ant", name: "ISLES OF ANTIQVITY", span: "I, V", islands: [4,3,2,1],
+      top: SEAMS[4], bottom: () => H,
+      paper: ["#e4d9a8", "#b3941a26"], ink: "#55470e", accent: "#a88b16",
+      font: "'Times New Roman', serif",
+      guide: "M 636 846 C 520 892, 400 852, 300 878 C 240 892, 190 872, 158 892", fracs: [0, .34, .66, 1], amp: 12 },
+  ];
+  // the four dual-era centuries sit ON their seam, x hand-set for the zigzag
+  const STRAITS = { 23: { x: 170, seam: 0 }, 19: { x: 545, seam: 1 }, 15: { x: 128, seam: 2 }, 5: { x: 470, seam: 4 } };
+  const ERAS_OF = c => {
+    const e = [];
+    if (c >= 1 && c <= 5) e.push("ant"); if (c >= 5 && c <= 10) e.push("hma");
+    if (c >= 11 && c <= 15) e.push("lma"); if (c >= 15 && c <= 19) e.push("mod");
+    if (c >= 19 && c <= 23) e.push("con"); if (c >= 23 && c <= 30) e.push("tim");
+    return e;
+  };
+  const ERA_NAME = { tim: "Timeless", con: "Contemporary", mod: "Modern", lma: "Low Middle Ages", hma: "High Middle Ages", ant: "Antiquity" };
+  const PERIOD_ERAS = { Origins: ["ant", "hma"], Ascension: ["lma", "mod"], Singularity: ["con", "tim"] };
+  const islR = c => (ERAS_OF(c).length === 2 ? 38 : 31) + rnd(c, 3) * 5;
+  const ACCENT = {}; BANDS.forEach(b => ACCENT[b.id] = b.accent);
+  const FIXCOL = { self: "#1d6b52", r0: "#3a5a86", r1: "#6a4a8a", r2: "#8c5a2a", r3: "#8c2a4a", r4: "#4a7a5a" };
+
+  /* ═══ LAYOUT ═══ */
+  const POS = {}, LBL = {}, META = {};
+  const ANCH = { taken: [], obst: [] };
+  const isStrait = c => c in STRAITS;
+  function addObst(x, y, w, h, kind) { ANCH.obst.push({ x, y, w, h, kind: kind || "glyph" }); }
+  function inObst(x, y, mx, my, forIsland) {
+    return ANCH.obst.some(o => {
+      if (forIsland && o.kind === "soft") return false;
+      const px = forIsland ? (o.kind === "panel" ? mx : 12) : mx;
+      const py = forIsland ? (o.kind === "panel" ? my : 12) : my;
+      return x > o.x - px && x < o.x + o.w + px && y > o.y - py && y < o.y + o.h + py;
+    });
+  }
+  function samplePath(d, fracs) {
+    const svg = document.createElementNS(NS, "svg");
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d); svg.appendChild(p);
+    document.body.appendChild(svg);
+    const L = p.getTotalLength();
+    const pts = fracs.map(f => {
+      const a = p.getPointAtLength(L * f);
+      const b = p.getPointAtLength(Math.min(L, L * f + 2));
+      return { x: a.x, y: a.y, dx: b.x - a.x, dy: b.y - a.y, t: f, L };
+    });
+    pts._path = p; pts._svg = svg; pts.L = L;
+    return pts;
+  }
+  function layout() {
+    const sx = W / 780;
+    // islands spread toward the freed corners, straits stay PINNED below
+    const SPREAD = 1.07;
+    const fxX = x => W / 2 + (x * sx - W / 2) * SPREAD;
+    for (const m of BANDS) {
+      const pts = samplePath(scalePathX(m.guide, fxX), m.fracs);
+      for (let iter = 0; iter < 30; iter++) {
+        let moved = false;
+        for (let i = 1; i < pts.length; i++) {
+          const a = pts[i - 1], b = pts[i];
+          if (Math.hypot(a.x - b.x, a.y - b.y) < 88) {
+            const t = Math.min(1, b.t + 0.012);
+            const q = pts._path.getPointAtLength(pts.L * t);
+            b.x = q.x; b.y = q.y; b.t = t; moved = true;
+          }
+        }
+        if (!moved) break;
+      }
+      pts.forEach((p, i) => {
+        const c = m.islands[i];
+        POS[c] = [Math.round(p.x), Math.round(p.y)];
+        META[c] = m;
+        LBL[c] = [POS[c][0], POS[c][1]];   // the numeral sits INSIDE its island
+      });
+      document.body.removeChild(pts._svg);
+    }
+    // strait islands: ON their seam, labels beside
+    for (const [cs, st] of Object.entries(STRAITS)) {
+      const c = +cs, sxx = Math.round(st.x * sx), y = Math.round(SEAMS[st.seam](sxx));
+      POS[c] = [sxx, y];
+      META[c] = BANDS[st.seam];      // upper sheet styles the disc
+      LBL[c] = [sxx, y];
+    }
+  }
+  function lblHalfW(c) { return rom(c).length * 5.2 + 4; }
+  function lblClash(c, x, y) {
+    if (x - lblHalfW(c) < 4 || x + lblHalfW(c) > W - 4 || y < 22 || y > H - 8) return true;
+    const m = META[c];
+    if (!isStrait(c) && (y < m.top(x) + 16 || y > m.bottom(x) - 10)) return true;
+    for (let d = 1; d <= 30; d++) {
+      if (Math.abs(x - POS[d][0]) < lblHalfW(c) + 30 && Math.abs(y - POS[d][1]) < 31) return true;
+      if (d === c) continue;
+      if (Math.abs(x - LBL[d][0]) < lblHalfW(c) + lblHalfW(d) + 4 && Math.abs(y - LBL[d][1]) < 19) return true;
+    }
+    if (inObst(x, y, lblHalfW(c) + 6, 16)) return true;
+    return false;
+  }
+  function repairLabels() {
+    for (let round = 0; round < 3; round++) {
+      let dirty = false;
+      for (let c = 1; c <= 30; c++) {
+        if (!lblClash(c, LBL[c][0], LBL[c][1])) continue;
+        dirty = true;
+        const [ix, iy] = POS[c];
+        let placed = false;
+        for (const r of [40, 54, 68]) {
+          for (let a = 0; a < 8; a++) {
+            const t = a / 8 * Math.PI * 2;
+            const x = Math.round(ix + Math.cos(t) * r), y = Math.round(iy + Math.sin(t) * r * .8 + 5);
+            if (!lblClash(c, x, y)) { LBL[c] = [x, y]; placed = true; break; }
+          }
+          if (placed) break;
+        }
+      }
+      if (!dirty) break;
+    }
+  }
+  function seaSpot(prefX, prefY, bandId, taken, minClear) {
+    const CLEAR = minClear || 18;
+    const m = BANDS.find(mm => mm.id === bandId);
+    let best = null, bestScore = -1;
+    for (let gx = 46; gx < W - 46; gx += 30) {
+      for (let gy = 34; gy < H - 34; gy += 30) {
+        if (m && (gy < m.top(gx) + 32 || gy > m.bottom(gx) - 32)) continue;
+        let dmin = 1e9;
+        for (let c = 1; c <= 30; c++) {
+          dmin = Math.min(dmin, Math.hypot(gx - POS[c][0], gy - POS[c][1]) - 40,
+                                Math.hypot(gx - LBL[c][0], gy - LBL[c][1]) - 28);
+        }
+        for (const t of taken) dmin = Math.min(dmin, Math.hypot(gx - t[0], gy - t[1]) - 46);
+        if (inObst(gx, gy, 40, 26)) continue;
+        const score = Math.min(dmin, 90) - Math.hypot(gx - prefX, gy - prefY) * 0.25;
+        if (dmin > CLEAR && score > bestScore) { bestScore = score; best = [gx, gy]; }
+      }
+    }
+    if (best) taken.push(best);
+    return best || [prefX, prefY];
+  }
+  function computeAnchors() {
+    ANCH.taken.length = 0; ANCH.obst.length = 0;   // fresh solver state on every layout
+    addObst(24, 18, 258, 56, "panel");                            // cartouche
+    // the CHART KEY pins itself to the clearest water (islands are the hard
+    // constraint, they cannot move; the key can). Clearance uses the AUDIT's own
+    // per-axis margins so a chosen spot can never fail the gate.
+    let bestK = null, bestKs = -1, leastBad = null, leastBadS = -1e9;
+    for (let gx = Math.round(W * 0.42); gx <= W - 184; gx += 14) {
+      for (let gy = 56; gy <= H - 308; gy += 16) {
+        let worst = 1e9, dLbl = 1e9;
+        for (let c = 1; c <= 30; c++) {
+          const [ix, iy] = POS[c];
+          const cx2 = Math.max(gx - 34 - ix, ix - (gx + 164 + 34), 0);
+          const cy2 = Math.max(gy - 30 - iy, iy - (gy + 290 + 30), 0);
+          worst = Math.min(worst, Math.max(cx2, cy2));   // clear if beyond the pad in x OR y
+          const [lx, ly] = LBL[c];
+          const lx2 = Math.max(gx - 12 - lx, lx - (gx + 176), 0);
+          const ly2 = Math.max(gy - 12 - ly, ly - (gy + 302), 0);
+          dLbl = Math.min(dLbl, Math.hypot(lx2, ly2));
+        }
+        const score = Math.min(worst, 40) + Math.min(dLbl, 40) * .5 + gx * 0.03;
+        if (score > leastBadS) { leastBadS = score; leastBad = [gx, gy]; }
+        if (worst < 2) continue;                        // an island would sit under the key
+        if (score > bestKs) { bestKs = score; bestK = [gx, gy]; }
+      }
+    }
+    ANCH.key = bestK || leastBad || [W - 184, 350];
+    addObst(ANCH.key[0], ANCH.key[1], 164, 290, "panel");            // the true rect (islands audit)
+    // extra padded ring for LABELS only, the key is rotated; text must not kiss it
+    addObst(ANCH.key[0] - 12, ANCH.key[1] - 12, 188, 314, "soft");
+    // Era TABS: each sheet's name is a label pasted ON its top tear, one uniform
+    // rule, never floating mid-water over islands. Solver picks the clearest x.
+    ANCH.tab = {};
+    BANDS.forEach((m, i) => {
+      const label = `${m.name} · ${m.span}`;
+      const hw = label.length * 3.35 + 10;
+      const seamY = i === 0 ? () => 16 : m.top;
+      const straitXs = Object.values(STRAITS).filter(s => s.seam === i - 1).map(s => Math.round(s.x * W / 780));
+      let best = null, bestD = -1;
+      for (let fx = 0.14; fx <= 0.86; fx += 0.03) {
+        const x = Math.round(W * fx), y = Math.round(seamY(x));
+        if (x - hw < 8 || x + hw > W - 8) continue;
+        if (inObst(x, y, hw + 12, 18)) continue;
+        let dmin = 1e9;
+        for (const sxx of straitXs) dmin = Math.min(dmin, Math.abs(x - sxx) - hw - 62);
+        for (let c = 1; c <= 30; c++) {
+          if (Math.abs(POS[c][1] - y) < 42) dmin = Math.min(dmin, Math.abs(x - POS[c][0]) - hw - 42);
+          if (Math.abs(LBL[c][1] - y) < 26) dmin = Math.min(dmin, Math.abs(x - LBL[c][0]) - hw - lblHalfW(c) - 10);
+        }
+        if (dmin > bestD) { bestD = dmin; best = [x, y]; }
+      }
+      ANCH.tab[m.id] = { spot: best || [Math.round(W / 2), Math.round(seamY(W / 2))], label, hw };
+      const sp = ANCH.tab[m.id].spot;
+      addObst(sp[0] - hw - 8, sp[1] - 12, hw * 2 + 16, 24);
+    });
+    // THE SAILING ORDER, a slim wooden tab docked on the chart's left edge.
+    // Glance = the leader's boat on the tab · hover = the full order · click =
+    // the slate slides out OVER the water (transient, player-invoked).
+    ANCH.ord = [0, 88];
+    addObst(0, 84, 30, 152, "soft");   // labels keep clear of the tab
+    ANCH.compass = seaSpot(W - 78, POS[10][1] + 4, "hma", ANCH.taken, 34);
+    addObst(ANCH.compass[0] - 30, ANCH.compass[1] - 42, 60, 92);
+    ANCH.well = [Math.max(60, POS[1][0] - 62), Math.min(H - 58, POS[1][1] + 34)];
+    addObst(ANCH.well[0] - 26, ANCH.well[1] - 26, 52, 56);
+    ANCH.light = {};
+    for (const c of [10, 20]) {
+      const [x, y] = POS[c];
+      const ry = islR(c) * 0.74;
+      ANCH.light[c] = [x - 6, y - ry - 13];    // base buried in the coast, no floating
+      // soft: the tower stands ON its island by design, repel labels, not land
+      addObst(ANCH.light[c][0] - 4, ANCH.light[c][1] - 2, 22, 26, "soft");
+    }
+    // PERIOD POSTS (§5.4), a registry marker planted ON each period's internal
+    // tear (the one seam that lies wholly inside it): pole, plate, filling chest.
+    ANCH.post = {};
+    [["Origins", 4], ["Ascension", 2], ["Singularity", 0]].forEach(([pname, si]) => {
+      let best = null, bestD = -1;
+      for (let fx2 = 0.1; fx2 <= 0.9; fx2 += 0.02) {
+        const x = Math.round(W * fx2), y = Math.round(SEAMS[si](x));
+        if (x < 56 || x > W - 56) continue;
+        if (inObst(x, y, 52, 36)) continue;
+        let dmin = 1e9;
+        for (let c = 1; c <= 30; c++)
+          dmin = Math.min(dmin, Math.hypot(x - POS[c][0], y - POS[c][1]) - islR(c));
+        for (const s of Object.values(STRAITS)) if (s.seam === si)
+          dmin = Math.min(dmin, Math.abs(x - Math.round(s.x * W / 780)) - 60);
+        if (dmin > bestD) { bestD = dmin; best = [x, y]; }
+      }
+      ANCH.post[pname] = best || [Math.round(W * .5), Math.round(SEAMS[si](W * .5))];
+      // soft: a compact marker like the lighthouses, repels nothing but labels
+      addObst(ANCH.post[pname][0] - 46, ANCH.post[pname][1] - 30, 92, 62, "soft");
+    });
+    ANCH.coveLab = seaSpot(POS[11][0] - 60, POS[11][1] - 60, "lma", ANCH.taken, 28);
+    addObst(ANCH.coveLab[0] - 52, ANCH.coveLab[1] - 12, 104, 24);   // cove label
+  }
+  let TEARS = [];   // [{band index, rect}]
+  function findTear(bi, w, h) {
+    const m = BANDS[bi], seam = m.bottom;
+    let best = null, bestScore = -1;
+    for (let gx = 30; gx < W - 30 - w; gx += 22) {
+      for (let gy = 20; gy < H - 20 - h; gy += 22) {
+        if (gy < m.top(gx) + 22 || gy + h > seam(gx + w) - 26 || gy < m.top(gx + w) + 22 || gy + h > seam(gx) - 26) continue;
+        if (gy < seam(gx) - 132 || gy < seam(gx + w) - 132) continue;   // sheet below must exist
+        if (inObst(gx + w / 2, gy + h / 2, w / 2 + 10, h / 2 + 10)) continue;
+        let dmin = 1e9;
+        const cx = gx + w / 2, cy = gy + h / 2;
+        for (let c = 1; c <= 30; c++) {
+          dmin = Math.min(dmin, Math.hypot(cx - POS[c][0], cy - POS[c][1]) - (w / 2 + 38),
+                                Math.hypot(cx - LBL[c][0], cy - LBL[c][1]) - (w / 2 + 30));
+        }
+        if (dmin > 4 && dmin > bestScore) { bestScore = dmin; best = { x: gx, y: gy, w, h }; }
+      }
+    }
+    return best;
+  }
+  function audit() {
+    const v = [];
+    for (let c = 1; c <= 30; c++) {
+      const [x, y] = POS[c], m = META[c];
+      if (x < 46 || x > W - 46) v.push(`island ${rom(c)} x-margin`);
+      if (!isStrait(c) && (y < m.top(x) + 30 || y > m.bottom(x) - 30)) v.push(`island ${rom(c)} seam-margin`);
+      for (const T of TEARS)
+        if (T.r && x > T.r.x - 34 && x < T.r.x + T.r.w + 34 && y > T.r.y - 30 && y < T.r.y + T.r.h + 30)
+          v.push(`island ${rom(c)} in tear`);
+      for (let d = c + 1; d <= 30; d++) {
+        const [x2, y2] = POS[d];
+        if (Math.hypot(x - x2, y - y2) < 74) v.push(`islands ${rom(c)}/${rom(d)} too close`);
+      }
+      if (inObst(x, y, 34, 30, true)) v.push(`island ${rom(c)} under chart furniture`);
+    }
+    return v;
+  }
+
+  /* ═══ STATE ═══ */
+  const R = { trails: [], monsters: [], wrecks: [], storms: [], restored: new Set(),
+    merchantLast: null, merchantHist: [], taken: [], fx: [], prevShip: null,
+    presented: new Set(), preplot: null, shown: {}, sailing: false, deliveries: [], pendingSelf: null,
+    ordIdx: null, ordFlip: null, merchantShown: null };
+  const trailKey = t => `${t.seat}:${t.from}:${t.to}:${t.hour}`;
+  let app = null, rivalKeys = {};
+  function hookApp() {
+    app = window.__game;
+    if (!app || app.__seaHooked) return !!app;
+    app.__seaHooked = true;
+    const orig = app.playEvent.bind(app);
+    app.playEvent = async msg => {
+      try { onEvent(msg); } catch (e) {}
+      return orig(msg);
+    };
+    const origDec = app.onDecision.bind(app);
+    app.onDecision = req => {
+      const r = origDec(req);
+      try { pollDecisions(); } catch (e) {}
+      return r;
+    };
+    window.__seaState = R; window.__seaFx = (f) => { R.fx.push(f); drainFx(); };
+    window.__seaPresenting = () => __live() && (fxBusy || R.fx.length > 0 || R.sailing);
+    // Screen rect of an island, lets game.js land card flights ON the chart
+    // (the delivered artifact flies home to its century's island).
+    window.__seaIslandRect = c => {
+      const el = document.querySelector(`.sea-isle[data-c="${c}"]`);
+      const r = el && el.isConnected ? el.getBoundingClientRect() : null;
+      return r && r.width ? r : null;
+    };
+    return true;
+  }
+  // The sea speaks through the game's audio engine (game.js exposes window.__audio).
+  const audible = () => { const r = document.getElementById("timeline-rail"); return !!r && (!r.classList.contains("skin-sing") && !r.classList.contains("skin-ori")); };
+  const snd = (n, o) => { try { if (window.__audio) audible() && window.__audio.play(n, o); } catch (e) {} };
+  function hourNow() { return app && app.view ? app.view.hour : 0; }
+  function voyagePath(from, to, hour) {
+    // a course NEVER crosses land: bow the arc wider and wider until every league is open sea
+    const [x1, y1] = POS[from], [x2, y2] = POS[to];
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+    const base = Math.min(30, Math.max(10, L * .14)) * (rnd(from * 31 + to, hour) > .5 ? 1 : -1);
+    const clear = (mx, my) => {
+      for (let k = 1; k < 15; k++) {
+        const t = k / 15, u = 1 - t;
+        const px = u * u * x1 + 2 * u * t * mx + t * t * x2, py = u * u * y1 + 2 * u * t * my + t * t * y2;
+        for (let c2 = 1; c2 <= 30; c2++) {
+          if (c2 === from || c2 === to || !POS[c2]) continue;
+          if (Math.hypot(px - POS[c2][0], py - POS[c2][1]) < islR(c2) + 9) return false;
+        }
+        if (ANCH.well && Math.hypot(px - ANCH.well[0], py - ANCH.well[1]) < 30 && from !== 0 && to !== 0) return false;
+      }
+      return true;
+    };
+    let mx = x1 + dx / 2 - dy / L * base, my = y1 + dy / 2 + dx / L * base;
+    for (const mult of [1, -1, 1.9, -1.9, 2.8, -2.8, 3.8, -3.8, 5]) {
+      const bw = base * mult;
+      const tx2 = x1 + dx / 2 - dy / L * bw, ty2 = y1 + dy / 2 + dx / L * bw;
+      if (clear(tx2, ty2)) { mx = tx2; my = ty2; break; }
+    }
+    return `M ${x1} ${y1} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${x2} ${y2}`;
+  }
+  function selfT() { return app && app.view ? app.view.travelers.find(t => t.is_self) : null; }
+  // THE SEAT COLOUR COMES FROM THE GAME NOW. This chart used to keep its own palette AND
+  // its own first-seen index (rivalKeys), so the boat you saw here and the badge on the
+  // desk were two different colours for the same rival, and no squinting was ever going
+  // to fix it. Colour is a LABEL; a label that disagrees with itself is worse than none.
+  // FIXCOL survives only as a fallback for previewing a chart with no game attached.
+  function seatColor(seat) {
+    try{ if(window.__seatColor){ const c=window.__seatColor(seat); if(c) return c; } }catch(e){}
+    const s = selfT();
+    if (s && seat === s.name) return FIXCOL.self;
+    if (!(seat in rivalKeys)) rivalKeys[seat] = "r" + (Object.keys(rivalKeys).length % 5);
+    return FIXCOL[rivalKeys[seat]];
+  }
+  // A stable RIG index per captain, you are your SILHOUETTE as much as your colour.
+  function seatRig(seat) {
+    const s = selfT();
+    if (s && seat === s.name) return 0;             // the flagship sloop is yours
+    seatColor(seat);                                // ensure a rival slot exists
+    const k = rivalKeys[seat];
+    return k ? (parseInt(k.slice(1), 10) + 1) % 6 : 0;
+  }
+  // The rig (sail plan) for a kind 0..5, drawn around a shared hull. `dead` heels
+  // the hull; `ghost` hollows it (terminated in the Reaches); `burst` furls + smokes.
+  // ONE boat for every captain (the square-rigger reads best); the
+  // CAPTAIN'S COLOUR is the hull, a bold band on the sail and the masthead pennant.
+  function rigSVG(kind, col, { ghost = false, burst = false } = {}) {
+    const dk = "rgba(20,12,4,.85)";
+    const hull = ghost
+      ? `<path d="M -9 3 Q 0 9 9 3 L 7 8 Q 0 11 -7 8 Z" fill="none" stroke="${col}" stroke-width="1.2" stroke-dasharray="2.5 2"/>`
+      : `<path d="M -9 3 Q 0 9 9 3 L 7 8 Q 0 11 -7 8 Z" fill="${col}" stroke="${dk}" stroke-width="1.1"/>
+         <path d="M -6 4.4 Q 0 6.8 6 4.4" fill="none" stroke="#f2e8cd" stroke-width=".8" opacity=".7"/>`;
+    if (burst)   // boiler burst, furled sail, rising smoke
+      return hull + `<path d="M 0 3 V -9" stroke="${dk}" stroke-width="1.4"/>
+        <path d="M 0 -9 q 3 3.5 0 7" fill="none" stroke="${dk}" stroke-width="1.7"/>
+        <path class="sea-smoke" d="M 1.5 -11 q 3.5 -3.5 1 -7 q -2.5 -2.5 1.5 -6" fill="none" stroke="#5a5f6a" stroke-width="1.5"/>`;
+    const sailFill = ghost ? "none" : "#f2e8cd";
+    const sailStroke = ghost ? col : "rgba(20,12,4,.7)";
+    const dash = ghost ? ' stroke-dasharray="2.5 2"' : "";
+    return hull
+      + `<path d="M 0 4.6 V -15.5" stroke="${dk}" stroke-width="1.6"/>`
+      + `<path d="M -7.6 -11.6 H 7.6" stroke="${dk}" stroke-width="1.3"/>`
+      + `<path d="M -7.2 -11.6 Q 0 -8.8 7.2 -11.6 L 5.8 2.6 Q 0 4.9 -5.8 2.6 Z" fill="${sailFill}" stroke="${sailStroke}" stroke-width=".9"${dash}/>`
+      + (ghost ? "" : `<path d="M -6 -4.4 Q 0 -2 6 -4.4" fill="none" stroke="${col}" stroke-width="2"/>`)
+      + `<path d="M 0 -15.5 l 7.5 2.4 l -7.5 2.4 Z" fill="${col}" stroke="${dk}" stroke-width=".5"/>`;
+  }
+  // A faithful split of a total across n three-sided dice (each 1..3). The server
+  // never sends the individual rolls, but any split summing to the moved distance
+  // is a true picture of 'Nd3 that summed to this'.
+  function d3Split(total, n) {
+    const out = new Array(n).fill(1);
+    let rem = Math.max(0, Math.min(3 * n, total | 0) - n);
+    for (let i = 0; i < n && rem > 0; i++) { const add = Math.min(2, rem); out[i] += add; rem -= add; }
+    return out;
+  }
+  const PIPS = { 1: [[0, 0]], 2: [[-1.4, -1.4], [1.4, 1.4]], 3: [[-1.6, -1.6], [0, 0], [1.6, 1.6]] };
+  function d3Token(v, tx, ty) {
+    const dots = (PIPS[v] || PIPS[1]).map(([dx, dy]) =>
+      `<circle cx="${(tx + dx).toFixed(1)}" cy="${(ty + dy).toFixed(1)}" r=".85" fill="#3a2c16"/>`).join("");
+    return `<rect x="${tx - 4}" y="${ty - 4}" width="8" height="8" rx="1.6" fill="#f2e8cd" stroke="#3a2c16" stroke-width=".8"/>${dots}`;
+  }
+  function centuryOf(seat) {
+    const t = app.view.travelers.find(x => x.name === seat);
+    return t ? t.century : null;
+  }
+  function onEvent(msg) {
+    const k = msg.event || msg.kind || msg.type, p = msg.payload || {};
+    if (k === "traveled" && p.from >= 0 && p.to >= 0) {
+      const tr = { seat: p.seat, from: Math.max(1, p.from), to: Math.max(1, p.to), hour: hourNow() };
+      R.trails.push(tr);
+      const st = selfT();
+      if (st && p.seat === st.name && R.preplot === `${tr.from}:${tr.to}`) {
+        R.presented.add(trailKey(tr));   // the click already inked this voyage
+        R.preplot = null;
+      } else {
+        R.fx.push({ t: "trail", ...tr });
+      }
+      if (st && p.seat === st.name) R.pendingSelf = tr.to;   // server truth wins, corrects an over-plotted (clamped) landfall
+    }
+    if (k === "paradox_resolved")
+      for (const h of (p.hits || [])) {
+        const c = centuryOf(h.seat);
+        if (!c) continue;
+        let mo = R.monsters.find(m => m.c === c);
+        if (!mo) {
+          mo = { c, dmg: 0, count: 0, hour: hourNow(),
+            spot: seaSpot(POS[c][0] + islR(c) + 18, POS[c][1] - islR(c) * .6 - 16, META[c].id, R.taken) };
+          R.monsters.push(mo);
+        }
+        mo.dmg += h.damage || 1; mo.count++; mo.hour = hourNow();
+        R.fx.push({ t: "monster", c, d: h.damage || 1, seat: h.seat });
+      }
+    if (k === "exploded") {
+      const c = centuryOf(p.seat);
+      if (c) { R.storms.push({ c, hour: hourNow() }); R.fx.push({ t: "flash", c }); }
+    }
+    if (k === "terminated") {
+      const c = centuryOf(p.seat);
+      if (c) { R.wrecks.push({ seat: p.seat, c, hour: hourNow(),
+        spot: seaSpot(POS[c][0] - islR(c) - 18, POS[c][1] + islR(c) * .6 + 16, META[c].id, R.taken) });
+        R.fx.push({ t: "wreck", c }); }
+    }
+    if (k === "respawned") R.fx.push({ t: "respawn", seat: p.seat });
+    if (k === "milestone") R.fx.push({ t: "sail", seat: p.seat, c: p.century });
+    if (k === "delivered") {
+      R.restored.add(p.century);
+      R.deliveries.push({ seat: p.seat, card: p.card, century: p.century, hour: hourNow() });
+      R.fx.push({ t: "restore", c: p.century });
+    }
+    if (k === "merchant_moved") {
+      R.merchantLast = p;
+      if (p.from != null && p.to != null && p.from !== p.to) {
+        R.merchantHist.push({ from: p.from, to: p.to, hour: hourNow() });
+        if (R.merchantHist.length > 6) R.merchantHist.shift();
+      }
+      R.fx.push({ t: "ship" });
+    }
+    scheduleLive();
+  }
+
+  /* ═══ ISLANDS THAT ARE ISLANDS ═══ */
+  function coastPath(c, R0, squish) {
+    const n = 12, pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2;
+      const rr = R0 * (0.68 + 0.42 * rnd(c * 7 + 1, i));
+      pts.push([Math.cos(a) * rr, Math.sin(a) * rr * squish]);
+    }
+    let d = "";
+    for (let i = 0; i < n; i++) {
+      const p0 = pts[(i + n - 1) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+      const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += (i === 0 ? `M ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} ` : "")
+        + `C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} `;
+    }
+    return d + "Z";
+  }
+  function islandG(c) {
+    const [x, y] = POS[c], m = META[c];
+    const eras = ERAS_OF(c), dual = eras.length === 2;
+    const R0 = islR(c);
+    const rot = (rnd(c, 9) - .5) * 30;
+    const coast = coastPath(c, R0, 0.74);
+    const high = coastPath(c + 60, R0 * .5, 0.7);
+    const sand = "#e9dcb8";
+
+    // the century's number lives ON its island, no floating labels to collide
+    const fs = rom(c).length <= 2 ? 18 : rom(c).length <= 4 ? 14 : 11.5;
+    return `<g class="sea-isle${c <= 9 ? " od" : ""}" data-c="${c}">
+      <g transform="translate(${x} ${y}) rotate(${rot})">
+        <path d="${coast}" fill="${sand}" stroke="${m.ink}" stroke-width="2"/>
+        <path d="${high}" fill="${ACCENT[META[c].id] || m.accent}" opacity=".18"/>
+      </g>
+      <circle class="sea-hit" data-c="${c}" cx="${x}" cy="${y}" r="${R0 + 10}" fill="transparent"/>
+      <text x="${x}" y="${y + fs * .36}" text-anchor="middle" font-family="${m.font}" font-weight="bold"
+        font-size="${fs}" letter-spacing=".5" fill="${m.ink}"
+        stroke="${sand}" stroke-width="3.5" paint-order="stroke" class="sea-num" data-c="${c}">${rom(c)}</text>
+    </g>`;
+  }
+
+  /* ═══ SHEETS, SEAMS, FURNITURE ═══ */
+  function zig(x0, y0, x1, y1, amp, n) {
+    let d = `L ${x0} ${y0} `;
+    for (let i = 1; i <= n; i++) {
+      const t = i / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+      const j = (i * 2654435761 % 97) / 97 - 0.5;
+      d += `L ${x.toFixed(1)} ${(y + j * amp).toFixed(1)} `;
+    }
+    return d;
+  }
+  function holePath(T) {
+    const { x, y, w, h } = T;
+    return `M ${x + 8} ${y} L ${x + w * .4} ${y + 6} L ${x + w * .7} ${y - 2} L ${x + w} ${y + 10}
+      L ${x + w - 6} ${y + h * .5} L ${x + w} ${y + h - 8} L ${x + w * .6} ${y + h} L ${x + w * .3} ${y + h - 6}
+      L ${x} ${y + h - 2} L ${x + 6} ${y + h * .4} Z`;
+  }
+  function bandClip(i) {
+    const m = BANDS[i];
+    const G = 0;    // the six seas meet at the seam, the boundary is foam, not paper
+    const tear = TEARS.find(t => t.band === i && t.r);
+    const tT = x => m.top(x) + G, tB = x => m.bottom(x) - G;
+    let d;
+    if (i === 0) d = `M 0 0 L ${W} 0 L ${W} ${tB(W)} ` + zig(W, tB(W), 0, tB(0), m.amp, 24) + "Z";
+    else if (i === BANDS.length - 1) d = `M 0 ${tT(0)} ` + zig(0, tT(0), W, tT(W), m.amp, 22) + ` L ${W} ${H} L 0 ${H} Z`;
+    else d = `M 0 ${tT(0)} ` + zig(0, tT(0), W, tT(W), m.amp, 22) + ` L ${W} ${tB(W)} ` + zig(W, tB(W), 0, tB(0), m.amp, 24) + "Z";
+    return { main: d, hole: tear ? holePath(tear.r) : null };
+  }
+  let SHARKS = "";
+  // THE PARCHMENT TOOTH, BAKED ONCE. seaRough was a LIVE feTurbulence wrapped around the
+  // entire 832x1000 chart, and a live SVG filter is re-evaluated on every repaint of what
+  // it wraps. The sixteen sharks animate offset-distance (a PAINT property), so the chart
+  // repainted every frame and the filter chain ran with it, 60x a second, over 832,000
+  // pixels. Measured in Firefox on my RTX at 165Hz: the Sea ran at 27 fps; frozen
+  // solid it still only reached 55; frozen with the filters off, 164. ONE filter, 109 fps.
+  // The texture never changes, so it is an IMAGE the browser rasterises once and caches.
+  const ROUGH_TEX = "data:image/svg+xml," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360">' +
+    '<filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/>' +
+    '<feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .09 0"/></filter>' +
+    '<rect width="100%" height="100%" filter="url(#n)"/></svg>');
+  function sharkBody(scale) {
+    return `<g transform="scale(${scale})">
+      <path d="M -8 0 Q -5 -3 2 -2.6 Q 7 -1.3 9.5 0 Q 7 1.3 2 2.6 Q -5 3 -8 0 Z" fill="#2c3a46" stroke="#141f28" stroke-width=".9"/>
+      <path d="M -8 0 l -4.5 -3.2 l 1.6 3.2 l -1.6 3.2 z" fill="#2c3a46" stroke="#141f28" stroke-width=".8"/>
+      <path d="M 0 -2.4 l -2.4 -4.2 l 4.6 1.8 z" fill="#24303c" stroke="#141f28" stroke-width=".7"/>
+      <circle cx="6.8" cy="-.9" r=".55" fill="#0c1418"/>
+    </g>`;
+  }
+  function finG(scale) {
+    return `<g class="flip"><g transform="scale(${scale})">
+      <path d="M 3.4 0 Q 2.6 -5.6 -1.2 -7.9 Q -.6 -3.4 -5.4 0 Z" fill="#2c3a46" stroke="#141f28" stroke-width=".8"/>
+      <path d="M -12 1 q 5 1.8 16 1.2 M -9 3 q 4 1.2 10 .9" stroke="#eaf4f6" stroke-width=".9" fill="none" opacity=".5"/>
+    </g></g>`;
+  }
+  function sharkWaters(m) {
+    // the school IS the overdrive: each shark patrols its own stretch of open water,
+    // placed with clearance from every island, seam, panel, sign and the Skull Mount
+    const zone = m.islands.filter(c => c <= 9);
+    if (!zone.length) return "";
+    const pts2 = zone.map(c => POS[c]);
+    if (POS[5]) pts2.push(POS[5]);
+    const cx = pts2.reduce((t, q) => t + q[0], 0) / pts2.length;
+    const cy = pts2.reduce((t, q) => t + q[1], 0) / pts2.length;
+    const rx = Math.max(...pts2.map(q => Math.abs(q[0] - cx))) + 70;
+    const ry = Math.max(...pts2.map(q => Math.abs(q[1] - cy))) + 48;
+    const want = m.id === "hma" ? 9 : 7;
+    const spots = [];
+    const okSpot = (px, py, hw) => {
+      if (px - hw < 24 || px + hw > W - 24 || py < 30 || py > H - 22) return false;
+      for (let c2 = 1; c2 <= 30; c2++) if (POS[c2] && Math.hypot(px - POS[c2][0], py - POS[c2][1]) < islR(c2) + hw + 11) return false;
+      if (ANCH.well && Math.hypot(px - ANCH.well[0], py - ANCH.well[1]) < hw + 40) return false;
+      for (const f of SEAMS) if (Math.abs(py - f(px)) < 19) return false;
+      for (const o of (ANCH.obst || [])) if (o.kind !== "soft" && px + hw > o.x - 10 && px - hw < o.x + o.w + 10 && py > o.y - 13 && py < o.y + o.h + 13) return false;
+      for (const sp of spots) if (Math.hypot(px - sp[0], py - sp[1]) < 42) return false;
+      return true;
+    };
+    let tries = 0;
+    while (spots.length < want && tries < 900) {
+      const i = tries++;
+      const px = cx - rx + ((i * 53.7 + (m.id === "hma" ? 17 : 211)) % (2 * rx)) + (rnd(i, 2) - .5) * 22;
+      const py = cy - ry + ((i * 37.3 + 29) % (2 * ry)) + (rnd(i, 3) - .5) * 16;
+      const hw = 15 + rnd(i, 6) * 11;
+      if (okSpot(px, py, hw + 6)) spots.push([px, py, hw]);
+    }
+    spots.forEach(([px, py, hw], i) => {
+      const r = Math.min(hw, 13 + rnd(i, 21) * 8), cw = i % 2 === 0, sw = cw ? 1 : 0;
+      const pth = `M ${(px + r).toFixed(1)} ${py.toFixed(1)} A ${r.toFixed(1)} ${(r * .72).toFixed(1)} 0 1 ${sw} ${(px - r).toFixed(1)} ${py.toFixed(1)} A ${r.toFixed(1)} ${(r * .72).toFixed(1)} 0 1 ${sw} ${(px + r).toFixed(1)} ${py.toFixed(1)} Z`;
+      const T = (9 + rnd(i, 33) * 6).toFixed(1), D = (-rnd(i, 47) * 9).toFixed(1);
+      // THE SHARKS SWAM ON A PAINT PROPERTY. offset-distance is not compositable: every
+      // frame, all sixteen of them forced a repaint of the whole 832x1000 chart, and the
+      // chart was wearing a live feTurbulence, so the filter chain ran with it. Together
+      // they took the Paradox Sea to 27 fps on an RTX 5050 (Firefox, 165Hz panel).
+      // But `offset-rotate: 0deg` means the shark never actually TURNED along the path,
+      // it only travelled it, and a separate scaleX flip makes it face its heading. So
+      // the path is pure translation around an ellipse, and pure translation is exactly
+      // what `transform` does, for free, on the compositor, with no repaint at all.
+      // Outer <g> carries the CENTRE as an SVG attribute; the inner <g> orbits in CSS.
+      // (Never both on one node: a CSS transform OVERRIDES the SVG transform attribute.)
+      SHARKS += `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="sea-shark ${cw ? "cw": "ccw"}" data-tip="shark waters, every league here costs 2 energy"
+        style="--r: ${r.toFixed(1)}; --ry: ${(r * .72).toFixed(1)}; animation-duration: ${T}s; animation-delay: ${D}s; --t2: ${T}s">${finG(.95 + rnd(i, 51) * .35)}</g></g>`;
+    });
+    if (m.id === "hma") {
+      const sx2 = cx, sy2 = cy - ry + 16;
+      SHARKS += `<g class="sea-sign" data-tip="DANGER: shark waters (centuries I-IX): every league costs 2 energy" transform="translate(${sx2.toFixed(0)} ${sy2.toFixed(0)}) rotate(-3)">
+        <path d="M -4 16 q 4 2 8 0 M -6 19 q 6 3 12 0" stroke="#eaf4f6" stroke-width="1" fill="none" opacity=".5"/>
+        <rect x="-1.4" y="-6" width="2.8" height="22" fill="#6a4a26" stroke="#241708" stroke-width=".9"/>
+        <rect x="-24" y="-20" width="48" height="15" rx="2" fill="#c9a45c" stroke="#241708" stroke-width="1.1"/>
+        <path d="M -19 -8.5 Q -18 -15 -13.5 -16.5 Q -14.5 -12 -12 -8.5 Z" fill="#2c3a46"/>
+        <text x="4" y="-9.5" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="7.5" letter-spacing=".5" fill="#4a2f10">2 ENERGY</text>
+      </g>`;
+    }
+    return "";
+  }
+  function eraTabs() {
+    let g = "";
+    BANDS.forEach((m, i) => {
+      const { spot: [x, y], label, hw } = ANCH.tab[m.id];
+      const tilt = ((rnd(i, 5) - .5) * 2.4).toFixed(1);
+      g += `<g transform="translate(${x} ${y}) rotate(${tilt})">
+        <rect x="${-hw - 8}" y="-11" width="${hw * 2 + 16}" height="22" fill="${m.paper[0]}" stroke="${m.ink}" stroke-width="1.2" opacity=".96"/>
+        <rect x="${-hw - 5}" y="-8" width="${hw * 2 + 10}" height="16" fill="none" stroke="${m.ink}" stroke-width=".5" opacity=".5"/>
+        <text y="4" text-anchor="middle" font-family="${m.font}" font-weight="bold" font-size="11" letter-spacing="1.2" fill="${m.ink}">${label}</text></g>`;
+    });
+    return g;
+  }
+  function surveyRoute() {
+    // the faint survey scrawl, trimmed at every coastline so it never crosses land
+    const pts = [];
+    for (let c = 30; c >= 1; c--) pts.push([POS[c][0], POS[c][1], islR(c)]);
+    pts.push([ANCH.well[0], ANCH.well[1], 26]);
+    let d = "", chev = "";
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [x1, y1, r1] = pts[i], [x2, y2, r2] = pts[i + 1];
+      const L = Math.hypot(x2 - x1, y2 - y1) || 1;
+      // cap each end's trim at 40% of the run so consecutive islands ALWAYS connect
+      const t1 = Math.min(r1 + 2, L * 0.4) / L, t2 = 1 - Math.min(r2 + 2, L * 0.4) / L;
+      if (t2 <= t1) continue;
+      d += `M ${(x1 + (x2 - x1) * t1).toFixed(1)} ${(y1 + (y2 - y1) * t1).toFixed(1)} L ${(x1 + (x2 - x1) * t2).toFixed(1)} ${(y1 + (y2 - y1) * t2).toFixed(1)} `;
+      if (L > 60) { const mx3 = (x1 + x2) / 2, my3 = (y1 + y2) / 2, ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+        chev += `<path d="M -4.2 -3.8 L 4.2 0 L -4.2 3.8" fill="none" stroke="#2a2018" stroke-width="1.8"
+          transform="translate(${mx3.toFixed(1)} ${my3.toFixed(1)}) rotate(${ang.toFixed(1)})" opacity=".55"/>`; }
+    }
+    return `<path d="${d}" fill="none" stroke="#f6eeda" stroke-width="5.5" opacity=".5" stroke-linecap="round"/>
+      <path d="${d}" fill="none" stroke="#2a2018" stroke-width="2.2"
+      stroke-dasharray="7 5" opacity=".55" stroke-linecap="round"/>` + chev;
+  }
+  function legendPanel() {
+    const [kx, ky] = ANCH.key;
+    const row = (i, glyph, label) =>
+      `<g transform="translate(9 ${34 + i * 21})">${glyph}
+        <text x="26" y="4" font-family="Georgia" font-style="italic" font-size="8" fill="#3a2c16">${label}</text></g>`;
+    let keyOpen = true;
+    try { keyOpen = localStorage.getItem("seaKeyOpen") !== "0"; } catch (e) {}
+    return `<g class="sea-key${keyOpen ? "" : " folded"}" transform="translate(${kx} ${ky}) rotate(-1.2)">
+      <g class="sea-key-body">
+      <rect width="160" height="286" fill="#ead9b0" stroke="#5a4526" stroke-width="1.6" rx="2"/>
+      <rect x="4" y="4" width="152" height="278" fill="none" stroke="#5a4526" stroke-width=".5" opacity=".6"/>
+      <text x="80" y="24" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="11" letter-spacing="2" fill="#3a2c16">CHART KEY</text>
+      ${row(0, `<g transform="translate(7 -1) scale(.4)">${rigSVG(0, "#1d6b52", {})}</g>`, "a traveler's boat")}
+      ${row(1, `<line x1="0" y1="0" x2="18" y2="0" stroke="#1d6b52" stroke-width="2.4"/>`, "a voyage (fades with hours)")}
+      ${row(2, `<path d="M 0 1 a 6 3 0 0 1 12 0" fill="none" stroke="#7a2a1a" stroke-width="1.4" stroke-dasharray="2.5 2.5"/>`, "troubled water, a paradox")}
+      ${row(3, `<path d="M 2 2 q -3 -5 3 -6 q 1 -4 6 -3 q 5 -3 8 1 q 5 0 4 5 z" fill="#5a5f6a"/>`, "a storm = gathering booms")}
+      ${row(4, `<path d="M 0 4 q 6 4 12 0 l -2 3 q -4 2 -8 0 z M 5 3 V -4 l 4 2 -4 2" fill="#4a3a1c"/>`, "a wreck = a termination")}
+      ${row(5, `<path d="M 0 4 Q 8 8 16 4 L 14.5 7 Q 8 10 1.5 7 Z" fill="#4a3620"/><path d="M 1.5 0 Q 8 -3 14.5 0 L 14.5 2 Q 8 -1 1.5 2 Z" fill="#8c3b2a"/><path d="M 8 -1 V -7 M 8 -7 L 13 -5.5 L 8 -4 Z" stroke="#241708" stroke-width=".8" fill="#c9a45c"/>`, "the Merchant (sails=speed)")}
+      ${row(6, `<path d="M 2 6 V -6 L 11 -3 L 2 0" fill="#a04a2a"/>`, "you deliver at this century")}
+      ${row(7, `<ellipse cx="9" cy="0" rx="9" ry="6" fill="none" stroke="#b8862a" stroke-width="2"/>`, "restored, a delivery landed")}
+      ${row(8, `<path d="M 6 6 L 7 -2 H 11 L 12 6 Z M 5 -2 L 0 -5 M 12 -2 L 17 -5" stroke="#5a4526" stroke-width="1" fill="#c9a45c"/>`, "milestone light (X · XX)")}
+      ${row(9, `<path d="M 3 4 Q 1 -3 6 -5 Q 9 -7 13 -5 Q 17 -3 15 4 Q 12 6 6 6 Z" fill="#5c566e" stroke="#2a2438" stroke-width=".8"/><ellipse cx="7" cy="-1" rx="1.6" ry="2" fill="#171226"/><ellipse cx="12" cy="-1" rx="1.6" ry="2" fill="#171226"/><path d="M 6 4 l 1.4 -2 l 1.4 2 M 10 4 l 1.4 -2 l 1.4 2" fill="#171226"/>`, "the Skull Mount, Year Zero")}
+      ${row(10, `<path d="M 4 4 Q 5 -2 9 -3.5 Q 8.2 0 10.5 4 Z M 12 3 Q 12.7 -1 15.5 -2 Q 15 .6 16.8 3 Z" fill="#2c3a46"/><path d="M 1 5.5 q 4 1.6 9 1 M 11 5.5 q 3.5 1.2 7 .6" stroke="#7a94a0" stroke-width=".8" fill="none"/>`, "shark waters, costs 2 energy")}
+      <text x="80" y="280" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="7.5" fill="#6a5232">- in the traveler's own hand -</text>
+      </g>
+      <g class="sea-key-pin">
+        <circle cx="80" cy="9" r="6" fill="#8c2a1a" stroke="#4a1608" stroke-width="1.2"/>
+        <circle cx="78.4" cy="7.4" r="2" fill="#c05a4a"/>
+        <text class="sea-key-tag" x="80" y="27" text-anchor="middle" font-family="Georgia" font-weight="bold"
+          font-size="9" letter-spacing="1.5" fill="#3a2c16" stroke="#ead9b0" stroke-width="3" paint-order="stroke">KEY</text>
+      </g>
+    </g>`;
+  }
+  function furniture() {
+    let g = `<g class="sea-cart" transform="translate(24 18)">
+      <rect width="258" height="56" fill="#d9cba4" stroke="#3a2c16" stroke-width="1.4" opacity=".95"/>
+      <rect x="4" y="4" width="250" height="48" fill="none" stroke="#3a2c16" stroke-width=".5"/>
+      <text x="129" y="20" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="14" letter-spacing="3" fill="#3a2c16">THE PARADOX SEA</text>
+      <text x="129" y="33" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" letter-spacing=".8" fill="#3a2c16">C.R.O.N.O.S. SURVEY · THE SIX SEAS OF TIME</text>
+      <text x="129" y="46" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" letter-spacing="1" fill="#8c2a1a" class="sea-hour">TUESDAY 31 DEC 2999 · HOUR -</text></g>`;
+    const cp = ANCH.compass;
+    g += `<g transform="translate(${cp[0]} ${cp[1]})" stroke="#3a3458" fill="none" opacity=".9" class="sea-compass">
+      <circle r="26" stroke-width="1"/><circle r="18" stroke-width=".5" opacity=".7"/>
+      <path d="M0 -24 L4.5 -5 L0 0 L-4.5 -5 Z" fill="#8c2a1a" stroke="none"/>
+      <path d="M0 24 L4.5 5 L0 0 L-4.5 5 Z M-24 0 L-5 -4.5 L0 0 L-5 4.5 Z M24 0 L5 -4.5 L0 0 L5 4.5 Z" fill="#3a3458" stroke="none" opacity=".6"/>
+      <text y="-31" text-anchor="middle" font-size="9" fill="#3a3458" stroke="none" font-family="Georgia" font-style="italic">future</text>
+      <text y="38" text-anchor="middle" font-size="9" fill="#3a3458" stroke="none" font-family="Georgia" font-style="italic">past</text></g>`;
+    for (const c of [10, 20]) {
+      const [lx2, ly2] = ANCH.light[c];
+      const ink = META[c].ink;
+      g += `<g transform="translate(${lx2} ${ly2})" class="sea-light" data-c="${c}">
+        <circle cx="7.5" cy="5.4" r="17" fill="url(#seaLightGlow)" class="sea-beam"/>
+        <path d="M3.6 5.4 L-16 -1 L-16 10 Z" fill="#ffe9b0" opacity=".3" class="sea-beam"/>
+        <path d="M11.4 5.4 L31 -1 L31 10 Z" fill="#ffe9b0" opacity=".3" class="sea-beam"/>
+        <path d="M4 20 L5.2 7 L9.8 7 L11 20 Z" fill="#8a6a3a" stroke="${ink}" stroke-width=".9"/>
+        <rect x="4.6" y="3.4" width="5.8" height="4" rx="1" fill="#c9a45c" stroke="${ink}" stroke-width=".9"/>
+        <path d="M3.6 5.4 L-13 .4 M11.4 5.4 L28 .4" stroke="#e8c05a" stroke-width="1.4" opacity=".95" class="sea-beam"/>
+        <circle cx="7.5" cy="5.4" r="1.8" fill="#fff4cc"/>
+        <g class="sea-pips" data-c="${c}"></g></g>`;
+    }
+    g += legendPanel();
+    return g;
+  }
+  function waveRows(ink) {
+    // engraved chart waves in this sea's own ink, two layers, gently adrift
+    const row = (y, ph, op) => { let d = `M ${-96 + ph} ${y} `; for (let x = -96 + ph; x < W + 96; x += 48) d += `q 12 -8 24 0 q 12 8 24 0 `; return `<path d="${d}" fill="none" stroke="${ink}" stroke-width="1" opacity="${op}"/>`; };
+    let l1 = "", l2 = "";
+    for (let y = 8; y < H + 12; y += 14) { const k = (y / 14) | 0; if (k % 2 === 0) l1 += row(y, (k * 17) % 48, .16); else l2 += row(y, (k * 29) % 48, .11); }
+    let curls = "";
+    for (let i = 0; i < 26; i++) { const x = (i * 173 + 40) % W, y = 16 + ((i * 107) % (H - 30));
+      curls += `<path d="M ${x} ${y} q 7 -7 14 -2 q -6 0 -8 4" fill="none" stroke="#f4f8f6" stroke-width="1" opacity=".22"/>`; }
+    return `<g class="sea-waves w1">${l1}</g><g class="sea-waves w2">${l2}${curls}</g>`;
+  }
+  function foamSeams() {
+    // where two seas of time meet, the currents raise a line of foam
+    let g = "";
+    SEAMS.forEach((f, i) => {
+      const amp = BANDS[i].amp;
+      g += `<path d="M 0 ${f(0) + 2} ${zig(0, f(0) + 2, W, f(W) + 2, amp, 24)}" fill="none" stroke="rgba(26,66,84,.28)" stroke-width="5"/>
+        <path d="M 0 ${f(0)} ${zig(0, f(0), W, f(W), amp, 24)}" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="2" class="sea-foamline"/>`;
+      for (let x = 40 + i * 25; x < W - 20; x += 96)
+        g += `<path d="M ${x} ${(f(x) - 3).toFixed(1)} q 6 -6 12 -1 q -5 0 -7 3.5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.1"/>`;
+    });
+    return g;
+  }
+  function baseMap() {
+    layout();
+    computeAnchors();
+    TEARS = [];   // sheet-holes read as render BUGS in open water, the torn seams alone sell the puzzle
+    const violations = audit();
+    window.__seaAudit = () => violations;
+    window.__seaProbe = c => ({ pos: POS[c], hits: ANCH.obst.filter(o => {
+      const px = o.kind === "panel" ? 34 : 12, py = o.kind === "panel" ? 30 : 12;
+      return o.kind !== "soft" && POS[c][0] > o.x - px && POS[c][0] < o.x + o.w + px
+        && POS[c][1] > o.y - py && POS[c][1] < o.y + o.h + py; }) });
+    window.__seaDebug = () => ({ W, xxv: POS[25], lbl: LBL[25],
+      obst: ANCH.obst.filter(o => o.kind !== "soft" && POS[25][0] > o.x - 46 && POS[25][0] < o.x + o.w + 46
+        && POS[25][1] > o.y - 46 && POS[25][1] < o.y + o.h + 46),
+      compass: ANCH.compass, tab: ANCH.tab });
+    let defs = `<linearGradient id="seaDeep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fb5bd"/><stop offset=".5" stop-color="#6d9aa6"/><stop offset="1" stop-color="#587f8f"/></linearGradient>
+      <radialGradient id="seaLightGlow"><stop offset="0" stop-color="#ffe9b0" stop-opacity=".55"/><stop offset="1" stop-color="#ffe9b0" stop-opacity="0"/></radialGradient>
+      <radialGradient id="seaCoveGlow"><stop offset="0" stop-color="#ffd98a" stop-opacity=".8"/><stop offset="1" stop-color="#6a4a8a" stop-opacity=".15"/></radialGradient>
+      <radialGradient id="seaOD"><stop offset="0" stop-color="rgba(160,58,26,.42)"/><stop offset=".55" stop-color="rgba(160,58,26,.18)"/><stop offset="1" stop-color="rgba(160,58,26,0)"/></radialGradient>
+      <filter id="seaRough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0" result="na"/>
+      <feComposite in="na" in2="SourceGraphic" operator="in" result="g"/>
+      <feBlend in="SourceGraphic" in2="g" mode="multiply"/></filter>`;
+    SHARKS = "";
+    let out = `<rect x="0" y="0" width="${W}" height="${H}" fill="url(#seaDeep)"/>`;
+    for (let i = BANDS.length - 1; i >= 0; i--) {   // bottom sheet first, top last
+      const m = BANDS[i];
+      const clip = bandClip(i);
+      const cid = "seaclip" + m.id;
+      defs += `<clipPath id="${cid}"><path d="${clip.main} ${clip.hole || ""}" fill-rule="evenodd"/></clipPath>`;
+      out += `<g clip-path="url(#${cid})">
+        <rect x="0" y="0" width="${W}" height="${H}" fill="${m.paper[0]}"/>
+        <rect x="0" y="0" width="${W}" height="${H}" fill="${m.paper[1]}"/>`;
+      out += waveRows(m.ink);
+      out += sharkWaters(m);
+      for (const c of m.islands) out += islandG(c);
+      out += `</g>`;
+      if (clip.hole) out += `<path d="${clip.hole}" fill="none" stroke="rgba(20,12,4,.6)" stroke-width="2.2"/>
+        <path d="${clip.hole}" fill="none" stroke="rgba(255,246,220,.5)" stroke-width="1" transform="translate(-1.2 -1.5)"/>`;
+    }
+    out += SHARKS;
+    out += foamSeams();
+    out += surveyRoute();
+    for (const c of Object.keys(STRAITS)) out += islandG(+c);   // straits sit ON the seams, unclipped
+    out += eraTabs();
+    out += furniture();
+    return { defs, out, violations };
+  }
+
+  /* ═══ LIVE LAYER ═══ */
+  function liveLayer() {
+    if (!app || !app.view) return "";
+    const view = app.view, self = selfT(), h = view.hour;
+    let g = "";
+    for (const t of R.trails) {
+      if (!R.presented.has(trailKey(t))) continue;    // a voyage appears only when PLAYED
+      const age = h - t.hour;
+      const col = age >= 3 ? "#8a8578" : seatColor(t.seat);
+      const op = age <= 0 ? .95 : age === 1 ? .65 : age === 2 ? .5 : .3;
+      const wdt = age <= 0 ? 3 : age === 1 ? 2.2 : 1.6;
+      const dash = age >= 2 ? `stroke-dasharray="6 6"` : "";
+      g += `<path class="sea-voyage" data-k="${trailKey(t)}" data-tip="${esc(`${t.seat} sailed ${rom(t.from)} to ${rom(t.to)}, H${t.hour}`)}" d="${voyagePath(t.from, t.to, t.hour)}"
+        fill="none" stroke="${col}" stroke-width="${wdt}" ${dash} opacity="${op}" stroke-linecap="round"/>`;
+    }
+    for (const mo of R.monsters) {
+      const [x, y] = mo.spot, s = .7 + Math.min(.5, mo.dmg * .06);
+      // a paradox leaves TROUBLED WATER, small, still, unobtrusive (no creature)
+      g += `<g class="sea-scar" data-mc="${mo.c}" data-tip="${esc(`troubled water off ${rom(mo.c)}, ${mo.count} paradox strike${mo.count > 1 ? "s": ""} · ${mo.dmg} energy taken in all · last H${mo.hour}`)}" transform="translate(${x} ${y}) scale(${s})" opacity=".5">
+        <path d="M -9 0 a 9 5 0 0 1 18 0" fill="none" stroke="#7a2a1a" stroke-width="1.3" stroke-dasharray="3 3"/>
+        <path d="M -5 3 a 5 3 0 0 1 10 0" fill="none" stroke="#7a2a1a" stroke-width="1.1" stroke-dasharray="2 3"/></g>`;
+    }
+    for (const wk of R.wrecks) {
+      const [x, y] = wk.spot;
+      g += `<g class="sea-wreck" data-wc="${wk.c}" data-tip="${esc(`wreck of ${wk.seat}, terminated H${wk.hour} near ${rom(wk.c)}`)}" transform="translate(${x} ${y}) rotate(-12)" opacity=".85">
+        <g class="wk-in">
+        <path d="M -10 4 q 10 8 20 0 l -3 5 q -7 4 -14 0 z" fill="#4a3a1c"/>
+        <path d="M 1 3 L 1 -10 M 1 -10 l 8 4 l -8 3" stroke="#4a3a1c" stroke-width="1.4" fill="none"/></g></g>`;
+    }
+    for (const st of R.storms) {
+      const [x, y] = POS[st.c];
+      g += `<g class="sea-storm" data-tip="${esc(`a storm broke here, H${st.hour} (a motor exploded)`)}" transform="translate(${x - 22} ${y - 40})" opacity=".55">
+        <path d="M -14 4 q -5 -9 5 -11 q 1 -8 11 -6 q 9 -5 15 1 q 9 -1 8 8 q 5 8 -5 9 z" fill="#5a5f6a"/></g>`;
+    }
+    // gathering storms over EVERY loaded traveler, threats readable at a glance
+    for (const t of view.travelers) {
+      if (!POS[t.century] || (t.booms || 0) < 5) continue;
+      const [x, y] = POS[t.century];
+      const dark = Math.min(1, t.booms / 12);
+      g += `<g class="sea-gt" data-tip="${esc(`a storm gathers over ${t.name}, ${t.booms}/12 booms`)}" transform="translate(${x} ${y - 46})" opacity="${.3 + dark * .55}">
+        <g class="gt-in">
+        <path d="M -20 6 q -7 -12 7 -15 q 2 -10 15 -8 q 12 -7 20 2 q 12 -2 10 10 q 7 10 -7 12 z" fill="#4a4f5a"
+          transform="scale(${.7 + dark * .6})"/>
+        ${t.booms >= 10 ? `<path d="M -2 8 l -6 10 l 6 -2 l -4 10" fill="none" stroke="#e8c05a" stroke-width="2"/>` : ""}</g></g>`;
+    }
+    for (const c of R.restored) {
+      if (!POS[c]) continue;
+      const [x, y] = POS[c];
+      g += `<ellipse class="sea-restored" data-rc="${c}" data-tip="${esc(`${rom(c)}, restored. it was always thus.`)}" cx="${x}" cy="${y}" rx="34" ry="26" fill="none"
+        stroke="#b8862a" stroke-width="2.2" opacity=".9"/>`;
+    }
+    if (self) for (const card of (self.hand || [])) {
+      const c = card.delivery_century;
+      if (!POS[c]) continue;
+      const [x, y] = POS[c];
+      const fy = y - islR(c) * .74 + 3;   // pole foot on the north beach
+      g += `<g class="sea-flag" data-tip="${esc(`${card.display_name || card.name} delivers at ${rom(c)}, sail here and deliver`)}" transform="translate(${x - 4} ${fy})">
+        <path d="M 0 2 V -22" stroke="#5e2a16" stroke-width="1.4"/>
+        <path d="M 0 -22 L 15 -18 L 0 -13 Z" fill="#a04a2a" stroke="#5e2a16" stroke-width="1"/>
+        <circle cx="0" cy="3" r="1.6" fill="#5e2a16"/></g>`;
+    }
+    for (const t of view.travelers) {   // rivals' pennants, smaller, in their color
+      if (t.is_self) continue;
+      let k2 = 0;
+      for (const card of (t.equipment || [])) {
+        const c = card.delivery_century;
+        if (c == null || !POS[c]) continue;
+        const [x, y] = POS[c];
+        const rfy = y - islR(c) * .74 + 3;
+        g += `<g class="sea-flag" data-tip="${esc(`${t.name} must deliver ${card.display_name || card.name} at ${rom(c)}`)}" transform="translate(${x + 8 + k2 * 8} ${rfy})">
+          <path d="M 0 2 V -17" stroke="rgba(20,12,4,.6)" stroke-width="1.1"/>
+          <path d="M 0 -17 L 10 -14 L 0 -11 Z" fill="${seatColor(t.name)}" stroke="rgba(20,12,4,.6)" stroke-width=".6" opacity=".9"/></g>`;
+        k2++;
+      }
+    }
+    const byC = {};
+    for (const t of view.travelers) {
+      const sc = R.shown[t.name] != null ? R.shown[t.name] : t.century;
+      (byC[sc] = byC[sc] || []).push(t);
+    }
+    for (const [cStr, ts] of Object.entries(byC)) {
+      const c = +cStr; if (!POS[c]) continue;
+      const [x, y] = POS[c];
+      const rx = islR(c), ry = rx * .74;
+      if (ts.length > 1) g += `<circle data-tip="shared anchorage, agreements possible" cx="${x}" cy="${y}" r="${rx + 16}" fill="none" stroke="#8a6a3a"
+        stroke-width="1.2" stroke-dasharray="4 4" opacity=".7"/>`;
+      // BERTHS, RE-CUT FOR THE AURA. The hulls used to KISS the shore at a single fixed
+      // radius, five of them within 90 degrees, lovely when a boat was a thumbnail, a
+      // single unreadable knot now that each one wears a ring. An anchorage does not moor
+      // its ships in one line: they ride at TWO depths. Alternate rings, wider angles, and
+      // three rivals in one port stay three rivals.
+      const SLOTS = [96, 40, 152, 6, 180];    // beach berths, southern shores first
+      const RING  = [0, 1, 1, 0, 1];          // ...at two depths, so neighbours never touch
+      ts.forEach((t, i) => {
+        const col = seatColor(t.name);
+        let deg = SLOTS[i % SLOTS.length];
+        if (x > W - 76) deg = 180 - deg;        // near an edge the berths face INLAND
+        else if (x < 76) deg = deg;             // (left edge already faces inland)
+        if (y > H - 70) deg = -deg;             // bottom edge: berth on the north shore
+        const a = deg * Math.PI / 180;
+        // ...but not so far out that the hull stops belonging to its isle.
+        // Pushing the berths too far traded a knot of
+        // boats for a fleet of orphans. They come back to the SHORE; the second ring
+        // is now a step, not a swim, and the mooring line carries the rest.
+        const rg = RING[i % RING.length];
+        const bx = Math.round(x + Math.cos(a) * (rx + 3 + rg * 13));
+        const by = Math.round(y + Math.sin(a) * (ry + 5 + rg * 12) + 2);
+        const dead = t.is_terminated && t.awaiting_respawn;
+        const chipY = Math.min(H - 8, Math.max(20, by + 30 + (i % 3) * 15));  // same-port chips stagger
+        const chipX = Math.min(W - 52, Math.max(2, bx - 25 - (i % 2) * 8));
+        const st = t.statuses || [];
+        const ghost = st.includes("terminated") && t.century >= 24;   // the Reaches shelter the terminated (§28)
+        const burst = st.includes("exploded");                        // boiler burst, no sailing this hour (§5.2)
+        const hunted = !!(R.merchantLast && R.merchantLast.target === t.name);
+        const ini = esc(t.name.slice(0, 2).toUpperCase());
+        g += `<g class="sea-fixg${ghost ? " sea-ghost": ""}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self ? " (you)": ""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.booms}/12 booms${t.is_wanted ? " · WANTED": ""}${hunted ? " · hunted by the Merchant": ""}${burst ? " · boiler burst, cannot sail or activate this hour": ""}${ghost ? " · sheltered beyond time, the Reaches spare the terminated": ""}${dead && !ghost ? " · lost at sea (respawning)": ""}`)}" opacity="${dead && !ghost ? .45: 1}">
+          <g transform="translate(${bx} ${by})"><line x1="${(x - bx).toFixed(1)}" y1="${(y - by).toFixed(1)}" x2="0" y2="-3" stroke="${col}" stroke-width="1.6" stroke-linecap="round" opacity=".5" stroke-dasharray="2.6 2.4"/><g class="sea-fix-boat">
+              <!-- THE AURA. The tokens were too hard to track
+                   across the three maps.
+                   A token that is a small drawing in a busy chart cannot be found by its
+                   drawing, it has to be found by its RING. So every traveller now wears one,
+                   in the exact colour of their badge: a wash, a dark contrast ring that keeps
+                   it legible on parchment AND on black, and the colour ring that IS the label.
+                   You do not read it. You see it. -->
+            <g class="sea-aura">
+              <circle cy="-3" r="15" fill="${col}" opacity=".15"/>
+              <circle cy="-3" r="15" fill="none" stroke="rgba(22,32,40,.45)" stroke-width="3.6"/>
+              <circle cy="-3" r="15" fill="none" stroke="${col}" stroke-width="2.4"/>
+              <circle cy="-3" r="13" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1"/>
+            </g>
+            <g transform="scale(1.8)${dead && !ghost ? " rotate(-24)" : ""}">
+            ${hunted ? `<g class="sea-hunt"><circle cy="-19" r="6.5" fill="none" stroke="#b8862a" stroke-width="1.4" stroke-dasharray="3 2.4"/><circle cy="-19" r="1.9" fill="#b8862a"/></g>` : ""}
+            ${t.is_self ? `<circle cy="-2" r="15" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.1" stroke-dasharray="3 2.6"/>` : ""}
+            ${rigSVG(0, col, { ghost, burst })}
+          </g></g></g></g>`;
+      });
+    }
+    // ═══ PERIOD MARKERS, a carved plaque lying ON the divide, a chest beside it ═══
+    for (const pname of Object.keys(PERIOD_ERAS)) {
+      if (!ANCH.post || !ANCH.post[pname]) continue;
+      const [px, py] = ANCH.post[pname];
+      const eras2 = PERIOD_ERAS[pname];
+      const items = R.deliveries.filter(dv => ERAS_OF(dv.century).some(e2 => eras2.includes(e2)));
+      const covered = view.travelers.filter(t => (t.delivered_periods || []).includes(pname));
+      const open = items.length > 0;
+      // the plaque is centred ON the seam; the chest sits just to its right, also on the line
+      g += `<g class="sea-postg" data-period="${pname}" transform="translate(${px} ${py})">
+        <ellipse cx="0" cy="12" rx="15" ry="3" fill="rgba(20,12,4,.25)"/>
+        <path d="M -13 12 V 2 Q -13 0 -11 0 H 11 Q 13 0 13 2 V 12 Z" fill="#7a4f24" stroke="#241708" stroke-width="1.2"/>
+        <path d="M -13 2 Q -13 -9 0 -9 Q 13 -9 13 2 Z" fill="#8a5c2c" stroke="#241708" stroke-width="1.2"/>
+        <path d="M -13 -1.5 H 13" stroke="#241708" stroke-width="1.1"/>
+        <path d="M -6 -8.4 V 12 M 6 -8.4 V 12" stroke="#5a3a1a" stroke-width="1.6"/>
+        <rect x="-2.6" y="-1" width="5.2" height="6" rx="1" fill="#c9a45c" stroke="#241708" stroke-width=".8"/>
+        <circle cx="0" cy="1.6" r=".9" fill="#241708"/>
+        ${open ? `<circle cx="0" cy="2" r="9" fill="rgba(201,164,92,.28)"/>
+          <path d="M -7 -3 l 2 -3 M 5 -4 l 2 -3 M -2 -5 l 1 -3" stroke="#e8c05a" stroke-width="1.2" opacity=".8"/>
+          <text x="20" y="4" font-family="Georgia" font-weight="bold" font-size="11" fill="#c9a45c" stroke="#2a1c0c" stroke-width="2.4" paint-order="stroke">×${items.length}</text>` : ""}
+        ${covered.length ? `<g transform="translate(0 21)">${covered.map((t, k) => `<circle cx="${(k - (covered.length - 1) / 2) * 8}" cy="0" r="3" fill="${seatColor(t.name)}" stroke="#241708" stroke-width=".6"/>`).join("")}</g>` : ""}
+      </g>`;
+    }
+    // ═══ THE SAILING ORDER, who resolves first (century desc -> gold -> energy) ═══
+    {
+      const [ox, oy] = ANCH.ord;
+      const order = [...view.travelers].sort((a, b) =>
+        b.century - a.century || b.gold - a.gold || b.energy - a.energy);
+      const bh = 38 + order.length * 30 + 6;
+      let rows = "";
+      const newIdx = {};
+      order.forEach((t, i) => { newIdx[t.name] = i; });
+      R.ordFlip = { prev: R.ordIdx || null, next: newIdx };   // renderLive plays the slide
+      R.ordIdx = newIdx;
+      order.forEach((t, i) => {
+        const col = seatColor(t.name), yy = 36 + i * 30;
+        const stt = t.statuses || [];
+        const ghost2 = stt.includes("terminated") && t.century >= 24;
+        const burst2 = stt.includes("exploded");
+        const pers = t.delivered_periods || [];
+        const pips = ["Origins", "Ascension", "Singularity"].map((p, k) =>
+          `<rect x="${104 + k * 13}" y="${yy - 6}" width="9" height="9" rx="1.5"
+            fill="${pers.includes(p) ? col : "none"}" stroke="#c9b890" stroke-width=".8" opacity="${pers.includes(p) ? .95 : .45}"/>`).join("");
+        const cameo = t.is_wanted
+          ? `<g transform="translate(88 ${yy - 1})"><rect x="-7.5" y="-10" width="15" height="20" fill="#e8d9b8" stroke="#c0392b" stroke-width="1"/>
+             <text y="-4.6" text-anchor="middle" font-size="3.7" font-family="Georgia" font-weight="bold" fill="#8c2a1a" letter-spacing=".3">WANTED</text>
+             <circle cy="1.5" r="3.2" fill="#3a2c1c"/><path d="M -4 7.5 Q 0 4 4 7.5 Z" fill="#3a2c1c"/></g>`
+          : `<g transform="translate(88 ${yy - 1})"><circle r="6.5" fill="none" stroke="${col}" stroke-width="1"/>
+             <circle cy="-1.4" r="2.6" fill="#c9b890"/><path d="M -3.6 4.6 Q 0 1.4 3.6 4.6 Z" fill="#c9b890"/></g>`;
+        rows += `<g data-hlseat="${esc(t.name)}" data-ordrow="${esc(t.name)}" data-tip="${esc(`${i + 1}. ${t.name}${t.is_self ? " (you)": ""}, ${rom(t.century)} · ${t.gold} gold · ${t.energy} energy${t.is_wanted ? " · WANTED": ""}${burst2 ? " · boiler burst (cannot sail this hour)": ""}${ghost2 ? " · beyond time's reach": ""} · periods ${pers.length}/3`)}">
+          <rect x="6" y="${yy - 12}" width="142" height="26" fill="rgba(233,220,184,.06)" stroke="none"/>
+          <text x="15" y="${yy + 3}" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="12" fill="#e8dcc0">${i + 1}</text>
+          <g transform="translate(31 ${yy}) scale(.82)">${rigSVG(seatRig(t.name), col, { ghost: ghost2, burst: burst2 })}</g>
+          <text x="44" y="${yy + 3}" font-family="Georgia" font-weight="bold" font-size="10" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="2" paint-order="stroke">${esc(t.name.slice(0, 6).toUpperCase())}</text>
+          ${cameo}${pips}
+        </g>`;
+      });
+      const lead = order[0], leadCol = lead ? seatColor(lead.name) : "#e8dcc0";
+      const orderTip = order.map((t, i) =>
+        `${i + 1}. ${t.name}, ${rom(t.century)} · ${t.gold} gold · ${t.energy} energy`).join("   ");
+      g += `<g class="sea-ord${ordHovered ? " open" : ""}" transform="translate(${ox} ${oy})">
+        <g class="sea-ord-body" data-tip="when voyages tie in a module, the farthest-future traveler sails first; then the richest; then the most energised">
+          <rect width="154" height="${bh}" rx="2" fill="#3c2e1a" stroke="#241708" stroke-width="1.6"/>
+          <rect x="4" y="4" width="146" height="${bh - 8}" fill="none" stroke="#c9b890" stroke-width=".5" opacity=".4"/>
+          <text x="77" y="20" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="10.5" letter-spacing="2.2" fill="#e8dcc0">SAILING ORDER</text>
+          <text x="77" y="${bh - 8}" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="6.8" fill="#c9b890" opacity=".8">future first · then gold · then energy, squares = periods</text>
+          ${rows}
+        </g>
+        <g class="sea-ord-pin">
+          <path d="M 0 0 H 21 Q 26 0 26 6 V 134 Q 26 140 21 140 H 0 Z" fill="#3c2e1a" stroke="#241708" stroke-width="1.4"/>
+          <g transform="translate(13 21) scale(.92)">${lead ? rigSVG(seatRig(lead.name), leadCol, {}) : ""}</g>
+          <text transform="translate(17.5 52) rotate(90)" font-family="Georgia" font-weight="bold"
+            font-size="9.5" letter-spacing="2.6" fill="#e8dcc0">ORDER</text>
+        </g>
+      </g>`;
+    }
+    const mc = R.merchantShown != null ? R.merchantShown : view.merchant_century;
+    if (POS[mc]) {
+      const [x, y] = POS[mc];
+      const dice = view.merchant_movement_dice || 1;
+      const dir = R.merchantLast ? Math.sign((R.merchantLast.to || mc) - (R.merchantLast.from || mc)) || 1 : 1;
+      // the sail wears one RED STRIPE per movement die (1..3), speed you can read
+      let stripes = "";
+      const bands = Math.min(3, dice);
+      for (let i = 0; i < bands; i++)
+        stripes += `<rect x="-9.5" y="${(-18 + (i + .5) * 19 / bands).toFixed(1)}" width="19.5" height="${(19 / bands * .42).toFixed(1)}" rx="1" fill="#8c3b2a" opacity=".9"/>`;
+      g += `<g class="sea-shipg" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${x} ${y - 47})">
+        <g class="sh-slide"><g transform="scale(${dir < 0 ? -1 : 1} 1)" class="sea-ship"><g class="sh-bob">
+        <g transform="translate(0 12) scale(.8)">
+        <path d="M -21 14 Q -23 22 -14 25 L 9 25 Q 19 23 21 14 L 17 12 Q 0 17 -17 12 Z" fill="#6a4522" stroke="#241708" stroke-width="1.1"/>
+        <path d="M -18 17 Q 0 21 18 16" fill="none" stroke="#3a2510" stroke-width=".7" opacity=".65"/>
+        <path d="M -16 21 Q 0 24 15 20" fill="none" stroke="#3a2510" stroke-width=".7" opacity=".5"/>
+        <path d="M 21 14 q 4 -1 4 -5 l -3 .5 z" fill="#5a3a1e" stroke="#241708" stroke-width=".8"/>
+        <path d="M -21 14 q -3 -4 -1 -8 l 4 4 z" fill="#5a3a1e" stroke="#241708" stroke-width=".8"/>
+        <rect x="8" y="6" width="9" height="7" rx="1" fill="#7a5228" stroke="#241708" stroke-width=".8"/>
+        <path d="M 7 6 h 11 l -1.6 -3 h -7.8 z" fill="#8a5c2c" stroke="#241708" stroke-width=".7"/>
+        <path d="M 0 13 V -24" stroke="#3a2510" stroke-width="1.8"/>
+        <path d="M -12 -22 H 13" stroke="#3a2510" stroke-width="1.3"/>
+        <path d="M -11 -21 Q 1 -17 12 -21 L 10 2 Q 0 8 -9 2 Z" fill="#e8d9b8" stroke="#241708" stroke-width=".9"/>
+        ${stripes}
+        <path d="M -11 -21 Q 1 -17 12 -21 L 10 2 Q 0 8 -9 2 Z" fill="none" stroke="#241708" stroke-width=".9"/>
+        <path d="M 0 -24 l 8 2.2 l -8 2.2 z" fill="#8c3b2a" stroke="#241708" stroke-width=".6"/>
+        <path d="M -12 -22 L -19 12 M 13 -22 L 19 12" stroke="#3a2510" stroke-width=".6" opacity=".5"/>
+        <circle cx="15" cy="4" r="1.7" fill="#ffd98a" class="sea-lantern"/>
+        <path d="M -23 22 q -8 3 -14 1 M 22 21 q 7 3 12 1" fill="none" stroke="#eaf4f6" stroke-width="1.1" opacity=".55"/>
+        </g>
+        ${(() => {
+          const last = R.merchantHist.length ? R.merchantHist[R.merchantHist.length - 1] : null;
+          const dist = last ? Math.abs(last.to - last.from) : 0;
+          const split = dist ? d3Split(dist, dice) : new Array(dice).fill(1);
+          return `<g transform="translate(${-6 - dice * 5} 30)"><g class="sea-dice">`
+            + split.slice(0, 3).map((v, i) => d3Token(v, i * 10, 0)).join("") + `</g></g>`;
+        })()}</g></g></g></g>`;
+    }
+    {
+      const [cx2, cy2] = POS[11];
+      const open = !!view.secret_market_open;
+      const [clx, cly] = ANCH.coveLab;
+      g += `<g class="sea-cove" data-tip="${esc(open ? "THE SMUGGLERS' HAVEN stands open, a secret market trades on these docks": "a sealed haven, dark piers and shuttered doors; find it, and something will trade")}" transform="translate(${cx2 - 38} ${cy2 - 2})">
+        <path d="M -18 6 q -6 -12 4 -16 q 8 -4 16 -1 q 7 3 6 10 q -12 6 -26 7 z" fill="#4a4258" stroke="#2c2438" stroke-width="1.2"/>
+        <path d="M -14 -9 l 3 -6 l 3 5 z" fill="#3a3248" stroke="#2c2438" stroke-width=".7"/>
+        <path d="M -2 8 H 22 M 2 8 V 12 M 8 8 V 13 M 14 8 V 12 M 20 8 V 13" stroke="#5a4326" stroke-width="1.6"/>
+        <rect x="-12" y="-8" width="9" height="8" fill="${open ? "#6a5238" : "#463a50"}" stroke="#241708" stroke-width=".9"/>
+        <path d="M -13.5 -8 L -7.5 -13.5 L -1.5 -8 Z" fill="#8a5c2c" stroke="#241708" stroke-width=".8"/>
+        <rect x="-1" y="-6" width="8" height="6" fill="${open ? "#75593c" : "#4a3e54"}" stroke="#241708" stroke-width=".9"/>
+        <path d="M -2 -6 L 3 -10.5 L 8 -6 Z" fill="#7a4e24" stroke="#241708" stroke-width=".8"/>
+        <rect x="-10" y="-5.5" width="2.2" height="2.6" fill="${open ? "#ffd98a" : "#241c30"}" class="${open ? "sea-lantern" : ""}"/>
+        <rect x="-6" y="-5.5" width="2.2" height="2.6" fill="${open ? "#ffd98a" : "#241c30"}"/>
+        <rect x="1.5" y="-4" width="2" height="2.4" fill="${open ? "#ffe9b0" : "#241c30"}"/>
+        <path d="M 9 -6 V -18 ${open ? "M 9 -18 l 7 2.2 l -7 2.2" : ""}" stroke="#241708" stroke-width="1" fill="none"/>
+        ${open ? `<path d="M 9 -18 l 7 2.2 l -7 2.2 z" fill="#22202c"/><circle cx="11.5" cy="-15.5" r=".7" fill="#e8e2d0"/>` : ""}
+        ${open
+          ? `<g transform="translate(16 11)"><path d="M -5 0 q 5 4 10 0 l -1.5 -3 h -7 z" fill="#5a3a1e" stroke="#241708" stroke-width=".7"/></g>
+             <circle cx="23" cy="6" r="4.5" fill="rgba(255,217,138,.4)" class="sea-lantern"/><circle cx="23" cy="6" r="1.3" fill="#ffd98a"/>`
+          : `<path d="M -2 3 l 4 3 m 0 -3 l -4 3 M 6 2 l 4 3 m 0 -3 l -4 3" stroke="#8a8072" stroke-width="1"/>
+             <ellipse class="sea-fog f1" cx="2" cy="0" rx="17" ry="6" fill="#cfd6d2" opacity=".38"/>
+             <ellipse class="sea-fog f2" cx="10" cy="5" rx="13" ry="5" fill="#dde2de" opacity=".3"/>`}
+        <line x1="${clx - cx2 + 38}" y1="${cly - cy2 + 7}" x2="2" y2="-2" stroke="#6a4a8a" stroke-width=".8" stroke-dasharray="2 3" opacity=".7"/>
+        <text x="${clx - cx2 + 38}" y="${cly - cy2 + 2}" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="10" fill="#6a4a8a"
+          stroke="#c8d6c3" stroke-width="3" paint-order="stroke">${open ? "the haven stands open" : "sealed haven"}</text></g>`;
+    }
+    const [wx, wy] = ANCH.well;
+    g += `<g class="sea-well" data-tip="YEAR ZERO: the Skull Mount; the last voyage sails into its maw and ends the game (+2 CP)" transform="translate(${wx} ${wy})">
+      <g class="sea-well-rings">
+      <circle r="24" fill="none" stroke="#6a5a9e" stroke-width="1.2" stroke-dasharray="10 6" opacity=".6"/>
+      <path d="M -18 12 q 10 7 26 3 M -22 6 q -6 6 2 12" fill="none" stroke="#8fb0ba" stroke-width="1.2" opacity=".7"/></g>
+      <path d="M -17 12 Q -22 -2 -13 -10 Q -6 -17 3 -16 Q 13 -14 16 -6 Q 19 2 15 12 Q 8 15 -2 15 Q -11 15 -17 12 Z" fill="#5c566e" stroke="#2a2438" stroke-width="1.5"/>
+      <path d="M -13 -8 q 5 -5 12 -4 M 12 -8 q 3 4 3 9" fill="none" stroke="#787290" stroke-width="1" opacity=".7"/>
+      <ellipse cx="-6.5" cy="-3" rx="3.6" ry="4.4" fill="#171226"/>
+      <ellipse cx="5.5" cy="-3" rx="3.6" ry="4.4" fill="#171226"/>
+      <circle cx="-5.8" cy="-2.2" r="1" fill="#6a5a9e" class="sea-skulleye"/>
+      <circle cx="6.2" cy="-2.2" r="1" fill="#6a5a9e" class="sea-skulleye e2"/>
+      <path d="M -1.6 3.5 L 0 .4 L 1.6 3.5 Z" fill="#171226"/>
+      <path d="M -9 12 L -6.5 7.5 L -4 12 M -2.5 12 L 0 7.5 L 2.5 12 M 4 12 L 6.5 7.5 L 9 12" fill="#171226" stroke="#171226" stroke-width=".6"/>
+      <path d="M -6 12 q 6 4 12 0 q -6 5 -12 0 z" fill="#0e0a1c"/>
+      <path d="M -20 14 q 4 -3 7 0 M 13 14 q 4 -3 7 0" fill="none" stroke="#eaf4f6" stroke-width="1" opacity=".5"/>
+      <circle class="sea-hit" data-c="0" r="26" fill="transparent"/></g>`;
+    return g;
+  }
+
+  /* ═══ INTERACTION ═══ */
+  let mode = null;
+  let ordHovered = false;   // the Sailing Order reveals on hover (data-driven, survives re-renders)
+  function pollDecisions() {
+    if (!app) return;
+    const req = app.pendingReq;
+    if (!req) { if (mode) { mode = null; scheduleLive(); } return; }
+    if (mode && mode.req === req) return;
+    const self = selfT(); if (!self) return;
+    if (req.kind === "travel") {
+      const o = req.options || {};
+      mode = { kind: "travel", req, max: o.max, self: o.century != null ? o.century : self.century,
+        energy: self.energy, locked: o.direction_locked != null ? o.direction_locked : null };
+      scheduleLive();
+    } else if (req.kind === "merchant_century") {
+      mode = { kind: "merchant", req, centuries: new Set(req.options.centuries || []) };
+      scheduleLive();
+    } else if (req.kind === "target" && req.options && req.options.target_type === "century") {
+      mode = { kind: "century", req, centuries: new Set((req.options.candidates || []).map(Number)) };
+      scheduleLive();
+    } else if (mode) { mode = null; scheduleLive(); }
+  }
+  function stepCost(from, dist) {
+    let cost = 0;
+    for (let s = 1; s <= dist; s++) {
+      const dest = from - s;
+      if (dest <= 0) break;
+      cost += dest <= 9 ? 2 : 1;
+    }
+    return cost;
+  }
+  const BOLT = "M 0 0 l -2.7 4.9 h 2 l -1.2 4.7 4.5 -6.1 h -2.1 l 2 -3.5 z";
+  function costTag(c, cost, kind) {
+    const [x, y] = POS[c];
+    const ty = y - islR(c) * .74 - 24;
+    const col = kind === "free" ? "#1d6b52" : kind === "risk" ? "#c0392b" : "#8a6215";
+    const label = kind === "free" ? "free" : String(cost) + (kind === "risk" ? "!" : "");
+    const w2 = label.length * 6.8 + (kind === "free" ? 14 : 26);
+    return `<g class="sea-cost">
+      <rect x="${x - w2 / 2}" y="${ty - 11}" width="${w2}" height="18" rx="3" fill="rgba(255,246,220,.95)" stroke="${col}" stroke-width="1.4"/>
+      ${kind === "free" ? "" : `<path d="${BOLT}" transform="translate(${x - w2 / 2 + 9} ${ty - 7})" fill="${col}"/>`}
+      <text x="${x + (kind === "free" ? 0 : 6)}" y="${ty + 3}" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="11" fill="${col}">${label}</text></g>`;
+  }
+  function highlights() {
+    if (!mode) return "";
+    let g = "";
+    const ring = (c, cls, tip) => {
+      const [x, y] = POS[c];
+      g += `<circle class="sea-glow ${cls}" data-c="${c}" data-tip="${esc(tip)}" cx="${x}" cy="${y}" r="${islR(c) + 12}"/>`;
+    };
+    if (mode.kind === "travel") {
+      for (let c = 1; c <= 30; c++) {
+        const d = Math.abs(c - mode.self);
+        if (d === 0 || d > mode.max) continue;
+        if (mode.locked != null && Math.sign(c - mode.self) !== mode.locked) continue;
+        if (c > mode.self) { ring(c, "glow-go", `sail with the current to ${rom(c)}, free`); g += costTag(c, 0, "free"); }
+        else {
+          const cost = stepCost(mode.self, d);
+          const risky = cost >= mode.energy;
+          ring(c, risky ? "glow-risk" : "glow-cost",
+            `beat upstream to ${rom(c)}, ${cost} energy${risky ? " (this could sink you)": ""}`);
+          g += costTag(c, cost, risky ? "risk" : "cost");
+        }
+      }
+    } else if (mode.kind === "merchant") {
+      for (const c of mode.centuries) if (POS[c]) ring(c, "glow-amber", `send the wagon to ${rom(c)}`);
+    } else if (mode.kind === "century") {
+      for (const c of mode.centuries) if (POS[c]) ring(c, "glow-violet", `target ${rom(c)}`);
+    }
+    return g;
+  }
+  function pickCandidates() {
+    if (!mode) return null;
+    const set = new Set();
+    if (mode.kind === "travel") {
+      for (let c = 1; c <= 30; c++) {
+        const d = Math.abs(c - mode.self);
+        if (d === 0 || d > mode.max) continue;
+        if (mode.locked != null && Math.sign(c - mode.self) !== mode.locked) continue;
+        set.add(c);
+      }
+      set.add(mode.self);   // staying put is a choice too
+    } else for (const c of mode.centuries) set.add(c);
+    return set;
+  }
+  function applyFocus() {
+    const svg = document.querySelector(".pc-world");
+    if (!svg) return;
+    const cands = pickCandidates();
+    svg.classList.toggle("mode-pick", !!cands);
+    svg.querySelectorAll(".sea-isle").forEach(el => {
+      el.classList.toggle("can-go", !!cands && cands.has(+el.dataset.c));
+    });
+  }
+  function commandText() {
+    if (!mode) return "";
+    if (mode.kind === "travel")
+      return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + `PLOT YOUR COURSE <b class="cgo">\u25CF free</b> <b class="ccost">\u25CF costs</b>`
+        + `<span class="sea-anchor"><svg width="11" height="12" viewBox="0 0 12 13"><path d="M6 1.4 a1.7 1.7 0 1 0 .01 0 M6 4.6 V 11 M2.6 6.6 H 9.4 M1.8 8.4 Q 2 11.6 6 11.6 Q 10 11.6 10.2 8.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg> ${rom(mode.self)}</span>`;
+    if (mode.kind === "merchant") return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + "CHAOS III: choose the Merchant's new harbor";
+    return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + "CHOOSE A TARGET CENTURY on the chart";
+  }
+  let prevC = null, prevEl = null;
+  function setPreview(c) {
+    if (c === prevC) return;
+    prevC = c;
+    if (prevEl) { prevEl.remove(); prevEl = null; }
+    if (!c || !mode || mode.kind !== "travel" || !liveG || REDUCED) return;
+    prevEl = document.createElementNS(NS, "path");
+    prevEl.setAttribute("d", voyagePath(mode.self, c, hourNow()));
+    prevEl.setAttribute("fill", "none");
+    prevEl.setAttribute("stroke", c > mode.self ? "#2fae7c" : "#c9a45c");
+    prevEl.setAttribute("stroke-width", "2.2");
+    prevEl.setAttribute("stroke-dasharray", "3 6");
+    prevEl.setAttribute("opacity", ".7");
+    prevEl.setAttribute("pointer-events", "none");
+    (fxG || liveG).appendChild(prevEl);
+  }
+  function popIsle(c) {
+    if (REDUCED) return;
+    const el = document.querySelector(`.sea-isle[data-c="${c}"]`);
+    if (el) el.animate([
+      { transform: "scale(1)" }, { transform: "scale(1.14)" }, { transform: "scale(1)" }
+    ], { duration: 280, easing: "cubic-bezier(.3,1.6,.4,1)" });
+    if (POS[c] && liveG) ripple(POS[c][0], POS[c][1], "#8a6a3a");
+  }
+  function plotJuice(fromC, toC) {
+    if (!POS[fromC] || !POS[toC]) return;
+    R.preplot = `${fromC}:${toC}`; R.travelFrom = fromC;
+    if (REDUCED || !liveG) { snd("quill", { dur: 500 }); return; }
+    const stt = selfT();
+    const col = stt ? seatColor(stt.name) : "#1d6b52";
+    if (stt) { R.shown[stt.name] = -1; R.sailing = true; renderNow(); }   // anchored boat yields
+    // the course stroke lives in fxG so a state re-render can't wipe it mid-draw
+    const tmp = document.createElementNS(NS, "path");
+    tmp.setAttribute("d", voyagePath(fromC, toC, hourNow()));
+    tmp.setAttribute("fill", "none");
+    tmp.setAttribute("stroke", col); tmp.setAttribute("stroke-width", "3.2");
+    tmp.setAttribute("stroke-linecap", "round"); tmp.classList.add("sea-temp");
+    (fxG || liveG).appendChild(tmp);
+    const L = tmp.getTotalLength();
+    const dur = Math.min(2600, 850 + L * 3.4);   // a voyage is an EVENT, let it take its time
+    snd("quill", { dur }); snd("sea_sail", { dur });
+    tmp.style.strokeDasharray = L;
+    tmp.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }],
+      { duration: dur, easing: "cubic-bezier(.35,.1,.35,1)", fill: "forwards" });
+    sailBoat(tmp, dur, col, stt ? seatRig(stt.name) : 0);
+    setTimeout(() => {   // landfall of YOUR own optimistic voyage
+      if (stt) { const real = selfT(); const land = (real && real.century !== R.travelFrom) ? real.century : toC; R.shown[stt.name] = land; R.pendingSelf = land; R.sailing = false; R.travelFrom = null; }
+      tmp.remove();      // the permanent trail (drawn by liveLayer) takes over
+      renderNow();
+      if (POS[toC]) { ripple(POS[toC][0], POS[toC][1], col); snd("chart_splash"); }
+    }, dur);
+    const cp = document.querySelector(".cplot");
+    if (cp) cp.animate([
+      { transform: "translate(0,0)" }, { transform: "translate(1.5px,2px)" }, { transform: "translate(-1px,-1px)" }, { transform: "translate(0,0)" }
+    ], { duration: 220, easing: "ease-out" });
+  }
+  function onIslandClick(c) {
+    if (!app) return;
+    if (!mode && app.pendingReq) pollDecisions();
+    if (!mode || !app.pendingReq) return;
+    if (mode.kind === "travel") {
+      if (c === 0) {
+        if (mode.self <= mode.max && mode.locked !== 1) {
+          plotJuice(mode.self, 1);
+          app.respond({ direction: -1, distance: mode.self });
+        }
+        mode = null; scheduleLive(); return;
+      }
+      const d = Math.abs(c - mode.self);
+      if (c === mode.self) { snd("chart_stamp"); app.respond({ direction: 1, distance: 0 }); mode = null; scheduleLive(); return; }
+      if (d === 0 || d > mode.max) { snd("chart_brush"); return; }
+      if (mode.locked != null && Math.sign(c - mode.self) !== mode.locked) { snd("chart_brush"); return; }
+      popIsle(c);
+      plotJuice(mode.self, c);
+      app.respond({ direction: c > mode.self ? 1 : -1, distance: d });
+      mode = null; scheduleLive();
+    } else if (mode.kind === "merchant" && mode.centuries.has(c)) {
+      popIsle(c); snd("chart_stamp");
+      app.respond({ century: c }); mode = null; scheduleLive();
+    } else if (mode.kind === "century" && mode.centuries.has(c)) {
+      popIsle(c); snd("chart_stamp");
+      app.respond({ choice: c }); mode = null; scheduleLive();
+    } else if (mode.kind === "merchant" || mode.kind === "century") {
+      snd("chart_brush");   // armed pick, but this island is not one of the options
+    }
+  }
+
+  /* ═══ FX (the sauce), a serialized little theater: one thing at a time ═══ */
+
+  /* ═══ THE STALL, the bug that made the game unplayable ═══════════════════════
+     drainFx() lives at the END of renderLive(). When I gated renderLive() on "am I the
+     skin on screen?" (a real win, three maps were re-rendering on every state tick,
+     two of them invisible), I put the `return` ABOVE the drain. So the moment the
+     traveller's period switched the visible skin, THIS map's fx queue started filling
+     and never emptied.
+
+     That is not a cosmetic leak. game.js line 300 holds the entire paced event queue
+     open on this flag:
+
+         for (let w = 0; w < 80 && window.__seaPresenting(); w++) await this._sleep(150);
+
+     ...before it will prompt for ANY decision. A permanently-true flag therefore taxed
+     every single action in the game, buy a card, end a turn, plot a voyage, with a
+     multi-second dead stall. Every event had at least a 4-second gap between them,
+     which made the game unplayable.
+
+     Two guards now, because a flag that can freeze the whole game deserves belts AND
+     braces:
+       1. Off-screen, the theatre plays to an empty house, so it plays INSTANTLY. Bank
+          whatever state the fx carried, drop the animation, clear the flags. (Exactly
+          what the reduced-motion path already does, for exactly the same reason.)
+       2. *Presenting() answers false whenever this skin is not the one on screen. It
+          cannot be "presenting" to somebody who is looking at a different map.
+     And drainFx() gets a watchdog: if playFx ever fails to call done(), fxBusy unsticks
+     itself instead of hanging the game forever. ═══════════════════════════════════ */
+  let fxBusy = false, renderPending = false, fxGuard = null;
+  function __flushFxSilently() {
+    // and DROP OUR ORDER. An off-screen chart holding a stale command banner is what the
+    // pip-boy mirror used to latch onto and pin over the matrix forever.
+    try{ const r=document.getElementById("timeline-rail"); const c=r&&r.querySelector(".sea-cmd");
+      if(c) c.innerHTML=""; }catch(e){}
+    if (R.fx.length) R.fx.splice(0).forEach(f => { if (f.t === "trail") R.presented.add(trailKey(f)); });
+    if (fxGuard) { clearTimeout(fxGuard); fxGuard = null; }
+    fxBusy = false; renderPending = false; R.sailing = false; R.travelFrom = null;
+  }
+  function drainFx() {
+    if (!liveG) { R.fx.length = 0; return; }
+    if (REDUCED) {   // no animation: everything is simply already there
+      R.fx.splice(0).forEach(f => { if (f.t === "trail") R.presented.add(trailKey(f)); });
+      renderNow();
+      return;
+    }
+    if (fxBusy) return;
+    const f = R.fx.shift();
+    if (!f) return;
+    fxBusy = true;
+    // WATCHDOG: this flag gates the whole game's event queue. If playFx ever fails to
+    // call done(), a throw inside a callback, an animation that never fires, the game
+    // must not hang. Unstick and carry on.
+    if (fxGuard) clearTimeout(fxGuard);
+    fxGuard = setTimeout(() => { fxGuard = null; if (fxBusy) { fxBusy = false; drainFx(); } }, 6000);
+    const done = ms => setTimeout(() => {
+      if (fxGuard) { clearTimeout(fxGuard); fxGuard = null; }
+      fxBusy = false;
+      if (renderPending) { renderPending = false; renderNow(); }
+      drainFx();
+    }, ms);
+    try {
+      playFx(f, done);
+    } catch (e) { fxBusy = false; }
+  }
+  function sharkBite(c, seat) {
+    // the paradox is a SHARK, it strikes the boat that suffered, wherever it floats
+    const svg = fxG || liveG; if (!svg || !POS[c]) return;
+    let tx = POS[c][0] + islR(c) * .6, ty = POS[c][1] - islR(c) * .35;
+    const fg = seat && liveG && liveG.querySelector(`.sea-fixg[data-seat="${seat}"] > g`);
+    if (fg) { const mm = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(fg.getAttribute("transform") || ""); if (mm) { tx = +mm[1]; ty = +mm[2]; } }
+    const a = -0.6, sx0 = tx + Math.cos(a) * 54, sy0 = ty + Math.sin(a) * 54;
+    const bx2 = tx + Math.cos(a) * 8, by2 = ty + Math.sin(a) * 8;
+    const g = document.createElementNS(NS, "g");
+    g.innerHTML = sharkBody(1.15);
+    g.setAttribute("transform", `translate(${sx0} ${sy0}) rotate(${(a * 180 / Math.PI + 180).toFixed(0)})`);
+    svg.appendChild(g);
+    g.animate([{ transform: `translate(${sx0}px,${sy0}px) rotate(${(a * 180 / Math.PI + 180).toFixed(0)}deg)` },
+               { transform: `translate(${bx2}px,${by2}px) rotate(${(a * 180 / Math.PI + 180).toFixed(0)}deg)` }],
+      { duration: 320, easing: "cubic-bezier(.4,0,.9,.5)", fill: "forwards" });
+    setTimeout(() => {   // THE CHOMP: jaws close twice at the waterline
+      const jaw = document.createElementNS(NS, "g");
+      jaw.innerHTML = `<g class="sea-jaw-t"><path d="M -9 -7 L -5 -1.5 L -2 -7 L 1 -1.5 L 4 -7 L 8 -1.5 L 8 -8 L -9 -8 Z" fill="#e8f0f2" stroke="#16222a" stroke-width=".8"/></g>
+        <g class="sea-jaw-b"><path d="M -9 7 L -5 1.5 L -2 7 L 1 1.5 L 4 7 L 8 1.5 L 8 8 L -9 8 Z" fill="#e8f0f2" stroke="#16222a" stroke-width=".8"/></g>`;
+      jaw.setAttribute("transform", `translate(${bx2} ${by2}) rotate(${(a * 180 / Math.PI).toFixed(0)})`);
+      svg.appendChild(jaw);
+      const jt = jaw.querySelector(".sea-jaw-t"), jb = jaw.querySelector(".sea-jaw-b");
+      for (const [el, dy] of [[jt, -6], [jb, 6]]) {
+        el.style.transformBox = "fill-box"; el.style.transformOrigin = "center";
+        el.animate([{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }, { transform: `translateY(${dy * .7}px)` }, { transform: "translateY(0)" }, { transform: `translateY(${dy}px)`, opacity: 0 }],
+          { duration: 620, easing: "ease-in-out", fill: "forwards" });
+      }
+      snd("crack");
+      for (let i = 0; i < 6; i++) {   // splash
+        const dr = document.createElementNS(NS, "circle");
+        const aa = a + (Math.random() - .5) * 1.6, sp = 10 + Math.random() * 16;
+        dr.setAttribute("cx", bx2); dr.setAttribute("cy", by2); dr.setAttribute("r", (1 + Math.random() * 1.6).toFixed(1)); dr.setAttribute("fill", "#eaf4f6");
+        svg.appendChild(dr);
+        dr.animate([{ transform: "translate(0,0)", opacity: .95 }, { transform: `translate(${(Math.cos(aa) * sp).toFixed(0)}px,${(Math.sin(aa) * sp - 8).toFixed(0)}px)`, opacity: 0 }],
+          { duration: 480 + Math.random() * 220, easing: "ease-out" }).onfinish = () => dr.remove();
+      }
+      const boat = seat && liveG && liveG.querySelector(`.sea-fixg[data-seat="${seat}"] .sea-fix-boat`);
+      if (boat && boat.animate) boat.animate([{ transform: "rotate(0)" }, { transform: "rotate(-11deg) translateY(-2px)" }, { transform: "rotate(8deg)" }, { transform: "rotate(0)" }], { duration: 460, easing: "ease-out" });
+      setTimeout(() => { jaw.remove(); g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, fill: "forwards" }).onfinish = () => g.remove(); }, 700);
+    }, 330);
+  }
+  function playFx(f, done) {
+    {
+      {
+        if (f.t === "trail") {
+          R.presented.add(trailKey(f));
+          R.shown[f.seat] = -1;              // the anchored boat yields to the SAILING one
+          renderNow();
+          const el = liveG.querySelector(`path[data-k="${trailKey(f)}"]`);
+          let dur = 1100;
+          if (el) {
+            const L = el.getTotalLength();
+            dur = Math.min(2600, 850 + L * 3.4);   // a voyage is an EVENT, let it take its time
+            snd("quill", { dur }); snd("sea_sail", { dur });
+            el.style.strokeDasharray = L;
+            el.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }],
+              { duration: dur, easing: "cubic-bezier(.35,.1,.35,1)" }).onfinish = () => { el.style.strokeDasharray = ""; };
+            sailBoat(el, dur, seatColor(f.seat), seatRig(f.seat));
+          }
+          setTimeout(() => {   // landfall: the boat drops anchor, splash, stamp
+            R.shown[f.seat] = f.to;
+            renderNow();
+            if (POS[f.to]) { ripple(POS[f.to][0], POS[f.to][1], seatColor(f.seat)); popIsle(f.to); snd("chart_splash"); }
+            const fixg = [...liveG.querySelectorAll(`.sea-fixg[data-seat="${f.seat}"] .sea-fix-boat`)].pop();
+            if (fixg) fixg.animate([
+              { transform: "scale(1.9) rotate(-10deg)", opacity: .2 }, { transform: "scale(1) rotate(0)", opacity: 1 }
+            ], { duration: 420, easing: "cubic-bezier(.2,1.4,.4,1)" });
+            setTimeout(() => snd("chart_stamp"), 200);
+          }, Math.max(0, dur - 60));
+          done(dur + 650);
+          return;
+        }
+        if (f.t === "monster") {
+          snd("sea_monster");   // something vast beneath the water, the self-hit alarm stays in game.js
+          setTimeout(() => snd("chart_splash"), 260);
+          sharkBite(f.c, f.seat);
+          const el = liveG.querySelector(`.sea-scar[data-mc="${f.c}"]`);
+          if (el) el.animate([{ opacity: 0, transform: el.getAttribute("transform") + " scale(1.6)" },
+            { opacity: .5, transform: el.getAttribute("transform") }],
+            { duration: 700, easing: "ease-out" });
+          const isle = document.querySelector(`.sea-isle[data-c="${f.c}"]`);
+          if (isle) isle.animate([
+            { transform: "translate(0,0)" }, { transform: "translate(-2.5px,1.5px)" },
+            { transform: "translate(2px,-1px)" }, { transform: "translate(0,0)" }
+          ], { duration: 300, easing: "ease-out" });
+          ripple(POS[f.c][0] + 30, POS[f.c][1] - 20, "#3a5a52");
+          setTimeout(() => floatText(POS[f.c][0], POS[f.c][1] - 28, "−" + (f.d || 1), "#8c2a1a"), 640);
+          done(1650); return;
+        }
+        if (f.t === "flash") {
+          const [x, y] = POS[f.c];
+          const fl = document.createElementNS(NS, "circle");
+          fl.setAttribute("cx", x); fl.setAttribute("cy", y); fl.setAttribute("r", 42);
+          fl.setAttribute("fill", "#fff"); liveG.appendChild(fl);
+          fl.animate([{ opacity: .9 }, { opacity: 0 }], { duration: 300, easing: "ease-out" }).onfinish = () => fl.remove();
+          const cl = document.createElementNS(NS, "g");
+          cl.setAttribute("transform", `translate(${x} ${y - 44})`);
+          cl.innerHTML = `<path d="M -18 6 q -6 -11 6 -13 q 2 -9 13 -7 q 11 -6 18 2 q 11 -1 9 9 q 6 9 -6 11 z" fill="#3a3f4a"/>
+            <path d="M -8 12 l -5 9 M 2 12 l -5 9 M 12 12 l -5 9" stroke="#8a9aa5" stroke-width="1.4" opacity=".8"/>`;
+          liveG.appendChild(cl);
+          snd("sea_storm");
+          cl.animate([{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .8 }, { opacity: 0 }],
+            { duration: 1600, easing: "ease-out" }).onfinish = () => cl.remove();
+          const bolt = document.createElementNS(NS, "path");
+          bolt.setAttribute("d", `M ${x - 2} ${y - 30} l -7 14 l 7 -3 l -6 13`);
+          bolt.setAttribute("stroke", "#ffe9b0"); bolt.setAttribute("stroke-width", "2.4");
+          bolt.setAttribute("fill", "none"); bolt.setAttribute("stroke-linejoin", "round");
+          liveG.appendChild(bolt);
+          bolt.animate([{ opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: .2, offset: .3 },
+            { opacity: 1, offset: .42 }, { opacity: 0 }],
+            { duration: 700, easing: "ease-out" }).onfinish = () => bolt.remove();
+          const cp2 = document.querySelector(".cplot");
+          if (cp2) cp2.animate([
+            { transform: "translate(0,0)" }, { transform: "translate(-3px,2px)" },
+            { transform: "translate(2.5px,-2px)" }, { transform: "translate(0,0)" }
+          ], { duration: 240, easing: "ease-out" });
+          setTimeout(() => floatText(x, y - 30, "−2", "#8c2a1a"), 380);
+          done(1750); return;
+        }
+        if (f.t === "wreck") {
+          snd("chart_creak");
+          const el = liveG.querySelector(`.sea-wreck[data-wc="${f.c}"] .wk-in`);
+          if (el) el.animate([{ opacity: 0, transform: "translateY(-8px) rotate(6deg)" },
+            { opacity: 1, transform: "translateY(0) rotate(0)" }], { duration: 1150, easing: "ease-in" });
+          const wk = [...R.wrecks].reverse().find(w => w.c === f.c);
+          if (wk) for (let b = 0; b < 3; b++) {
+            const bub = document.createElementNS(NS, "circle");
+            bub.setAttribute("cx", wk.spot[0] + 4 + b * 5); bub.setAttribute("cy", wk.spot[1] + 4);
+            bub.setAttribute("r", 2.2 - b * .5); bub.setAttribute("fill", "none");
+            bub.setAttribute("stroke", "#8a9aa5"); bub.setAttribute("stroke-width", "1");
+            liveG.appendChild(bub);
+            bub.animate([{ transform: "translateY(0)", opacity: 0 },
+              { transform: "translateY(-7px)", opacity: .8, offset: .4 },
+              { transform: "translateY(-16px)", opacity: 0 }],
+              { duration: 900, delay: 500 + b * 260, easing: "ease-out" }).onfinish = () => bub.remove();
+          }
+          done(1900); return;
+        }
+        if (f.t === "restore") {
+          snd("chart_bell", { warm: true }); setTimeout(() => snd("sea_treasure"), 350);
+          const el = liveG.querySelector(`.sea-restored[data-rc="${f.c}"]`);
+          if (el) el.animate([{ transform: "scale(1.6)", opacity: 0 },
+            { transform: "scale(1)", opacity: 1 }], { duration: 520, easing: "cubic-bezier(.2,.8,.3,1)" });
+          if (POS[f.c]) {
+            const [rx2, ry2] = POS[f.c];
+            for (let i = 0; i < 8; i++) {
+              const a = i / 8 * Math.PI * 2, ln = document.createElementNS(NS, "line");
+              ln.setAttribute("x1", rx2 + Math.cos(a) * 30); ln.setAttribute("y1", ry2 + Math.sin(a) * 23);
+              ln.setAttribute("x2", rx2 + Math.cos(a) * 46); ln.setAttribute("y2", ry2 + Math.sin(a) * 34);
+              ln.setAttribute("stroke", "#b8862a"); ln.setAttribute("stroke-width", "2"); ln.setAttribute("stroke-linecap", "round");
+              liveG.appendChild(ln);
+              ln.animate([{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: 0 }],
+                { duration: 900, delay: i * 40, easing: "ease-out" }).onfinish = () => ln.remove();
+            }
+          }
+          done(1100); return;
+        }
+        if (f.t === "sail") {
+          const sl = liveG.querySelector(".sea-shipg .sh-slide");
+          if (sl) sl.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(1)" }],
+            { duration: 700, easing: "cubic-bezier(.3,1.4,.4,1)" });
+          const mc2 = app.view.merchant_century;
+          if (POS[mc2]) floatText(POS[mc2][0], POS[mc2][1] - 66, "+1 sail", "#b8862a");
+          if (POS[f.c]) { popIsle(f.c); ripple(POS[f.c][0], POS[f.c][1], "#b8862a"); }
+          snd("chart_bell"); setTimeout(() => snd("chart_creak"), 320);
+          done(1150); return;
+        }
+        if (f.t === "respawn") {
+          const c = centuryOf(f.seat);
+          if (c) R.shown[f.seat] = c;
+          if (c && POS[c]) {
+            ripple(POS[c][0], POS[c][1], seatColor(f.seat)); popIsle(c); snd("chart_splash");
+            setTimeout(() => floatText(POS[c][0], POS[c][1] - 30, "returned", seatColor(f.seat)), 300);
+          }
+          done(950); return;
+        }
+        if (f.t === "ship") {
+          const to = app.view.merchant_century;
+          const from = R.prevShip;
+          if (from != null && from !== to && POS[from] && POS[to]) {
+            R.merchantShown = from;   // HOLD the barge at the old port, no teleport
+            renderNow();              // draw it there with a fresh sh-slide at identity
+            const el = liveG.querySelector(".sea-shipg .sh-slide");
+            const step = to > from ? 1 : -1, way = [];
+            for (let c2 = from + step; ; c2 += step) { if (POS[c2]) way.push(c2); if (c2 === to) break; }
+            const HOP = 640, total = Math.max(1, way.length) * HOP;
+            const frames = [{ transform: "translate(0px,0px)" }];
+            way.forEach(c2 => frames.push({ transform: `translate(${POS[c2][0] - POS[from][0]}px,${POS[c2][1] - POS[from][1]}px)` }));
+            if (el) el.animate(frames, { duration: total, easing: "ease-in-out", fill: "forwards" });
+            const wake = document.createElementNS(NS, "path");
+            let wd = `M ${POS[from][0]} ${POS[from][1] - 44} `;
+            way.forEach(c2 => { wd += `L ${POS[c2][0]} ${POS[c2][1] - 44} `; });
+            wake.setAttribute("d", wd); wake.setAttribute("stroke", "#8a9aa5"); wake.setAttribute("stroke-width", "1.6");
+            wake.setAttribute("stroke-dasharray", "2 5"); wake.setAttribute("fill", "none");
+            (fxG || liveG).appendChild(wake);
+            wake.animate([{ opacity: .6 }, { opacity: 0 }], { duration: total + 900 }).onfinish = () => wake.remove();
+            snd("chart_creak"); snd("sea_sail", { dur: total });
+            for (let i = 1; i < way.length; i += 2) setTimeout(() => snd("chart_creak"), i * HOP);
+            setTimeout(() => snd("chart_bell"), Math.max(0, total - 120));
+            const dice2 = liveG.querySelector(".sea-shipg .sea-dice");
+            if (dice2) dice2.animate([{ transform: "rotate(0)" }, { transform: "rotate(-10deg)" },
+              { transform: "rotate(8deg)" }, { transform: "rotate(0)" }], { duration: 420, iterations: 2, easing: "ease-in-out" });
+            floatText(POS[from][0], POS[from][1] - 74, "sailed " + Math.abs(to - from), "#b8862a");
+            setTimeout(() => { R.merchantShown = to; R.prevShip = to; renderNow(); }, total);
+            done(total + 420); return;
+          }
+          R.prevShip = to; R.merchantShown = to;
+        }
+      }
+    }
+    done(60);
+  }
+  function sailBoat(pathEl, dur, col, rig) {
+    // the boat itself sails the plotted course; the ink line rises in its wake
+    try {
+      const b = document.createElementNS(NS, "g");
+      b.innerHTML = `<g transform="scale(1.6)">${rigSVG(0, col, {})}</g>`;
+      b.style.offsetPath = `path("${pathEl.getAttribute("d")}")`;
+      b.style.offsetRotate = "0deg";
+      (fxG || liveG).appendChild(b);
+      b.animate([{ offsetDistance: "0%" }, { offsetDistance: "100%" }],
+        { duration: dur, easing: "cubic-bezier(.35,.1,.35,1)" }).onfinish = () => b.remove();
+    } catch (e) {}
+  }
+  function penDot(pathEl, dur, col) {
+    try {
+      const dot = document.createElementNS(NS, "circle");
+      dot.setAttribute("r", "3.2"); dot.setAttribute("fill", col);
+      dot.style.offsetPath = `path("${pathEl.getAttribute("d")}")`;
+      dot.style.offsetRotate = "0deg";
+      liveG.appendChild(dot);
+      dot.animate([{ offsetDistance: "0%" }, { offsetDistance: "100%" }],
+        { duration: dur, easing: "cubic-bezier(.35,.1,.35,1)" }).onfinish = () => dot.remove();
+    } catch (e) {}
+  }
+  function floatText(x, y, txt, col) {
+    if (REDUCED || !liveG) return;
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", x); t.setAttribute("y", y);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("font-family", "Georgia"); t.setAttribute("font-weight", "bold");
+    t.setAttribute("font-style", "italic"); t.setAttribute("font-size", "18");
+    t.setAttribute("fill", col);
+    t.setAttribute("stroke", "rgba(255,246,220,.85)"); t.setAttribute("stroke-width", "3.5");
+    t.setAttribute("paint-order", "stroke");
+    t.style.transformBox = "fill-box"; t.style.transformOrigin = "center";
+    t.textContent = txt;
+    liveG.appendChild(t);
+    t.animate([
+      { transform: "translateY(6px) scale(.6)", opacity: 0 },
+      { transform: "translateY(-4px) scale(1.15)", opacity: 1, offset: .3 },
+      { transform: "translateY(-30px) scale(1)", opacity: 0 },
+    ], { duration: 1100, easing: "cubic-bezier(.2,.8,.4,1)" }).onfinish = () => t.remove();
+  }
+  function ripple(x, y, col) {
+    for (const [delay, r0] of [[0, 6], [140, 4]]) {
+      const rp = document.createElementNS(NS, "circle");
+      rp.setAttribute("cx", x); rp.setAttribute("cy", y); rp.setAttribute("r", r0);
+      rp.setAttribute("fill", "none"); rp.setAttribute("stroke", col); rp.setAttribute("stroke-width", "1.6");
+      liveG.appendChild(rp);
+      rp.animate([{ opacity: .6 }, { opacity: 0 }], { duration: 700, delay, easing: "ease-out" }).onfinish = () => rp.remove();
+      rp.animate([{ r: r0 }, { r: r0 + 22 }], { duration: 700, delay, easing: "ease-out" });
+    }
+  }
+
+  /* ═══ MOUNT ═══ */
+  let liveG = null, fxG = null, topG = null, baseCache = null, liveTimer = null;
+  let __dirty = false;
+  function __live() { const r = document.getElementById("timeline-rail");
+    return !!r && (!r.classList.contains("skin-sing") && !r.classList.contains("skin-ori")); }
+  function scheduleLive() {
+    if (liveTimer) return;
+    liveTimer = setTimeout(() => { liveTimer = null; renderLive(); }, 120);
+  }
+  function renderNow() {
+    if (liveTimer) { clearTimeout(liveTimer); liveTimer = null; }
+    renderLive(true);
+  }
+  function renderLive(force) {
+    // PERF: all three timeline skins live in the DOM at once, and all three ran
+    // this on every state tick, including the two you cannot see. The CPU profile
+    // caught them: 21.9 + 15.8 + 14.9 ms of self-time, on maps nobody is looking at.
+    // Skip the work while we are not the skin on screen; remember we fell behind and
+    // catch up the instant we become visible (SEA).
+    if (!__live()) { __dirty = true; __flushFxSilently(); return; }
+    if (__dirty) { __dirty = false; force = true; }
+    if (!liveG || !liveG.isConnected) return;
+    // A re-render rebuilds the live layer and KILLS any playing animation mid-flight
+    // (the teleporting-barge bug). While the theater plays, renders wait their turn.
+    if (fxBusy && !force) { renderPending = true; return; }
+    // idle = truth: displayed positions resync to the engine between presentations
+    if (!fxBusy && !R.sailing && R.fx.length === 0 && app && app.view)
+      app.view.travelers.forEach(t => {
+        if (t.is_self && R.pendingSelf != null) {          // just made an optimistic landfall
+          if (t.century === R.pendingSelf) R.pendingSelf = null;   // server confirmed
+          else return;                                     // hold the boat at destination
+        }
+        R.shown[t.name] = t.century;
+      });
+    if (!fxBusy && R.fx.length === 0 && app && app.view) R.merchantShown = app.view.merchant_century;
+    liveG.innerHTML = liveLayer() + highlights();
+    if (R.ordFlip && R.ordFlip.prev && !REDUCED) {   // the slate re-orders with a slide
+      const { prev, next } = R.ordFlip;
+      liveG.querySelectorAll("[data-ordrow]").forEach(row => {
+        const s = row.getAttribute("data-ordrow");
+        if (prev[s] == null || prev[s] === next[s]) return;
+        const dy = (prev[s] - next[s]) * 30;
+        row.animate([{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }],
+          { duration: 520, easing: "cubic-bezier(.3,1.1,.4,1)" });
+        if (next[s] < prev[s]) {   // climbed, a brief gilt flash
+          const bar = row.querySelector("rect");
+          if (bar) bar.animate([{ fill: "rgba(201,164,92,.5)" }, { fill: "rgba(233,220,184,.06)" }],
+            { duration: 900, easing: "ease-out" });
+        }
+      });
+    }
+    R.ordFlip = null;
+    if (topG) {   // the Sailing Order rides ABOVE every object (opaque, never see-through)
+      topG.replaceChildren();
+      const ord = liveG.querySelector(".sea-ord");
+      if (ord) topG.appendChild(ord);
+    }
+    const svgEl = document.querySelector(".pc-world");
+    if (svgEl && app && app.view)   // someone nears Year Zero -> the whole sea tenses
+      svgEl.classList.toggle("sea-endgame",
+        app.view.travelers.some(t => t.century <= 5 && !(t.statuses || []).includes("terminated")));
+    const cmd = document.querySelector(".sea-cmd");
+    if (cmd) {
+      const t = commandText();
+      cmd.innerHTML = t;
+      cmd.classList.toggle("on", !!t);
+    }
+    const hourEl = document.querySelector(".sea-hour");
+    if (hourEl && app && app.view) hourEl.textContent = `TUESDAY 31 DEC 2999 · HOUR ${app.view.hour}`;
+    for (const c of [10, 20]) {
+      const pipG = document.querySelector(`.sea-pips[data-c="${c}"]`);
+      if (!pipG || !app || !app.view) continue;
+      let pips = "";
+      app.view.travelers.forEach((t, i) => {
+        const claimed = c === 10 ? t.scored_century_x : t.scored_century_xx;
+        if (claimed) pips += `<circle cx="${i * 8 - 4}" cy="37" r="3" fill="${seatColor(t.name)}" stroke="#2a1c0c" stroke-width=".6"/>`;
+      });
+      pipG.innerHTML = pips;
+    }
+    const well = document.querySelector(".sea-well");
+    if (well) well.classList.toggle("well-reach", !!(mode && mode.kind === "travel" && mode.self <= mode.max && mode.locked !== 1));
+    applyFocus();
+    drainFx();
+  }
+  function mount() {
+    const rail = document.getElementById("timeline-rail");
+    if (!rail) return false;
+    if (rail.querySelector(".cplot")) return true;
+    if (!baseCache) {
+      // the chart FILLS its frame: derive W from the rail's real aspect (no side void)
+      const rb = rail.getBoundingClientRect();
+      const bw = rb.width - 6, bh = rb.height - 74;   // .cplot insets (74px top, 6px left)
+      if (bw < 60 || bh < 60) return false;            // rail not laid out yet, retry
+      W = Math.max(700, Math.min(1200, Math.round(H * bw / bh)));
+      baseCache = baseMap();
+      if (baseCache.violations.length) console.warn("SEA AUDIT VIOLATIONS:", baseCache.violations);
+    }
+    const base = baseCache;
+    rail.insertAdjacentHTML("beforeend", `
+      <div class="cplot">
+        <svg class="pc-world" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+          <defs>${base.defs}</defs>
+          <g>${base.out}</g>
+          <!-- THE PARCHMENT TOOTH, BAKED. This used to be filter=url(#seaRough) wrapped
+               around the ENTIRE 832x1000 chart: a live feTurbulence + feComposite + feBlend.
+               The texture never changes - but a live SVG filter is re-evaluated on every
+               repaint of what it wraps, and the sixteen sharks animate offset-distance
+               (a PAINT property), so the chart repainted every frame and the whole filter
+               chain ran with it, sixty times a second, over 832,000 pixels.
+               MEASURED in Firefox on my RTX at 165Hz:
+                   the Sea, frozen solid ................  55 fps
+                   the Sea, frozen, filters off ......... 164 fps    <- ONE filter: 109 fps
+                   the Sea as he plays it ...............  27 fps
+               It is a static texture, so it is now a static IMAGE: rasterised once by the
+               browser and cached forever, instead of recomputed every frame. Same tooth. -->
+          <image href="${ROUGH_TEX}" x="0" y="0" width="${W}" height="${H}"
+                 preserveAspectRatio="none" opacity=".55" style="pointer-events:none"/>
+          <g class="sea-live"></g>
+          <g class="sea-fx"></g>
+          <g class="sea-top"></g>
+        </svg>
+        <div class="sea-cmd"></div>
+      </div>`);
+    liveG = rail.querySelector(".sea-live");
+    fxG = rail.querySelector(".sea-fx");
+    topG = rail.querySelector(".sea-top");
+    rail.querySelector(".sea-cmd").addEventListener("click", e => {
+      if (!e.target.closest(".sea-anchor") || !mode || mode.kind !== "travel" || !app.pendingReq) return;
+      snd("chart_stamp");
+      app.respond({ direction: 1, distance: 0 });
+      mode = null; scheduleLive();
+    });
+    rail.querySelector(".pc-world").addEventListener("click", e => {
+      const kp = e.target.closest(".sea-key-pin");
+      if (kp) {
+        const kg = kp.closest(".sea-key");
+        kg.classList.toggle("folded");
+        try { localStorage.setItem("seaKeyOpen", kg.classList.contains("folded") ? "0" : "1"); } catch (err) {}
+        snd("chart_stamp");
+        return;
+      }
+      const t = e.target.closest(".sea-hit, .sea-glow, .sea-cost");
+      if (!t) return;
+      const c = t.classList.contains("sea-hit") ? +t.dataset.c : nearestIsland(e);
+      if (c !== null && c !== undefined && !isNaN(c)) onIslandClick(c);
+    });
+    function nearestIsland(e) {
+      const svg = rail.querySelector(".pc-world");
+      const r = svg.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+      let best = null, bd = 1e9;
+      for (let c = 1; c <= 30; c++) {
+        const d = Math.hypot(x - POS[c][0], y - POS[c][1]);
+        if (d < bd) { bd = d; best = c; }
+      }
+      return bd < 54 ? best : null;
+    }
+    /* ── the surveyor's slip: instant, in-fiction hover info (glance -> hover) ── */
+    const tipEl = document.createElement("div");
+    tipEl.className = "sea-tip";
+    rail.querySelector(".cplot").appendChild(tipEl);
+    function islandTip(c) {
+      if (!app || !app.view || !POS[c]) return "";
+      const v = app.view;
+      const L = [`<b>CENTURY ${rom(c)}</b>, ${ERAS_OF(c).map(e => ERA_NAME[e]).join(" + ")}`];
+      for (const t of v.travelers) if (t.century === c)
+        L.push(`<svg width="15" height="13" viewBox="-9 -14 18 20" style="vertical-align:-2px">${rigSVG(seatRig(t.name), seatColor(t.name), {})}</svg> ${esc(t.name)}${t.is_self ? " (you)" : ""} · ${t.energy} energy · ${t.gold} gold`);
+      if (v.merchant_century === c) L.push("the Merchant is anchored here");
+      if (R.restored.has(c)) L.push("restored, a delivery landed");
+      for (const t of v.travelers)
+        for (const card of ((t.is_self ? t.hand : t.equipment) || []))
+          if (card.delivery_century === c)
+            L.push(`${t.is_self ? "your" : esc(t.name) + "'s"} delivery: ${esc(card.display_name || card.name)}`);
+      if (c <= 9) L.push("<i>red waters, upstream costs 2 energy per league</i>");
+      if (mode && mode.kind === "travel" && c !== mode.self) {
+        const d = Math.abs(c - mode.self);
+        const ok = d > 0 && d <= mode.max && (mode.locked == null || Math.sign(c - mode.self) === mode.locked);
+        if (ok) L.push(c > mode.self ? "<b>with the current, free · click to sail</b>"
+          : `<b>upstream, ${stepCost(mode.self, d)} energy · click to sail</b>`);
+      }
+      return L.join("<br>");
+    }
+    function tipFor(e) {
+      const pg2 = e.target.closest(".sea-postg");
+      if (pg2 && app && app.view) {
+        const pname = pg2.getAttribute("data-period");
+        const eras2 = PERIOD_ERAS[pname] || [];
+        const items = R.deliveries.filter(dv => ERAS_OF(dv.century).some(e2 => eras2.includes(e2)));
+        const covered = app.view.travelers.filter(t => (t.delivered_periods || []).includes(pname));
+        const icon = seat => `<svg width="17" height="17" viewBox="-11 -11 22 22" style="vertical-align:-4px"><g transform="scale(.8)">${rigSVG(seatRig(seat), seatColor(seat), {})}</g></svg>`;
+        const nm = dv => { const c = dv.card; const id = (typeof c === "string") ? c : (c && (c.display_name || c.name)); return (app.nameMap && app.nameMap[id]) || id || "a relic"; };
+        const tiles = items.map(dv => `<div class="tip-card"><div class="tc-name">${esc(nm(dv))}</div><div class="tc-kind">relic · at ${rom(dv.century)} · Hour ${dv.hour}</div><div class="tc-cost">${icon(dv.seat)} ${esc(dv.seat)}</div></div>`).join("");
+        const cov = covered.length ? `<div style="margin-top:4px">covered by ${covered.map(t => `${icon(t.name)} <b style="color:${seatColor(t.name)}">${esc(t.name)}</b>`).join(" · ")}</div>` : "";
+        return `<b>${esc(pname).toUpperCase()} REGISTRY</b>, a delivery in these waters scores this period`
+          + `<div class="tip-cards">${tiles || "<i>no relic landed here yet</i>"}</div>${cov}`;
+      }
+      const ship = e.target.closest(".sea-shipg");
+      if (ship && app && app.view) {
+        const v = app.view, dice = v.merchant_movement_dice || 1;
+        const tiles = (v.market_revealed || []).map(c2 => `
+          <div class="tip-card">
+            <div class="tc-name">${esc(c2.display_name || c2.name)}</div>
+            <div class="tc-kind">${esc(c2.kind_label || "")}</div>
+            <div class="tc-desc">${esc(c2.description || "")}</div>
+            <div class="tc-cost">${c2.gold_cost != null ? esc(String(c2.gold_cost)) + " gold": "--"}</div>
+          </div>`).join("");
+        return `<b>THE MERCHANT'S BARGE</b>, anchored at ${rom(v.merchant_century)}<br>`
+          + `${dice} sail${dice > 1 ? "s" : ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? ` · hunting ${esc(R.merchantLast.target)}` : ""}`
+          + `<div class="tm-head">CARGO MANIFEST: GOODS FOR TRADE</div>`
+          + `<div class="tip-cards">${tiles || "<i>the hold stands empty</i>"}</div>`;
+      }
+      const hit = e.target.closest(".sea-hit, .sea-glow, .sea-cost");
+      if (hit) {
+        const c = hit.dataset && hit.dataset.c !== undefined ? +hit.dataset.c : nearestIsland(e);
+        if (c === 0) return "<b>THE WELLSPRING: Year Zero</b><br>reaching it ends the game (+2 CP), but the most CP wins, not the arrival";
+        if (c) return islandTip(c);
+      }
+      const isle = e.target.closest(".sea-isle");
+      if (isle) return islandTip(+isle.dataset.c);
+      const lg = e.target.closest(".sea-light");
+      if (lg) {
+        const c = +lg.dataset.c;
+        const names = (app && app.view ? app.view.travelers : [])
+          .filter(t => c === 10 ? t.scored_century_x : t.scored_century_xx).map(t => t.name);
+        return `<b>the ${rom(c)} light, milestone of ${rom(c)}</b><br>` +
+          (names.length ? `claimed by ${names.map(esc).join(", ")}` : "no traveler has claimed it yet");
+      }
+      const dt = e.target.closest("[data-tip]");
+      if (dt) return esc(dt.dataset.tip);
+      return "";
+    }
+    const world2 = rail.querySelector(".pc-world");
+    world2.addEventListener("mousemove", e => {
+      if (!__live()) return;   // ...and the Sea, when it is not the chart on screen
+      const html = tipFor(e);
+      if (html) {
+        tipEl.innerHTML = html;
+        tipEl.classList.toggle("tip-wide", html.indexOf("tip-cards") !== -1);
+        tipEl.classList.add("on");
+        const box = rail.querySelector(".cplot").getBoundingClientRect();
+        const fit = window.__pdxFit || 1;   // .cplot is inside the fit-scaled plane; offsetW/H are plane px
+        const localW = box.width / fit, localH = box.height / fit;
+        let tx = (e.clientX - box.left) / fit + 14, ty = (e.clientY - box.top) / fit + 12;
+        tipEl.style.left = "0px"; tipEl.style.top = "0px";   // measure at natural size
+        const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+        if (tx + tw > localW - 8) tx = (e.clientX - box.left) / fit - tw - 12;
+        if (ty + th > localH - 8) ty = (e.clientY - box.top) / fit - th - 10;
+        tipEl.style.left = tx + "px"; tipEl.style.top = ty + "px";
+      } else tipEl.classList.remove("on");
+      // hovering a reachable island PREVIEWS the course before you commit
+      let pv = null;
+      if (mode && mode.kind === "travel") {
+        const el2 = e.target.closest(".sea-isle, .sea-hit, .sea-glow, .sea-cost");
+        if (el2) {
+          const c2 = el2.dataset && el2.dataset.c !== undefined ? +el2.dataset.c : nearestIsland(e);
+          const cands = pickCandidates();
+          if (c2 && c2 !== mode.self && cands && cands.has(c2)) pv = c2;
+        }
+      }
+      setPreview(pv);
+      const hl = e.target.closest("[data-hlseat]");
+      const hlSeat = hl ? hl.getAttribute("data-hlseat") : null;
+      if (hlSeat !== mount._hl) {
+        mount._hl = hlSeat;
+        liveG && liveG.querySelectorAll(".sea-fixg").forEach(n =>
+          n.classList.toggle("sea-hl", n.dataset.seat === hlSeat));
+      }
+      const oh = !!e.target.closest(".sea-ord");
+      if (oh !== ordHovered) {
+        ordHovered = oh;
+        const ordEl = document.querySelector(".sea-ord");
+        if (ordEl) ordEl.classList.toggle("open", oh);
+      }
+    });
+    world2.addEventListener("mouseleave", () => { tipEl.classList.remove("on"); setPreview(null); ordHovered = false; const oe = document.querySelector(".sea-ord"); if (oe) oe.classList.remove("open"); });
+    world2.addEventListener("mousedown", () => tipEl.classList.remove("on"));
+    renderLive();
+    return true;
+  }
+  function rehome() {
+    // re-seat monsters/wrecks in clear water after a re-layout
+    R.taken.length = 0;
+    for (const mo of R.monsters) if (POS[mo.c])
+      mo.spot = seaSpot(POS[mo.c][0] + islR(mo.c) + 18, POS[mo.c][1] - islR(mo.c) * .6 - 16, META[mo.c].id, R.taken);
+    for (const wk of R.wrecks) if (POS[wk.c])
+      wk.spot = seaSpot(POS[wk.c][0] - islR(wk.c) - 18, POS[wk.c][1] + islR(wk.c) * .6 + 16, META[wk.c].id, R.taken);
+  }
+  let rzT = null;
+  const seaRelayout = () => {
+    clearTimeout(rzT);
+    rzT = setTimeout(() => {
+      const rail = document.getElementById("timeline-rail");
+      const cp = rail && rail.querySelector(".cplot");
+      if (!cp) return;
+      const box = cp.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      const want = Math.max(700, Math.min(1200, Math.round(H * box.width / box.height)));
+      if (Math.abs(want - W) < 12) return;   // the chart must FILL its frame, tiny drifts only
+      cp.remove(); baseCache = null; liveG = null;
+      if (mount()) { rehome(); renderNow(); }
+    }, 350);
+  };
+  window.addEventListener("resize", seaRelayout);
+  // the rail itself resizes without a window resize (cabin toggle recomposes scenes)
+  if (window.ResizeObserver) {
+    const railEl = document.getElementById("timeline-rail");
+    if (railEl) new ResizeObserver(seaRelayout).observe(railEl);
+  }
+
+  const style = document.createElement("style");
+  style.textContent = `
+    @media (prefers-reduced-motion: no-preference) {
+      .sea-waves.w1 { animation: seaDriftA 12s linear infinite; }
+      .sea-waves.w2 { animation: seaDriftB 19s linear infinite; }
+      .sea-fog { animation: seaFog 7s ease-in-out infinite alternate; }
+      .sea-fog.f2 { animation-duration: 9.5s; animation-direction: alternate-reverse; }
+      .sea-glint { animation: seaGlint 2.6s ease-in-out infinite; }
+      .sea-glint.g2 { animation-delay: 1.2s; }
+      .sea-skulleye { animation: seaGlint 4.8s ease-in-out infinite; }
+      .sea-skulleye.e2 { animation-delay: 2.1s; }
+    }
+    .sea-shark { transform-box: view-box; }
+    @media (prefers-reduced-motion: no-preference) {
+      .sea-shark { animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; }
+      .sea-shark.cw  { animation-name: seaSharkOrbitCW; }
+      .sea-shark.ccw { animation-name: seaSharkOrbitCCW; }
+      .sea-shark .flip { transform-box: fill-box; transform-origin: center; animation-duration: var(--t2); animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-delay: inherit; }
+      .sea-shark.cw .flip { animation-name: seaSharkFaceCW; }
+      .sea-shark.ccw .flip { animation-name: seaSharkFaceCCW; }
+    }
+    @keyframes seaSharkOrbitCW { 0% { transform: translate(calc(var(--r) * 1.0000px), calc(var(--ry) * 0.0000px)); } 4.167% { transform: translate(calc(var(--r) * 0.9659px), calc(var(--ry) * 0.2588px)); } 8.333% { transform: translate(calc(var(--r) * 0.8660px), calc(var(--ry) * 0.5000px)); } 12.5% { transform: translate(calc(var(--r) * 0.7071px), calc(var(--ry) * 0.7071px)); } 16.67% { transform: translate(calc(var(--r) * 0.5000px), calc(var(--ry) * 0.8660px)); } 20.83% { transform: translate(calc(var(--r) * 0.2588px), calc(var(--ry) * 0.9659px)); } 25% { transform: translate(calc(var(--r) * 0.0000px), calc(var(--ry) * 1.0000px)); } 29.17% { transform: translate(calc(var(--r) * -0.2588px), calc(var(--ry) * 0.9659px)); } 33.33% { transform: translate(calc(var(--r) * -0.5000px), calc(var(--ry) * 0.8660px)); } 37.5% { transform: translate(calc(var(--r) * -0.7071px), calc(var(--ry) * 0.7071px)); } 41.67% { transform: translate(calc(var(--r) * -0.8660px), calc(var(--ry) * 0.5000px)); } 45.83% { transform: translate(calc(var(--r) * -0.9659px), calc(var(--ry) * 0.2588px)); } 50% { transform: translate(calc(var(--r) * -1.0000px), calc(var(--ry) * 0.0000px)); } 54.17% { transform: translate(calc(var(--r) * -0.9659px), calc(var(--ry) * -0.2588px)); } 58.33% { transform: translate(calc(var(--r) * -0.8660px), calc(var(--ry) * -0.5000px)); } 62.5% { transform: translate(calc(var(--r) * -0.7071px), calc(var(--ry) * -0.7071px)); } 66.67% { transform: translate(calc(var(--r) * -0.5000px), calc(var(--ry) * -0.8660px)); } 70.83% { transform: translate(calc(var(--r) * -0.2588px), calc(var(--ry) * -0.9659px)); } 75% { transform: translate(calc(var(--r) * -0.0000px), calc(var(--ry) * -1.0000px)); } 79.17% { transform: translate(calc(var(--r) * 0.2588px), calc(var(--ry) * -0.9659px)); } 83.33% { transform: translate(calc(var(--r) * 0.5000px), calc(var(--ry) * -0.8660px)); } 87.5% { transform: translate(calc(var(--r) * 0.7071px), calc(var(--ry) * -0.7071px)); } 91.67% { transform: translate(calc(var(--r) * 0.8660px), calc(var(--ry) * -0.5000px)); } 95.83% { transform: translate(calc(var(--r) * 0.9659px), calc(var(--ry) * -0.2588px)); } 100% { transform: translate(calc(var(--r) * 1.0000px), calc(var(--ry) * -0.0000px)); } }
+    @keyframes seaSharkOrbitCCW { 0% { transform: translate(calc(var(--r) * 1.0000px), calc(var(--ry) * -0.0000px)); } 4.167% { transform: translate(calc(var(--r) * 0.9659px), calc(var(--ry) * -0.2588px)); } 8.333% { transform: translate(calc(var(--r) * 0.8660px), calc(var(--ry) * -0.5000px)); } 12.5% { transform: translate(calc(var(--r) * 0.7071px), calc(var(--ry) * -0.7071px)); } 16.67% { transform: translate(calc(var(--r) * 0.5000px), calc(var(--ry) * -0.8660px)); } 20.83% { transform: translate(calc(var(--r) * 0.2588px), calc(var(--ry) * -0.9659px)); } 25% { transform: translate(calc(var(--r) * 0.0000px), calc(var(--ry) * -1.0000px)); } 29.17% { transform: translate(calc(var(--r) * -0.2588px), calc(var(--ry) * -0.9659px)); } 33.33% { transform: translate(calc(var(--r) * -0.5000px), calc(var(--ry) * -0.8660px)); } 37.5% { transform: translate(calc(var(--r) * -0.7071px), calc(var(--ry) * -0.7071px)); } 41.67% { transform: translate(calc(var(--r) * -0.8660px), calc(var(--ry) * -0.5000px)); } 45.83% { transform: translate(calc(var(--r) * -0.9659px), calc(var(--ry) * -0.2588px)); } 50% { transform: translate(calc(var(--r) * -1.0000px), calc(var(--ry) * -0.0000px)); } 54.17% { transform: translate(calc(var(--r) * -0.9659px), calc(var(--ry) * 0.2588px)); } 58.33% { transform: translate(calc(var(--r) * -0.8660px), calc(var(--ry) * 0.5000px)); } 62.5% { transform: translate(calc(var(--r) * -0.7071px), calc(var(--ry) * 0.7071px)); } 66.67% { transform: translate(calc(var(--r) * -0.5000px), calc(var(--ry) * 0.8660px)); } 70.83% { transform: translate(calc(var(--r) * -0.2588px), calc(var(--ry) * 0.9659px)); } 75% { transform: translate(calc(var(--r) * -0.0000px), calc(var(--ry) * 1.0000px)); } 79.17% { transform: translate(calc(var(--r) * 0.2588px), calc(var(--ry) * 0.9659px)); } 83.33% { transform: translate(calc(var(--r) * 0.5000px), calc(var(--ry) * 0.8660px)); } 87.5% { transform: translate(calc(var(--r) * 0.7071px), calc(var(--ry) * 0.7071px)); } 91.67% { transform: translate(calc(var(--r) * 0.8660px), calc(var(--ry) * 0.5000px)); } 95.83% { transform: translate(calc(var(--r) * 0.9659px), calc(var(--ry) * 0.2588px)); } 100% { transform: translate(calc(var(--r) * 1.0000px), calc(var(--ry) * 0.0000px)); } }
+    @keyframes seaSharkFaceCW { 0% { transform: scaleX(.06); } 7% { transform: scaleX(-1); } 43% { transform: scaleX(-1); } 50% { transform: scaleX(-.06); } 57% { transform: scaleX(1); } 93% { transform: scaleX(1); } 100% { transform: scaleX(.06); } }
+    @keyframes seaSharkFaceCCW { 0% { transform: scaleX(-.06); } 7% { transform: scaleX(1); } 43% { transform: scaleX(1); } 50% { transform: scaleX(.06); } 57% { transform: scaleX(-1); } 93% { transform: scaleX(-1); } 100% { transform: scaleX(-.06); } }
+    /* the drift animates the individual translate property, not transform: Chrome hands a
+       transform animation on an SVG group to the compositor, and every overlapping wave
+       path then became its own layer (468 layers, half the compositor's frame time).
+       translate paints on the main thread, and under steps(6) that is one repaint a step. */
+    @keyframes seaDriftA { from { translate: 0 0; } to { translate: -48px 0; } }
+    @keyframes seaDriftB { from { translate: -48px 0; } to { translate: 0 0; } }
+    @keyframes seaFog { from { transform: translateX(-3px); opacity: .42; } to { transform: translateX(4px); opacity: .26; } }
+    @keyframes seaGlint { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  ` + `
+    #timeline-rail > :not(.cplot) { display: none !important; }
+    #timeline-rail .cplot { pointer-events: auto; }   /* the sea is an instrument, not decoration */
+    .sea-cmd { pointer-events: none; }
+    .travel-ghost { display: none !important; }   /* the sea presents voyages now */
+    .cplot { position: absolute; inset:74px 0 0 6px; }
+    .pc-world { width: 100%; height: 100%; display: block;
+      filter: drop-shadow(0 10px 26px rgba(0,0,0,.6)); }
+    .sea-hit { cursor: pointer; }
+    .sea-glow { fill: transparent; stroke-width: 3.4; cursor: pointer; animation: seaglow 1.1s infinite alternate; }
+    .sea-cost { cursor: pointer; }
+    .glow-go { stroke: #2fae7c; } .glow-cost { stroke: #c9a45c; }
+    .glow-risk { stroke: #c0392b; } .glow-amber { stroke: #e0972b; } .glow-violet { stroke: #8f6fd6; }
+    @keyframes seaglow { from { opacity: .4; } to { opacity: 1; } }
+    .sea-well.well-reach circle { animation: seaglow 1.1s infinite alternate; }
+    .sea-isle { transform-box: fill-box; transform-origin: center; transition: opacity .35s ease, transform .18s ease; }
+    .mode-pick .sea-isle { opacity: .38; }
+    .sea-cart { transition: opacity .3s ease; }
+    .mode-pick .sea-cart { opacity: .22; }   /* the strip gives orders OVER the title */
+    .mode-pick .sea-isle.can-go { opacity: 1; cursor: pointer; }
+    .mode-pick .sea-isle.can-go:hover { transform: scale(1.07); }
+    .mode-pick .sea-hit { cursor: pointer; }
+    .sea-isle:hover path { filter: brightness(1.07); }
+    .sea-cmd { position: absolute; left: 50%; top: 6px; transform: translateX(-50%) scale(.9);
+      background: rgba(26,20,12,.92); border: 1px solid #8a6a3a; border-radius: 4px;
+      color: #e8dcc0; font: 600 11px/1.5 Georgia, serif; letter-spacing: .5px;
+      padding: 5px 14px; opacity: 0; pointer-events: none; transition: all .25s ease; white-space: nowrap; }
+    .sea-cmd.on { opacity: 1; transform: translateX(-50%) scale(1); }
+    .sea-cmd .cgo { color: #5fd6a3; } .sea-cmd .ccost { color: #e8c05a; }
+    .sea-cmd .sea-anchor { pointer-events: auto; cursor: pointer; display: inline-block;
+      margin-left: 12px; padding: 1px 9px 2px; border: 1px solid #8a6a3a; border-radius: 3px;
+      color: #e8dcc0; background: rgba(138,106,58,.18); transition: all .18s ease; }
+    .sea-cmd .sea-anchor:hover { background: rgba(138,106,58,.42); color: #fff; }
+    .sea-cmd .sea-anchor svg { vertical-align: -1.5px; }
+    .sea-key-pin { cursor: pointer; }
+    .sea-key-pin circle { transition: transform .2s ease; transform-box: fill-box; transform-origin: center; }
+    .sea-key-pin:hover circle { transform: scale(1.25); }
+    .sea-key-body { transform-box: fill-box; transform-origin: 80px 9px;
+      transition: transform .4s cubic-bezier(.3,1.15,.4,1), opacity .3s ease;
+      filter: drop-shadow(3px 5px 7px rgba(0,0,0,.4)); }
+    .sea-key.folded .sea-key-body { transform: scale(.05) rotate(-9deg); opacity: 0; pointer-events: none; }
+    .sea-key-tag { opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+    .sea-key.folded .sea-key-tag { opacity: 1; }
+    .sea-tip { position: absolute; left: 0; top: 0; max-width: 250px; background: #f2e8cd; color: #2a2018;
+      border: 1px solid #6a5232; padding: 7px 10px; font: 11px/1.55 Georgia, serif;
+      box-shadow: 3px 4px 12px rgba(0,0,0,.45); opacity: 0; pointer-events: none;
+      transform: rotate(-.5deg); transition: opacity .12s ease; z-index: 5; }
+    .sea-tip.on { opacity: 1; }
+    .sea-tip b { letter-spacing: .5px; }
+    .sea-tip i { color: #8c2a1a; }
+    .sea-voyage { pointer-events: stroke; }
+    .sea-beam { animation: seabeam 3.4s ease-in-out infinite alternate; }
+    @keyframes seabeam { from { opacity: .45; } to { opacity: 1; } }
+    .sea-od { animation: seaod 7s ease-in-out infinite alternate; }
+    @keyframes seaod { from { opacity: .55; } to { opacity: .85; } }
+    .mo-in, .gt-in, .wk-in, .sh-bob, .sh-slide, .sea-restored, .sea-fix-boat {
+      transform-box: fill-box; transform-origin: center; }
+    .sea-ghost { opacity: .6; }
+    @keyframes seatremble { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(.7px, -.4px); }
+      50% { transform: translate(-.5px, .5px); } 75% { transform: translate(.4px, .3px); } }
+    .sea-endgame .sea-isle.od { animation: seatremble 2.4s ease-in-out infinite; }
+    .sea-endgame .sea-od { animation-duration: 2.4s; opacity: .95; }
+    .sea-endgame .sea-well-rings { animation-duration: 1.5s; }
+    .sea-fixg.sea-hl .sea-fix-boat { transform: scale(1.28); }
+    .sea-ord-pin { cursor: help; }
+    .sea-ord-pin:hover path { filter: brightness(1.25); }
+    .sea-ord-body { transform: translate(-180px, 0); opacity: 0; pointer-events: none;
+      transition: transform .42s cubic-bezier(.3,1.1,.4,1), opacity .3s ease;
+      filter: drop-shadow(3px 5px 7px rgba(0,0,0,.45)); }
+    .sea-ord.open .sea-ord-body { transform: translate(22px, 0); opacity: 1; pointer-events: auto; }
+    .sea-hunt { transform-box: fill-box; transform-origin: center; animation: seasway 3s ease-in-out infinite alternate; }
+    .sea-smoke { transform-box: fill-box; transform-origin: center bottom; animation: seasmoke 2.8s ease-in-out infinite; }
+    @keyframes seasmoke { 0% { opacity: .2; transform: translateY(0); } 55% { opacity: .75; } 100% { opacity: 0; transform: translateY(-4px); } }
+    .sea-tip.tip-wide { max-width: 430px; }
+    .sea-tip .tm-head { font-size: 8.5px; letter-spacing: 1.4px; font-weight: bold;
+      border-top: 1px solid #6a5232; margin-top: 5px; padding-top: 4px; }
+    .sea-tip .tip-cards { display: flex; gap: 6px; margin-top: 4px; }
+    .sea-tip .tip-card { flex: 1 1 0; min-width: 88px; max-width: 108px; background: #221a10;
+      color: #e8dcc0; border: 1px solid #8a6a3a; border-radius: 4px; padding: 6px 7px;
+      font-size: 9.5px; line-height: 1.35; }
+    .sea-tip .tc-name { font-weight: bold; font-size: 10px; color: #f2e8cd; }
+    .sea-tip .tc-kind { font-style: italic; opacity: .75; margin: 1px 0 3px; }
+    .sea-tip .tc-desc { opacity: .85; max-height: 52px; overflow: hidden; }
+    .sea-tip .tc-cost { margin-top: 4px; color: #e8c05a; font-weight: bold; letter-spacing: .5px; }
+    .sea-dice { transform-box: fill-box; transform-origin: center; }
+    .sea-lantern { animation: sealant 2.6s ease-in-out infinite alternate; }
+    @keyframes sealant { from { opacity: .55; } to { opacity: 1; } }
+    .sea-trade { animation: seatrade 14s linear infinite; }
+    @keyframes seatrade { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -120; } }
+    .mo-in { animation: seasway 5.5s ease-in-out infinite alternate; }
+    .gt-in { animation: seasway 4s ease-in-out infinite alternate; }
+    .sh-bob { animation: seabob 3.2s ease-in-out infinite alternate; }
+    .sea-well-rings { transform-box: fill-box; transform-origin: center;
+      animation: seabreathe 4s ease-in-out infinite alternate; }
+    @keyframes seasway { from { transform: rotate(-1.8deg); } to { transform: rotate(1.8deg); } }
+    @keyframes seabob { from { transform: translateY(0); } to { transform: translateY(2.4px); } }
+    @keyframes seabreathe { from { opacity: .72; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .sea-glow, .sea-well.well-reach circle, .mo-in, .gt-in, .sh-bob, .sea-beam, .sea-od,
+      .sea-endgame .sea-isle.od, .sea-smoke, .sea-hunt { animation: none; } }
+  `;
+  document.head.appendChild(style);
+
+  setInterval(() => {
+    if (hookApp()) { mount(); pollDecisions(); scheduleLive(); }
+  }, 300);
+})();

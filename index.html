@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="play-shim.js?202609261009"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PARADOXO · C.R.O.N.O.S. Temporal Operations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Identity type: Oswald (institutional display), JetBrains Mono (terminal data),
+       Inter (humanist body). Self-host these for the offline Tauri build later. -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css?202609261009" />
+  <link rel="stylesheet" href="styles/tutorial.css?202609261009" />
+</head>
+<body class="boot">
+  <!-- The WORLD: AI-painted temporal environments sit behind the whole board so the
+       player feels inside the universe. The backdrop cross-fades to match the era YOUR
+       traveler stands in (body[data-era]); a scrim + haze + drifting motes keep the UI
+       readable and the depth atmospheric; a dread layer lets the world darken and warp
+       as the horror grows in silence (:root --dread). -->
+  <div class="world-bg" aria-hidden="true"></div>
+  <div class="world-haze" aria-hidden="true"></div>
+  <div class="world-motes" aria-hidden="true"></div>
+  <div class="world-dread" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- ============================ LANDING ============================ -->
+  <section id="screen-landing" class="screen is-active">
+    <div class="landing-frame panel bracketed">
+      <header class="landing-head">
+        <div class="cronos-mark" id="cronos-mark"></div>
+        <div class="landing-titles">
+          <h1 class="wordmark">PARADOXO</h1>
+          <p class="overline">Corporação C.R.O.N.O.S. · Temporal Operations Division</p>
+        </div>
+      </header>
+
+      <div class="landing-body">
+        <div class="field">
+          <label class="lbl" for="inp-name">Operative designation</label>
+          <input id="inp-name" class="inp" maxlength="24" placeholder="Your name" autocomplete="off" />
+        </div>
+
+        <button id="btn-tutorial" class="btn btn-primary block" type="button">
+          <span class="btn-ico" data-icon="machine"></span> Learn to Play
+        </button>
+
+        <div class="landing-cols">
+          <div class="card-form bracketed">
+            <h2 class="form-title">Open a dossier</h2>
+            <p class="muted small">Create a new temporal contract and invite operatives.</p>
+            <div class="field">
+              <label class="lbl" for="sel-players">Operatives (2-6)</label>
+              <div class="stepper" id="players-stepper">
+                <button class="step-btn" data-step="-1" type="button">-</button>
+                <output id="out-players" class="step-val">3</output>
+                <button class="step-btn" data-step="1" type="button">+</button>
+              </div>
+            </div>
+            <button id="btn-create" class="btn btn-primary block" type="button">
+              <span class="btn-ico" data-icon="seal"></span> Establish Room
+            </button>
+            <!-- The Test Room: the auction mode under construction. Same lobby,
+                 different dimension. Never touches a classic match. -->
+            <button id="btn-testroom" class="btn btn-ghost block" type="button">
+              <span class="btn-ico" data-icon="machine"></span> Test Room
+            </button>
+            <!-- A mesa dividida: um monitor, ate quatro controles. -->
+            <button id="btn-mesa" class="btn btn-ghost block" type="button">
+              <span class="btn-ico" data-icon="play"></span> Split-screen Table
+            </button>
+          </div>
+
+          <div class="card-form bracketed">
+            <h2 class="form-title">Report for duty</h2>
+            <p class="muted small">Enter an existing room code to take a seat.</p>
+            <div class="field">
+              <label class="lbl" for="inp-code">Room code</label>
+              <input id="inp-code" class="inp mono code-inp" maxlength="4" placeholder="••••" autocomplete="off" />
+            </div>
+            <button id="btn-join" class="btn btn-ghost block" type="button">
+              <span class="btn-ico" data-icon="enter"></span> Join Room
+            </button>
+          </div>
+        </div>
+        <p id="landing-error" class="error-line" role="alert"></p>
+
+        <!-- O PERFIL: nome fixo, cor do operativo e a folha de servico. Tudo
+             guardado nesta maquina, sem conta e sem servidor. -->
+        <div class="card-form bracketed profile-card" id="profile-card">
+          <h2 class="form-title">Service record</h2>
+          <div class="prof-top">
+            <div class="prof-swatches" id="prof-swatches"></div>
+            <div class="prof-stats" id="prof-stats"></div>
+          </div>
+          <ul class="prof-log" id="prof-log"></ul>
+          <button class="btn btn-ghost btn-sm" id="btn-clear-history" type="button">
+            Clear record
+          </button>
+        </div>
+      </div>
+
+      <footer class="landing-foot mono small muted">
+        CORPORAÇÃO C.R.O.N.O.S. · TEMPORAL OPERATIONS DIVISION · "Time is a contract. Honour it."
+      </footer>
+    </div>
+  </section>
+
+  <!-- ============================ LOBBY ============================ -->
+  <section id="screen-lobby" class="screen">
+    <div class="lobby-frame panel bracketed">
+      <header class="lobby-head">
+        <div>
+          <p class="overline">Room</p>
+          <h2 class="room-code mono" id="lobby-code">----</h2>
+        </div>
+        <div class="lobby-status">
+          <span class="status-dot"></span>
+          <span id="lobby-status-text" class="mono small">AWAITING OPERATIVES</span>
+        </div>
+      </header>
+
+      <ul id="seat-list" class="seat-list"></ul>
+
+      <div class="lobby-actions">
+        <p class="muted small" id="lobby-hint">Empty seats become bots when the game begins.</p>
+        <button id="btn-start" class="btn btn-primary" type="button">
+          <span class="btn-ico" data-icon="play"></span> Begin Operation
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ GAME ============================ -->
+  <section id="screen-game" class="screen">
+    <div id="cam" class="cam-world" data-scene="main">
+    <div class="game-grid">
+      <!-- Top bar -->
+      <header class="topbar" id="topbar">
+        <div class="topbar-left">
+          <div class="cronos-mark small" id="cronos-mark-game"></div>
+          <div class="hour-readout">
+            <span class="overline">Hour</span>
+            <span class="mono hour-num" id="hud-hour">1</span>
+          </div>
+        </div>
+        <div class="phase-track" id="phase-track"></div>
+        <div class="topbar-right">
+          <div class="priority-strip" id="priority-strip"></div>
+          <button class="icon-btn" id="btn-settings" type="button" title="Settings"><span data-icon="gear"></span></button>
+        </div>
+      </header>
+
+      <!-- Left + centre STAGE: the arch Timeline frames the Market; the Time
+           Machine + Causality Generators toolbar sits across the bottom. -->
+      <main class="stage" id="stage">
+        <!-- Arch timeline, drawn as an SVG overlay across the whole stage -->
+        <div class="timeline-rail" id="timeline-rail"></div>
+
+        <!-- Market (merchant stock + merchant info + secret market) inside the arch.
+             The Merchant's Wagon is drawn as one inked-noir booth: a striped
+             canopy, hanging lanterns spilling warm light, an ornate framed interior and
+             time-wheels at the base. The live stock cards are the goods on display inside;
+             an ambient layer (dust, spotlight, drifting numerals) gives it life. -->
+        <section class="zone market-zone" id="market-zone">
+          <div class="portal-bg" aria-hidden="true"></div>
+          <div class="portal-fx" aria-hidden="true">
+            <span class="pt-rim"></span>
+            <span class="pt-spark s1"></span><span class="pt-spark s2"></span><span class="pt-spark s3"></span>
+          </div>
+          <div class="secret-bg" aria-hidden="true"><span class="sc-rim"></span></div>
+          <h3 class="zone-title market-title">
+            <span class="market-sign closed" id="market-sign"><span>CLOSED</span></span>
+            <span class="market-title-text">The Merchant's Wagon</span>
+          </h3>
+          <span class="zone-title-meta market-meta" id="market-meta"></span>
+          <div class="market-body" id="market-body"></div>
+        </section>
+      </main>
+
+      <!-- Right column: Operations Log (top) + player status (below) -->
+      <section class="zone log-zone panel" id="log-zone">
+        <h3 class="zone-title"><span class="zt-ico" data-icon="log"></span> Operations Log</h3>
+        <ul class="log-list" id="log-list"></ul>
+      </section>
+      <aside class="zone players-zone" id="players-zone"></aside>
+
+      <!-- FULL-WIDTH bottom band: THE GAUNTLET (the operative's wrist device) + the
+           separate Rucksack backpack on the left. -->
+      <div class="stage-toolbar">
+        <section class="zone machine-zone panel bracketed" id="machine-zone">
+          <h3 class="zone-title"><span class="zt-ico" data-icon="machine"></span> Time Machine</h3>
+          <div class="machine-body" id="machine-body"></div>
+        </section>
+        <section class="zone dice-zone panel bracketed" id="dice-zone">
+          <h3 class="zone-title"><span class="zt-ico" data-icon="energy"></span> Causality Generators
+            <span class="zone-title-meta" id="dice-meta"></span></h3>
+          <div class="dice-body" id="dice-body"></div>
+        </section>
+        <section class="zone rucksack-zone panel bracketed" id="rucksack-zone">
+          <div class="ruck-flap" aria-hidden="true">
+            <span class="ruck-strap ruck-strap-l"><span class="ruck-buckle"></span></span>
+            <span class="ruck-strap ruck-strap-r"><span class="ruck-buckle"></span></span>
+            <span class="ruck-patch">C.R.O.N.O.S.</span>
+            <span class="ruck-brand">REWARD ▲ 4G</span>
+          </div>
+          <h3 class="zone-title"><span class="zt-ico" data-icon="briefcase"></span> The Rucksack
+            <span class="zone-title-meta" id="ruck-meta"></span></h3>
+          <div class="ruck-body" id="ruck-body"></div>
+        </section>
+      </div>
+    </div>
+    <div class="cam-veil" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- Settings panel (audio + presentation) -->
+  <div id="settings-backdrop" class="settings-backdrop" hidden>
+    <div class="settings-panel panel bracketed">
+      <div class="settings-head">
+        <h3 class="settings-title"><span class="zt-ico" data-icon="gear"></span> Settings</h3>
+        <button class="icon-btn" id="settings-close" type="button" title="Close"><span data-icon="close"></span></button>
+      </div>
+
+      <div class="settings-group">
+        <p class="overline">Audio</p>
+        <label class="set-row">
+          <span class="set-label"><span data-icon="sound"></span> Master</span>
+          <input type="range" id="vol-master" class="slider" min="0" max="100" />
+        </label>
+        <label class="set-row">
+          <span class="set-label"><span data-icon="music"></span> Music</span>
+          <input type="range" id="vol-music" class="slider" min="0" max="100" />
+        </label>
+        <label class="set-row">
+          <span class="set-label"><span data-icon="sound"></span> Effects</span>
+          <input type="range" id="vol-sfx" class="slider" min="0" max="100" />
+        </label>
+        <label class="set-check">
+          <input type="checkbox" id="chk-mute" /> <span>Mute all</span>
+        </label>
+      </div>
+
+      <div class="settings-group">
+        <p class="overline">Presentation pace</p>
+        <div class="seg" id="speed-seg">
+          <button class="seg-btn" data-speed="slow" type="button">Slow</button>
+          <button class="seg-btn is-on" data-speed="normal" type="button">Normal</button>
+          <button class="seg-btn" data-speed="fast" type="button">Fast</button>
+        </div>
+        <p class="muted small">How long each action lingers on screen so you can follow the turn.</p>
+      </div>
+
+      <div class="settings-group">
+        <p class="overline">Hotkeys</p>
+        <div class="hotkey-list mono small">
+          <div class="hk"><b>W</b><span>look up &mdash; the Merchant's wagon</span></div>
+          <div class="hk"><b>A</b><span>look left &mdash; the paperwork desk</span></div>
+          <div class="hk"><b>S</b><span>back to the desk (from the Market)</span></div>
+          <div class="hk"><b>D</b><span>back to the desk (from the paperwork)</span></div>
+          <div class="hk"><b>SPACE</b><span>lift the hand &mdash; free cursor on the desk</span></div>
+          <div class="hk"><b>T</b><span>the Time Machine reference card</span></div>
+          <div class="hk"><b>ESC</b><span>close the reference / dialogs</span></div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <p class="overline">Display</p>
+        <label class="set-check">
+          <input type="checkbox" id="chk-fullscreen" /> <span>Fullscreen (F11)</span>
+        </label>
+        <label class="set-row" style="margin-top:12px">
+          <span class="set-label">Table size</span>
+          <select id="sel-ui-scale" class="set-select">
+            <option value="1">Fit the screen</option>
+            <option value="0.95">95%</option>
+            <option value="0.9">90%</option>
+            <option value="0.85">85%</option>
+            <option value="0.8">80%</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Graphics: High is the game as designed; Medium and Low switch off the
+           effects that measurably cost frames (main.js applyGfx, app.css GRAPHICS). -->
+      <div class="settings-group">
+        <p class="overline">Graphics</p>
+        <div class="seg" id="gfx-seg">
+          <button class="seg-btn is-on" data-gfx="high" type="button">High</button>
+          <button class="seg-btn" data-gfx="medium" type="button">Medium</button>
+          <button class="seg-btn" data-gfx="low" type="button">Low</button>
+        </div>
+        <p class="muted small" style="margin:8px 0 10px">Medium drops the live background blur. Low also stills the chart and the case files. Use it if the table stutters.</p>
+        <label class="set-check">
+          <input type="checkbox" id="chk-ambient" checked /> <span>Ambient animation (waves, motes, heartbeats)</span>
+        </label>
+      </div>
+
+      <div class="settings-group">
+        <p class="overline">Tutorials</p>
+        <label class="set-check">
+          <input type="checkbox" id="chk-tutorials" /> <span>Show contextual tips</span>
+        </label>
+        <button class="btn btn-ghost btn-sm" id="btn-reset-tutorials" type="button">Replay all tips</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlays: phase banners, wanted poster, modal decisions -->
+  <div id="overlay-root" class="overlay-root" aria-live="polite"></div>
+
+  <!-- ══ THE MOUSEMOVE PROFILER ═══════════════════════════════════════════════════════
+       my frame is 6.1ms at rest (163 fps) and 12 / 20 / 29ms the MOMENT he moves the
+       cursor, 82 / 55 / 41 / 34 fps, deeper the faster his hand goes. Those are 165/2,
+       165/3, 165/4, 165/5: the vsync harmonics. A frame cost that scales with HAND SPEED
+       is work done PER MOUSE EVENT, and there are THIRTEEN mousemove listeners in this
+       game, exactly ONE of which is coalesced to a frame. His 165Hz panel fires 165 of
+       them a second where a 60Hz panel fired 60.
+       My synthetic mouse cannot reproduce the drop (it reads 164 fps while moving), and
+       I have been burned enough times this week by trusting an instrument that cannot see
+       what he sees. So this times EVERY mousemove handler, by file and line, on HIS
+       machine, and F7 names the worst one in milliseconds. It must load before anything
+       else registers a listener, which is why it is here and inline.
+       Cost of the profiler itself: two performance.now() per event. ~43 microseconds a
+       second. It cannot be the thing it is measuring. ══════════════════════════════════ -->
+  <script>
+  (function(){
+    var MM = { per: Object.create(null), t0: performance.now() };
+    window.__mm = MM;
+    var orig = EventTarget.prototype.addEventListener;
+    var origRm = EventTarget.prototype.removeEventListener;
+    var wrapped = new WeakMap();          // original fn -> wrapped fn, so removeEventListener still works
+    EventTarget.prototype.addEventListener = function(type, fn, opts){
+      if ((type === "mousemove" || type === "pointermove") && typeof fn === "function") {
+        var w = wrapped.get(fn);
+        if (!w) {
+          var st = (new Error().stack || "").split("\n")[2] || "";
+          var m = st.match(/([\w-]+\.js)(?:\?[^:]*)?:(\d+)/);   // skip the ?v197 cache-buster
+          var name = m ? (m[1] + ":" + m[2]) : "?";
+          w = function(e){
+            var a = performance.now();
+            try { return fn.call(this, e); }
+            finally { MM.per[name] = (MM.per[name] || 0) + (performance.now() - a); }
+          };
+          wrapped.set(fn, w);
+        }
+        return orig.call(this, type, w, opts);
+      }
+      return orig.call(this, type, fn, opts);
+    };
+    EventTarget.prototype.removeEventListener = function(type, fn, opts){
+      if ((type === "mousemove" || type === "pointermove") && typeof fn === "function") {
+        var w = wrapped.get(fn);
+        if (w) return origRm.call(this, type, w, opts);
+      }
+      return origRm.call(this, type, fn, opts);
+    };
+    // read-and-reset: total ms spent in mousemove handlers since the last call, plus the worst
+    window.__mmTake = function(){
+      var tot = 0, top = "", topMs = 0;
+      for (var k in MM.per) { tot += MM.per[k]; if (MM.per[k] > topMs) { topMs = MM.per[k]; top = k; } }
+      var dt = (performance.now() - MM.t0) / 1000;
+      MM.per = Object.create(null); MM.t0 = performance.now();
+      return { msPerSec: dt > 0 ? tot / dt : 0, top: top, topMsPerSec: dt > 0 ? topMs / dt : 0 };
+    };
+  })();
+  </script>
+  <script type="module" src="js/main.js?202609261009"></script>
+<div id="build-stamp" style="position:fixed;left:8px;top:calc(100vh - 16px);z-index:9999;font:10px/1.2 monospace;color:#8a8578;opacity:.45;pointer-events:none">BUILD v197</div>
+<div id="stale-banner" style="display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;background:#7a1c10;color:#ffe9b0;font:bold 12px/1 monospace;padding:9px 16px;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.5)">NEW BUILD ON THE SERVER: PRESS F5 (Ctrl+Shift+R)</div>
+<script>
+(function(){
+  var BUILD="v39";
+  console.log("%cPARADOXO "+BUILD, "color:#c9a45c;font-weight:bold");
+  var myTag=null;
+  function check(){
+    fetch(location.pathname+"?_ping="+Date.now(), {method:"HEAD", cache:"no-store"}).then(function(r){
+      var tag=r.headers.get("etag"); if(!tag) return;
+      if(myTag===null){ myTag=tag; return; }
+      if(tag!==myTag) document.getElementById("stale-banner").style.display="block";
+    }).catch(function(){});
+  }
+  check(); setInterval(check, 45000);
+})();
+</script>
+<script src="js/board_draft.js?202609261009"></script>
+<script src="js/leilao_fase.js?202609261009"></script>
+<script src="js/board_singularity.js?202609261009"></script>
+<script src="js/board_origins.js?202609261009"></script>
+    <script src="js/cabin.js?202609261009"></script>
+</body>
+</html>

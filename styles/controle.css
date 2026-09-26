@@ -1,0 +1,23 @@
+/* O anel do controle: o cursor virtual que o analogico move. Fica acima de
+   tudo, inclusive do plano do cursor da cabine (z 60000), e nunca captura
+   o ponteiro. A cor e a do assento do jogador. */
+.ctl-cursor {
+  position: fixed; left: 0; top: 0; width: 0; height: 0;
+  z-index: 70000; pointer-events: none;
+  opacity: 0; transition: opacity .25s ease;
+  will-change: transform;
+}
+.ctl-cursor.on { opacity: 1; }
+.ctl-anel {
+  position: absolute; left: -14px; top: -14px; width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid var(--ctl-cor, #f2a93b);
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, .65), 0 0 14px var(--ctl-cor, #f2a93b);
+  transition: transform .08s ease;
+}
+.ctl-anel::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%;
+  background: var(--ctl-cor, #f2a93b);
+}
+.ctl-cursor.down .ctl-anel { transform: scale(.74); }

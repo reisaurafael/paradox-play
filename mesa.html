@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PARADOXO · Split-screen table</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/mesa.css?202609261009" />
+</head>
+<body>
+  <!-- A MESA DIVIDIDA: um monitor, ate quatro paineis, um controle de Xbox
+       para cada um. Cada painel e o proprio jogo num iframe; mesa.js pareia
+       os controles, monta a sala e alimenta cada painel a cada quadro. -->
+  <section id="setup" class="setup">
+    <header class="setup-head">
+      <h1 class="wordmark">PARADOXO</h1>
+      <p class="overline">Split-screen table · one screen, up to four controllers</p>
+    </header>
+
+    <ol class="slots" id="slots"></ol>
+
+    <div class="setup-row">
+      <div class="field">
+        <span class="lbl">Seats at the table</span>
+        <div class="stepper" id="seats-stepper">
+          <button class="step-btn" data-step="-1" type="button">-</button>
+          <output id="out-seats" class="step-val">4</output>
+          <button class="step-btn" data-step="1" type="button">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="sel-strategy">Empty seats play as</label>
+        <select id="sel-strategy" class="sel">
+          <option value="smart">smart</option>
+          <option value="aggressive">aggressive</option>
+          <option value="conservative">conservative</option>
+          <option value="collector">collector</option>
+        </select>
+      </div>
+      <div class="field grow">
+        <span class="lbl mono" id="pads-seen">0 controllers detected</span>
+      </div>
+      <button id="btn-fullscreen" class="btn" type="button">Fullscreen</button>
+      <button id="btn-begin" class="btn primary" type="button">Begin · or START on controller 1</button>
+    </div>
+    <p id="setup-error" class="error" role="alert"></p>
+
+    <div class="map">
+      <h2 class="map-title">The controller</h2>
+      <div class="map-grid mono">
+        <div><b>Left stick</b><span>move the hand</span></div>
+        <div><b>D-pad</b><span>jump to the nearest button</span></div>
+        <div><b>A / RT</b><span>click</span></div>
+        <div><b>B / Back</b><span>close (Esc)</span></div>
+        <div><b>X</b><span>swap hands (Space)</span></div>
+        <div><b>Y</b><span>Time Machine reference (T)</span></div>
+        <div><b>LB / RB</b><span>previous / next button</span></div>
+        <div><b>Right stick</b><span>look around (W A S D)</span></div>
+        <div><b>Start</b><span>settings</span></div>
+        <div><b>Hold LT</b><span>slow, precise hand</span></div>
+      </div>
+      <p class="note">Only the first panel plays sound; the others would echo the same table.
+        Close Steam before playing: Steam Input can show each controller twice.</p>
+    </div>
+  </section>
+
+  <section id="mesa" class="mesa" hidden></section>
+  <button id="btn-leave" class="leave" type="button" title="End the table" hidden>&#x2715;</button>
+
+  <script type="module" src="js/mesa.js?202609261009"></script>
+</body>
+</html>

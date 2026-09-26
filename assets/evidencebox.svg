@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+<!-- ══════════════════════════════════════════════════════════════════════
+     CAIXA DE APREENSAO: C.R.O.N.O.S.
+     Autorada no mesmo metodo da maleta: materiais como gradientes nomeados
+     no defs, e um <g> por parte fisica. Vista de tres quartos, com o topo e a
+     lateral a mostra, que e o que da volume de objeto e nao de retangulo.
+     As partes com id sao pintadas por fora (raridade, categoria, numero).
+     ══════════════════════════════════════════════════════════════════════ -->
+<defs>
+  <!-- o papelao kraft: tres faces, tres luminosidades. E isso que faz volume -->
+  <linearGradient id="ev-top" x1="0" y1="0" x2=".25" y2="1">
+    <stop offset="0%" stop-color="#d9bb8c"/><stop offset="55%" stop-color="#c6a678"/>
+    <stop offset="100%" stop-color="#b18f60"/>
+  </linearGradient>
+  <linearGradient id="ev-front" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#bd9a68"/><stop offset="42%" stop-color="#a8875a"/>
+    <stop offset="100%" stop-color="#856a44"/>
+  </linearGradient>
+  <linearGradient id="ev-side" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#8a6f48"/><stop offset="100%" stop-color="#6b5636"/>
+  </linearGradient>
+  <!-- o papel da etiqueta, levemente amarelado e sujo de arquivo -->
+  <linearGradient id="ev-label" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#f6efdc"/><stop offset="70%" stop-color="#e9dfc4"/>
+    <stop offset="100%" stop-color="#d9ceaf"/>
+  </linearGradient>
+  <!-- a luz da luminaria pendente, entrando pelo alto e pela esquerda -->
+  <radialGradient id="ev-lamp" cx=".34" cy="-.15" r="1.05">
+    <stop offset="0%" stop-color="#ffe6b4" stop-opacity=".34"/>
+    <stop offset="62%" stop-color="#ffd79a" stop-opacity="0"/>
+  </radialGradient>
+  <!-- a sombra que apoia a caixa -->
+  <radialGradient id="ev-shadow" cx=".5" cy=".5" r=".5">
+    <stop offset="0%" stop-color="#000" stop-opacity=".72"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="ev-brass" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#e6c583"/><stop offset="48%" stop-color="#a5813f"/>
+    <stop offset="100%" stop-color="#6b5227"/>
+  </linearGradient>
+</defs>
+
+<!-- ══════════ a sombra no balcao ══════════ -->
+<ellipse cx="205" cy="268" rx="150" ry="16" fill="url(#ev-shadow)"/>
+
+<!-- ══════════ o CORPO, tres faces ══════════ -->
+<g id="ev-body">
+  <!-- a lateral direita, a mais escura -->
+  <path d="M 300 118 L 362 80 L 362 208 L 300 250 Z" fill="url(#ev-side)"/>
+  <!-- o topo, o mais claro: e ele que diz que a caixa tem profundidade -->
+  <path d="M 42 118 L 104 80 L 362 80 L 300 118 Z" fill="url(#ev-top)"/>
+  <!-- a frente -->
+  <path d="M 42 118 L 300 118 L 300 250 L 42 250 Z" fill="url(#ev-front)"/>
+  <!-- o ondulado do papelao aparecendo na aresta de cima -->
+  <path d="M 42 118 L 300 118 L 300 124 L 42 124 Z" fill="#6f5937" opacity=".38"/>
+  <!-- os vincos verticais das dobras da caixa -->
+  <g opacity=".22" stroke="#4d3c22" stroke-width="1.3">
+    <path d="M 96 120 V 249"/><path d="M 246 120 V 249"/>
+  </g>
+  <!-- o desgaste do pe, poeira de deposito -->
+  <path d="M 42 232 L 300 232 L 300 250 L 42 250 Z" fill="#3b2c17" opacity=".26"/>
+  <!-- a luz da luminaria -->
+  <path d="M 42 118 L 104 80 L 362 80 L 362 208 L 300 250 L 42 250 Z"
+        fill="url(#ev-lamp)"/>
+</g>
+
+<!-- ══════════ o FURO DE MAO, recortado na frente ══════════ -->
+<g id="ev-hole">
+  <rect x="140" y="196" width="64" height="15" rx="7" fill="#150e06"/>
+  <rect x="140" y="196" width="64" height="5" rx="2.5" fill="#000" opacity=".55"/>
+  <rect x="140" y="209" width="64" height="2" rx="1" fill="#e2c99c" opacity=".28"/>
+</g>
+
+<!-- ══════════ a ETIQUETA DE PROCESSO, colada na frente ══════════ -->
+<g id="ev-label" transform="rotate(-.7 66 138)">
+  <rect x="60" y="132" width="164" height="54" rx="1.5" fill="url(#ev-label)"/>
+  <rect x="60" y="132" width="164" height="54" rx="1.5" fill="none"
+        stroke="#000" stroke-opacity=".14"/>
+  <!-- o cabecalho impresso -->
+  <rect x="60" y="132" width="164" height="12" fill="#8a2b2b" opacity=".13"/>
+  <text x="66" y="141" font-family="monospace" font-size="7.5"
+        letter-spacing="1.4" fill="#7a2323">CASE #</text>
+  <!-- as pautas onde o numero vai escrito a mao -->
+  <g stroke="#2a2116" stroke-opacity=".2" stroke-width="1">
+    <path d="M 66 158 H 218"/><path d="M 66 170 H 218"/><path d="M 66 180 H 150"/>
+  </g>
+  <!-- o furo de arquivo, no canto -->
+  <circle cx="212" cy="139" r="3" fill="#2a2116" opacity=".35"/>
+</g>
+
+<!-- ══════════ a TAMPA, plano proprio: gira por fora ══════════ -->
+<g id="ev-lid">
+  <path d="M 36 112 L 100 72 L 368 72 L 368 84 L 304 124 L 36 124 Z"
+        fill="url(#ev-top)"/>
+  <path d="M 36 112 L 304 112 L 304 124 L 36 124 Z" fill="url(#ev-front)"/>
+  <path d="M 36 112 L 304 112 L 304 115 L 36 115 Z" fill="#fff" opacity=".16"/>
+  <!-- a lingueta que desce sobre a frente -->
+  <path d="M 96 124 L 248 124 L 244 140 L 100 140 Z" fill="url(#ev-front)"/>
+  <path d="M 96 124 L 248 124 L 248 127 L 96 127 Z" fill="#000" opacity=".18"/>
+</g>
+
+<!-- ══════════ o CORDAO e a ETIQUETA PENDURADA ══════════ -->
+<g id="ev-hang">
+  <path d="M 330 96 q 6 16 2 30" stroke="#8a2b2b" stroke-width="2.2"
+        fill="none" stroke-linecap="round"/>
+  <g transform="rotate(5 332 126)">
+    <path d="M 316 126 L 348 126 L 348 172 L 332 182 L 316 172 Z"
+          fill="url(#ev-label)" stroke="#000" stroke-opacity=".18"/>
+    <circle cx="332" cy="133" r="3.4" fill="none" stroke="#8a6a3c" stroke-width="1.6"/>
+    <g stroke="#5a2020" stroke-opacity=".45" stroke-width="1">
+      <path d="M 321 146 H 343"/><path d="M 321 154 H 343"/>
+    </g>
+  </g>
+</g>
+</svg>

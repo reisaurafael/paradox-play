@@ -1,0 +1,303 @@
+/* =========================================================================
+   tutorial.css, the teaching layer over the REAL game UI.
+
+   Nothing here rebuilds the game. It only reduces two things that are hardwired
+   (the machine to four cells, the map to the first era), draws the black wake
+   the traveller opens his eyes from, and gives the reveal a few helpers. Scoped
+   under body.tut so the real game is untouched.
+   ========================================================================= */
+
+/* ---- the machine, reduced to four cells (Recharge + Travel, two modules each) ----
+   The matrix is a 4-column auto-flow grid (label + 3 modules). Re-declaring it to
+   three columns and hiding the Paradox row + the third module column reflows the
+   remaining items into a clean 2x2 with no gap. Same machine, fewer cells. */
+/* The machine GROWS. It opens with two functions of two modules and gains the rest a
+   piece at a time, each piece materialising into place as it is earned. */
+body.tut-2x2:not(.tut-mod3) #machine-body .matrix-wrap { grid-template-columns: 92px repeat(2, 1fr); max-width: 280px; }
+body.tut-2x2:not(.tut-mod3) #machine-body .cell[data-c="2"] { display: none !important; }
+body.tut-2x2:not(.tut-show-paradox) #machine-body .cell[data-r="1"],
+body.tut-2x2:not(.tut-show-paradox) #machine-body .matrix-fnlabel.fn-paradox { display: none !important; }
+/* a module or a function that has just arrived announces itself */
+body.tut #machine-body .cell.tut-new,
+body.tut #machine-body .matrix-fnlabel.tut-new { animation: tutBorn 1.5s ease-out; }
+@keyframes tutBorn {
+  0% { opacity: 0; transform: scale(.55); filter: brightness(2.4) blur(3px); }
+  55% { opacity: 1; filter: brightness(1.7); }
+  100% { opacity: 1; transform: scale(1); filter: none; } }
+/* the Travel function only opens in turn two; until then the machine is one row */
+body.tut-2x2:not(.tut-show-travel) #machine-body .matrix-wrap { grid-template-columns: 92px repeat(2, 1fr); }
+body.tut:not(.tut-show-travel) #machine-body .cell[data-r="2"],
+body.tut:not(.tut-show-travel) #machine-body .matrix-fnlabel.fn-travel { display: none !important; }
+/* the escape valve only appears once a function can overload */
+body.tut:not(.tut-show-valve) #dice-body .escape-col { display: none !important; }
+
+/* ---- the star map, limited to the first era (centuries XXIV to XXX) ---- */
+.tut-era-hidden { display: none !important; }
+
+/* ---- the chart is cut just below the first era, with the game's own rolled-chart
+   asset (#chart-roll) sitting exactly on the cut and the wooden desk below. The cut
+   percentage and the roll's position are MEASURED and aligned in JS (limitMap),
+   because the plot and the roll live in different coordinate references. ---- */
+body.tut #timeline-rail::before { display: none !important; }   /* drop the full-height chart frame */
+
+/* ---- generic progressive-reveal helper: a piece only shows when needed ---- */
+body.tut .tut-hidden { display: none !important; }
+
+/* ---- the opening desk starts nearly empty ----
+   Every piece the newcomer does not need yet stays hidden. A reveal class on the
+   body brings each one in exactly when the lesson calls for it (the rival file
+   only after the first dice phase, the maleta only when there is gold, and so
+   on). Same real elements, revealed one at a time. */
+body.tut:not(.tut-show-rival)    #players-zone   { display: none !important; }
+body.tut:not(.tut-show-maleta)   #rucksack-zone  { display: none !important; }
+body.tut:not(.tut-show-phases)   #phase-track     { display: none !important; }
+body.tut:not(.tut-show-phases)   #vz-phases       { display: none !important; }
+body.tut:not(.tut-show-priority) #priority-strip  { display: none !important; }
+body.tut:not(.tut-show-log)      #log-zone        { display: none !important; }
+body.tut:not(.tut-show-dice)     #dice-zone       { display: none !important; }
+body.tut:not(.tut-show-vitals)   #vz-holo         { display: none !important; }
+/* the scene beacons point at side scenes the tutorial has not unlocked yet */
+body.tut:not(.tut-show-nav) .scene-beacon,
+body.tut:not(.tut-show-nav) #cam-beacon { display: none !important; }
+
+/* ---- the black scene the traveller wakes from ---- */
+/* ---- the black the traveller wakes from: the screen holds black while HELA speaks ---- */
+#tut-black { position: fixed; inset: 0; z-index: 2147482000; background: #000; opacity: 1; transition: opacity 1.4s ease; }
+#tut-black.gone { opacity: 0; pointer-events: none; }
+
+/* ---- HELA's panel: large, persistent, one line held until the traveller clicks ---- */
+/* ---- the immersive wake: the world starts blurred and dim (he sleeps face-down),
+   then clears slowly as the camera lifts back to the seat ---- */
+body.tut .cam-world { transition: transform var(--cam-dur, .62s) cubic-bezier(.5, 0, .2, 1), filter 5.5s ease; }
+body.tut-waking .cam-world { filter: blur(9px) brightness(.5); }
+body.tut-waking #hela-eye { z-index: 2147482500; }   /* her eye wakes over the dark */
+
+/* ---- HELA's purple eye is the voice for every line after the wake, enlarged for
+   reading since the tutorial carries a lot of text ---- */
+body.tut .he-chip { font-size: 17px !important; max-width: 460px !important; line-height: 1.55 !important;
+  padding: 14px 18px !important; }
+
+/* ---- the big bottom panel: ONLY the opening wake message ---- */
+#tut-hela { position: fixed; left: 50%; bottom: 44px; transform: translateX(-50%); z-index: 2147483000;
+  display: flex; align-items: center; gap: 18px; max-width: 900px; width: calc(100% - 80px);
+  background: linear-gradient(180deg, rgba(18,10,20,.93), rgba(10,6,12,.97)); border: 1px solid #4a2a44;
+  border-radius: 14px; padding: 20px 24px; box-shadow: 0 14px 44px rgba(0,0,0,.6), 0 0 0 1px rgba(199,122,166,.14); }
+#tut-hela .th-sigil { flex: none; width: 46px; height: 46px; color: #c77aa6; filter: drop-shadow(0 0 10px #7a3c6377); }
+#tut-hela .th-sigil svg { width: 100%; height: 100%; }
+#tut-hela .th-body { flex: 1; }
+#tut-hela .th-name { font: 700 12px/1 "JetBrains Mono", monospace; letter-spacing: .22em; color: #c77aa6; text-transform: uppercase; margin-bottom: 6px; }
+#tut-hela .th-line { font: 400 23px/1.5 "Inter", system-ui, sans-serif; color: #f0eaf2; }
+#tut-hela .th-hint { flex: none; align-self: flex-end; color: #a76b93; font: 600 13px "JetBrains Mono", monospace; letter-spacing: .06em; white-space: nowrap; animation: tutHint 1.4s ease-in-out infinite; }
+
+/* ---- the eye's click hint (small, at the foot) ---- */
+#tut-eye-hint { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 2147483000;
+  color: #c77aa6; font: 600 13px "JetBrains Mono", monospace; letter-spacing: .06em; animation: tutHint 1.4s ease-in-out infinite; pointer-events: none; }
+@keyframes tutHint { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
+
+/* ---- the reveal must NOT move the rival's file. Kill the parade lift/stage motion;
+   the badge stays exactly where it is, only its indicator glows (below). ---- */
+body.tut #players-zone .pcard.rt-lift { transform: none !important; filter: none !important; }
+body.tut.rt-stage #players-zone .pcard { opacity: 1 !important; transform: none !important; }
+
+/* ---- CALL ATTENTION: whenever the lesson points at a thing, that thing glows for real ---- */
+body.tut .bd-alloc.tut-attn { animation: tutAttn 1s ease-in-out infinite; border-radius: 6px; }
+@keyframes tutAttn { 0%, 100% { box-shadow: 0 0 0 0 rgba(199,122,166,0); }
+  50% { box-shadow: 0 0 16px 5px rgba(199,122,166,.8), 0 0 0 2px rgba(199,122,166,.7); } }
+
+/* ---- THE RESOLVING GENERATOR. The module being explained has to be unmistakable on
+   a screen that small, so it burns amber against the green and swells slightly, while
+   every other module on the board dims out of the way. Contrast does the pointing. ---- */
+body.tut #machine-body .cell.tut-attn {
+  position: relative; z-index: 6; border-color: #ffe08a !important;
+  animation: tutCellAttn .9s ease-in-out infinite; }
+@keyframes tutCellAttn {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(255,224,138,.75), 0 0 0 1px rgba(255,224,138,.9);
+    filter: brightness(1.08); transform: scale(1); }
+  50% { box-shadow: 0 0 18px 6px rgba(255,224,138,.95), 0 0 0 2px #fff3c4;
+    filter: brightness(1.55); transform: scale(1.14); } }
+body.tut #machine-body .cell.tut-attn .die {
+  box-shadow: 0 0 10px 3px rgba(255,224,138,.9) !important; }
+/* everything that is NOT resolving steps back while one module has the floor */
+body.tut-spot #machine-body .cell:not(.tut-attn),
+body.tut-spot #machine-body .matrix-fnlabel { opacity: .38; filter: grayscale(.55); transition: opacity .25s ease; }
+
+/* ---- PRESENTING A PIECE OF THE UI: the named part is traced whole, so there is no
+   doubt about which shape she is talking about. Red for the things that can kill you. ---- */
+body.tut .tut-frame { fill: none; stroke-width: 3.2; vector-effect: non-scaling-stroke; }
+body.tut .tut-frame-red { stroke: #ff5a4a; animation: tutFrameRed 1.05s ease-in-out infinite; }
+body.tut .tut-frame-green { stroke: #6dffa1; animation: tutFrameGreen 1.05s ease-in-out infinite; }
+@keyframes tutFrameRed {
+  0%, 100% { stroke-opacity: .55; filter: drop-shadow(0 0 2px rgba(255,90,74,.55)); }
+  50% { stroke-opacity: 1; filter: drop-shadow(0 0 10px rgba(255,90,74,1)); } }
+@keyframes tutFrameGreen {
+  0%, 100% { stroke-opacity: .55; filter: drop-shadow(0 0 2px rgba(109,255,161,.55)); }
+  50% { stroke-opacity: 1; filter: drop-shadow(0 0 10px rgba(109,255,161,1)); } }
+.tut-frame-box { position: fixed; z-index: 2147482300; pointer-events: none; border-radius: 10px;
+  border: 3px solid transparent; }
+.tut-frame-box.tut-frame-red { border-color: #ff5a4a; animation: tutFrameBox 1.05s ease-in-out infinite; }
+.tut-frame-box.tut-frame-green { border-color: #6dffa1; animation: tutFrameBox 1.05s ease-in-out infinite; }
+@keyframes tutFrameBox { 0%, 100% { box-shadow: 0 0 6px rgba(255,255,255,.25); }
+  50% { box-shadow: 0 0 20px 5px currentColor; } }
+
+/* ---- TRAVEL plotted by hand: the reachable centuries pulse and invite a click ---- */
+body.tut .tut-travel-pick { cursor: pointer !important; pointer-events: auto !important;
+  animation: tutTravelPick 1s ease-in-out infinite; }
+@keyframes tutTravelPick { 0%, 100% { filter: drop-shadow(0 0 0 rgba(122,196,255,0)); }
+  50% { filter: drop-shadow(0 0 9px rgba(122,196,255,.95)) drop-shadow(0 0 3px rgba(122,196,255,.9)); } }
+
+/* (the rolling die's green terminal look is fixed globally in app.css, since the
+   yellow generator styling was swallowing it in the real game too) */
+
+/* ---- ORDER: while the generators are still computing their values, the board takes
+   no input. The materialisation always plays out in full before the traveller acts. ---- */
+body.tut-rolling #dice-body .die,
+body.tut-rolling #dice-body .escape-drop,
+body.tut-rolling #machine-body .cell,
+body.tut-rolling #confirm-alloc { pointer-events: none !important; }
+body.tut-rolling #dice-body .dice-actions { opacity: .35; }
+
+/* ---- object materialisation: the classic 0s-and-1s form the object as it fades in ---- */
+.tut-bitmat { position: fixed; z-index: 2147482400; pointer-events: none; overflow: hidden; }
+.tut-bitmat span { position: absolute; transform: translate(-50%, -50%);
+  color: #7CFC7C; font: 700 13px "JetBrains Mono", monospace; text-shadow: 0 0 6px #7CFC7C;
+  opacity: 0; animation: tutBit 1s ease-out forwards; }
+@keyframes tutBit { 0% { opacity: 0; } 22% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -150%) scale(.55); } }
+body.tut .tut-materialize { animation: tutMat .9s ease-out; }
+@keyframes tutMat { 0% { opacity: 0; filter: blur(7px) brightness(1.8); }
+  35% { opacity: .5; } 70% { opacity: .85; filter: blur(1.5px); }
+  100% { opacity: 1; filter: none; } }
+
+/* ---- the rival file materialises up CLOSE: a centred spotlight clone forms from the
+   0s and 1s, then fades and hands off to the real badge easing in at its corner ---- */
+body.tut #players-zone { transition: opacity .5s ease; }
+body.tut-badge-intro #players-zone,
+body.tut-badge-intro #players-zone .pcard,
+body.tut-badge-intro #players-zone .badge { opacity: 0 !important; }
+.tut-badge-spot { position: fixed; left: 50%; top: 44%; z-index: 2147482600; pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.6); transform-origin: 50% 50%;
+  transition: opacity .5s ease, transform .5s ease;
+  filter: drop-shadow(0 0 26px rgba(199,122,166,.55)); }
+.tut-badge-spot.gone { opacity: 0; transform: translate(-50%, -50%) scale(.55); }
+.tut-badge-spot .badge, .tut-badge-spot .pcard { opacity: 1 !important; transform: none !important; }
+
+/* ---- during allocation the dice glow to call the eye; nothing moves (no zoom) ---- */
+body.tut-allocating .world-bg { filter: brightness(.82); transition: filter .4s ease; }
+body.tut-allocating #dice-body .die[data-source="pool"] { animation: tutDieGlow 1.1s ease-in-out infinite; }
+@keyframes tutDieGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(242,201,90,0); }
+  50% { box-shadow: 0 0 14px 4px rgba(242,201,90,.7), 0 0 0 2px rgba(242,201,90,.55); } }
+
+
+/* ---- the rival's file starts as just the badge: cracha, energy, boom, and the
+   revealed-dice indicator. The full case sheet (gold, CP, equipment, location,
+   receptor) and the flags stay hidden until later beats need them. ---- */
+body.tut:not(.tut-show-rivalfull) .pcard .csheet { display: none !important; }
+body.tut:not(.tut-show-rivalfull) .pcard .bd-flags { display: none !important; }
+
+/* ---- the maleta opens showing only the gold compartment first; the contract
+   papers and the combination lock stay away until they are earned/needed.
+   (The baked recess labels live in briefcase.svg; a gold-only asset swap is TODO.) ---- */
+body.tut:not(.tut-show-maletafull) #mala-extra #mala-contracts,
+body.tut:not(.tut-show-maletafull) #mala-extra #mala-lock { display: none !important; }
+
+/* ---- HELA leans purple in the lesson (her death-goddess hue) ---- */
+body.tut .he-svg { color: #c77aa6; }
+
+
+/* ---- THE ESCAPE VALVE, when a generator has nowhere lawful to go ----
+   Confirm is dead while he holds that die, so missing this slot means the hour can never
+   close. It burns until the die is in it, the machine steps back so the eye goes to the
+   only place that will accept anything, and the die itself pulls toward the valve. ---- */
+body.tut-valve-need #dice-body .escape-col,
+body.tut-valve-need #hull-console .escape-col { position: relative; z-index: 40; }
+body.tut-valve-need #dice-body .escape-slot,
+body.tut-valve-need #dice-body [data-drop="escape"],
+body.tut-valve-need #hull-console [data-drop="escape"] {
+  animation: tutValve .85s ease-in-out infinite;
+  outline: 2px solid #ff5a4a; outline-offset: 3px; border-radius: 8px; }
+@keyframes tutValve {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(255,90,74,.55); filter: brightness(1.05); }
+  50% { box-shadow: 0 0 26px 9px rgba(255,90,74,.95); filter: brightness(1.5); } }
+/* the rest of the board stops competing for his attention */
+body.tut-valve-need #machine-body .matrix-wrap { opacity: .45; transition: opacity .3s ease; }
+/* the stranded generator glows too, but it does NOT move: a target that slides around is
+   harder to grab, and the whole point here is to make the action easy */
+body.tut-valve-need #dice-body .die[data-source="pool"] {
+  animation: tutStrandedGlow .85s ease-in-out infinite; }
+@keyframes tutStrandedGlow {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(255,90,74,.5); }
+  50% { box-shadow: 0 0 18px 6px rgba(255,90,74,.95); } }
+
+
+/* ---- THE CABINET FILLS ONE DRAWER AT A TIME ----
+   Four drawers arriving together is four things at once, which is the one thing this
+   whole mode exists to avoid. Each drawer is dark until the lesson has a reason for it:
+   the era drawer when a relic is filed in that era, the contracts drawer when there is
+   a contract to sign. ---- */
+body.tut #drawer-zone .cab2-cell { display: none !important; }
+body.tut.tut-drawer-singularity #drawer-zone .cab2-cell[data-drawer="Singularity"],
+body.tut.tut-drawer-ascension  #drawer-zone .cab2-cell[data-drawer="Ascension"],
+body.tut.tut-drawer-origins    #drawer-zone .cab2-cell[data-drawer="Origins"],
+body.tut.tut-drawer-contracts  #drawer-zone .cab2-cell[data-drawer="CONTRACTS"],
+body.tut.tut-drawer-contracts  #drawer-zone .cab2-contracts { display: block !important; }
+/* a drawer that has just been earned announces itself */
+body.tut #drawer-zone .cab2-cell.tut-new { animation: tutBorn 1.5s ease-out; }
+
+
+/* ---- SHE MUST NEVER COVER WHAT SHE IS POINTING AT ----
+   Her eye drifts wherever it likes, which is fine over empty desk and useless over the
+   thing being explained. While the reference card is open, both the eye and her caption
+   step down to the foot of the screen, clear of it. ---- */
+body.tut.mano-help-on #hela-eye {
+  position: fixed !important; left: 4vw !important; right: auto !important;
+  top: auto !important; bottom: 4vh !important; transform: none !important;
+  z-index: 10060 !important; }
+body.tut.mano-help-on .he-chip {
+  position: fixed !important; left: 50% !important; right: auto !important;
+  top: auto !important; bottom: 11vh !important;
+  transform: none !important; z-index: 10061 !important;
+  width: min(620px, 62vw) !important; max-width: none !important; }
+
+
+/* ---- WHILE SHE SPEAKS, THE BOARD IS NOT LISTENING ----
+   "Click anywhere" used to mean the click also landed on whatever was under the caption,
+   which pressed CONFIRM and dropped dice on its own. This shield sits under her caption
+   and over the board, so a click meant for her cannot reach the machine. ---- */
+#tut-shield { position: fixed; inset: 0; z-index: 2147482900; background: transparent; cursor: default; }
+#tut-shield.gone { display: none; }
+
+
+/* ---- WHERE THE DIE MAY GO, AT A GLANCE ----
+   The machine keeps its real size, so the legal modules have to shout instead. The moment
+   a generator leaves the tray, every module that will take it burns green and every module
+   that will not falls away. Aiming stops being guesswork. ---- */
+body.tut #machine-body .cell.legal {
+  border-color: #6dffa1 !important;
+  background: rgba(109,255,161,.20) !important;
+  box-shadow: 0 0 12px 3px rgba(109,255,161,.75), inset 0 0 8px rgba(109,255,161,.35) !important;
+  animation: tutLegal 1s ease-in-out infinite; }
+@keyframes tutLegal {
+  0%, 100% { box-shadow: 0 0 8px 2px rgba(109,255,161,.6), inset 0 0 6px rgba(109,255,161,.25); }
+  50% { box-shadow: 0 0 18px 6px rgba(109,255,161,.95), inset 0 0 10px rgba(109,255,161,.45); } }
+/* only while a generator is actually in his hand: the matrix must look normal at rest */
+body.tut #machine-body .matrix-wrap:has(.cell.legal) .cell:not(.legal):not(.filled) { opacity: .3; }
+body.tut #machine-body .cell.illegal { opacity: .3; }
+body.tut #machine-body .cell.dragover.legal {
+  outline: 2px solid #bfffd8 !important; outline-offset: 1px; }
+/* and the refusal chip is readable on the small screen */
+body.tut .refuse-why { font-size: 10px; padding: 6px 10px; }
+
+
+/* ---- THE VALVE IS A 35px CIRCLE IN THE CORNER ----
+   That is the whole reason a stranded traveller never finds it, and CONFIRM stays dead
+   until he does. So when a generator has nowhere to go, the slot grows a halo far bigger
+   than itself and the corner of the machine becomes the brightest thing on the desk. ---- */
+body.tut-valve-need #dice-body .escape-slot { position: relative; z-index: 45; }
+body.tut-valve-need #dice-body .escape-slot::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 130px; height: 130px;
+  margin: -65px 0 0 -65px; border-radius: 50%; pointer-events: none;
+  border: 3px solid #ff5a4a;
+  animation: tutValveHalo 1.1s ease-out infinite; }
+@keyframes tutValveHalo {
+  0%   { transform: scale(.34); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; } }

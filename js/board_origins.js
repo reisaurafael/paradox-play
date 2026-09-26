@@ -1,0 +1,974 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE ILLUMINATED CHRONICLE: Origins skin (TEMP: cosmic art, medieval rewrite pending)  ·  C.R.O.N.O.S. celestial survey of the
+   SEA OF STARS. When the traveler stands in the Singularity period (2999, the
+   frozen present, Cronos fallen) his map is no longer a chart of water but of
+   the VOID: the thirty centuries are dead world-stations strung along the great
+   temporal DRIFT, descending toward the Dead Sun of Cronos, Year Zero, where
+   time collapses. Same living machine as the Paradox Sea (layered SVG, serialized
+   fx theater, decision->click wiring, computed layout + audit), re-spoken in the
+   language of the void. The Sea (board_draft.js) is byte-identical & untouched,
+   this mounts a sibling `.cplot-ori`; the local traveler's PERIOD picks the skin.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  let W = 820; const H = 950;
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  const ROM = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV",
+    "XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX"];
+  const rom = c => c === 0 ? "0" : ROM[c - 1];
+  const rnd = (a, b) => { const x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); };
+  const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const initials = name => { const p = String(name).trim().split(/\s+/); return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase(); };
+  const audible = () => { const r = document.getElementById("timeline-rail"); return !!r && r.classList.contains("skin-ori"); };
+  const snd = (n, o) => { try { if (audible() && window.__audio) window.__audio.play(n, o); } catch (e) {} };
+
+  const ERAS_OF = c => { const e = []; if (c>=1&&c<=5)e.push("ant"); if(c>=5&&c<=10)e.push("hma"); if(c>=11&&c<=15)e.push("lma"); if(c>=15&&c<=19)e.push("mod"); if(c>=19&&c<=23)e.push("con"); if(c>=23&&c<=30)e.push("tim"); return e; };
+  const ERA_NAME = { tim:"Timeless", con:"Contemporary", mod:"Modern", lma:"Low Middle Ages", hma:"High Middle Ages", ant:"Antiquity" };
+  const PERIOD_ERAS = { Origins:["ant","hma"], Ascension:["lma","mod"], Singularity:["con","tim"] };
+  // celestial era hues (shared family with the Sea so a rival's era reads alike)
+  const HUE = { tim:"#8f74c6", con:"#4f79c0", mod:"#2fa6ae", lma:"#4f9e46", hma:"#d8a63a", ant:"#c8701c" };  // jewel glass (red = dragon only)
+  const PHUE = { Singularity:"#9d86d4", Ascension:"#3fb0a8", Origins:"#cf9036" };
+  const BHP = { Singularity:[257,95], Ascension:[325,448], Origins:[353,695] };  // the three receptor-churches  // base coords (x scaled by sx)
+  const FIXCOL = { self:"#2f7d4f", r0:"#3a6ea5", r1:"#7a4fa0", r2:"#c06a2a", r3:"#a83250", r4:"#2a7d78" };
+  const DUAL = { 23:["tim","con"], 19:["con","mod"], 15:["mod","lma"], 5:["hma","ant"] };
+  const singleEra = c => ERAS_OF(c)[0];
+  function periodOf(c){ const e=ERAS_OF(c); for(const p in PERIOD_ERAS) if(PERIOD_ERAS[p].some(x=>e.includes(x))) return p; return "Singularity"; }
+
+  /* ═══ LAYOUT, worlds strung along the great DRIFT, future(XXX) top -> Dead Sun bottom ═══ */
+  const POS = {}, META = {};
+  let SUN = [410, 912];   // Year Zero, the gate out of hell (base)
+  let LIGHT = [410, 74];  // the glory / the cross, paradise (crown)
+  // SIX ERA-CONSTELLATIONS. Travelers read the sky to register paradoxes: the
+  // centuries are STARS; each era is a figure; the drift threads them in order.
+  // THE BODY OF CRONOS, the six ERAS are the SIX COILS of the one world-serpent; the
+  // strongholds are built ALONG his scaled body, from the MAW (deep past) to the tail (future).
+  // THE PILGRIMAGE WINDOW, six realms of glass (different peoples/terrains) climbing
+  // from the fiery deep past (base) to the light; the river of time links them all.
+  const CONSTS = {
+    tim: { name:"KINGDOM OF THE LAST DAWN", sci:"CRN\u00b7TIM", mean:"the age to come, where the road begins", stars:{30:[365,112],29:[480,120],28:[595,110],27:[710,122],26:[670,205],25:[520,200],24:[370,208]} },
+    con: { name:"THE IRON CROWNLANDS", sci:"CRN\u00b7CON", mean:"the age of the great houses that made time a good", stars:{23:[255,205],22:[145,140],21:[90,210],20:[145,280]} },
+    mod: { name:"THE CHARTERED MARCHES", sci:"CRN\u00b7MOD", mean:"the age that measured the road", stars:{19:[235,370],18:[145,435],17:[90,495],16:[205,500]} },
+    lma: { name:"THE ABBEYLANDS", sci:"CRN\u00b7LMA", mean:"the age of the first faiths", stars:{15:[327,508],14:[465,485],13:[570,452],12:[672,486],11:[565,528]} },
+    hma: { name:"THE HIGH MARCHES", sci:"CRN\u00b7HMA", mean:"the marching age that holds the deep past", stars:{10:[708,652],9:[582,782],8:[552,714],7:[458,692],6:[462,802]} },
+    ant: { name:"THE DRAGON WASTES", sci:"CRN\u00b7ANT", mean:"the first age, the beast coils here", stars:{5:[360,775],4:[242,738],3:[120,722],2:[92,825],1:[235,862]} },
+  };
+  function worldR(c){ return (c===10||c===20)?40:(DUAL[c]?36:31); }
+  function layout(){
+    const sx=W/820;
+    for(const era in CONSTS){ const cst=CONSTS[era]; for(const c in cst.stars){ const p=cst.stars[c]; POS[+c]=[Math.round(p[0]*sx), p[1]]; META[+c]=era; } }
+    SUN=[Math.round(420*sx), 880]; LIGHT=[Math.round(420*sx), 66];   // the sacred cross within the beast's circle
+  }
+  function audit(){ const v=[]; for(let c=1;c<=30;c++){ if(!POS[c]){ v.push("world "+rom(c)+" MISSING"); continue; } const [x,y]=POS[c]; if(x<26||x>W-26) v.push("world "+rom(c)+" x-margin"); if(y<40||y>H-26) v.push("world "+rom(c)+" y-margin"); } return v; }
+  /* ═══ STATE ═══ */
+  const R = { trails:[], monsters:new Set(), wrecks:new Set(), restored:new Set(), deliveries:[], fx:[], shown:{}, preplot:null, pendingSelf:null, sailing:false, merchantShown:null, ordIdx:null, ordFlip:null, clockSec:0 };
+  let app=null, rivalKeys={}, prevHour=null;
+  function hookApp(){
+    app = window.__game; if(!app) return false;
+    if(!app.__oriHooked){
+      app.__oriHooked=true;
+      const orig=app.playEvent.bind(app); app.playEvent = async m => { try{onEvent(m);}catch(e){} return orig(m); };
+      const od=app.onDecision.bind(app); app.onDecision = req => { const r=od(req); try{pollDecisions();}catch(e){} return r; };
+      window.__oriState=R; window.__oriFx=(f)=>{ R.fx.push(f); drainFx(); }; window.__oriAudit=()=>auditCache; window.__oriPresenting=()=>__live()&&(fxBusy||R.fx.length>0||R.sailing); window.__oriPeriodOf=periodOf; window.__oriWarp=(b)=>{ warping=false; window.__skinWarping=false; playWarp(!!b, b?"the deep past":"the ages ahead", ()=>{ const r=document.getElementById("timeline-rail"); if(r) { r.classList.toggle("skin-ori",!!b); renderNow(); } }); };
+      wireAudio();
+    }
+    return true;
+  }
+  function selfT(){ return app&&app.view ? app.view.travelers.find(t=>t.is_self) : null; }
+  // THE SEAT COLOUR COMES FROM THE GAME NOW. This chart used to keep its own palette AND
+  // its own first-seen index (rivalKeys), so the boat you saw here and the badge on the
+  // desk were two different colours for the same rival, and no squinting was ever going
+  // to fix it. Colour is a LABEL; a label that disagrees with itself is worse than none.
+  // FIXCOL survives only as a fallback for previewing a chart with no game attached.
+  function seatColor(seat){
+    try{ if(window.__seatColor){ const c=window.__seatColor(seat); if(c) return c; } }catch(e){}
+    const s=selfT(); if(s&&seat===s.name) return FIXCOL.self; if(!(seat in rivalKeys)) rivalKeys[seat]="r"+(Object.keys(rivalKeys).length%5); return FIXCOL[rivalKeys[seat]]; }
+  function seatShip(seat){ const s=selfT(); if(s&&seat===s.name) return 0; seatColor(seat); const k=rivalKeys[seat]; return k?(parseInt(k.slice(1),10)+1)%6:0; }
+  function hourNow(){ return app&&app.view?app.view.hour:0; }
+  function centuryOf(seat){ const t=app&&app.view&&app.view.travelers.find(x=>x.name===seat); return t?t.century:null; }
+  function onEvent(msg){
+    const k=msg.event||msg.kind||msg.type, p=msg.payload||{};
+    if(k==="traveled" && p.to!=null){ const from=Math.max(0,p.from), to=Math.max(0,p.to); if(from!==to){ R.trails.push({seat:p.seat,from,to,hour:hourNow()}); if(R.trails.length>64) R.trails.shift(); } const st=selfT(); if(st&&p.seat===st.name&&R.preplot===`${p.from}:${p.to}`){R.preplot=null;} else R.fx.push({t:"trail",seat:p.seat,from,to}); if(st&&p.seat===st.name) R.pendingSelf=to; }
+    if(k==="paradox_resolved") for(const h of (p.hits||[])){ const c=centuryOf(h.seat); if(c){R.monsters.add(c); R.fx.push({t:"paradox",c});} }
+    if(k==="exploded"){ const c=centuryOf(p.seat); if(c) R.fx.push({t:"paradox",c}); }
+    if(k==="terminated"){ const c=centuryOf(p.seat); if(c){R.wrecks.add(c); (R.wreckAt=R.wreckAt||{})[p.seat]=c; R.fx.push({t:"wreck",c});} }
+    if(k==="respawned"){ const wc=(R.wreckAt||{})[p.seat]; if(wc!=null){ R.wrecks.delete(wc); delete R.wreckAt[p.seat]; } }
+    if(k==="milestone") R.fx.push({t:"milestone",c:p.century});
+    if(k==="delivered"){ R.restored.add(p.century); R.deliveries.push({seat:p.seat,card:p.card,century:p.century,hour:hourNow()}); R.fx.push({t:"deliver",c:p.century}); }
+    if(k==="merchant_moved") R.fx.push({t:"merchant"});
+    if(k==="secret_market_opened") R.fx.push({t:"secret"});
+    scheduleLive();
+  }
+
+  /* ═══ DECISIONS (engine-correct) ═══ */
+  let mode=null;
+  function pollDecisions(){
+    if(!app) return; const req=app.pendingReq;
+    if(!req){ if(mode){mode=null; scheduleLive();} return; }
+    if(mode&&mode.req===req) return;
+    const self=selfT(); if(!self) return;
+    if(req.kind==="travel"){ const o=req.options||{}; mode={kind:"travel",req,max:o.max,self:o.century!=null?o.century:self.century,energy:self.energy,locked:o.direction_locked!=null?o.direction_locked:null,ppc:o.energy_per_past_century!=null?o.energy_per_past_century:1}; scheduleLive(); }
+    else if(req.kind==="merchant_century"||req.kind==="merchant"){ mode={kind:"merchant",req,centuries:new Set((req.options&&req.options.centuries)||[])}; scheduleLive(); }
+    else if(req.kind==="target"||req.kind==="century"){ const o=req.options||{}; if(o.target_type&&o.target_type!=="century"){ if(mode){mode=null;scheduleLive();} return; } mode={kind:"century",req,centuries:new Set((o.candidates||[]).map(x=>x&&typeof x==="object"?Number(x.century):Number(x)))}; scheduleLive(); }
+    else if(mode){ mode=null; scheduleLive(); }
+  }
+  function stepCost(from,dist){ let c=0; for(let s=1;s<=dist;s++){ const d=from-s; if(d<=0) break; c+=d<=9?2:1; } return c; }
+  function armedCost(c){ if(!mode||mode.kind!=="travel") return 0; if(mode.ppc===0) return 0; if(c===0){ let z=0; for(let d=mode.self-1; d>=0; d--) z+=(d<=9?2:1); return z; } if(c>=mode.self) return 0; return stepCost(mode.self,mode.self-c); }
+  function travelCandidates(){
+    if(!mode||mode.kind!=="travel") return null; const set=new Set();
+    for(let c=1;c<=30;c++){ const d=Math.abs(c-mode.self); if(d===0||d>mode.max) continue; if(mode.locked!=null&&Math.sign(c-mode.self)!==mode.locked) continue; if(c<mode.self&&mode.ppc!==0&&stepCost(mode.self,d)>mode.energy-1) continue; set.add(c); }
+    if(mode.self<=mode.max&&mode.locked!==1) set.add(0);
+    set.add(mode.self); return set;
+  }
+  function pickCandidates(){ if(!mode) return null; return mode.kind==="travel"?travelCandidates():mode.centuries; }
+
+  /* ═══ ART, ships, worlds, the void ═══ */
+  function shipSVG(kind,col,{ghost=false,dead=false}={}){
+    const ink=dead?"#8a7a5a":"#2a2012", body=ghost?"none":col, dash=ghost?' stroke-dasharray="2 2"':"";
+    // a knight's PENNON on a lance + a small heraldic shield in the house colour
+    return `<g class="cm-ship${dead?" cm-dead":""}"><line x1="0" y1="-12" x2="0" y2="8" stroke="${ink}" stroke-width="1.2"/><path d="M0 -12 L11 -9 L2 -6 Z" fill="${body}" stroke="${ink}" stroke-width=".7"${dash}/><path d="M-5 -3 H5 V2 Q5 7 0 9 Q-5 7 -5 2 Z" fill="${body}" stroke="${ink}" stroke-width="1"${dash}/>${ghost?"":`<path d="M0 -3 V9 M-5 0 H5" stroke="rgba(255,255,255,.55)" stroke-width=".7"/>`}</g>`;
+  }
+  function bld(era, ink, stone, roof){
+    const cr=(x)=>`<rect x="${x}" y="-8.4" width="2.6" height="2.8" fill="${stone}" stroke="${ink}" stroke-width=".7"/>`;
+    if(era==="ant"){ // DRAGON WASTES, a ruined tower + fallen stones
+      return `<path d="M -6 14 V -4 L -4 -9 L -1 -4 L -1 -11 L 2 -6 L 3 -12 L 6 -3 V 14 Z" fill="${stone}" stroke="${ink}" stroke-width="1.4"/><rect x="-2.2" y="4" width="4.4" height="5" fill="${ink}"/><path d="M 8.5 14 l 3.5 -3.5 l 2.5 3.5 z" fill="${stone}" stroke="${ink}" stroke-width="1"/><path d="M -11 14 l 2.5 -2.5 l 2 2.5 z" fill="${stone}" stroke="${ink}" stroke-width=".9"/>`; }
+    if(era==="hma"){ // MARCHLANDS, a motte-and-bailey (wooden fort on a mound)
+      return `<path d="M -14 15 Q 0 6 14 15 Z" fill="#8f7449" stroke="${ink}" stroke-width="1"/><path d="M -13 13.2 v-4 M -9 12.4 v-4 M 9 12.4 v-4 M 13 13.2 v-4" stroke="${ink}" stroke-width="1.5"/><rect x="-5.5" y="-8" width="11" height="18" fill="#8a5a2c" stroke="${ink}" stroke-width="1.4"/><path d="M -7 -8 L 0 -16 L 7 -8 Z" fill="${roof}" stroke="${ink}" stroke-width="1.1"/><rect x="-1.6" y="1" width="3.2" height="6" fill="${ink}"/>`; }
+    if(era==="lma"){ // HOLY SEE, a cathedral (twin spires + rose window)
+      return `<rect x="-9" y="-1" width="18" height="15" fill="${stone}" stroke="${ink}" stroke-width="1.4"/><path d="M -9 -1 L -9 -9 L -6 -18 L -3 -9 L -3 -1 Z" fill="${roof}" stroke="${ink}" stroke-width="1.1"/><path d="M 9 -1 L 9 -9 L 6 -18 L 3 -9 L 3 -1 Z" fill="${roof}" stroke="${ink}" stroke-width="1.1"/><path d="M -3 -1 Q 0 -10 3 -1 Z" fill="${roof}" stroke="${ink}" stroke-width="1"/><circle cx="0" cy="6" r="3.4" fill="#efe3c2" stroke="${ink}" stroke-width="1.1"/><path d="M -3.4 6 H 3.4 M 0 2.6 V 9.4 M -2.4 3.6 L 2.4 8.4 M -2.4 8.4 L 2.4 3.6" stroke="${ink}" stroke-width=".6"/>`; }
+    if(era==="mod"){ // CHARTERED REALM, a walled town (gatehouse + towers)
+      return `<path d="M -3 -6 L 0 -11 L 3 -6 Z" fill="${roof}" stroke="${ink}" stroke-width="1"/><rect x="-13" y="0" width="26" height="14" fill="${stone}" stroke="${ink}" stroke-width="1.3"/>${cr(-11)}${cr(-4)}${cr(2.6)}${cr(9)}<rect x="-13" y="-6" width="6" height="9" fill="${stone}" stroke="${ink}" stroke-width="1.2"/><rect x="7" y="-6" width="6" height="9" fill="${stone}" stroke="${ink}" stroke-width="1.2"/><path d="M -4 14 V 6 Q 0 2 4 6 V 14 Z" fill="${ink}"/><path d="M -10 -6 v-3 l3 1 M 10 -6 v-3 l-3 1" stroke="${roof}" stroke-width="1.4"/>`; }
+    if(era==="con"){ // IRON DOMINION, a great keep (Norman donjon, corner turrets)
+      return `<rect x="-11" y="-9" width="4" height="23" fill="${stone}" stroke="${ink}" stroke-width="1.2"/><rect x="7" y="-9" width="4" height="23" fill="${stone}" stroke="${ink}" stroke-width="1.2"/><path d="M -11 -9 l 2 -4 l 2 4 z M 7 -9 l 2 -4 l 2 4 z" fill="${roof}" stroke="${ink}" stroke-width=".9"/><rect x="-8" y="-6" width="16" height="20" fill="${stone}" stroke="${ink}" stroke-width="1.5"/>${cr(-7.5)}${cr(-2.6)}${cr(2.2)}${cr(6.5)}<rect x="-2.6" y="7" width="5.2" height="7" fill="${ink}"/><rect x="-5.5" y="-1" width="3" height="4" fill="${ink}"/><rect x="2.5" y="-1" width="3" height="4" fill="${ink}"/>`; }
+    // tim, CELESTIAL CITY, a domed basilica crowned with a cross
+    return `<rect x="-9" y="-4" width="4" height="18" fill="${stone}" stroke="${ink}" stroke-width="1.1"/><rect x="5" y="-4" width="4" height="18" fill="${stone}" stroke="${ink}" stroke-width="1.1"/><path d="M -9 -4 l 2 -8 l 2 8 z M 5 -4 l 2 -8 l 2 8 z" fill="${roof}" stroke="${ink}" stroke-width=".9"/><rect x="-6" y="2" width="12" height="12" fill="${stone}" stroke="${ink}" stroke-width="1.3"/><path d="M -6.5 2 A 6.5 6.5 0 0 1 6.5 2 Z" fill="${roof}" stroke="${ink}" stroke-width="1.3"/><path d="M 0 -4.5 V -9 M -1.6 -7 H 1.6" stroke="url(#cmGold)" stroke-width="1.7"/><rect x="-1.8" y="7" width="3.6" height="7" fill="${ink}"/>`;
+  }
+  /* ═══════════════ THE ITINERARY OF THE SIX WALLED KINGDOMS, each era a wall, the beast's coil below ═══════════════ */
+  const INK="#3a2c12";
+  function shd(h,f){ const g=i=>Math.max(0,Math.min(255,Math.round(parseInt(h.substr(i,2),16)*f))).toString(16).padStart(2,"0"); return "#"+g(1)+g(3)+g(5); }
+  function parchmentField(){
+    let g=`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#cmBg)"/>`;
+    // THE VELLUM, BAKED. These were two LIVE feTurbulence filters on two full-size rects.
+    // A live SVG filter is re-evaluated on every repaint of what it covers, and the old
+    // roads animate stroke-dashoffset (a PAINT property), so the whole chart repainted
+    // every frame and both noise fields were recomputed with it, sixty times a second.
+    // The Paradox Sea had the identical disease and it cost 137 fps: measured in Firefox
+    // on my RTX at 165Hz, the Sea ran at 27 fps and 164 with the filter gone.
+    // The texture never changes, so it is a static IMAGE now: the browser rasterises it
+    // ONCE and caches it. Same vellum, same mottle, no per-frame cost.
+    const parch = "data:image/svg+xml,"+encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">`+
+      `<filter id="p"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/>`+
+      `<feColorMatrix type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.33  0 0 0 0 0.18  0 0 0 0.05 0"/></filter>`+
+      `<rect width="100%" height="100%" filter="url(#p)"/></svg>`);
+    const mottle = "data:image/svg+xml,"+encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">`+
+      `<filter id="m"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.02" numOctaves="3" seed="7"/>`+
+      `<feColorMatrix type="matrix" values="0 0 0 0 0.46  0 0 0 0 0.37  0 0 0 0 0.20  0 0 0 0.085 0"/></filter>`+
+      `<rect width="100%" height="100%" filter="url(#m)"/></svg>`);
+    g+=`<image href="${parch}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" opacity=".5" style="pointer-events:none"/>`;
+    g+=`<image href="${mottle}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" opacity=".5" style="pointer-events:none"/>`;
+    g+=`<path d="M 0 ${(H*0.415).toFixed(0)} Q ${(W*0.28).toFixed(0)} ${(H*0.415+7).toFixed(0)} ${(W*0.55).toFixed(0)} ${(H*0.415-4).toFixed(0)} T ${W} ${(H*0.415+5).toFixed(0)}" stroke="#8a6a42" stroke-width="1.1" fill="none" opacity=".10"/>`;
+    g+=`<path d="M ${(W*0.63).toFixed(0)} 0 Q ${(W*0.63-6).toFixed(0)} ${(H*0.4).toFixed(0)} ${(W*0.63+4).toFixed(0)} ${(H*0.72).toFixed(0)} T ${(W*0.63-3).toFixed(0)} ${H}" stroke="#8a6a42" stroke-width="1" fill="none" opacity=".08"/>`;
+    for(let i=0;i<14;i++){ const px=Math.round(rnd(i,11)*W), py=Math.round(rnd(i,13)*H); g+=`<circle cx="${px}" cy="${py}" r="${(rnd(i,17)*0.7+0.4).toFixed(2)}" fill="#4a3218" opacity=".16"/>`; }
+    g+=`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#cmVign)"/>`;
+    return g;
+  }
+  /* the walled compounds  /* the walled compounds (820-base coords): [x0,y0,x1,y1, ruined?] */
+  const WALLS={ tim:[290,62,765,250,0], con:[30,95,230,325,0], mod:[25,395,272,550,0], lma:[382,398,742,566,0], hma:[408,598,772,852,0], ant:[25,685,298,905,1] };
+  /* the road sequence: stations + wall-gate waypoints */
+  const SEQ=[["g",208,54],["g",290,88],["c",30],["c",29],["c",28],["c",27],["c",26],["c",25],["c",24],["g",290,207],["c",23],["g",230,183],["c",22],["c",21],["c",20],["g",180,325],["c",19],["g",195,395],["c",18],["c",17],["c",16],["g",272,510],["c",15],["g",382,505],["c",14],["c",13],["c",12],["c",11],["g",602,566],["g",650,598],["c",10],["c",9],["c",8],["c",7],["c",6],["g",408,791],["c",5],["g",298,755],["c",4],["c",3],["c",2],["c",1],["g",298,868],["c",0]];
+  /* the beast's coil = the overdrive circumference (ellipse arc, deg CW from tail to head) */
+  const COIL={cx:340,cy:790,rx:300,ry:138,a0:212,a1:510};
+  let MOUTH=[213,859];
+  function coilPt(deg){ const sx=W/820, r=deg*Math.PI/180; return [(COIL.cx-COIL.rx*Math.cos(r))*sx, COIL.cy+COIL.ry*Math.sin(r)]; }
+  let ROADPTS=[], ROADIDX={};
+  function buildRoad(){
+    ROADPTS=[]; ROADIDX={}; const sx=W/820;
+    let prev=null;
+    for(const w of SEQ){
+      const P=w[0]==="c"?(w[1]===0?SUN:POS[w[1]]):[w[1]*sx,w[2]];
+      if(prev){ for(let k=1;k<=3;k++) ROADPTS.push([prev[0]+(P[0]-prev[0])*k/4, prev[1]+(P[1]-prev[1])*k/4]); }
+      if(w[0]==="c") ROADIDX[w[1]]=ROADPTS.length;
+      ROADPTS.push([P[0],P[1]]); prev=P;
+    }
+  }
+  function roadSlice(a,b){
+    const ia=ROADIDX[a], ib=ROADIDX[b]; if(ia==null||ib==null) return null;
+    const seg=ia<=ib?ROADPTS.slice(ia,ib+1):ROADPTS.slice(ib,ia+1).reverse();
+    return "M "+seg.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L ");
+  }
+  function roadG(){
+    let g=""; const sx=W/820;
+    g+=`<path d="M ${ROADPTS.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L ")}" fill="none" stroke="#6e4e22" stroke-width="7" opacity=".06" stroke-linejoin="round"/>`;
+    g+=`<path d="M ${ROADPTS.slice(0,ROADIDX[30]+1).map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L ")}" fill="none" stroke="#a83224" stroke-width="2.2" opacity=".4" stroke-dasharray="7 5" stroke-linecap="round"/>`;
+    for(let c=30;c>=1;c--){
+      const to=c-1, d=roadSlice(c,to); if(!d) continue;
+      const wild=to<=9;
+      g+=`<path class="cm-seg" data-tip="${esc(wild?"a perilous league, 2 energy on the beast's ground":"one league of the pilgrim road")}" d="${d}" fill="none" stroke="${wild?"#8a3220":"#a83224"}" stroke-width="2.4" stroke-linejoin="round" opacity=".8"/>`;
+    }
+    return g;
+  }
+  function towerG(x,y,roof,ruined){
+    if(ruined) return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path d="M -4 3 L -4 -4 L -1 -6 L 2 -3 L 4 -1 L 4 3 Z" fill="#cfc0a0" stroke="#4a3a22" stroke-width="1"/><path d="M -1 -6 l 2 -3 M 2 -3 l 3 -2" stroke="#4a3a22" stroke-width=".8"/></g>`;
+    return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><rect x="-4" y="-5" width="8" height="9" fill="#e8dcc0" stroke="#3a2c12" stroke-width="1.1"/><path d="M -5 -5 L 0 -12 L 5 -5 Z" fill="${roof}" stroke="#3a2c12" stroke-width="1"/><rect x="-1.2" y="-2" width="2.4" height="3" fill="#3a2c12"/><g class="cm-pennant" transform="translate(0 -12)"><path d="M 0 0 v-6 l6 2 l-6 2" fill="${roof}" stroke="#3a2c12" stroke-width=".6"/></g></g>`;
+  }
+  function walls(){
+    const sx=W/820; let g="";
+    const NAME={tim:"LAST DAWN",con:"IRON CROWNLANDS",mod:"CHARTERED MARCHES",lma:"ABBEYLANDS",hma:"HIGH MARCHES",ant:"DRAGON WASTES"};
+    const STY={ tim:{stone:"#f2e9d4",edge:"#9a884e",teeth:"2 6"}, con:{stone:"#c6cbd6",edge:"#4a5568",teeth:"7 4"},
+      mod:{stone:"#e8d3a4",edge:"#8a6a3a",teeth:"4 5"}, lma:{stone:"#cfdcc0",edge:"#4a6a3a",teeth:"2.5 8"},
+      hma:{stone:"#d0c2ac",edge:"#5a4634",teeth:"5.5 5"}, ant:{stone:"#b4a488",edge:"#463626",teeth:"4 15"} };
+    const gatesFor=(e)=>SEQ.filter(w=>w[0]==="g").map(w=>[w[1]*sx,w[2]]).filter(p=>{ const B=WALLS[e]; const eps=8;
+      return (Math.abs(p[0]-B[0]*sx)<eps||Math.abs(p[0]-B[2]*sx)<eps)&&p[1]>B[1]-eps&&p[1]<B[3]+eps || (Math.abs(p[1]-B[1])<eps||Math.abs(p[1]-B[3])<eps)&&p[0]>B[0]*sx-eps&&p[0]<B[2]*sx+eps; });
+    for(const e in WALLS){
+      const [x0,y0,x1,y1,ruin]=WALLS[e]; const X0=x0*sx,X1=x1*sx, col=HUE[e], st=STY[e];
+      g+=`<rect x="${X0.toFixed(0)}" y="${y0}" width="${(X1-X0).toFixed(0)}" height="${y1-y0}" rx="16" fill="${col}" opacity=".085"/>`;
+      const dash=ruin?'stroke-dasharray="16 10"':"";
+      g+=`<rect x="${X0.toFixed(0)}" y="${y0}" width="${(X1-X0).toFixed(0)}" height="${y1-y0}" rx="14" fill="none" stroke="${col}" stroke-width="10" ${dash} opacity=".82"/>`;
+      g+=`<rect x="${X0.toFixed(0)}" y="${y0}" width="${(X1-X0).toFixed(0)}" height="${y1-y0}" rx="14" fill="none" stroke="#f3e6c2" stroke-width="2.2" ${dash} opacity=".75"/>`;
+      g+=`<rect x="${(X0-6).toFixed(0)}" y="${y0-6}" width="${(X1-X0+12).toFixed(0)}" height="${y1-y0+12}" rx="18" fill="none" stroke="${shd(col,0.55)}" stroke-width="1.6" ${dash} opacity=".85"/>`;
+      g+=`<rect x="${(X0+6).toFixed(0)}" y="${y0+6}" width="${(X1-X0-12).toFixed(0)}" height="${y1-y0-12}" rx="10" fill="none" stroke="${shd(col,0.55)}" stroke-width="1.2" ${dash} opacity=".6"/>`;
+      g+=`<rect x="${(X0-6).toFixed(0)}" y="${y0-6}" width="${(X1-X0+12).toFixed(0)}" height="${y1-y0+12}" rx="18" fill="none" stroke="${col}" stroke-width="4.4" stroke-dasharray="${st.teeth}" opacity=".9"/>`;
+      for(const [tx,ty] of [[X0+10,y0+8],[X1-10,y0+8],[X0+10,y1-8],[X1-10,y1-8]]) g+=towerG(tx,ty,col,ruin);
+      for(const [gx,gy] of gatesFor(e)){
+        g+=`<circle cx="${gx.toFixed(0)}" cy="${gy.toFixed(0)}" r="9" fill="#efe3c2"/>`;
+        g+=`<path d="M ${(gx-7).toFixed(0)} ${(gy+6).toFixed(0)} v-6 a7 7 0 0 1 14 0 v6" fill="none" stroke="#3a2c12" stroke-width="1.7"/>`;
+        g+=towerG(gx-12,gy-4,col,ruin); g+=towerG(gx+12,gy-4,col,ruin);
+      }
+      const LBLPOS={tim:[297,52],con:[36,85],mod:[31,385],lma:[388,382],hma:[448,622],ant:[162,700]};
+      const lx=LBLPOS[e][0]*sx, ly=LBLPOS[e][1];
+      g+=`<g data-tip="${esc(CONSTS[e].mean)}"><g class="cm-pennant" transform="translate(${lx.toFixed(0)} ${ly})"><path d="M 0 0 v-14 l10 3.5 l-10 3.5" fill="${col}" stroke="#3a2c12" stroke-width=".9"/></g><text x="${(lx+14).toFixed(0)}" y="${ly-6}" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="10.5" letter-spacing="1.1" fill="${shd(col,0.6)}" stroke="#efe3c2" stroke-width="2.2" paint-order="stroke">${NAME[e]}</text></g>`;
+    }
+    return g;
+  }
+  function coilGround(){
+    const sx=W/820; let g="";
+    g+=`<ellipse cx="${(COIL.cx*sx).toFixed(0)}" cy="${COIL.cy}" rx="${(COIL.rx*sx-8).toFixed(0)}" ry="${COIL.ry-8}" fill="#5a2412" opacity=".05"/>`;
+    for(let i=0;i<22;i++){ const a=rnd(i,9)*6.283, rr=rnd(i,3); const px=COIL.cx*sx+Math.cos(a)*COIL.rx*sx*0.8*rr, py=COIL.cy+Math.sin(a)*COIL.ry*0.8*rr;
+      g+=`<circle cx="${px.toFixed(0)}" cy="${py.toFixed(0)}" r="${(rnd(i,5)*7+2).toFixed(0)}" fill="#3a1c0e" opacity="${(rnd(i,7)*.06+.03).toFixed(3)}"/>`; }
+    return g;
+  }
+  function dragonCoil(){
+    const sx=W/820; const pts=[]; const N=64;
+    for(let i=0;i<=N;i++) pts.push(coilPt(COIL.a0+(COIL.a1-COIL.a0)*i/N));
+    MOUTH=[pts[N][0]+10*sx, pts[N][1]+2];
+    const d="M "+pts.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L ");
+    let g=`<g class="cm-dragon" data-tip="THE WORLD-DRAGON: his coiled body IS the overdrive: within his circle every league costs 2; the paradox is his fire">`;
+    g+=`<g class="cm-dragbreath">`;
+    g+=`<path d="${d}" fill="none" stroke="#4a1810" stroke-width="15" stroke-linecap="round"/>`;
+    g+=`<path d="${d}" fill="none" stroke="#a8341f" stroke-width="9.5" stroke-linecap="round"/>`;
+    for(let i=2;i<N-1;i+=2){ const p=pts[i]; g+=`<path d="M ${(p[0]-4.4).toFixed(1)} ${p[1].toFixed(1)} a 4.4 4.4 0 0 1 8.8 0" fill="none" stroke="#dd7c50" stroke-width="1" opacity=".75"/>`; }
+    for(let i=3;i<N-2;i+=4){ const p=pts[i], q=pts[i+1], txv=q[0]-p[0], tyv=q[1]-p[1], L=Math.hypot(txv,tyv)||1, nx=-tyv/L, ny=txv/L;
+      g+=`<path d="M ${p[0].toFixed(1)} ${p[1].toFixed(1)} l ${(nx*11).toFixed(1)} ${(ny*11).toFixed(1)} l ${(txv*0.3+nx*3).toFixed(1)} ${(tyv*0.3+ny*3).toFixed(1)}" fill="none" stroke="#4a1810" stroke-width="2"/>`; }
+    // tail rattling by the bridge
+    const tp=pts[0];
+    g+=`<g transform="translate(${tp[0].toFixed(1)} ${tp[1].toFixed(1)}) scale(-1 1)"><path d="M 0 0 Q -14 -4 -18 -14 Q -20 -22 -13 -22 Q -8 -22 -9 -15" fill="none" stroke="#a8341f" stroke-width="6.5" stroke-linecap="round"/><path d="M -9 -15 l -6 -8 l 9 1 z M -9 -15 l 2 -9 l 5 6 z" fill="#7a2416" stroke="#3a140b" stroke-width="1.1"/></g>`;
+    // the head, turned inward upon the sacred cross
+    const hp=pts[N];
+    MOUTH=[hp[0]-34*sx, hp[1]+3];
+    g+=`<g transform="translate(${hp[0].toFixed(1)} ${hp[1].toFixed(1)}) scale(-1 1)">
+      <path d="M -2 -7 Q 12 -14 22 -8 Q 32 -4 36 0 L 24 2 Q 30 4 26 7 L 12 10 Q 0 10 -4 2 Q -6 -3 -2 -7 Z" fill="#a8341f" stroke="#3a140b" stroke-width="1.9"/>
+      <path d="M 24 2 L 36 10 Q 24 14 14 10" fill="#8a2a14" stroke="#3a140b" stroke-width="1.2"/>
+      <path d="M -1 -7 l -4 -9 l 8 5 z M 8 -10 l -1 -10 l 7 7 z" fill="#7a2416" stroke="#3a140b" stroke-width="1"/>
+      <circle class="cm-drageye" cx="13" cy="-2" r="2.5" fill="#f4d000" stroke="#3a140b" stroke-width=".7"/>
+    </g>`;
+    // perpetual fire, breathed against the cross
+    g+=`<g class="cm-dragfire" transform="translate(${MOUTH[0].toFixed(1)} ${MOUTH[1].toFixed(1)}) scale(-1 1)">
+      <path class="cm-flame f1" d="M 0 0 Q 26 -14 66 -8 Q 44 -2 70 4 Q 40 10 60 16 Q 26 14 0 5 Z" fill="url(#cmFire)" opacity=".85"/>
+      <path class="cm-flame f2" d="M 2 0 Q 22 -8 46 -5 Q 30 0 48 5 Q 24 9 2 4 Z" fill="#f6c14a" opacity=".8"/>
+      <path class="cm-flame f3" d="M 3 0 Q 14 -3 26 -2 Q 16 1 26 4 Q 13 6 3 3 Z" fill="#fbe89a" opacity=".9"/>
+    </g>`;
+    g+=`</g>`;
+    // the bridge rides OVER the beast's tail the beast's tail (between X and IX)
+    const bp=[(619)*sx,744];
+    g+=`<g data-tip="THE BEAST-BRIDGE: here the road crosses the World-Dragon's tail; beyond it every league costs 2" transform="translate(${bp[0].toFixed(0)} ${bp[1].toFixed(0)}) rotate(-46)">
+      <path d="M -13 -3 h26" stroke="#6e4e22" stroke-width="5"/><path d="M -13 -3 h26" stroke="#c9a86a" stroke-width="3"/>
+      <path d="M -11 -6 v7 M -4 -7 v8 M 4 -7 v8 M 11 -6 v7" stroke="#4a3218" stroke-width="1.4"/></g>`;
+    g+=`<g transform="translate(${(655*sx).toFixed(0)} 700)" data-tip="THE WARNING STONE: beyond the bridge the beast's leagues begin"><path d="M -4 10 L -3.4 -7 L 0 -10 L 3.4 -7 L 4 10 Z" fill="#cbbb96" stroke="#3a2c12" stroke-width="1.1"/><text y="5" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="7" fill="#8a2a14">II</text></g>`;
+    return g+`</g>`;
+  }
+  function sacredCross(){
+    const [x,y]=SUN;
+    let g=`<g class="cm-sun" data-c="0" data-tip="YEAR ZERO: the sacred cross at the root of time, ringed by the beast; the last pilgrimage ends the game (+2 CP)">`;
+    g+=`<circle class="cm-hit" data-c="0" cx="${x}" cy="${y}" r="28" fill="transparent"/>`;
+    g+=`<ellipse cx="${x}" cy="${y+8}" rx="62" ry="30" fill="url(#cmYZGlow)" opacity=".65"/>`;
+    g+=`<circle cx="${x}" cy="${y-9}" r="46" fill="#f9efcf" opacity=".30"/>`;
+    g+=`<circle class="cm-crosshalo" cx="${x}" cy="${y-9}" r="29" fill="url(#cmYZGlow)"/>`;
+    for(let i=0;i<12;i++){ const a=i/12*6.283, r1=i%2===0?31:24;
+      g+=`<line x1="${(x+Math.cos(a)*17).toFixed(1)}" y1="${(y-9+Math.sin(a)*17).toFixed(1)}" x2="${(x+Math.cos(a)*r1).toFixed(1)}" y2="${(y-9+Math.sin(a)*r1).toFixed(1)}" stroke="#f2c14a" stroke-width="1.5" opacity=".85"/>`; }
+    g+=`<path d="M ${x-13} ${y+14} q 13 -7 26 0 l -3 5 h -20 z" fill="#b7a05a" stroke="#3a2c12" stroke-width="1.2"/>`;
+    g+=`<path d="M ${x-2.7} ${y+12} L ${x-2.7} ${y-7} L ${x-11} ${y-7} L ${x-13} ${y-9.8} L ${x-13} ${y-14.2} L ${x-11} ${y-17} L ${x-2.7} ${y-17} L ${x-2.7} ${y-25} L ${x-4.4} ${y-29.5} L ${x+4.4} ${y-29.5} L ${x+2.7} ${y-25} L ${x+2.7} ${y-17} L ${x+11} ${y-17} L ${x+13} ${y-14.2} L ${x+13} ${y-9.8} L ${x+11} ${y-7} L ${x+2.7} ${y-7} L ${x+2.7} ${y+12} L ${x+4.8} ${y+15} L ${x-4.8} ${y+15} Z" fill="url(#cmGoldBar)" stroke="#3a2c12" stroke-width="1.5"/>`;
+    g+=`<path d="M ${x} ${y+10} V ${y-26} M ${x-10} ${y-12} H ${x+10}" stroke="#fff3c0" stroke-width="1.3" opacity=".85"/>`;
+    g+=`<g><rect x="${x-33}" y="${y+22}" width="66" height="13.5" rx="2.2" fill="#f3e6c2" stroke="#5a4426" stroke-width=".9" opacity=".95"/><text x="${x}" y="${y+32.5}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="10.5" fill="#2c2010">YEAR ZERO</text></g>`;
+    return g+`</g>`;
+  }
+  function treeG(x,y,s2,ev){ return ev? `<g transform="translate(${x} ${y}) scale(${s2})"><path d="M 0 4 L 0 -1 M -4 4 h8" stroke="#4a3a22" stroke-width="1.2"/><path d="M -4.5 0 L 0 -10 L 4.5 0 Z M -3.5 -5 L 0 -13 L 3.5 -5 Z" fill="#5f7a4a" stroke="#39492b" stroke-width=".8"/></g>`
+      : `<g transform="translate(${x} ${y}) scale(${s2})"><path d="M 0 4 V -2" stroke="#4a3a22" stroke-width="1.3"/><circle cx="0" cy="-6" r="4.6" fill="#6f8a5e" stroke="#39492b" stroke-width=".8"/><circle cx="-3" cy="-4" r="3" fill="#6f8a5e" stroke="#39492b" stroke-width=".6"/><circle cx="3.2" cy="-4.4" r="3.2" fill="#7a945e" stroke="#39492b" stroke-width=".6"/></g>`; }
+  function churchRoads(){
+    const sx=W/820; let g="";
+    const mud=(x1,y1,x2,y2)=>{ const mx=(x1+x2)/2+(y2-y1)*0.18, my=(y1+y2)/2-(x2-x1)*0.18; const d=`M ${(x1*sx).toFixed(1)} ${y1} Q ${(mx*sx).toFixed(1)} ${my.toFixed(1)} ${(x2*sx).toFixed(1)} ${y2}`;
+      return `<path d="${d}" fill="none" stroke="#8a6a42" stroke-width="4.8" opacity=".45" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#6e4e2a" stroke-width="1.4" opacity=".55" stroke-dasharray="4.5 5.5"/>`; };
+    g+=mud(257,104,288,140)+mud(257,104,232,150);   // Singularity, bound to LAST DAWN + IRON CROWNLANDS
+    g+=mud(325,458,378,478)+mud(325,458,274,495);   // Ascension, bound to ABBEYLANDS + CHARTERED MARCHES
+    g+=mud(353,690,406,666)+mud(353,700,300,700);   // Origins, bound to HIGH MARCHES + DRAGON WASTES
+    for(const [x,y,s2,ev] of [[280,132,0.85,1],[234,128,0.8,0],[362,492,0.9,0],[292,480,0.85,1],[388,676,0.85,1],[318,712,0.8,0]])
+      g+=treeG((x*sx).toFixed(0),y,s2,ev);
+    return g;
+  }
+  function timeRose(){
+    const sx=W/820, x=728*sx, y=310;
+    let g=`<g class="cm-rose" data-tip="THE ROSE OF TIME: the future dawns above; the deep past lies below, in the beast's keeping">`;
+    g+=`<circle cx="${x.toFixed(0)}" cy="${y}" r="27" fill="#efe3c2" opacity=".8" stroke="#7a5a24" stroke-width="1.2"/>`;
+    for(let i=0;i<8;i++){ const a=i*Math.PI/4-Math.PI/2, long=i%2===0, r1=long?24:14;
+      g+=`<path d="M ${(x+Math.cos(a)*r1).toFixed(1)} ${(y+Math.sin(a)*r1).toFixed(1)} L ${(x+Math.cos(a+0.28)*5).toFixed(1)} ${(y+Math.sin(a+0.28)*5).toFixed(1)} L ${(x+Math.cos(a-0.28)*5).toFixed(1)} ${(y+Math.sin(a-0.28)*5).toFixed(1)} Z" fill="${long?"url(#cmGold)":"#a8341f"}" stroke="#5a3c10" stroke-width=".7"/>`; }
+    g+=`<circle cx="${x.toFixed(0)}" cy="${y}" r="3" fill="#5a3c10"/>`;
+    g+=`<g transform="translate(${x.toFixed(0)} ${y-38})"><circle r="5.5" fill="url(#cmGold)" stroke="#5a3c10" stroke-width=".9"/>${Array.from({length:8},(_,i)=>{const a=i*Math.PI/4; return `<line x1="${(Math.cos(a)*7).toFixed(1)}" y1="${(Math.sin(a)*7).toFixed(1)}" x2="${(Math.cos(a)*10).toFixed(1)}" y2="${(Math.sin(a)*10).toFixed(1)}" stroke="#a17518" stroke-width="1.2"/>`;}).join("")}</g>`;
+    g+=`<text x="${x.toFixed(0)}" y="${y-52}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="7.5" letter-spacing="1.5" fill="#6e4e22">FUTURE</text>`;
+    g+=`<path d="M ${(x-8).toFixed(0)} ${y+38} q 4 -6 8 0 q 4 6 8 0" fill="none" stroke="#8a2a14" stroke-width="2.2" stroke-linecap="round"/><circle cx="${(x+9).toFixed(0)}" cy="${y+37}" r="1.6" fill="#8a2a14"/>`;
+    g+=`<text x="${x.toFixed(0)}" y="${y+52}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="7.5" letter-spacing="1.5" fill="#8a2a14">PAST</text>`;
+    return g+`</g>`;
+  }
+  function rubrics(){
+    const sx=W/820; let g="";
+    g+=`<g opacity=".8"><text x="${(52*sx).toFixed(0)}" y="46" font-family="Georgia,serif" font-style="italic" font-size="8" fill="#6e4e22">FROM THE FAR FUTURE</text><path d="M ${(148*sx).toFixed(0)} 50 q 18 8 30 28" stroke="#6e4e22" stroke-width="1" fill="none"/></g>`;
+    let f=`<g class="cm-forest" data-tip="the wild leagues, no road dares the woods between the ages" opacity=".85">`;
+    const spots=[[645,330,0.9,1],[580,295,1.2,1],[520,335,1.0,0],[460,300,0.9,1],[565,378,1.1,0],[490,372,0.85,1],[610,340,0.8,0],[425,345,0.95,0],[365,278,1.0,0],[315,302,0.9,1],[350,352,1.05,0],[285,265,0.85,1],[320,382,0.9,0],[130,352,0.95,0],[82,348,0.85,1],[106,368,0.8,0],[728,878,0.9,1],[692,898,0.85,0],[750,900,0.75,1],[368,562,0.8,0],[342,574,0.75,1],[168,588,0.9,0],[120,600,0.8,1],[75,585,0.85,0]];
+    for(const [x,y,s2,ev] of spots) f+=treeG((x*sx).toFixed(0),y,s2,ev);
+
+    f+=`</g>`;
+    return g+f;
+  }
+  function borderFrame(){
+    let g=`<rect x="6" y="6" width="${W-12}" height="${H-12}" fill="none" stroke="#5a3c10" stroke-width="1.8"/>`;
+    g+=`<rect x="13" y="13" width="${W-26}" height="${H-26}" fill="none" stroke="url(#cmGoldBar)" stroke-width="12"/>`;
+    g+=`<rect x="13" y="13" width="${W-26}" height="${H-26}" fill="none" stroke="#fff0a8" stroke-width="1.6" opacity=".6"/>`;
+    g+=`<rect x="20" y="20" width="${W-40}" height="${H-40}" fill="none" stroke="#5a3c10" stroke-width="1.4"/>`;
+    g+=`<rect x="24" y="24" width="${W-48}" height="${H-48}" fill="none" stroke="#3f5f9a" stroke-width="4.5" opacity=".85"/>`;
+    g+=`<rect x="28" y="28" width="${W-56}" height="${H-56}" fill="none" stroke="#5a3c10" stroke-width=".9" opacity=".8"/>`;
+    const tx=W/2;
+    g+=`<g transform="translate(${tx.toFixed(0)} 6)"><path d="M-212 0 h424 v20 l-10 8 h-404 l-10 -8 z" fill="#4a2e12" stroke="url(#cmGold)" stroke-width="1.4"/><text x="0" y="15" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="11.5" letter-spacing="1.6" fill="#f0d68a">ITINERARIVM SAECVLORVM · the six walled kingdoms</text></g>`;
+    return g;
+  }
+  function worldG(c){
+    const [x,y]=POS[c], eras=ERAS_OF(c), dual=eras.length===2, era=singleEra(c), col=HUE[era];
+    const lit=R.restored.has(c), broken=R.monsters.has(c)&&!lit, wreck=R.wrecks.has(c);
+    const mile=(c===10||c===20), s=(mile?1.28:dual?1.1:1)*1.05;
+    const ink=wreck?"#7a6642":"#33260f", stone=lit?"#fbe8c6":(wreck?"#c9bd98":"#efe3c2"), roof=dual?HUE[eras[1]]:col;
+    const gild=lit?`<circle r="${(19*s).toFixed(1)}" fill="none" stroke="url(#cmGold)" stroke-width="1.5" opacity=".85" class="cm-lit"/>`:"";
+    const shadow=`<ellipse cx="0" cy="${(13*s).toFixed(1)}" rx="${(19*s).toFixed(1)}" ry="${(7*s).toFixed(1)}" fill="#efe3c2" opacity=".55"/><ellipse cx="0" cy="${(15*s).toFixed(1)}" rx="${(13.5*s).toFixed(1)}" ry="${(2.6*s).toFixed(1)}" fill="rgba(60,40,16,.2)"/>`;
+    const crown=mile?`<g transform="translate(0 ${(-25*s).toFixed(1)}) scale(${s.toFixed(3)})"><path d="M -9.5 3.5 L -9.5 -3 L -5 0.5 L 0 -6.5 L 5 0.5 L 9.5 -3 L 9.5 3.5 Z" fill="url(#cmGoldBar)" stroke="${ink}" stroke-width="1"/><rect x="-9.5" y="3.5" width="19" height="3.8" rx="1" fill="url(#cmGoldBar)" stroke="${ink}" stroke-width="1"/><circle cx="0" cy="-7.5" r="1.6" fill="#f6e08c" stroke="${ink}" stroke-width=".5"/><circle cx="-9.5" cy="-4" r="1.2" fill="#f6e08c" stroke="${ink}" stroke-width=".4"/><circle cx="9.5" cy="-4" r="1.2" fill="#f6e08c" stroke="${ink}" stroke-width=".4"/><circle cx="-4.5" cy="5.4" r="1.1" fill="#a8341f"/><circle cx="4.5" cy="5.4" r="1.1" fill="#2f6f9f"/></g>`:"";
+    const scorch=broken?`<ellipse cx="0" cy="2" rx="16" ry="12" fill="#1c0e08" opacity=".55"/><path d="M-11 -13 L11 12 M-11 8 L11 -12" stroke="#3a140b" stroke-width="1.7" opacity=".9"/>`:"";
+    const dualTags=dual?`<text x="${(-12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[0]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[0].toUpperCase()}</text><text x="${(12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[1]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[1].toUpperCase()}</text>`:"";
+    const fs=(dual?15:14)*(mile?1.12:1);
+    return `<g class="cm-world${broken?" cm-broken":""}${wreck?" cm-wreck":""}" data-c="${c}" transform="translate(${x} ${y})" style="color:${col}">
+      <circle class="cm-hit" data-c="${c}" r="${Math.max(32,26*s).toFixed(1)}" fill="transparent"/>
+      ${gild}${shadow}
+      <g class="cm-worldbody"><g transform="scale(${s.toFixed(3)})">${dual?`<g clip-path="url(#cmHalfL)">${bld(eras[0],ink,stone,HUE[eras[0]])}</g><g clip-path="url(#cmHalfR)">${bld(eras[1],ink,stone,HUE[eras[1]])}</g><line x1="0" y1="-20" x2="0" y2="15" stroke="${ink}" stroke-width="1.4"/>`:bld(era,ink,stone,roof)}</g>${crown}</g>
+      ${scorch}${dualTags}
+      <g class="cm-numplate"><rect x="${(-rom(c).length*4.4-4).toFixed(1)}" y="${(17*s).toFixed(1)}" width="${(rom(c).length*8.8+8).toFixed(1)}" height="13.5" rx="2.2" fill="#f3e6c2" stroke="${wreck?"#8a7652":"#5a4426"}" stroke-width=".9" opacity=".94"/><text y="${(17*s+10.6).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="11.5" fill="${wreck?"#7a6642":"#2c2010"}">${rom(c)}</text></g>
+    </g>`;
+  }
+  let auditCache=[];
+  function baseMap(){
+    layout(); buildRoad(); auditCache=audit(); if(auditCache.length) console.warn("ITINERARY AUDIT:", auditCache);
+    const defs=`<radialGradient id="cmBg" cx="50%" cy="42%" r="78%"><stop offset="0" stop-color="#f0e2c0"/><stop offset=".7" stop-color="#e6d3aa"/><stop offset="1" stop-color="#d6be90"/></radialGradient>
+      <filter id="cmParchTex" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.33  0 0 0 0 0.18  0 0 0 0.05 0"/></filter>
+      <filter id="cmMottle" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.02" numOctaves="3" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.46  0 0 0 0 0.37  0 0 0 0 0.20  0 0 0 0.085 0"/></filter>
+      <radialGradient id="cmVign" cx="50%" cy="50%" r="72%"><stop offset=".62" stop-color="rgba(90,60,20,0)"/><stop offset="1" stop-color="rgba(90,60,20,.22)"/></radialGradient>
+      <linearGradient id="cmGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e08c"/><stop offset=".5" stop-color="#cfa53f"/><stop offset="1" stop-color="#a17518"/></linearGradient>
+      <linearGradient id="cmGoldBar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffdf6b"/><stop offset=".45" stop-color="#f2b62e"/><stop offset=".62" stop-color="#e8a01c"/><stop offset="1" stop-color="#a87414"/></linearGradient>
+      <linearGradient id="cmFire" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e8541f"/><stop offset=".6" stop-color="#f6a03a"/><stop offset="1" stop-color="#f6a03a" stop-opacity="0"/></linearGradient>
+      <radialGradient id="cmYZGlow"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".55"/><stop offset="1" stop-color="#ffd04a" stop-opacity="0"/></radialGradient>
+      <radialGradient id="cmSecHalo"><stop offset="0" stop-color="#e8d38a" stop-opacity=".6"/><stop offset=".55" stop-color="#c9a23c" stop-opacity=".2"/><stop offset="1" stop-color="#c9a23c" stop-opacity="0"/></radialGradient>
+      <filter id="cmBhBlur" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4"/></filter>
+      <clipPath id="cmHalfL"><rect x="-24" y="-32" width="24" height="56"/></clipPath>
+      <clipPath id="cmHalfR"><rect x="0" y="-32" width="24" height="56"/></clipPath>`;
+    let out=parchmentField();
+    out+=coilGround();
+    out+=walls();
+    out+=roadG();
+    out+=churchRoads();
+    out+=rubrics();
+    out+=timeRose();
+    out+=borderFrame();
+    out+=dragonCoil();
+    out+=sacredCross();
+    for(let c=1;c<=30;c++) out+=worldG(c);
+    return {defs,out};
+  }
+    function liveLayer(){
+    if(!app||!app.view) return ""; const view=app.view; let g="";
+    // ── THE RECEPTOR-CHURCHES, one per period; a delivered relic flies here and is received ──
+    for(const period in BHP){ const H2=holePos(period); if(!H2) continue; const [x,y]=H2, col=PHUE[period], eras=PERIOD_ERAS[period];
+      const items=R.deliveries.filter(dv=>ERAS_OF(dv.century).some(e2=>eras.includes(e2)));
+      const covered=view.travelers.filter(t=>(t.delivered_periods||[]).includes(period)); const n=items.length;
+      const recent=items.slice(-5).map(dv=>`  ${rom(dv.century)} \u00b7 ${(dv.card&&(typeof dv.card==="string"?dv.card:(dv.card.display_name||dv.card.name)))||"a relic"}`).join("\n");
+      const tip=`THE ${period.toUpperCase()} RECEPTOR-CHURCH: relics of this realm are received here\n${n?n+" relic"+(n>1?"s":"")+" received \u00b7 +"+n+" CP scored here":"the reliquary stands empty"}${covered.length?"\nblessed by "+covered.map(t=>t.name).join(", "):""}${recent?"\n"+recent:""}`;
+      let rays=""; if(n) for(let i=0;i<8;i++){ const a=i/8*6.28; rays+=`<line x1="${(Math.cos(a)*13).toFixed(1)}" y1="${(Math.sin(a)*13-6).toFixed(1)}" x2="${(Math.cos(a)*19).toFixed(1)}" y2="${(Math.sin(a)*19-6).toFixed(1)}" stroke="#e6c56a" stroke-width="1" opacity=".7"/>`; }
+      g+=`<g class="cm-bhole${n?" on":""}" data-period="${esc(period)}" data-tip="${esc(tip)}" transform="translate(${x} ${y}) scale(1.14)">
+        <ellipse class="cm-bh-glow" cx="0" cy="-4" rx="22" ry="18" fill="${col}" opacity="${n?.2:.07}" filter="url(#cmBhBlur)"/>
+        <g class="cm-beam">${rays}</g>
+        <rect x="-12" y="4" width="24" height="4" rx="1" fill="#6e4e22" stroke="#3a2c12" stroke-width="1"/>
+        <rect x="-9" y="-6" width="18" height="10" fill="${n?"url(#cmGold)":"#e2d4b2"}" stroke="#3a2c12" stroke-width="1.2"/>
+        <path d="M-10 -6 L0 -14 L10 -6 Z" fill="${col}" stroke="#3a2c12" stroke-width="1.2" fill-opacity=".8"/>
+        <rect x="4" y="-13" width="5" height="8" fill="#e2d4b2" stroke="#3a2c12" stroke-width="1"/><path d="M 3 -13 L 6.5 -18.5 L 10 -13 Z" fill="${col}" stroke="#3a2c12" stroke-width=".9"/>
+        <path class="cm-bh-disk" d="M 0 -14 v-5 M -2.4 -16.6 h4.8" stroke="url(#cmGold)" stroke-width="1.6"/>
+        <g class="cm-smoke"><circle cx="6.5" cy="-21" r="1.6" fill="#c9beA8" opacity=".55"/><circle cx="8" cy="-26" r="2" fill="#c9bea8" opacity=".4"/><circle cx="6" cy="-31" r="2.5" fill="#c9bea8" opacity=".26"/></g>
+        <rect x="-2.2" y="-1" width="4.4" height="9" fill="#3a2c12"/>
+        <circle cx="-5.5" y="0" cy="-2" r="1.4" fill="${col}" stroke="#3a2c12" stroke-width=".4"/>
+        ${n?`<text x="0" y="-24" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="11" fill="#6e4a12" stroke="#efe3c2" stroke-width="2.6" paint-order="stroke">\u00d7${n}</text>`:""}
+        ${covered.map((t,i)=>`<circle cx="${-8+i*5}" cy="11" r="1.7" fill="${seatColor(t.name)}" stroke="#3a2c12" stroke-width=".5"/>`).join("")}
+      </g>`; }
+    // drift trails (voyages), faint comet wakes
+    for(const t of R.trails){ const d=roadSlice(t.from,t.to)||arcPath(t.from,t.to); if(!d) continue; const age=view.hour-t.hour; const op=age<=0?.9:age===1?.6:age===2?.42:Math.max(.18,.36-(age-2)*.03); const col=age<=1?seatColor(t.seat):(HUE[META[t.to]]||"#7fa0e0"); g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="${age<=0?2.6:age===1?1.9:1.3}" opacity="${op}" stroke-linecap="round" stroke-dasharray="4.5 4.5"/>`; }
+    // paradox rifts
+    for(const c of R.monsters){ if(!POS[c]||R.restored.has(c)) continue; const [x,y]=POS[c]; g+=`<g class="cm-rift" transform="translate(${x+worldR(c)+8} ${y-6})" data-tip="${esc(`a rift tore open near ${rom(c)}, the Paradix bleeds through`)}"><path d="M0 -8 l3 6 l-4 3 l4 5" stroke="#7a1e10" stroke-width="1.6" fill="none"/><path d="M0 -8 l-3 6 l4 3 l-4 5" stroke="#3a2c12" stroke-width="1" fill="none" opacity=".7"/></g>`; }
+    // the peddler's wagon
+    const mc = R.merchantShown!=null?R.merchantShown:view.merchant_century;
+    if(POS[mc]){ const [x,y]=POS[mc]; const dice=view.merchant_movement_dice||1; const side=x>W*0.82?-1:1;
+      const cargo=(view.market_revealed||[]).slice(0,5).map(c2=>`  ${(c2.display_name||c2.name)}, ${c2.gold_cost!=null?c2.gold_cost+"g":"--"}`).join("\n");
+      const tip=`THE PEDDLER'S WAGON: halted at ${rom(mc)}\nwanders ${dice}d3 · barter when near\n${cargo?"WARES FOR SALE:\n"+cargo:"the cart stands bare"}`;
+      g+=`<g class="cm-hauler" data-tip="${esc(tip)}" transform="translate(${(x+side*26).toFixed(0)} ${(y-2).toFixed(0)}) scale(${(side<0?-1:1)*0.85} 0.85)"><g class="cm-bob">
+        <circle cx="-7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="-7" cy="7" r="1" fill="#241810"/><circle cx="7" cy="7" r="1" fill="#241810"/>
+        <rect x="-11" y="-1" width="22" height="8" fill="#6e4e2a" stroke="#241810" stroke-width="1"/>
+        <path d="M-11 -1 Q-11 -11 0 -11 Q11 -11 11 -1 Z" fill="#b0472e" stroke="#241810" stroke-width="1"/>
+        <path d="M-6 -9.6 V-1 M0 -11 V-1 M6 -9.6 V-1" stroke="#ecd6a6" stroke-width="1.3" opacity=".85"/>
+        <path d="M11 3 q8 -1 10 -7 q1 -3 -2.5 -3 q-1 3.5 -4.5 3.5 q-3 2 -3 6.5 z" fill="#5a4028" stroke="#241810" stroke-width=".8"/><circle cx="18" cy="-4" r=".9" fill="#241810"/>
+        ${Array.from({length:Math.min(3,dice)},(_,i)=>`<rect x="${-5+i*4}" y="10.5" width="3.2" height="4" rx="1" fill="#8a6a3a" stroke="#241810" stroke-width=".5"/>`).join("")}
+      </g></g>`; }
+    // milestone beacons X / XX
+    for(const c of [10,20]){ if(!POS[c]) continue; const [x,y]=POS[c]; const claim=view.travelers.filter(t=>c===10?t.scored_century_x:t.scored_century_xx); g+=`<g class="cm-beacon" data-tip="${esc(`the waymark cross at ${rom(c)}, ${claim.length?"claimed by "+claim.map(t=>t.name).join(", "):"unclaimed"} · end an Hour here for +1 CP`)}" transform="translate(${(x-worldR(c)*0.5).toFixed(0)} ${(y+worldR(c)*0.2).toFixed(0)})"><path d="M-3 6 L0 -8 L3 6 Z" fill="#c9a45c" stroke="#e8c05a" stroke-width=".7"/><circle cx="0" cy="-8" r="2.2" fill="#ffe9b0" class="cm-beam"/>${claim.map((t,i)=>`<circle cx="${-3+i*3}" cy="9" r="1.3" fill="${seatColor(t.name)}"/>`).join("")}</g>`; }
+    // the Grail Chapel of Corbenic (secret market, XI)
+    if(POS[11]){ const [x,y]=POS[11], open=!!view.secret_market_open;
+      g+=`<g class="cm-secret${open?" on":""}" data-tip="${esc(open?"THE HIDDEN HOSPICE is revealed off the road at XI, a secret market trades in its cellar":"a hidden pilgrims' hospice off the road at XI, end an Hour here to find its secret market")}" transform="translate(${(x+30).toFixed(0)} ${(y-16).toFixed(0)})">
+        <circle class="cm-sec-halo" r="19" fill="url(#cmSecHalo)" opacity="${open?1:.5}"/>
+        <g class="cm-sec-ring"><circle r="14" fill="none" stroke="#b0872f" stroke-width=".9" stroke-dasharray="2.5 4.5" opacity=".7"/></g>
+        <path d="M-8 8 V-4 L0 -12 L8 -4 V8 Z" fill="${open?"#f0e2bc":"rgba(240,226,188,.32)"}" stroke="#5a4020" stroke-width="1.3" ${open?"":'stroke-dasharray="3 2.5"'}/>
+        <path d="M0 -12 V-17 M-2 -15 H2" stroke="#5a4020" stroke-width="1.2"/>
+        <g opacity="${open?1:.55}"><path d="M-2.6 -2 h5.2 v1.4 q0 2.6 -2.6 3.1 q-2.6 -.5 -2.6 -3.1 z" fill="url(#cmGold)" stroke="#5a4020" stroke-width=".6"/><rect x="-.6" y="2.2" width="1.2" height="2.2" fill="#c9a23c"/><rect x="-2.2" y="4.4" width="4.4" height="1" fill="#c9a23c"/><circle class="cm-sec-core" cx="0" cy="-1" r="2.4" fill="${open?"#fff2c0":"#cbb277"}" opacity=".9"/></g>
+        ${open?`<text y="24" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="6.5" letter-spacing="1" fill="#6e4a12" stroke="#efe3c2" stroke-width="1.7" paint-order="stroke">HIDDEN HOSPICE</text>`:""}
+      </g>`; }
+    // delivery beacons, my hand's destinations
+    const self=view.travelers.find(t=>t.is_self);
+    if(self) for(const card of (self.hand||[])){ const c=card.delivery_century; if(!POS[c]) continue; const [x,y]=POS[c]; g+=`<g class="cm-flag" data-tip="${esc(`${card.display_name||card.name}, deliver at ${rom(c)} for +1 CP`)}" transform="translate(${x} ${(y-worldR(c)*0.5).toFixed(0)})"><path d="M-7 5 V-2 Q-7 -4 -5 -4 H5 Q7 -4 7 -2 V5 Z" fill="#e8b24a" stroke="#5a3a1a" stroke-width="1"/><path d="M-7 -1 H7 M0 -4 V5" stroke="#5a3a1a" stroke-width=".8"/><rect x="-1.4" y="-2" width="2.8" height="3" fill="#8a5a1a"/></g>`; }
+    // rivals' required deliveries (public)
+    for(const t of view.travelers){ if(t.is_self) continue; let k2=0; for(const card of (t.equipment||[])){ const c=card.delivery_century; if(c==null||!POS[c]) continue; const [x,y]=POS[c]; g+=`<g class="cm-flag" data-tip="${esc(`${t.name} must deliver ${card.display_name||card.name} at ${rom(c)}`)}" transform="translate(${(x+worldR(c)*0.5+k2*5).toFixed(0)} ${(y-worldR(c)*0.4).toFixed(0)}) scale(.72)"><path d="M-7 5 V-2 Q-7 -4 -5 -4 H5 Q7 -4 7 -2 V5 Z M-7 -1 H7" fill="${seatColor(t.name)}" stroke="rgba(0,0,0,.5)" stroke-width=".6" opacity=".85"/></g>`; k2++; } }
+    // restored (delivered) ignition rings drawn in worldG via cm-lit; here add a soft "always thus" tag on hover handled by tip
+    // travelers (ships) at their worlds
+    const byC={}; for(const t of view.travelers){ const sc=R.shown[t.name]!=null?R.shown[t.name]:t.century; (byC[sc]=byC[sc]||[]).push(t); }
+    for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue; const [x,y]=POS[c], R0=worldR(c);
+      if(ts.length>1) g+=`<circle cx="${x}" cy="${y}" r="${R0+18}" fill="none" stroke="#8a6a3a" stroke-width="1" stroke-dasharray="3 4" opacity=".55" data-tip="shared orbit, agreements possible"/>`;
+      // BERTHS, RE-CUT FOR THE AURA. These were laid out for a token 1.2x tall with no
+      // ring: four diagonals at ~16px from the star's heart. The aura is r=17.5, so at
+      // that spacing three rivals on one century became a single unreadable knot, and
+      // the two bottom berths sat exactly where the new century plate goes.
+      // The bottom-centre is now RESERVED for the plate; the berths ring the star above
+      // and beside it, far enough apart that no two auras touch.
+      // A LEASH, AND A SHORTER ONE. It got hard to tell which century a
+      // traveller was on, the token sitting halfway between two
+      // centuries. That came from pushing the
+      // berths out to 40px to stop the new auras from overlapping, and traded one
+      // legibility problem for a worse one, a token that belongs to nobody.
+      // Two fixes, and belt AND braces because "which century" must never be a guess:
+      //   1. they come home. The berths are re-angled so three of them still clear each
+      //      other at HALF the distance (the slots carry the separation now, not the
+      //      radius), so every traveller sits inside their own star's glow.
+      //   2. a LEASH, a short line, in their colour, from the century to them. Even when
+      //      two centuries crowd, the line says whose they are. You do not read it.
+      const SLOTS=[[0,-1.34],[-1.34,0.10],[1.34,0.10],[-1.0,-1.0],[1.0,-1.0]];
+      ts.forEach((t,i)=>{ const col=seatColor(t.name); const [dx,dy]=SLOTS[i%SLOTS.length]; const bx=Math.round(x+dx*(R0*0.40+10)), by=Math.round(y+dy*(R0*0.40+10)); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=false;
+        g+=`<g class="cm-shipg${dead&&!ghost?" cm-lost":""}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="0" stroke="${col}" stroke-width="1.8" stroke-linecap="round" opacity=".55" stroke-dasharray="2.6 2.4"/><g class="cm-aura"><circle r="14.5" fill="${col}" opacity=".16"/><circle r="14.5" fill="none" stroke="rgba(0,0,0,.52)" stroke-width="3.8"/><circle r="14.5" fill="none" stroke="${col}" stroke-width="2.4"/><circle r="12.6" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1"/></g>${t.is_self?`<circle r="20" fill="none" stroke="${col}" stroke-width="1.2" stroke-dasharray="3.4 3" opacity=".8"/>`:""}<g transform="scale(1.6)">${shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost})}</g><text y="24" text-anchor="middle" font-family="'Courier New',monospace" font-size="9.5" font-weight="bold" letter-spacing=".6" fill="${col}" stroke="#05060e" stroke-width="2.6" paint-order="stroke">${esc(initials(t.name))}</text></g>`;
+      });
+    }
+    g+=orderSlate();
+    g+=highlights();
+    return g;
+  }
+  function arcPath(from,to){ const A=from===0?SUN:POS[from], B=to===0?SUN:POS[to]; if(!A||!B) return ""; const dx=B[0]-A[0],dy=B[1]-A[1],L=Math.hypot(dx,dy)||1; const bow=Math.min(40,L*.16)*(rnd(from*31+to,1)>.5?1:-1); const mx=A[0]+dx/2-dy/L*bow, my=A[1]+dy/2+dx/L*bow; return `M ${A[0]} ${A[1]} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${B[0]} ${B[1]}`; }
+
+  /* ═══ SAILING ORDER (docked slate, hover-reveal) ═══ */
+  let ordHovered=false;
+  function orderSlate(){
+    if(!app||!app.view) return ""; const view=app.view;
+    const order=[...view.travelers].sort((a,b)=>b.century-a.century||b.gold-a.gold||b.energy-a.energy);
+    const bh=30+order.length*24+6; let rows="";
+    order.forEach((t,i)=>{ const col=seatColor(t.name), yy=30+i*24; const pers=t.delivered_periods||[]; const pips=["Origins","Ascension","Singularity"].map((p,k)=>`<path d="${(()=>{const cx=104+k*11;return `M${cx-3.5} ${yy-6} h7 v4 q0 3 -3.5 4.5 q-3.5 -1.5 -3.5 -4.5 z`;})()}" fill="${pers.includes(p)?PHUE[p]:"none"}" stroke="${PHUE[p]}" stroke-width=".8" opacity="${pers.includes(p)?1:.5}"/>`).join("");
+      rows+=`<g data-hlseat="${esc(t.name)}" data-tip="${esc(`${i+1}. ${t.name}${t.is_self?" (you)":""}, ${rom(t.century)} · ${t.gold}g · ${t.energy}e · ${t.contract_points||0} CP · realms ${pers.length}/3`)}"><text x="12" y="${yy}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="10" fill="#e9d6a6">${i+1}</text><g transform="translate(30 ${yy-3}) scale(.85)">${shipSVG(seatShip(t.name),col,{})}</g><text x="44" y="${yy}" font-family="Georgia,serif" font-weight="bold" font-size="9" fill="${col}">${esc(initials(t.name))} · ${rom(t.century)}</text>${pips}</g>`;
+    });
+    const lead=order[0];
+    return `<g class="cm-ord${ordHovered?" open":""}" transform="translate(0 92)">
+      <g class="cm-ord-body"><rect width="152" height="${bh}" rx="3" fill="#3a2812" stroke="#b0872f" stroke-width="1.4"/><rect x="3" y="3" width="146" height="${bh-6}" rx="2" fill="none" stroke="#7a5a24" stroke-width=".6"/><text x="76" y="18" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="9.5" letter-spacing="2" fill="#f0d68a">MUSTER ROLL</text>${rows}<text x="76" y="${bh-6}" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="6" fill="#c9a86a">farthest ahead rides first · shields = realms sworn</text></g>
+      <g class="cm-ord-pin"><path d="M0 0 H20 Q25 0 25 5 V120 Q25 125 20 125 H0 Z" fill="#3a2812" stroke="#b0872f" stroke-width="1.3"/><g transform="translate(12 22) scale(.95)">${lead?shipSVG(seatShip(lead.name),seatColor(lead.name),{}):""}</g><text transform="translate(16 56) rotate(90)" font-family="Georgia,serif" font-weight="bold" font-size="8" letter-spacing="2" fill="#f0d68a">MVSTER</text></g></g>`;
+  }
+  /* ═══ HIGHLIGHTS (decision focus) ═══ */
+  const BOLT="M 0 0 l -2.7 4.9 h 2 l -1.2 4.7 4.5 -6.1 h -2.1 l 2 -3.5 z";
+  function highlights(){
+    if(!mode) return ""; let g=""; const cand=pickCandidates();
+    const ring=(c,cls,tip)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const rr=(c===0?46:worldR(c)+13); g+=`<circle class="cm-glow ${cls}" data-c="${c}" data-tip="${esc(tip)}" cx="${P[0]}" cy="${P[1]}" r="${rr}"/>`; };
+    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P, ty=y-(c===0?52:worldR(c)+16); const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cm-cost"><rect x="${x-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
+    if(mode.kind==="travel"){
+      for(let c=1;c<=30;c++){ if(!cand.has(c)||c===mode.self) continue; if(c>mode.self||mode.ppc===0){ ring(c,"cm-go-future",`with the drift to ${rom(c)}, free`); tag(c,"FREE","free"); } else { const cost=armedCost(c); const risk=cost>=mode.energy; ring(c,risk?"cm-go-risk":"cm-go-past",`beat upstream to ${rom(c)}, ${cost} energy${risk?" (this could strand you)":""}`); tag(c,String(cost),risk?"risk":"cost"); } }
+      if(cand.has(0)){ ring(0,"cm-go-risk",`the final plunge into the Dead Sun, ends the game (+2 CP)`); tag(0,String(armedCost(0)),"risk"); }
+    } else if(mode.kind==="merchant"){ for(const c of mode.centuries) if(POS[c]) ring(c,"cm-go-merch",`send the hauler to ${rom(c)}`); }
+    else if(mode.kind==="century"){ for(const c of mode.centuries) if(POS[c]) ring(c,"cm-go-target",`target ${rom(c)}`); }
+    return g;
+  }
+  function commandText(){
+    if(!mode) return "";
+    if(mode.kind==="travel"){ const hasF=[...(travelCandidates()||[])].some(c=>c>mode.self&&c!==0); const clause=mode.ppc===0?` · <b class="cg">the Compass grants this ride FREE</b>`:hasF?"":` · <b class="cn">you sit at the newest age, only the PAST lies open</b>`; return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + `PLOT A RIDE: up to ${mode.max} ${mode.max===1?"league":"leagues"} · <b class="cg">green road = toward the future, free</b> · <b class="cm">amber road = into the past, costs energy</b>${clause} · <span class="cm-anchor">HOLD at ${rom(mode.self)}</span>`; }
+    if(mode.kind==="merchant") return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + "SEND THE PEDDLER: choose the site he rides to";
+    return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + "CHOOSE A SITE";
+  }
+
+    /* ═══ FX THEATER (serialized) ═══ */
+  /* ═══ THE STALL, the bug that made the game unplayable ═══════════════════════
+     drainFx() lives at the END of renderLive(). When I gated renderLive() on "am I the
+     skin on screen?" I put the `return` ABOVE the drain. The moment the traveller's
+     period switched the visible skin, this map's fx queue started filling and never
+     emptied, and game.js (line 300) holds the ENTIRE paced event queue open on that
+     flag before it will prompt for ANY decision:
+         for (let w = 0; w < 80 && window.__seaPresenting(); w++) await this._sleep(150);
+     A permanently-true flag therefore taxed every action in the game with a multi-second
+     dead stall. After buying an item it took about 6 seconds before you could
+     buy the next one, which killed the game.
+     Off-screen the theatre plays to an empty house, so it plays INSTANTLY: bank the
+     state, drop the animation, clear the flags. Plus a watchdog, because a flag that can
+     freeze the whole game must be able to unstick itself. ═══════════════════════════ */
+  let fxBusy=false, renderPending=false, fxGuard=null;
+  function __flushFxSilently(){
+    // and DROP OUR ORDER. An off-screen chart holding a stale command banner is what the
+    // pip-boy mirror used to latch onto and pin over the matrix forever.
+    try{ const r=document.getElementById("timeline-rail"); const c=r&&r.querySelector(".cm-cmd");
+      if(c) c.innerHTML=""; }catch(e){} R.fx.length=0; if(fxGuard){clearTimeout(fxGuard); fxGuard=null;}
+    fxBusy=false; renderPending=false; R.sailing=false; }
+  function fxG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-ori .cm-fx"); }
+  function liveG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-ori .cm-live"); }
+  function drainFx(){ if(REDUCED){ R.fx.length=0; return; } if(fxBusy) return; const f=R.fx.shift(); if(!f) return; fxBusy=true;
+    if(fxGuard) clearTimeout(fxGuard);
+    fxGuard=setTimeout(()=>{ fxGuard=null; if(fxBusy){ fxBusy=false; drainFx(); } },6000);   // watchdog: never hang the game
+    const done=ms=>setTimeout(()=>{ if(fxGuard){clearTimeout(fxGuard); fxGuard=null;} fxBusy=false; if(renderPending){renderPending=false; renderNow();} drainFx();},ms);
+    try{ playFx(f,done); }catch(e){ fxBusy=false; } }
+  function comet(from,to,col,onArrive,ship){
+    const svg=fxG(); if(!svg||REDUCED){ onArrive&&onArrive(); return; }
+    const d=roadSlice(from,to)||arcPath(from,to); if(!d){ onArrive&&onArrive(); return; }
+    const p=document.createElementNS(NS,"path"); p.setAttribute("d",d); p.setAttribute("fill","none"); p.setAttribute("stroke",col); p.setAttribute("stroke-width","2.4"); p.setAttribute("stroke-linecap","round"); p.setAttribute("opacity",".9"); svg.appendChild(p);
+    const L=p.getTotalLength(); const dur=Math.min(2300,520+L*1.5); p.style.strokeDasharray=L; p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:dur,easing:"cubic-bezier(.35,.1,.35,1)",fill:"forwards"});
+    const b=document.createElementNS(NS,"g"); b.innerHTML=`<g transform="scale(1.2)">${shipSVG(ship||0,col,{})}</g><circle r="10" fill="none" stroke="${col}" stroke-width="1" opacity=".4"/>`; b.style.offsetPath=`path("${d}")`; b.style.offsetRotate="auto"; svg.appendChild(b);
+    b.animate([{offsetDistance:"0%"},{offsetDistance:"100%"}],{duration:dur,easing:"cubic-bezier(.35,.1,.35,1)"}).onfinish=()=>b.remove();
+    stellarSail(dur);
+    setTimeout(()=>{ const P=to===0?SUN:POS[to];
+      if(P){ const ring=document.createElementNS(NS,"circle"); ring.setAttribute("cx",P[0]); ring.setAttribute("cy",P[1]); ring.setAttribute("r","6"); ring.setAttribute("fill","none"); ring.setAttribute("stroke","#8a6a3a"); ring.setAttribute("stroke-width","2"); svg.appendChild(ring);
+        ring.animate([{r:6,opacity:.8},{r:24,opacity:0}],{duration:460,easing:"ease-out"}).onfinish=()=>ring.remove(); }
+      p.animate([{opacity:.9},{opacity:0}],{duration:600,fill:"forwards"}).onfinish=()=>p.remove(); onArrive&&onArrive(); }, dur);
+  }
+  function flare(c,col){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return; for(let i=0;i<10;i++){ const a=i/10*6.28, ln=document.createElementNS(NS,"line"); ln.setAttribute("x1",P[0]+Math.cos(a)*8); ln.setAttribute("y1",P[1]+Math.sin(a)*8); ln.setAttribute("x2",P[0]+Math.cos(a)*24); ln.setAttribute("y2",P[1]+Math.sin(a)*24); ln.setAttribute("stroke",col); ln.setAttribute("stroke-width","2"); ln.setAttribute("stroke-linecap","round"); svg.appendChild(ln); ln.animate([{opacity:0},{opacity:1,offset:.3},{opacity:0}],{duration:700,delay:i*30}).onfinish=()=>ln.remove(); } }
+  function floatText(c,txt,col){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return; const t=document.createElementNS(NS,"text"); t.setAttribute("x",P[0]); t.setAttribute("y",P[1]-8); t.setAttribute("text-anchor","middle"); t.setAttribute("font-family","'Courier New',monospace"); t.setAttribute("font-weight","bold"); t.setAttribute("font-size","15"); t.setAttribute("fill",col); t.setAttribute("stroke","#05060e"); t.setAttribute("stroke-width","3"); t.setAttribute("paint-order","stroke"); t.style.transformBox="fill-box"; t.style.transformOrigin="center"; t.textContent=txt; svg.appendChild(t); t.animate([{transform:"translateY(6px)",opacity:0},{transform:"translateY(-4px)",opacity:1,offset:.3},{transform:"translateY(-26px)",opacity:0}],{duration:1100,easing:"cubic-bezier(.2,.8,.4,1)"}).onfinish=()=>t.remove(); }
+  function holePos(per){ const b=BHP[per]; return b?[Math.round(b[0]*W/820), b[1]]:null; }
+  function absorbToHole(c,per){ const svg=fxG(); const P=(c===0?SUN:POS[c]); const H2=holePos(per); if(!svg||!P||!H2||REDUCED) return; const col=PHUE[per]||"#9a8cf0";
+    const dx=H2[0]-P[0], dy=H2[1]-P[1]; const mx=P[0]+dx*0.5-dy*0.22, my=P[1]+dy*0.5+dx*0.22; const d=`M ${P[0]} ${P[1]} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${H2[0]} ${H2[1]}`;
+    const gg=document.createElementNS(NS,"g"); gg.innerHTML=`<path d="M0 -6 L5 0 L0 6 L-5 0 Z" fill="${col}" stroke="#fff" stroke-width=".8"/><circle r="1.8" fill="#fff"/>`; gg.style.offsetPath=`path("${d}")`; gg.style.offsetRotate="auto"; svg.appendChild(gg);
+    gg.animate([{offsetDistance:"0%",opacity:0},{offsetDistance:"10%",opacity:1,offset:.12},{offsetDistance:"80%",opacity:1,offset:.72},{offsetDistance:"100%",opacity:0}],{duration:1050,easing:"cubic-bezier(.45,0,.85,.35)"}).onfinish=()=>gg.remove();
+    setTimeout(()=>{ const hg=liveG()&&liveG().querySelector(`.cm-bhole[data-period="${per}"] .cm-bh-glow`); if(hg){ try{ hg.animate([{transform:"scale(1)"},{transform:"scale(1.5)"},{transform:"scale(1)"}],{duration:520,easing:"ease-out"}); }catch(_){} } const dk=liveG()&&liveG().querySelector(`.cm-bhole[data-period="${per}"] .cm-bh-disk`); if(dk){ try{ dk.animate([{opacity:1},{opacity:.4},{opacity:.9}],{duration:520}); }catch(_){} } }, 990);
+  }
+  function chrSfx(){ if(!audible()) return null; const A=window.__audio; return (A&&A.ctx)?{C:A.ctx,sfx:A.sfxBus||A.master||A.ctx.destination,mas:A.master||A.ctx.destination}:null; }
+  function stellarSail(dur){ try{ const S=chrSfx(); if(!S) return; const {C,sfx}=S, t0=C.currentTime, D=Math.min(2.4,Math.max(0.8,(dur||900)/1000));
+    const hoof=(at,vol)=>{
+      const o=C.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(115,at); o.frequency.exponentialRampToValueAtTime(52,at+0.07);
+      const g=C.createGain(); g.gain.setValueAtTime(0,at); g.gain.linearRampToValueAtTime(vol,at+0.006); g.gain.exponentialRampToValueAtTime(0.0001,at+0.09);
+      o.connect(g); g.connect(sfx); o.start(at); o.stop(at+0.1);
+      const k=C.createOscillator(); k.type="triangle"; k.frequency.setValueAtTime(340,at); k.frequency.exponentialRampToValueAtTime(180,at+0.03);
+      const kg=C.createGain(); kg.gain.setValueAtTime(0,at); kg.gain.linearRampToValueAtTime(vol*0.55,at+0.003); kg.gain.exponentialRampToValueAtTime(0.0001,at+0.045);
+      k.connect(kg); kg.connect(sfx); k.start(at); k.stop(at+0.05);
+      const nb=C.createBuffer(1,Math.ceil(C.sampleRate*0.03),C.sampleRate); const dd=nb.getChannelData(0);
+      for(let i=0;i<dd.length;i++) dd[i]=(Math.random()*2-1)*Math.pow(1-i/dd.length,2);
+      const ns=C.createBufferSource(); ns.buffer=nb; const bp=C.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=850; bp.Q.value=1.4;
+      const ng=C.createGain(); ng.gain.value=vol*0.35; ns.connect(bp); bp.connect(ng); ng.connect(sfx); ns.start(at); ns.stop(at+0.035);
+    };
+    const stride=0.4, n=Math.max(2,Math.round(D/stride));
+    for(let i=0;i<n;i++){ const base=t0+0.06+i*stride, j=()=> (Math.random()-0.5)*0.022;
+      hoof(base+j(),0.26); hoof(base+0.095+j(),0.21); hoof(base+0.19+j(),0.38); }
+    const rb=C.createBuffer(1,Math.ceil(C.sampleRate*(D+0.2)),C.sampleRate); const rd=rb.getChannelData(0); let lp2=0;
+    for(let i=0;i<rd.length;i++){ lp2=lp2*0.965+(Math.random()*2-1)*0.035; rd[i]=lp2*1.8; }
+    const rs=C.createBufferSource(); rs.buffer=rb; const rf=C.createBiquadFilter(); rf.type="lowpass"; rf.frequency.value=170;
+    const rg=C.createGain(); rg.gain.setValueAtTime(0.0001,t0); rg.gain.linearRampToValueAtTime(0.07,t0+0.2); rg.gain.setValueAtTime(0.07,t0+Math.max(0.3,D-0.25)); rg.gain.exponentialRampToValueAtTime(0.0001,t0+D+0.1);
+    rs.connect(rf); rf.connect(rg); rg.connect(sfx); rs.start(t0); rs.stop(t0+D+0.15);
+    const sb=C.createBuffer(1,Math.ceil(C.sampleRate*0.16),C.sampleRate); const sd=sb.getChannelData(0);
+    for(let i=0;i<sd.length;i++){ const env=Math.sin(Math.PI*i/sd.length); sd[i]=(Math.random()*2-1)*env*(0.6+0.4*Math.sin(i/60)); }
+    const ss=C.createBufferSource(); ss.buffer=sb; const sf=C.createBiquadFilter(); sf.type="bandpass"; sf.Q.value=1.1; sf.frequency.setValueAtTime(650,t0); sf.frequency.exponentialRampToValueAtTime(280,t0+0.15);
+    const sg=C.createGain(); sg.gain.value=0.09; ss.connect(sf); sf.connect(sg); sg.connect(sfx); ss.start(t0+0.02); ss.stop(t0+0.19);
+  }catch(e){} }
+  function blackholeAbsorb(){ try{ const S=chrSfx(); if(!S) return; const {C,mas}=S, t=C.currentTime;
+    [[1,0.16],[2.7,0.06],[5.2,0.03]].forEach(([m,g0])=>{ const o=C.createOscillator(); o.type="sine"; o.frequency.value=523.25*m; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(mas); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(g0,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+2.3); o.start(t); o.stop(t+2.4); });
+    [392,494,587].forEach((fr,i)=>{ const o=C.createOscillator(); o.type="sine"; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(mas); o.frequency.value=fr; const st=t+0.1+i*0.08; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.05,st+0.25); g.gain.setValueAtTime(0.05,st+0.6); g.gain.exponentialRampToValueAtTime(0.0001,st+1.5); o.start(st); o.stop(st+1.55); }); }catch(e){} }
+  function kintsugi(c){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return;
+    for(let i=0;i<6;i++){ const a=rnd(c,i)*6.283, x2=P[0]+Math.cos(a)*20, y2=P[1]+Math.sin(a)*20, mx=P[0]+Math.cos(a)*11+(rnd(i,c)-0.5)*8, my=P[1]+Math.sin(a)*11;
+      const p=document.createElementNS(NS,"path"); p.setAttribute("d",`M ${P[0]} ${P[1]} L ${mx.toFixed(0)} ${my.toFixed(0)} L ${x2.toFixed(0)} ${y2.toFixed(0)}`); p.setAttribute("stroke","url(#cmGold)"); p.setAttribute("stroke-width","2.6"); p.setAttribute("fill","none"); p.setAttribute("stroke-linecap","round"); svg.appendChild(p);
+      const L=p.getTotalLength(); p.style.strokeDasharray=L; p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:520,easing:"ease-out",fill:"forwards"});
+      setTimeout(()=>{ p.animate([{opacity:1},{opacity:0}],{duration:620,fill:"forwards"}).onfinish=()=>p.remove(); }, 820); }
+    flare(c,"#f0d068"); }
+  function dragonFire(c){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return;
+    const mx=MOUTH[0], my=MOUTH[1]; const cx2=(mx+P[0])/2+(P[1]-my)*0.16, cy2=(my+P[1])/2-(P[0]-mx)*0.16;
+    const d=`M ${mx.toFixed(0)} ${my.toFixed(0)} Q ${cx2.toFixed(0)} ${cy2.toFixed(0)} ${P[0]} ${P[1]}`;
+    const layers=[["#7a1c0e",13,.5],["#e8541f",8,.85],["#f6a03a",4.5,.95],["#fbe89a",1.8,1]];
+    const els=[];
+    for(const [col,wd,op] of layers){ const p=document.createElementNS(NS,"path"); p.setAttribute("d",d); p.setAttribute("fill","none"); p.setAttribute("stroke",col); p.setAttribute("stroke-width",wd); p.setAttribute("stroke-linecap","round"); p.setAttribute("opacity",op); svg.appendChild(p); els.push(p);
+      const L=p.getTotalLength(); p.style.strokeDasharray=L; p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:380,easing:"cubic-bezier(.5,0,.75,.4)",fill:"forwards"}); }
+    // fire tongues licking off the stream
+    const base=els[1]; const Lb=base.getTotalLength();
+    for(let i=0;i<7;i++){ setTimeout(()=>{ try{ const pt=base.getPointAtLength(Lb*(0.25+0.7*Math.random()));
+      const fl=document.createElementNS(NS,"path"); const a=Math.random()*6.28, ln=6+Math.random()*10;
+      fl.setAttribute("d",`M ${pt.x.toFixed(0)} ${pt.y.toFixed(0)} q ${(Math.cos(a)*ln*0.6).toFixed(0)} ${(Math.sin(a)*ln*0.6-4).toFixed(0)} ${(Math.cos(a)*ln).toFixed(0)} ${(Math.sin(a)*ln-8).toFixed(0)}`);
+      fl.setAttribute("stroke","#f6a03a"); fl.setAttribute("stroke-width","2.4"); fl.setAttribute("fill","none"); fl.setAttribute("stroke-linecap","round"); svg.appendChild(fl);
+      fl.animate([{opacity:0},{opacity:.95,offset:.3},{opacity:0}],{duration:420}).onfinish=()=>fl.remove(); }catch(_){} }, 120+i*70); }
+    setTimeout(()=>{ // impact: fireball + ember shower + char
+      const fb=document.createElementNS(NS,"circle"); fb.setAttribute("cx",P[0]); fb.setAttribute("cy",P[1]); fb.setAttribute("r","4"); fb.setAttribute("fill","#f6a03a"); svg.appendChild(fb);
+      fb.animate([{r:4,opacity:1},{r:22,opacity:.9,offset:.4},{r:30,opacity:0}],{duration:520,easing:"ease-out"}).onfinish=()=>fb.remove();
+      for(let i=0;i<10;i++){ const em=document.createElementNS(NS,"circle"); const a=Math.random()*6.28, sp=14+Math.random()*22;
+        em.setAttribute("cx",P[0]); em.setAttribute("cy",P[1]); em.setAttribute("r",(1+Math.random()*1.8).toFixed(1)); em.setAttribute("fill",Math.random()<.5?"#e8541f":"#fbe89a"); svg.appendChild(em);
+        em.animate([{transform:"translate(0,0)",opacity:1},{transform:`translate(${(Math.cos(a)*sp).toFixed(0)}px,${(Math.sin(a)*sp-10).toFixed(0)}px)`,opacity:0}],{duration:600+Math.random()*300,easing:"ease-out"}).onfinish=()=>em.remove(); }
+      for(const el of els){ el.animate([{opacity:el.getAttribute("opacity")},{opacity:0}],{duration:420,fill:"forwards"}).onfinish=()=>el.remove(); }
+      flare(c,"#e8541f");
+    },400);
+  }
+  function crackGlass(c){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return;
+    for(let i=0;i<4;i++){ const a=rnd(c*3,i)*6.283, x2=P[0]+Math.cos(a)*22, y2=P[1]+Math.sin(a)*22, mx=P[0]+Math.cos(a)*11+(rnd(i,c)-0.5)*7, my=P[1]+Math.sin(a)*11;
+      const p=document.createElementNS(NS,"path"); p.setAttribute("d",`M ${P[0]} ${P[1]} L ${mx.toFixed(0)} ${my.toFixed(0)} L ${x2.toFixed(0)} ${y2.toFixed(0)}`); p.setAttribute("stroke","#160d13"); p.setAttribute("stroke-width","1.9"); p.setAttribute("fill","none"); svg.appendChild(p);
+      p.animate([{opacity:0},{opacity:1,offset:.18},{opacity:1,offset:.7},{opacity:0}],{duration:920}).onfinish=()=>p.remove(); } }
+  function waxSeal(c){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return;
+    const gg=document.createElementNS(NS,"g"); gg.innerHTML=`<circle r="9" fill="#a8241a" stroke="#5a1210" stroke-width="1.4"/><circle r="6.4" fill="none" stroke="#7a1a12" stroke-width=".9"/><path d="M 0 -4 v8 M -4 0 h8" stroke="#e8b8a0" stroke-width="1.6"/>`;
+    gg.setAttribute("transform",`translate(${P[0]+16} ${P[1]+12})`); gg.style.transformBox="fill-box"; gg.style.transformOrigin="center"; svg.appendChild(gg);
+    gg.animate([{transform:"scale(2.1)",opacity:0},{transform:"scale(.92)",opacity:1,offset:.55},{transform:"scale(1)",opacity:1}],{duration:460,easing:"cubic-bezier(.2,.8,.3,1)"});
+    setTimeout(()=>{ gg.animate([{opacity:1},{opacity:0}],{duration:900,fill:"forwards"}).onfinish=()=>gg.remove(); },2600);
+  }
+  function churchChoir(){ try{ const S=chrSfx(); if(!S) return; const {C,mas}=S, t=C.currentTime;
+    [[261.63,.10],[329.63,.075],[392,.075],[523.25,.055]].forEach(([fr,g0],i)=>{
+      for(const det of [-4,4]){ const o=C.createOscillator(); o.type="triangle"; o.frequency.value=fr; o.detune.value=det;
+        const g=C.createGain(); g.gain.value=0; const lp=C.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1250;
+        o.connect(g); g.connect(lp); lp.connect(mas);
+        g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(g0/2,t+0.35+i*0.07); g.gain.setValueAtTime(g0/2,t+1.6); g.gain.exponentialRampToValueAtTime(0.0001,t+3.4);
+        o.start(t); o.stop(t+3.5); } });
+    [1046.5,1568].forEach((fr,i)=>{ const o=C.createOscillator(); o.type="sine"; o.frequency.value=fr; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(mas); const st=t+0.18+i*0.45; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.05/(1+i),st+0.012); g.gain.exponentialRampToValueAtTime(0.0001,st+2.4); o.start(st); o.stop(st+2.5); });
+  }catch(e){} }
+  function dragonRoar(){ try{ const S=chrSfx(); if(!S) return; const {C,mas}=S, t=C.currentTime;
+    const nb=C.createBuffer(1,Math.ceil(C.sampleRate*1.1),C.sampleRate); const dd=nb.getChannelData(0); let last=0;
+    for(let i=0;i<dd.length;i++){ last=(last+(Math.random()*2-1)*0.25)*0.96; dd[i]=last*Math.pow(1-i/dd.length,0.7)*3; }
+    const ns=C.createBufferSource(); ns.buffer=nb; const bp=C.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=0.8;
+    bp.frequency.setValueAtTime(420,t); bp.frequency.exponentialRampToValueAtTime(95,t+0.9);
+    const g=C.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.32,t+0.09); g.gain.exponentialRampToValueAtTime(0.0001,t+1.05);
+    ns.connect(bp); bp.connect(g); g.connect(mas); ns.start(t); ns.stop(t+1.1);
+    const o=C.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(88,t); o.frequency.exponentialRampToValueAtTime(42,t+0.8);
+    const g2=C.createGain(); g2.gain.setValueAtTime(0,t); g2.gain.linearRampToValueAtTime(0.13,t+0.06); g2.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+    o.connect(g2); g2.connect(mas); o.start(t); o.stop(t+0.95);
+    for(let i=0;i<6;i++){ const cb=C.createBuffer(1,Math.ceil(C.sampleRate*0.05),C.sampleRate); const cd=cb.getChannelData(0);
+      for(let j=0;j<cd.length;j++) cd[j]=(Math.random()*2-1)*Math.pow(1-j/cd.length,2);
+      const cs=C.createBufferSource(); cs.buffer=cb; const hp=C.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
+      const cg=C.createGain(); cg.gain.value=0.05; cs.connect(hp); hp.connect(cg); cg.connect(mas); const st=t+0.15+Math.random()*0.6; cs.start(st); cs.stop(st+0.05); }
+  }catch(e){} }
+  function kintsugiChime(){ try{ const S=chrSfx(); if(!S) return; const {C,mas}=S, t=C.currentTime;
+    [523.25,659.25,783.99,1046.5].forEach((fr,i)=>{ const o=C.createOscillator(); o.type="sine"; o.frequency.value=fr; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(mas); const st=t+i*0.05; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.09/(1+i*0.4),st+0.01); g.gain.exponentialRampToValueAtTime(0.0001,st+2.2); o.start(st); o.stop(st+2.3); });
+    for(let i=0;i<4;i++){ const o=C.createOscillator(); o.type="triangle"; o.frequency.value=1568+i*220; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(mas); const st=t+0.1+i*0.06; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.015,st+0.008); g.gain.exponentialRampToValueAtTime(0.0001,st+0.5); o.start(st); o.stop(st+0.55); } }catch(e){} }
+  function glassShatter(){ try{ const S=chrSfx(); if(!S) return; const {C,mas}=S, t=C.currentTime;
+    const nb=C.createBuffer(1,Math.ceil(C.sampleRate*0.4),C.sampleRate); const d=nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.6); const ns=C.createBufferSource(); ns.buffer=nb; const bp=C.createBiquadFilter(); bp.type="highpass"; bp.frequency.value=2300; const g=C.createGain(); g.gain.value=0.13; ns.connect(bp); bp.connect(g); g.connect(mas); ns.start(t); ns.stop(t+0.4);
+    for(let i=0;i<7;i++){ const o=C.createOscillator(); o.type="triangle"; o.frequency.value=1700+Math.random()*2400; const g2=C.createGain(); g2.gain.value=0; o.connect(g2); g2.connect(mas); const st=t+0.02+Math.random()*0.26; g2.gain.setValueAtTime(0,st); g2.gain.linearRampToValueAtTime(0.032,st+0.005); g2.gain.exponentialRampToValueAtTime(0.0001,st+0.24); o.start(st); o.stop(st+0.27); } }catch(e){} }
+    function playFx(f,done){
+    if(f.t==="trail"){ R.shown[f.seat]=-1; renderNow(); comet(f.from,f.to,seatColor(f.seat),()=>{ R.shown[f.seat]=f.to; renderNow(); flare(f.to,seatColor(f.seat)); snd("chart_stamp"); if(f.to===0) floatText(0,"YEAR ZERO","#efe6f8"); }, seatShip(f.seat)); const A=f.from===0?SUN:POS[f.from],B=f.to===0?SUN:POS[f.to]; const dur=A&&B?Math.min(1700,600+Math.hypot(B[0]-A[0],B[1]-A[1])*2.2):900; done(dur+260); return; }
+    if(f.t==="deliver"){ R.restored.add(f.c); renderNow(); kintsugi(f.c); churchChoir(); waxSeal(f.c); const _e=singleEra(f.c); const _per=Object.keys(PERIOD_ERAS).find(pp=>PERIOD_ERAS[pp].includes(_e)); if(_per) absorbToHole(f.c,_per); floatText(f.c,"+1 CP","#f0d068"); done(1500); return; }
+    if(f.t==="paradox"){ dragonFire(f.c); floatText(f.c,"PARADOX","#b3402e"); const el=liveG()&&liveG().querySelector(`.cm-world[data-c="${f.c}"]`); if(el) el.animate([{transform:el.getAttribute("transform")},{transform:el.getAttribute("transform")+" translate(-2px,1px)"},{transform:el.getAttribute("transform")+" translate(2px,-1px)"},{transform:el.getAttribute("transform")}],{duration:300}); crackGlass(f.c); dragonRoar(); done(900); return; }
+    if(f.t==="wreck"){ flare(f.c,"#b3402e"); floatText(f.c,"TERMINATED","#ff6a5a"); snd("chart_creak"); done(900); return; }
+    if(f.t==="milestone"){ flare(f.c,"#e8b24a"); floatText(f.c,"+1 CP","#e8b24a"); snd("chart_bell"); done(800); return; }
+    if(f.t==="merchant"){ R.merchantShown=null; renderNow(); snd("chart_creak"); done(500); return; }
+    if(f.t==="secret"){ renderNow(); if(POS[11]){ flare(11,"#c9a23c"); floatText(11,"REVEALED","#c9a23c"); } snd("chart_bell",{warm:true}); done(850); return; }
+    done(60);
+  }
+
+  /* ═══ INTERACTION ═══ */
+  function plotTravel(fromC,toC){ const st=selfT(); if(!st) return; R.preplot=`${fromC}:${toC}`; R.travelFrom=fromC; R.sailing=true; R.shown[st.name]=-1; renderNow(); comet(fromC,toC,seatColor(st.name),()=>{ const _r=selfT(); const _land=(_r&&_r.century!==R.travelFrom)?_r.century:toC; R.shown[st.name]=_land; R.pendingSelf=_land; R.travelFrom=null; R.sailing=false; renderNow(); flare(toC,seatColor(st.name)); snd("chart_stamp"); if(toC===0) floatText(0,"YEAR ZERO","#efe6f8"); }, seatShip(st.name)); }
+  let prevPrev=null;
+  function setPreview(c){ const svg=fxG(); if(prevPrev){ prevPrev.remove(); prevPrev=null; } if(c==null||!mode||mode.kind!=="travel"||c===mode.self||!svg||REDUCED) return; const cand=travelCandidates(); if(!cand||!cand.has(c)) return; const d=roadSlice(mode.self,c)||arcPath(mode.self,c); const p=document.createElementNS(NS,"path"); p.setAttribute("d",d); p.setAttribute("fill","none"); p.setAttribute("stroke",(armedCost(c)>=mode.energy&&armedCost(c))?"#ff6a5a":(c>mode.self||mode.ppc===0)?"#6ff0c0":"#e6b95a"); p.setAttribute("stroke-width","2"); p.setAttribute("stroke-dasharray","3 6"); p.setAttribute("opacity",".8"); p.setAttribute("stroke-linecap","round"); svg.appendChild(p); prevPrev=p; }
+  function nearestStar(e){ const rail=document.getElementById("timeline-rail"); const svg=rail&&rail.querySelector(".cplot-ori .pc-chart"); if(!svg) return null; const r=svg.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H; let best=null,bd=1e9; for(let c=1;c<=30;c++){ if(!POS[c]) continue; const d=Math.hypot(x-POS[c][0],y-POS[c][1]); if(d<bd){bd=d;best=c;} } const ds=Math.hypot(x-SUN[0],y-SUN[1]); if(ds<bd){bd=ds;best=0;} return bd<52?best:null; }
+  function onWorldClick(c){
+    if(!app||!mode||!app.pendingReq) return;
+    if(mode.kind==="travel"){ if(c===mode.self){ snd("chart_stamp"); app.respond({direction:1,distance:0}); mode=null; scheduleLive(); return; } const cand=travelCandidates(); if(!cand||!cand.has(c)){ snd("chart_brush"); return; } if(c===0){ plotTravel(mode.self,0); app.respond({direction:-1,distance:mode.self}); mode=null; scheduleLive(); return; } const d=Math.abs(c-mode.self); plotTravel(mode.self,c); app.respond({direction:c>mode.self?1:-1,distance:d}); mode=null; scheduleLive(); }
+    else if(mode.kind==="merchant"&&mode.centuries.has(c)){ snd("chart_stamp"); app.respond({century:c}); mode=null; scheduleLive(); }
+    else if(mode.kind==="century"&&mode.centuries.has(c)){ snd("chart_stamp"); app.respond({choice:c}); mode=null; scheduleLive(); }
+    else snd("chart_brush");
+  }
+
+  /* ═══ SKIN + RENDER ═══ */
+  let skinInit=false, warping=false;
+  function registryHTML(period){ if(!app||!app.view) return "";
+    const eras=PERIOD_ERAS[period]||[], items=R.deliveries.filter(dv=>ERAS_OF(dv.century).some(e2=>eras.includes(e2)));
+    const covered=app.view.travelers.filter(t=>(t.delivered_periods||[]).includes(period));
+    const nm=dv=>{ const c=dv.card; const id=(typeof c==="string")?c:(c&&(c.display_name||c.name)); return (app.nameMap&&app.nameMap[id])||id||"a relic"; };
+    const icon=seat=>`<svg width="17" height="17" viewBox="-11 -11 22 22" style="vertical-align:-4px">${shipSVG(seatShip(seat),seatColor(seat),{})}</svg>`;
+    const tiles=items.map(dv=>`<div class="cm-tile"><div class="cm-tn">${esc(nm(dv))}</div><div class="cm-tk">relic · at ${rom(dv.century)} · Hour ${dv.hour}</div><div class="cm-tc">${icon(dv.seat)} ${esc(dv.seat)}</div></div>`).join("");
+    const cov=covered.length?`<div style="margin-top:4px">sealed by ${covered.map(t=>`${icon(t.name)} <b style="color:${seatColor(t.name)}">${esc(t.name)}</b>`).join(" · ")}</div>`:"";
+    return `<b>THE ${esc(period).toUpperCase()} RECEPTOR-CHURCH</b>, relics of this realm are received here<div class="cm-tiles">${tiles||"<i>the reliquary stands empty</i>"}</div>${cov}`;
+  }
+  function manifestHTML(){ if(!app||!app.view) return ""; const v=app.view, dice=v.merchant_movement_dice||1;
+    const tiles=(v.market_revealed||[]).map(c2=>`<div class="cm-tile"><div class="cm-tn">${esc(c2.display_name||c2.name||"")}</div><div class="cm-tk">${esc(c2.kind_label||"")}</div><div class="cm-td">${esc(c2.description||"")}</div><div class="cm-tc">${c2.gold_cost!=null?esc(String(c2.gold_cost))+" gold":"--"}</div></div>`).join("");
+    return `<b>THE PEDDLER'S PACK</b>, halted at ${rom(v.merchant_century)}<br><span style="color:#8a5a12">${dice}d3 wander · barter when near</span><div class="cm-tiles">${tiles||"<i>the cart stands bare</i>"}</div>`; }
+    function updateSkin(){
+    const r=document.getElementById("timeline-rail"); if(!r) return;
+    const s=selfT(); const want=window.__forceSkin?(window.__forceSkin==="ori"):((s?periodOf(s.century):"none")==="Origins"); const cur=r.classList.contains("skin-ori");
+    const era=(w)=>{ try{ document.body.classList.toggle("era-ori", !!w); }catch(e){} };
+    if(!skinInit){ skinInit=true; r.classList.toggle("skin-ori",want); era(want); renderNow(); return; }
+    if(want===cur) return; if(warping || window.__skinWarping){ r.classList.toggle("skin-ori",want); era(want); renderNow(); return; }
+    warping=true; playWarp(want, (s?periodOf(s.century):"Origins"), ()=>{ r.classList.toggle("skin-ori",want); era(want); renderNow(); });
+  }
+  function warpSound(){ try{ const A=window.__audio; if(!A||!A.ctx) return; const C=A.ctx, bus=A.master||C.destination, t=C.currentTime;
+    // ONE mechanical gesture: three ratchet teeth -> heavy drum CLUNK -> steam breath on the open
+    [0,0.05,0.10].forEach((d,i)=>{ const o=C.createOscillator(); o.type="square"; o.frequency.value=520-i*90; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(bus); g.gain.setValueAtTime(0,t+d); g.gain.linearRampToValueAtTime(0.05,t+d+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+d+0.05); o.start(t+d); o.stop(t+d+0.06); });
+    const o=C.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(150,t+0.17); o.frequency.exponentialRampToValueAtTime(58,t+0.36); const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(bus); g.gain.setValueAtTime(0,t+0.17); g.gain.linearRampToValueAtTime(0.30,t+0.185); g.gain.exponentialRampToValueAtTime(0.0001,t+0.52); o.start(t+0.17); o.stop(t+0.55);
+    const nb=C.createBuffer(1,C.sampleRate>>1,C.sampleRate); const dd=nb.getChannelData(0); for(let i=0;i<dd.length;i++) dd[i]=Math.random()*2-1; const ns=C.createBufferSource(); ns.buffer=nb; const nf=C.createBiquadFilter(); nf.type="highpass"; nf.frequency.value=3200; const ng=C.createGain(); ng.gain.value=0; ns.connect(nf); nf.connect(ng); ng.connect(bus); ng.gain.setValueAtTime(0,t+0.36); ng.gain.linearRampToValueAtTime(0.045,t+0.41); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.75); ns.start(t+0.36); ns.stop(t+0.8); }catch(e){} }
+  function playWarp(entering, per, atFlash){
+    // THE SHUTTER: the manopla swaps the record drum, iris closes, the era
+    // plate CHUNKS over, iris opens on the new chart. Mechanical, <1s, no text.
+    if(typeof per==="function"){ atFlash=per; per=null; }
+    const rail=document.getElementById("timeline-rail"); if(!rail){ atFlash&&atFlash(); warping=false; window.__skinWarping=false; return; }
+    let w=rail.querySelector(".cplot-warp");
+    if(w && !w.classList.contains("iris-shutter")){ w.remove(); w=null; }
+    if(!w){ rail.insertAdjacentHTML("beforeend", `<div class="cplot-warp iris-shutter"><div class="iris-leaf"></div></div>`); w=rail.querySelector(".cplot-warp"); }
+    if(REDUCED){ atFlash&&atFlash(); warping=false; window.__skinWarping=false; return; }
+    window.__skinWarping=true;
+    try{ window.dispatchEvent(new CustomEvent("paradoxo:skinwarp")); }catch(e){}
+    w.classList.remove("opening"); void w.offsetWidth; w.classList.add("closing");
+    warpSound();
+    setTimeout(()=>{ atFlash&&atFlash(); }, 340);
+    setTimeout(()=>{ w.classList.remove("closing"); w.classList.add("opening"); }, 470);
+    setTimeout(()=>{ w.classList.remove("opening"); warping=false; window.__skinWarping=false; }, 1000);
+  }
+    let liveTimer=null;
+  let __dirty = false;
+  function __live() { const r = document.getElementById("timeline-rail");
+    return !!r && (r.classList.contains("skin-ori")); }
+  function scheduleLive(){ if(liveTimer) return; liveTimer=setTimeout(()=>{liveTimer=null; renderLive();},120); }
+  function renderNow(){ if(liveTimer){clearTimeout(liveTimer);liveTimer=null;} renderLive(true); }
+  function renderLive(force) {
+    // PERF: all three timeline skins live in the DOM at once, and all three ran
+    // this on every state tick, including the two you cannot see. The CPU profile
+    // caught them: 21.9 + 15.8 + 14.9 ms of self-time, on maps nobody is looking at.
+    // Skip the work while we are not the skin on screen; remember we fell behind and
+    // catch up the instant we become visible (ORIGINS).
+    // ═══ THE CHART COULD NEVER CHANGE ERA AGAIN ═══════════════════════════════════
+    // updateSkin() is NOT rendering. It is the function that DECIDES which of the three
+    // charts is on screen, it reads the traveller's century, works out the period, and
+    // plays the warp shutter that swaps the drum. It used to sit at the BOTTOM of this
+    // function, and my `if (!__live()) return` gate put it out of reach: __live() asks
+    // "am I the skin on screen?", so a chart that is NOT on screen could never run the
+    // one piece of code that would PUT it on screen. The only other caller is mount(),
+    // which runs once at boot. So the era the game started in was the era it was stuck
+    // in, forever, so travelling to the Origins left the castles behind.
+    // It decides liveness, so it must run BEFORE the liveness gate. Always.
+    updateSkin();
+    if (!__live()) { __dirty = true; __flushFxSilently(); return; }
+    if (__dirty) { __dirty = false; force = true; }
+    const r=document.getElementById("timeline-rail"); const lg=r&&r.querySelector(".cplot-ori .cm-live"); if(!lg||!lg.isConnected) return;
+    if(fxBusy&&!force){ renderPending=true; return; }
+    if(!fxBusy&&!R.sailing&&R.fx.length===0&&app&&app.view){ app.view.travelers.forEach(t=>{ if(t.is_self&&R.pendingSelf!=null){ if(t.century===R.pendingSelf) R.pendingSelf=null; else return; } R.shown[t.name]=t.century; }); R.merchantShown=app.view.merchant_century; }
+    lg.innerHTML=liveLayer();
+    const top=r.querySelector(".cplot-ori .cm-top"); if(top){ top.replaceChildren(); const ord=lg.querySelector(".cm-ord"); if(ord) top.appendChild(ord); }
+    const cmd=r.querySelector(".cplot-ori .cm-cmd"); if(cmd){ const t=commandText(); cmd.innerHTML=t; cmd.classList.toggle("on",!!t); }
+    const svg=r.querySelector(".cplot-ori .pc-chart"); if(svg) svg.classList.toggle("mode-pick",!!mode);
+    const h=app&&app.view?app.view.hour:null; const hh=r.querySelector(".cplot-ori .cm-hour"); if(hh&&h!=null) hh.textContent=`HOUR ${h}`;
+    if(h!=null&&prevHour!=null&&h!==prevHour&&r.classList.contains("skin-ori")){ /* new hour pulse */ svg&&svg.querySelectorAll(".cm-world .cm-worldbody").forEach((el,i)=>{ if(REDUCED) return; el.animate([{opacity:.5},{opacity:1}],{duration:400,delay:(i%8)*30}); }); }
+    prevHour=h;
+    applyFocus(); refreshAudio(); drainFx();   // updateSkin now runs at the TOP, see above
+  }
+  function applyFocus(){ const r=document.getElementById("timeline-rail"); const svg=r&&r.querySelector(".cplot-ori .pc-chart"); if(!svg) return; const cand=pickCandidates(); svg.querySelectorAll(".cm-world").forEach(el=>{ const c=+el.dataset.c; el.classList.toggle("can-go",!!cand&&cand.has(c)); const here=app&&app.view&&app.view.travelers.some(t=>(R.shown[t.name]!=null?R.shown[t.name]:t.century)===c); el.classList.toggle("has-trav",here); }); const sun=svg.querySelector(".cm-sun"); if(sun) sun.classList.toggle("can-go",!!(cand&&cand.has(0))); }
+
+  /* ═══ AUDIO ROUTING (cosmic soundscape, no gulls in space) ═══ */
+  function wireAudio(){ const A=window.__audio; if(!A||A.__oriAudio) return; A.__oriAudio=true; installChronicle(A); const origSea=A.setSeascape?A.setSeascape.bind(A):null;
+    A.setSeascape=(on)=>{ on=!!on; A._seaReq=on; const ori=window.__forceSkin?(window.__forceSkin==="ori"):(selfT()&&periodOf(selfT().century)==="Origins");
+      if(on&&ori){ A.setChronicle&&A.setChronicle(true); A.setStarscape&&A.setStarscape(false); if(origSea) origSea(false); return; }
+      A.setChronicle&&A.setChronicle(false); return origSea?origSea(on):undefined; }; }
+  // re-assert while the timeline soundscape is wanted, so a mid-scene period cross switches sea<->stars
+  function refreshAudio(){ const A=window.__audio; if(A&&A._seaReq&&A.setSeascape) A.setSeascape(true); }
+
+  /* ═══ MOUNT ═══ */
+  function mount(){
+    const rail=document.getElementById("timeline-rail"); if(!rail) return false;
+    if(rail.querySelector(".cplot-ori")) return true;
+    const rb=rail.getBoundingClientRect(); const bw=rb.width-6, bh=rb.height-74; if(bw<60||bh<60) return false;   // the cplot is inset 74px top + 6px left, derive W from the REAL content box so the chart fills it
+    W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
+    const base=baseMap();
+    rail.insertAdjacentHTML("beforeend",`<div class="cplot-ori"><svg class="pc-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cm-base">${base.out}</g><g class="cm-live"></g><g class="cm-fx"></g><g class="cm-top"></g></svg><div class="cm-cmd"></div><div class="cm-legend">${legendHTML()}</div><div class="cm-tip"></div></div>`);
+    const svg=rail.querySelector(".cplot-ori .pc-chart");
+    svg.addEventListener("click",e=>{ const t=e.target.closest(".cm-hit, .cm-glow, .cm-cost, .cm-world, .cm-sun"); let c=(t&&t.dataset&&t.dataset.c!==undefined)?+t.dataset.c:nearestStar(e); if(c!=null&&!isNaN(c)) onWorldClick(c); });
+    rail.querySelector(".cplot-ori .cm-cmd").addEventListener("click",e=>{ if(e.target.closest(".cm-anchor")&&mode&&mode.kind==="travel"&&app.pendingReq){ snd("chart_stamp"); app.respond({direction:1,distance:0}); mode=null; scheduleLive(); } });
+    rail.querySelector(".cplot-ori .cm-legkey")&&rail.querySelector(".cplot-ori .cm-legkey").addEventListener("click",()=>{ rail.querySelector(".cplot-ori .cm-legend").classList.toggle("open"); snd("chart_stamp"); });
+    const tip=rail.querySelector(".cplot-ori .cm-tip");
+    svg.addEventListener("mousemove",e=>{ if(!__live()) return;   // the two charts you cannot see were still
+      // hit-testing, measuring and building tooltip HTML on every single mouse event. my
+      // 165Hz panel fires 165 of those a second, and TWO of the three charts are always
+      // off-screen. Two thirds of this work has never been seen by anybody.
+      const bh=e.target.closest(".cm-bhole"); if(bh){ tip.innerHTML=registryHTML(bh.getAttribute("data-period")); tip.classList.add("on","wide"); const box=rail.querySelector(".cplot-ori").getBoundingClientRect(); let tx=e.clientX-box.left+14,ty=e.clientY-box.top+12; tip.style.left="0px"; tip.style.top="0px"; const tw=tip.offsetWidth,th=tip.offsetHeight; if(tx+tw>box.width-8) tx=e.clientX-box.left-tw-12; if(ty+th>box.height-8) ty=e.clientY-box.top-th-10; tip.style.left=tx+"px"; tip.style.top=ty+"px"; return; } const hl=e.target.closest(".cm-hauler"); if(hl){ tip.innerHTML=manifestHTML(); tip.classList.add("on","wide"); const box=rail.querySelector(".cplot-ori").getBoundingClientRect(); let tx=e.clientX-box.left+14,ty=e.clientY-box.top+12; tip.style.left="0px"; tip.style.top="0px"; const tw=tip.offsetWidth,th=tip.offsetHeight; if(tx+tw>box.width-8) tx=e.clientX-box.left-tw-12; if(ty+th>box.height-8) ty=e.clientY-box.top-th-10; tip.style.left=tx+"px"; tip.style.top=ty+"px"; return; } tip.classList.remove("wide"); const dt=e.target.closest("[data-tip]"); if(dt){ tip.innerHTML=esc(dt.getAttribute("data-tip")).replace(/\n/g,"<br>"); tip.classList.add("on"); const box=rail.querySelector(".cplot-ori").getBoundingClientRect(); let tx=e.clientX-box.left+14,ty=e.clientY-box.top+12; tip.style.left="0px"; tip.style.top="0px"; const tw=tip.offsetWidth,th=tip.offsetHeight; if(tx+tw>box.width-8) tx=e.clientX-box.left-tw-12; if(ty+th>box.height-8) ty=e.clientY-box.top-th-10; tip.style.left=tx+"px"; tip.style.top=ty+"px"; } else tip.classList.remove("on");
+      let pv=null; if(mode&&mode.kind==="travel"){ const el=e.target.closest(".cm-hit, .cm-glow, .cm-cost, .cm-world, .cm-sun"); const c=(el&&el.dataset.c!==undefined)?+el.dataset.c:nearestStar(e); if(c!=null){ const cand=travelCandidates(); if(c!==mode.self&&cand&&cand.has(c)) pv=c; } } if(pv!==mount._pv){ mount._pv=pv; setPreview(pv); }
+      const oh=!!e.target.closest(".cm-ord"); if(oh!==ordHovered){ ordHovered=oh; const oe=rail.querySelector(".cplot-ori .cm-ord"); if(oe) oe.classList.toggle("open",oh); }
+    });
+    svg.addEventListener("mouseleave",()=>{ tip.classList.remove("on"); setPreview(null); mount._pv=null; ordHovered=false; const oe=rail.querySelector(".cplot-ori .cm-ord"); if(oe) oe.classList.remove("open"); });
+    document.addEventListener("keydown", e=>{ if((e.key==="Tab"||e.code==="Tab") && document.getElementById("timeline-rail").classList.contains("skin-ori")){ e.preventDefault(); const sv=rail.querySelector(".cplot-ori .pc-chart"); if(sv) sv.classList.add("show-labels"); } });
+    document.addEventListener("keyup", e=>{ if(e.key==="Tab"||e.code==="Tab"){ const sv=rail.querySelector(".cplot-ori .pc-chart"); if(sv) sv.classList.remove("show-labels"); } });
+    updateSkin(); renderNow();
+    return true;
+  }
+  function legendHTML(){
+    const g=(svg,label)=>`<div class="cm-lrow"><svg viewBox="0 0 20 20">${svg}</svg><span>${label}</span></div>`;
+    return `<button class="cm-legkey" type="button">MAP KEY</button><div class="cm-legbody"><div class="cm-leghead">THE ITINERARY: the state road of time</div>
+      ${g(`<path d="M4 16 V8 h3 v-2 h6 v2 h3 v8 z" fill="#efe3c2" stroke="#3a2c12" stroke-width="1.2"/><path d="M7 8 V6 M13 8 V6" stroke="#3a2c12" stroke-width="1"/><path d="M8.5 16 v-3 q1.5 -2 3 0 v3 z" fill="#3a2c12"/>`,"a century, a walled station on the road")}
+      ${g(`<path d="M9 3 v14 M9 3 l6 1.6 l-5 1.6 z" fill="#3a6ea5" stroke="#2a2012" stroke-width=".7"/><path d="M5 9 h8 v4 q0 3 -4 4 q-4 -1 -4 -4 z" fill="#3a6ea5" stroke="#2a2012" stroke-width="1"/>`,"a traveller's banner (you = ringed)")}
+      ${g(`<path d="M2 10 h14 M11 6 l5 4 l-5 4" stroke="#2f7d4f" stroke-width="1.6" fill="none"/>`,"green road, toward the future, free")}
+      ${g(`<path d="M18 10 h-14 M9 6 l-5 4 l5 4" stroke="#b07a2a" stroke-width="1.6" fill="none"/>`,"amber road, into the past, costs energy")}
+      ${g(`<path d="M3 14 q4 -7 8 -1 q1 2 3 1 M9 11 q3 -2 4 1" stroke="#8a2a14" stroke-width="1.1" fill="none"/><text x="13" y="8" font-size="6.5" fill="#8a2a14" font-weight="bold">2×</text>`,"the Dragon Wastes, every league costs 2")}
+      ${g(`<path d="M6 16 V6 l8 3 l-8 3" fill="#c08a2a" stroke="#5a3a12" stroke-width=".7"/>`,"ride here to deliver a relic (+1 CP)")}
+      ${g(`<path d="M4 16 h12 v-6 l-6 -5 l-6 5 z" fill="#c9a23c" stroke="#3a2c12" stroke-width="1"/><path d="M10 5 v-2 M9 4 h2" stroke="#3a2c12" stroke-width=".8"/>`,"a gilded station, its relic delivered")}
+      ${g(`<circle cx="10" cy="9" r="6.5" fill="none" stroke="#c9a23c" stroke-width="1.6"/><path d="M6 14 h8 v-4 l-4 -3 l-4 3 z" fill="#efe3c2" stroke="#3a2c12" stroke-width=".9"/>`,"a restored station, it was always thus")}
+      ${g(`<circle cx="7" cy="12" r="2.6" fill="#4a3620" stroke="#241810" stroke-width=".7"/><circle cx="14" cy="12" r="2.6" fill="#4a3620" stroke="#241810" stroke-width=".7"/><rect x="4" y="6" width="12" height="5" fill="#6e4e2a" stroke="#241810" stroke-width=".7"/><path d="M4 6 Q4 1 10 1 Q16 1 16 6 Z" fill="#b0472e" stroke="#241810" stroke-width=".7"/>`,"the peddler's caravan, wanders each Hour; barter when near")}
+      ${g(`<path d="M10 3 l2.4 3 l-1.4 3 l1.4 3 l-2.4 3 l-2.4 -3 l1.4 -3 l-1.4 -3 z" fill="#c9a23c" stroke="#3a2c12" stroke-width=".8"/>`,"a crowned waymark · X, XX (+1 CP)")}
+      ${g(`<path d="M4 16 V8 L10 3 L16 8 V16 Z" fill="none" stroke="#6e4a12" stroke-width="1.3" stroke-dasharray="2 2"/><circle cx="10" cy="11" r="2" fill="#c9a23c"/>`,"the hidden hospice off the road (XI)")}
+      ${g(`<path d="M10 3 l3 6 l-4 3 l4 5" stroke="#7a1e10" stroke-width="1.4" fill="none"/>`,"a corruption, the Paradix bleeds in")}
+      ${g(`<circle cx="10" cy="10" r="7.5" fill="#f3e2b8" stroke="#3a2c12" stroke-width="1.2"/><circle cx="10" cy="10" r="5" fill="none" stroke="#3a2c12" stroke-width=".8"/><path d="M10 6.5 v7 M7 9.2 h6" stroke="#c9a23c" stroke-width="1.5"/>`,"the SACRED CROSS: Year Zero (+2 CP)")}
+      <div class="cm-legobj"><b>THE QUEST</b>, earn Contract Points (CP): deliver a relic to its century (+1), end an Hour at a crowned waymark X/XX (+1), enshrine all three periods, or ride to the sacred cross (+2). Most CP is crowned.</div>
+      <div class="cm-legfoot">- the muster-roll rides at left · hover a station to read it -</div></div>`;
+  }
+  let rzT=null;
+  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-ori"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()) renderNow(); },350); };
+  window.addEventListener("resize",railRelayout);
+  if(window.ResizeObserver){ const railEl=document.getElementById("timeline-rail"); if(railEl) new ResizeObserver(railRelayout).observe(railEl); }
+
+  const style=document.createElement("style"); style.textContent=STYLE(); document.head.appendChild(style);
+  // ── TEMP DEBUG HOTKEYS (remove before ship): 5=stellar · 6=nautical · 7=castles, preview any skin off-period ──
+  document.addEventListener("keydown", e=>{ const t=e.target; if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable)) return;
+    if(e.key==="5") window.__forceSkin="sing"; else if(e.key==="6") window.__forceSkin="sea"; else if(e.key==="7") window.__forceSkin="ori"; else return;
+    try{ if(window.__game&&window.__game.playEvent) window.__game.playEvent({event:"__skinpreview",payload:{}}); }catch(_){}
+    try{ if(window.__audio){ window.__audio.unlock&&window.__audio.unlock(); window.__audio.setSeascape&&window.__audio.setSeascape(true); } }catch(_){}
+  });
+  setInterval(()=>{ if(hookApp()){ mount(); scheduleLive(); } },300);
+
+  function STYLE(){ return `
+    #timeline-rail > div.cplot-ori { position:absolute; inset:74px 0 0 6px; display:block !important; opacity:0; pointer-events:none; transition:opacity .15s ease; z-index:3; }
+    #timeline-rail.skin-ori > div.cplot-ori { opacity:1; pointer-events:auto; }
+    #timeline-rail.skin-ori > .cplot { opacity:0 !important; pointer-events:none !important; }
+    .pc-chart { width:100%; height:100%; display:block; filter:drop-shadow(0 10px 30px rgba(30,18,4,.6)); border-radius:6px; }
+    .cm-hit { cursor:pointer; } .cm-world text, .cm-sun text { pointer-events:none; }
+    .cm-num { opacity:0; transition:opacity .15s ease; }
+    .cm-world.has-trav .cm-num, .cm-world.can-go .cm-num, .show-labels .cm-num, .cm-world.cm-broken .cm-num, .cm-world.cm-wreck .cm-num { opacity:1; }
+    .cm-road { animation:cmmarch 5s linear infinite; } @keyframes cmmarch { from{stroke-dashoffset:0;} to{stroke-dashoffset:-34;} }
+    .cm-dragon { transform-box:fill-box; transform-origin:center; animation:cmbreathe 6s ease-in-out infinite alternate; } @keyframes cmbreathe { from{opacity:.86;} to{opacity:1;} }
+    .cm-margin { transform-box:fill-box; transform-origin:center; animation:cmsway 7s ease-in-out infinite alternate; } @keyframes cmsway { from{transform:rotate(-1.5deg);} to{transform:rotate(1.5deg);} }
+    .cm-mist-ring { transform-box:fill-box; transform-origin:center; animation:cmmist 9s ease-in-out infinite alternate; } @keyframes cmmist { from{opacity:.1;transform:scale(1);} to{opacity:.3;transform:scale(1.08);} }
+    @keyframes cmspin { to{transform:rotate(360deg);} }
+    @keyframes cmpulse { from{opacity:.55;} to{opacity:1;} }
+    @keyframes cmbreath { from{opacity:.14;} to{opacity:.34;} }
+    .cm-lit { animation:cmglimmer 3s ease-in-out infinite alternate; } @keyframes cmglimmer { from{opacity:.55;} to{opacity:.95;} }
+    .cm-sealedline { filter:drop-shadow(0 0 2px rgba(120,90,20,.6)); animation:cmpulse 2.6s ease-in-out infinite alternate; }
+    .cm-beam { animation:cmpulse 1.9s ease-in-out infinite alternate; }
+    .cm-worldbody { transform-box:fill-box; transform-origin:center; }
+    .cm-world { transition:opacity .35s ease, transform .15s ease; transform-box:fill-box; }
+    .mode-pick .cm-world:not(.can-go), .mode-pick .cm-sun:not(.can-go) { opacity:.34; }
+    .mode-pick .cm-world.can-go { cursor:pointer; } .mode-pick .cm-world.can-go:hover { transform:scale(1.09); }
+    .cm-glow { fill:transparent; stroke-width:3; cursor:pointer; animation:cmglow 1.1s infinite alternate; }
+    .cm-sec-ring{ transform-box:fill-box; transform-origin:center; animation:cmspin 26s linear infinite; }
+    .cm-sec-core{ transform-box:fill-box; transform-origin:center; animation:cmpulse 2s ease-in-out infinite alternate; }
+    .cm-secret{ transition:opacity .3s ease; } .cm-secret.on .cm-sec-halo{ animation:cmbreath 3.5s ease-in-out infinite alternate; }
+    .cm-bh-disk{ transform-box:fill-box; transform-origin:center; animation:cmspin 40s linear infinite; }
+    .cm-bh-glow{ transform-box:fill-box; transform-origin:center; animation:cmbhpulse 4.6s ease-in-out infinite alternate; } @keyframes cmbhpulse{ from{ transform:scale(1); } to{ transform:scale(1.1); } }
+    @keyframes cmglow { from{opacity:.45;} to{opacity:1;} }
+    .cm-go-future{stroke:#57b36a;} .cm-go-past{stroke:#b07a2a;} .cm-go-risk{stroke:#a83220;} .cm-go-merch{stroke:#8a5a2a;} .cm-go-target{stroke:#7a4fa0;}
+    .cm-cost{cursor:pointer;} .cm-bob{transform-box:fill-box;transform-origin:center;animation:cmbob 3.4s ease-in-out infinite alternate;} @keyframes cmbob{from{transform:translateY(0);}to{transform:translateY(2.4px);}}
+    .cm-ship{transform-box:fill-box;transform-origin:center;} .cm-dead,.cm-lost{opacity:.5;filter:grayscale(.6);}
+    .cm-broken .cm-worldbody{filter:brightness(.82) saturate(.7) sepia(.3);}
+    .cm-wreck{filter:grayscale(.55) brightness(.86);}
+    .cm-rift{transform-box:fill-box;transform-origin:center;animation:cmrift 2.6s ease-in-out infinite alternate;} @keyframes cmrift{from{opacity:.5;transform:rotate(-4deg);}to{opacity:1;transform:rotate(4deg);}}
+    .cm-cmd { position:absolute; left:50%; top:6px; transform:translateX(-50%) scale(.92); z-index:8; background:linear-gradient(#4a2e14,#38220f); border:1.5px solid #b0872f; border-radius:4px; color:#f2e6c4; font:600 11px/1.5 Georgia,serif; letter-spacing:.3px; padding:5px 15px; opacity:0; pointer-events:none; transition:all .25s ease; white-space:nowrap; box-shadow:0 4px 14px rgba(20,12,2,.55); }
+    .cm-cmd.on{opacity:1;transform:translateX(-50%) scale(1);} .cm-cmd .cg{color:#8fd6a0;font-weight:bold;} .cm-cmd .cm{color:#e9c273;font-weight:bold;} .cm-cmd .cn{color:#e58a6a;font-weight:bold;}
+    .cm-cmd .cm-anchor{pointer-events:auto;cursor:pointer;margin-left:8px;padding:1px 8px;border:1px solid #b0872f;border-radius:3px;color:#f2e6c4;background:rgba(176,135,47,.18);} .cm-cmd .cm-anchor:hover{background:rgba(176,135,47,.4);}
+    .cm-ord-body{transform:translateX(-172px);opacity:0;transition:transform .42s cubic-bezier(.3,1.1,.4,1),opacity .3s ease;} .cm-ord.open .cm-ord-body{transform:translateX(6px);opacity:1;}
+    .cm-ord-pin{cursor:help;} .cm-ord-pin:hover path{filter:brightness(1.2);}
+    .cm-legend{position:absolute;left:10px;bottom:10px;z-index:12;}
+    .cm-legkey{cursor:pointer;font-family:Georgia,serif;font-weight:bold;font-size:.56rem;letter-spacing:2px;color:#f2e6c4;background:linear-gradient(#4a2e14,#38220f);border:1.5px solid #b0872f;border-radius:4px;padding:3px 11px;box-shadow:0 2px 5px rgba(20,12,2,.5);}
+    .cm-legkey:hover{background:linear-gradient(#5a3a1c,#412813);}
+    .cm-legbody{position:absolute;left:0;bottom:26px;width:244px;max-height:74vh;overflow:auto;padding:9px 11px;border-radius:6px;background:linear-gradient(#efe3c2,#e2d0a2);border:1.5px solid #7a5a24;box-shadow:0 8px 22px rgba(20,12,2,.5);opacity:0;transform:translateY(8px) scale(.97);transform-origin:bottom left;pointer-events:none;transition:all .2s ease;color:#3a2c14;}
+    .cm-legend.open .cm-legbody{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+    .cm-leghead{font-family:Georgia,serif;font-weight:bold;font-size:.6rem;letter-spacing:2px;color:#6e4a12;text-align:center;padding-bottom:5px;margin-bottom:5px;border-bottom:1px solid rgba(122,90,36,.5);}
+    .cm-lrow{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:.5rem;letter-spacing:.2px;color:#4a3a1e;} .cm-lrow svg{width:20px;height:20px;flex:none;}
+    .cm-legobj{margin-top:6px;padding-top:5px;border-top:1px solid rgba(122,90,36,.4);font-size:.48rem;line-height:1.55;color:#4a3a1e;} .cm-legobj b{color:#6e4a12;letter-spacing:1px;}
+    .cm-legfoot{margin-top:5px;padding-top:4px;border-top:1px solid rgba(122,90,36,.35);font-size:.44rem;font-style:italic;color:#7a5a2a;text-align:center;}
+    .cm-tip{position:absolute;left:0;top:0;pointer-events:none;max-width:236px;background:linear-gradient(#efe3c2,#e4d3a4);color:#3a2c14;z-index:20;border:1px solid #7a5a24;border-left:3px solid #b0872f;padding:6px 10px;font:11px/1.5 Georgia,serif;letter-spacing:.2px;box-shadow:3px 4px 12px rgba(20,12,2,.4);opacity:0;transition:opacity .12s ease;}
+    .cm-tip.on{opacity:1;} .cm-tip.wide{max-width:430px;}
+    .cm-tiles{display:flex;gap:6px;margin-top:5px;}
+    .cm-tile{flex:1 1 0;min-width:88px;max-width:112px;background:#f4ead0;border:1px solid #a98a4e;border-radius:3px;padding:6px 7px;font-size:.5rem;line-height:1.35;color:#3a2c14;}
+    .cm-tn{font-weight:bold;font-size:.56rem;color:#5a3a12;} .cm-tk{font-style:italic;opacity:.75;margin:1px 0 3px;} .cm-td{opacity:.9;max-height:52px;overflow:hidden;} .cm-tc{margin-top:4px;color:#8a5a12;font-weight:bold;letter-spacing:.4px;}
+    /* ── THE SHUTTER: the record-drum swap, iris closes, chart changes, iris opens ── */
+    #timeline-rail > div.cplot-warp { position:absolute; inset:74px 0 0 6px; display:block !important; z-index:40; opacity:0; pointer-events:none; overflow:hidden; border-radius:6px; }
+    #timeline-rail > div.cplot-warp.iris-shutter.closing,
+    #timeline-rail > div.cplot-warp.iris-shutter.opening { opacity:1; }
+    .iris-leaf { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); width:150%; aspect-ratio:1/1; border-radius:50%;
+      box-shadow: 0 0 0 260vmax #0d0a05, inset 0 0 26px rgba(210,180,110,.4), inset 0 0 3px rgba(210,180,110,.8); }
+    .cplot-warp.iris-shutter.closing .iris-leaf { animation: irisClose .3s cubic-bezier(.55,.05,.75,.4) forwards; }
+    .cplot-warp.iris-shutter.opening .iris-leaf { animation: irisOpen .52s cubic-bezier(.18,.6,.28,1) forwards; }
+    @keyframes irisClose { from { width:150%; } to { width:0%; } }
+    @keyframes irisOpen  { from { width:0%; } to { width:150%; } }
+    #timeline-rail.cm-shake { animation: cmshake .1s linear 7; }
+    @keyframes cmshake { 0%,100%{transform:translate(0,0);} 25%{transform:translate(2px,-1px);} 50%{transform:translate(-2px,1px);} 75%{transform:translate(1px,2px);} }
+    @media (prefers-reduced-motion:no-preference){
+      .cm-flame{ transform-box:fill-box; transform-origin:left center; }
+      .cm-flame.f1{ animation: cmflick 1.15s ease-in-out infinite alternate; }
+      .cm-flame.f2{ animation: cmflick 0.85s ease-in-out infinite alternate-reverse; }
+      .cm-flame.f3{ animation: cmflick 0.6s ease-in-out infinite alternate; }
+      .cm-dragbreath{ transform-box:fill-box; transform-origin:center; animation: cmbreath 4.2s ease-in-out infinite; }
+      .cm-drageye{ animation: cmeye 5.5s ease-in-out infinite; }
+      .cm-crosshalo{ animation: cmhalo 3.6s ease-in-out infinite; }
+      .cm-pennant{ transform-box:fill-box; transform-origin:left bottom; animation: cmflag 2.6s ease-in-out infinite alternate; }
+      .cm-smoke circle{ animation: cmsmoke 3.4s ease-in-out infinite; }
+      .cm-smoke circle:nth-child(2){ animation-delay:1.1s; } .cm-smoke circle:nth-child(3){ animation-delay:2.2s; }
+    }
+    @keyframes cmflick { from { transform:scaleX(.72) scaleY(.88); opacity:.7; } to { transform:scaleX(1.12) scaleY(1.06); opacity:1; } }
+    @keyframes cmbreath { 0%,100% { transform:scale(1); } 50% { transform:scale(1.006); } }
+    @keyframes cmeye { 0%,92%,100% { opacity:1; } 95% { opacity:.25; } }
+    @keyframes cmhalo { 0%,100% { opacity:.9; } 50% { opacity:.55; } }
+    @keyframes cmflag { from { transform:skewY(4deg) scaleX(.94); } to { transform:skewY(-5deg) scaleX(1.04); } }
+    @keyframes cmsmoke { 0% { transform:translateY(0); opacity:.5; } 80% { opacity:.15; } 100% { transform:translateY(-9px); opacity:0; } }
+    @media (prefers-reduced-motion:reduce){ .cm-road,.cm-dragon,.cm-mist-ring,.cm-sec-ring,.cm-sec-core,.cm-bh-disk,.cm-bh-glow,.cm-sun-rays,.cm-sun-ring,.cm-lit,.cm-beam,.cm-bob,.cm-rift,.cm-glow,.cm-flame,.cm-dragbreath,.cm-drageye,.cm-crosshalo,.cm-pennant,.cm-smoke circle{animation:none;} }
+  `; }
+
+  /* ═══ COSMIC SOUNDSCAPE (installed onto window.__audio) ═══ */
+  function installChronicle(A){
+    if(A.setChronicle) return;
+    A.setChronicle=function(on){
+      try{
+        if(on===this._chrOn) return; this._chrOn=on;
+        const ctx=this.ctx||this.context||(this._ctx); const C=this.ctx||this.context;
+        if(!C){ this._chrWant=on; return; }
+        if(on){
+          const master=this.master||this.masterGain||C.destination;
+          if(!this.chrBus){ this.chrBus=C.createGain(); this.chrBus.gain.value=0; this.chrBus.connect(master); }
+          this.chrBus.gain.cancelScheduledValues(C.currentTime); this.chrBus.gain.setValueAtTime(this.chrBus.gain.value,C.currentTime); this.chrBus.gain.linearRampToValueAtTime(0.6,C.currentTime+1.2);
+          if(this.musicBus) this.musicBus.gain.setTargetAtTime(0.0001,C.currentTime,0.5);
+          if(this.sfxBus) this.sfxBus.gain.setTargetAtTime((this.vol&&this.vol.sfx?this.vol.sfx:0.6)*0.3,C.currentTime,0.5);
+          this._chrNodes=[]; const self=this;
+          // 1) a HURDY-GURDY BOURDON, a sustained drone fifth (D + A), lightly detuned
+          [73.42,73.62,110.0,146.83].forEach((fr,i)=>{ const o=C.createOscillator(); o.type=i<2?"sawtooth":"triangle"; o.frequency.value=fr; const lp=C.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=520; const g=C.createGain(); g.gain.value=i<2?0.05:(i===2?0.06:0.035); o.connect(lp); lp.connect(g); g.connect(this.chrBus); o.start(); this._chrNodes.push(o,lp,g); });
+          // 2) a PLAINCHANT PAD, soft stacked voices (D dorian), slow tremolo
+          [146.83,174.61,220.0].forEach((fr,i)=>{ const o=C.createOscillator(); o.type="sine"; o.frequency.value=fr; const g=C.createGain(); g.gain.value=0.026; const lfo=C.createOscillator(); lfo.frequency.value=0.06+i*0.015; const lg=C.createGain(); lg.gain.value=0.014; lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(this.chrBus); o.start(); lfo.start(); this._chrNodes.push(o,g,lfo,lg); });
+          // 3) a faint stone-hall air (very quiet filtered noise)
+          const nb=C.createBuffer(1,C.sampleRate*2,C.sampleRate); const dat=nb.getChannelData(0); for(let i=0;i<dat.length;i++) dat[i]=(Math.random()*2-1)*0.5; const ns=C.createBufferSource(); ns.buffer=nb; ns.loop=true; const nf=C.createBiquadFilter(); nf.type="lowpass"; nf.frequency.value=900; const ng=C.createGain(); ng.gain.value=0.02; ns.connect(nf); nf.connect(ng); ng.connect(this.chrBus); ns.start(); this._chrNodes.push(ns,nf,ng);
+          // 4) a LUTE MELODY, a slow modal tune (D dorian) plucked over the drone
+          const tune=[293.66,349.23,392.0,440.0,392.0,349.23,329.63,293.66,329.63,392.0,440.0,392.0,349.23,329.63,293.66,0];
+          let mi=0; const pluck=()=>{ if(!self._chrOn) return; const fr=tune[mi%tune.length]; mi++; if(fr>0){ const t=C.currentTime; const o=C.createOscillator(); o.type="triangle"; o.frequency.value=fr; const o2=C.createOscillator(); o2.type="sine"; o2.frequency.value=fr*2; const g=C.createGain(); g.gain.value=0; const g2=C.createGain(); g2.gain.value=0; o.connect(g); o2.connect(g2); g.connect(self.chrBus); g2.connect(self.chrBus); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.05,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+0.9); g2.gain.setValueAtTime(0,t); g2.gain.linearRampToValueAtTime(0.018,t+0.01); g2.gain.exponentialRampToValueAtTime(0.0001,t+0.5); o.start(t); o.stop(t+0.95); o2.start(t); o2.stop(t+0.55); } self._chrMotif=setTimeout(pluck, fr>0?(620+Math.random()*150):1400); };
+          self._chrMotif=setTimeout(pluck,900);
+          // 5) a distant church BELL toll, now and then
+          const bell=()=>{ if(!self._chrOn) return; const t=C.currentTime; [[1,0.05],[2.05,0.02],[3.0,0.012]].forEach(([m,g0])=>{ const o=C.createOscillator(); o.type="sine"; o.frequency.value=196*m; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(self.chrBus); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(g0,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+3.4); o.start(t); o.stop(t+3.5); }); self._chrChord=setTimeout(bell,14000+Math.random()*12000); };
+          self._chrChord=setTimeout(bell,7000);
+        } else {
+          clearTimeout(this._chrPing); clearTimeout(this._chrGroan); clearTimeout(this._chrChord); clearTimeout(this._chrMotif);
+          if(this.chrBus && C){ this.chrBus.gain.cancelScheduledValues(C.currentTime); this.chrBus.gain.setValueAtTime(this.chrBus.gain.value,C.currentTime); this.chrBus.gain.linearRampToValueAtTime(0.0001,C.currentTime+0.8); }
+          const nodes=this._chrNodes||[]; setTimeout(()=>{ nodes.forEach(n=>{ try{ n.stop&&n.stop(); n.disconnect&&n.disconnect(); }catch(e){} }); },900); this._chrNodes=[];
+          // restore music/sfx only if the seascape isn't taking over
+          if(C){ if(this.musicBus && !this._seaOn) this.musicBus.gain.setTargetAtTime((this.vol&&this.vol.music?this.vol.music:0.5),C.currentTime,0.6); if(this.sfxBus && !this._seaOn) this.sfxBus.gain.setTargetAtTime((this.vol&&this.vol.sfx?this.vol.sfx:0.6),C.currentTime,0.6); }
+        }
+      }catch(e){}
+    };
+    if(A._chrWant){ const w=A._chrWant; A._chrWant=false; A.setChronicle(w); }
+  }
+})();
