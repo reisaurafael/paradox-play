@@ -7863,3 +7863,7 @@ html[data-ts="3"] #hela-brain-full .hb-node .hb-lbl, html.pdx-a11y #hela-brain-f
 /* every HELA message rides the eye: the phase explanation is now the chapter box at
    each phase start (and the phase track's hover text); the fixed line steps down */
 #cx-phaseline { display: none !important; }
+/* her words placed around the eye by forbidden zones (cabin.js): far placements drop
+   the side tail; her boxes keep their own column order */
+#hela-eye .he-chip.far::after { display: none; }
+#hela-eye .he-chip.far { box-shadow: 0 0 0 3px var(--vz), 4px 4px 0 3px var(--cx-ink), 0 0 20px rgb(var(--vz-rgb) / .45); }

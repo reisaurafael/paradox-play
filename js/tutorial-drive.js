@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609262037";
-import { Game } from "./game.js?202609262037";
-import { icon } from "./icons.js?202609262037";
-import { roman } from "./util.js?202609262037";
-import { profile } from "./profile.js?202609262037";
+import { api, Connection } from "./net.js?202609262048";
+import { Game } from "./game.js?202609262048";
+import { icon } from "./icons.js?202609262048";
+import { roman } from "./util.js?202609262048";
+import { profile } from "./profile.js?202609262048";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -785,7 +785,7 @@ class Coach {
       if (p.hour === 1 && this.once("intro")) await this.wake();
       await this.heraldBeat();
       if (p.hour >= 2 && this.scripted) await this.merchantIntro();
-      if (this.scripted && p.hour >= 10 && !this.done.has("win")) await this.wrapUp();
+      if (this.scripted && !this.done.has("win") && ((this._valveHour && p.hour > this._valveHour) || p.hour >= 12)) await this.wrapUp();
     }
     if ((k === "phase_started" || k === "phase_skipped") && this.hourNo === 1 && p.phase === "main") this.markTrack("machine");
     if (k === "game_over") this.gameOver(p);
@@ -803,8 +803,10 @@ class Coach {
     }
     if (k === "overloaded" && p.seat === self && this.once("overloaded")) {
       this.learn("overload");
-      await this.say(machineCell(p.function, 0),
-        `<b>${FN[p.function] || "That function"} overloaded.</b> It stays shut for the whole next Hour.`);
+      const fn = (p.functions || [p.function])[0];
+      await this.say(machineCell(fn, 0),
+        `<b>${FN[fn] || "That function"} overloaded:</b> three dice in one function. It stays shut for the whole next Hour.`,
+        { rings: [`#machine-body .matrix-fnlabel`] });
     }
     if (k === "paradox_resolved") {
       if (p.target === self && this.once("hit")) {
@@ -841,10 +843,7 @@ class Coach {
       try { window.__pdxTimelineMend && window.__pdxTimelineMend(p.century, 1); } catch (e) {}
       await this.say(".vital-chip.vc-cp", L.mended.replace("{c}", R(p.century || this.me().century)), { rings: [".vital-chip.vc-cp"] });
       // he kept a promise: the roll comes off the chart (his chartOpen)
-      this.home && this.home();
-      this.unrollMap();
-      await new Promise((r) => setTimeout(r, 1100));
-      await this.say("#timeline-rail", L.chartOpen, { ring: false });
+      // the whole chart comes off its roll when Learn to Play ends (wrapUp)
     }
     if (k === "reward_resolved" && p.seat === self) {
       const txt = (REWARD_TEXT[p.category] || [])[(p.roll || 1) - 1];
@@ -855,7 +854,7 @@ class Coach {
         await this.say(null, `<b>${p.category}, rolled ${R(p.roll || 1)}:</b> ${txt || "done"}.`,
           { sub: p.category === "Time" ? "Tickets wait in your case: drag one onto the machine's slot when you want it." : "" });
       }
-      if (this.scripted && this.done.has("deliver")) await this.wrapUp();
+      // the story goes on: an overload and the escape valve come next, then the end
     }
     if (k === "card_bought" && p.seat === self) this.learn("market");
     if (k === "secret_market_opened" && this.once("secret")) {
@@ -925,6 +924,8 @@ class Coach {
   // chart sitting on the cut; the desk shows below it. Re-applied through redraws.
   limitMap() {
     if (this._mapOpen) return;
+    const me = this.me && this.me();
+    if (me && me.century < this.cut) { this.unrollMap(); return; }   // he is past the roll: open it all
     const rail = document.getElementById("timeline-rail");
     if (!rail) return;
     const cplot = rail.querySelector(".cplot-sing") || rail.querySelector(".cplot") || rail.querySelector(".cplot-ori");
@@ -1105,6 +1106,7 @@ class Coach {
     this.markTrack("machine");
     const g = this.game;
     this.machine = (hint && hint.machine) || null;
+    if (hint && hint.lesson === "valve" && hint.matrix) this._valveHour = this.hour() || (hint.hour);
     if (hint && hint.matrix && this.scripted) {
       this.plan = { matrix: hint.matrix, valve: hint.escape_valve || 0, lesson: hint.lesson };
       this.pointing = true;
@@ -1168,6 +1170,7 @@ class Coach {
         if (s.c === 0 && first) sub = "Energy is your life. Click a die, then a module, or drag it.";
         if (s.c === 1 && first) sub = "A function holds one value only, so both dice here are the same.";
         if (s.c === 1 && !first) sub = "Gold buys the Merchant's cards.";
+        if (s.c === 2) { sub = "A third die in one function OVERLOADS it: it pays now, and shuts for the next Hour."; this.markTrack("overload"); }
       } else if (s.r === 1) {
         text = [`Drag a ${R(v)} onto <b>Paradox 1</b>: everyone ahead of you loses ${v} energy.`,
           `Drag a ${R(v)} onto <b>Paradox 2</b>: everyone in your own century loses ${v}.`,
@@ -1384,6 +1387,12 @@ class Coach {
     if (this.done.has("win") || this._wrapping) return;
     this._wrapping = true;
     this.markTrack("win");
+    // Learn to Play ends: the roll comes off the chart, thirty centuries and Year Zero
+    const cam0 = this.game.camera;
+    if (cam0 && cam0.scene !== "main") { cam0._engage(); cam0.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
+    this.unrollMap();
+    await new Promise((r) => setTimeout(r, 1100));
+    await this.say("#timeline-rail", L.chartOpen, { ring: false });
     await this.say(null, L.ending, { sub: "At 0 energy you are terminated and come back at XXX. At 12 heat your motor explodes." });
     await this.say(".vital-chip.vc-cp", "<b>How to win:</b> the most contract points when time settles.",
       { sub: "+1 per relic returned, +1 per termination, +1 the first time you end an Hour on XX and on X, +1 for being alive at the end.", rings: [".vital-chip.vc-cp"] });
@@ -1442,17 +1451,24 @@ class Coach {
       window.addEventListener("click", h, true);
     });
     const until = (fn, ms = 60000) => new Promise((resolve) => { const t0 = Date.now(); const iv = setInterval(() => { if (fn() || Date.now() - t0 > ms) { clearInterval(iv); resolve(); } }, 200); });
-    this.guide(root, "The Herald is filed in my memory. Open it: click it, or press <kbd>L</kbd>.", { rings: [root] });
-    await until(() => B.isOpen && B.isOpen());
     const node = q(".hb-node");
-    if (node()) { this.guide(node, "Every mark is an Hour. Click one to open its page.", { rings: [node] }); await clickOn(".hb-node"); }
+    if (node()) {
+      this.guide(node, "This is my memory: every mark is an Hour. Click one to open its page.", { rings: [node] });
+      await until(() => B.isOpen && B.isOpen(), 30000);
+    }
     const arrow = q(".hbp-arrow");
-    if (arrow()) { this.guide(arrow, "Flip through the Hours with the arrows.", { rings: [arrow] }); await clickOn(".hbp-arrow"); }
+    if (B.isOpen && B.isOpen() && arrow()) {
+      this.guide(arrow, "Flip through the Hours with the arrows.", { rings: [arrow] });
+      await clickOn(".hbp-arrow", 25000);
+    }
     const clip = q(".hbp-clip");
-    if (clip()) { this.guide(clip, "The Herald's clipping: click it to read the edition.", { rings: [clip] }); await clickOn(".hbp-clip"); }
+    if (B.isOpen && B.isOpen() && clip()) {
+      this.guide(clip, "The Herald's clipping: click it to read the edition.", { rings: [clip] });
+      await clickOn(".hbp-clip", 25000);
+    }
     if (B.isOpen && B.isOpen()) {
-      this.guide(root, "Close it with <kbd>Esc</kbd> or <kbd>L</kbd>. It keeps everything.", { rings: [root] });
-      await until(() => !(B.isOpen && B.isOpen()), 45000);
+      this.guide(null, "Close it with <kbd>Esc</kbd>. <kbd>L</kbd> opens it again. It keeps everything.", {});
+      await until(() => !(B.isOpen && B.isOpen()), 30000);
     }
     this.clear();
   }

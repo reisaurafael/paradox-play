@@ -1883,7 +1883,7 @@
 (function helaEyeLife(){
   if (window.__helaEye) return;
   const RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const GAP_X = 133, GAP_Y = 104;     // the falconry distance (tuned live, screen px, fit-scaled)
+  const GAP_X = 180, GAP_Y = 140;     // the falconry distance: far enough that eye, hand and words never pile up
   const HYST = 42;                    // midline dead-band so she never flickers
   let eye = null, mx = -1, my = -1, sx = 1, sy = 1;   // s* = which diagonal she keeps
   let blinkT = 0, nextIdleBlink = 0, nextSacc = 0, raf = 0;
@@ -1917,6 +1917,11 @@
     document.addEventListener("mouseleave", () => { mx = -1; my = -1; });
   }
 
+  // where she would stand on a given diagonal (sx2, sy2) for the current cursor
+  function post2(sx2, sy2){
+    const f = Math.max(.6, Math.min(1.25, fit()));
+    return { x: Math.max(30, Math.min(innerWidth - 30, mx + sx2 * GAP_X * f)), y: Math.max(150, Math.min(innerHeight - 34, my + sy2 * GAP_Y * f)) };
+  }
   // where she stands for a given cursor point (rigid diagonal + viewport clamp)
   function post(cx, cy){
     const f = Math.max(.6, Math.min(1.25, fit()));
@@ -1946,35 +1951,127 @@
     return { x: Math.max(30, Math.min(innerWidth - 30, ccx + dx * k)),
              y: Math.max(56, Math.min(innerHeight - 34, ccy + dy * k)) };
   }
-  // HER BALLOON (comic.js speaks through .he-chip) sits on the side AWAY from the
-  // cursor, so it never covers what the hand is reaching for, and flips at the screen
-  // edges. It only changes side on a blink or at an edge, never mid-read.
+  /* ── WHERE HER WORDS GO. Her balloon (.he-chip) and her boxes (.he-caps: YOUR MOVE,
+     the chapter, a footnote) ride the eye, but they must never land ON something the
+     player needs: the dice, the machine's cells, Confirm, the case files, the pieces
+     on the chart, the yellow box she is pointing at, the tutorial's own card, and the
+     hand itself. Those are FORBIDDEN ZONES (measured at most every 300 ms, only while
+     she has words up). Each side of the eye is tried, away from the cursor first; a
+     side that stays free is kept while it stays free (no flicker). If no side is free
+     she keeps her distance and the words go to the nearest free spot around her. ── */
   let chipSide = "", chipEl = null, capsEl = null, avoidR = null;
-  // which side her balloon opens on: away from the cursor, inside the screen, and not
-  // over the thing she is pointing out (avoid, a rect set by comic.js)
-  function hits(bx0, by0, bx1, by1){
-    const a = avoidR; return !!a && bx0 < a.right && bx1 > a.left && by0 < a.bottom && by1 > a.top;
-  }
-  function sideFor(x, y){
-    const W = 350, H = 80;
-    let right = mx < 0 ? x < innerWidth - 400 : sx === 1;
-    if (right && x > innerWidth - 400) right = false;
-    if (!right && x < 400) right = true;
-    const box = (r) => r ? [x + 34, y - 33, x + 34 + W, y - 33 + H] : [x - 34 - W, y - 33, x - 34, y - 33 + H];
-    if (hits(...box(right)) && !hits(...box(!right)) && (right ? x > 400 : x < innerWidth - 400)) right = !right;
-    return (right ? "r" : "l") + (y > innerHeight - 150 ? "u" : "d");
-  }
-  function applySide(x, y){
-    const sd = sideFor(x, y);
-    if (sd === chipSide) return;
-    chipSide = sd;
+  let zones = [], zonesT = 0, chipBox = null, capsBox = null, chipMode = "", capsMode = "";
+  const ZONE_SEL = "#hull-console .dice-pool, #hull-console .matrix-wrap, #confirm-alloc, #hull-console .dice-actions,"
+    + " .dice-pool, .pcard.cfolio, .he-ring, .tut-ring, #tut-callout.on, .cx-preview, #vz-holo,"
+    + " #timeline-rail [data-seat], #tl-gauge";
+  let zMx = -9, zMy = -9;
+  function refreshZones(t){
+    if (t - zonesT < 300) return;
+    // a still hand over a still table needs no new measure (reading rects can force a
+    // layout); re-measure when the hand moved, or every 0.7 s at most
+    if (mx === zMx && my === zMy && zonesT && t - zonesT < 700) return;
+    zMx = mx; zMy = my;
+    zonesT = t; zones = [];
+    for (const el2 of document.querySelectorAll(ZONE_SEL)){
+      if (el2.closest && el2.closest("#hela-eye")) continue;
+      const r = el2.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4 || r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) continue;
+      if (r.width > innerWidth * .7 && r.height > innerHeight * .7) continue;   // a whole-scene layer is not a zone
+      zones.push([r.left - 6, r.top - 6, r.right + 6, r.bottom + 6]);
+      if (zones.length > 40) break;
+    }
+    if (avoidR) zones.push([avoidR.left, avoidR.top, avoidR.right, avoidR.bottom]);
     if (!chipEl && eye) chipEl = eye.querySelector(".he-chip");
     if (!capsEl && eye) capsEl = eye.querySelector(".he-caps");
-    for (const el2 of [chipEl, capsEl, eye && eye.querySelector(".he-dchip")]){
-      if (!el2) continue;
-      el2.classList.toggle("flip-x", sd[0] === "l");
-      el2.classList.toggle("flip-y", sd[1] === "u");
+    chipBox = chipEl ? [chipEl.offsetWidth || 300, chipEl.offsetHeight || 60] : [300, 60];
+    capsBox = capsEl && capsEl.offsetHeight ? [capsEl.offsetWidth, capsEl.offsetHeight] : null;
+  }
+  function overl(b, z){ return b[0] < z[2] && b[2] > z[0] && b[1] < z[3] && b[3] > z[1]; }
+  function freeBox(b, extra){
+    if (b[0] < 6 || b[1] < 6 || b[2] > innerWidth - 6 || b[3] > innerHeight - 6) return false;
+    const hand = mx >= 0 ? [mx - 40, my - 40, mx + 60, my + 70] : null;   // the cursor and the drawn hand
+    if (hand && overl(b, hand)) return false;
+    for (const z of zones) if (overl(b, z)) return false;
+    for (const z of extra || []) if (overl(b, z)) return false;
+    return true;
+  }
+  // candidate boxes for a W x H block around the eye centre (x, y)
+  function cands(x, y, W, H, away, caps){
+    const o = away === "r" ? "l" : "r", L = {};
+    if (!caps){
+      L.rd = [x + 34, y - 33, x + 34 + W, y - 33 + H]; L.ru = [x + 34, y + 33 - H, x + 34 + W, y + 33];
+      L.ld = [x - 34 - W, y - 33, x - 34, y - 33 + H]; L.lu = [x - 34 - W, y + 33 - H, x - 34, y + 33];
+      L.b = [x - W / 2, y + 44, x + W / 2, y + 44 + H]; L.a = [x - W / 2, y - 44 - H, x + W / 2, y - 44];
+      return [[away + "d", L[away + "d"]], [away + "u", L[away + "u"]], [o + "d", L[o + "d"]], [o + "u", L[o + "u"]], ["b", L.b], ["a", L.a]];
     }
+    L.ra = [x + 10, y - 38 - H, x + 10 + W, y - 38]; L.la = [x - 10 - W, y - 38 - H, x - 10, y - 38];
+    L.rb = [x + 10, y + 40, x + 10 + W, y + 40 + H]; L.lb = [x - 10 - W, y + 40, x - 10, y + 40 + H];
+    return [[away + "a", L[away + "a"]], [o + "a", L[o + "a"]], [away + "b", L[away + "b"]], [o + "b", L[o + "b"]]];
+  }
+  // the nearest free spot around the eye, keeping her distance
+  function nearestFree(x, y, W, H, extra){
+    for (const rad of [110, 160, 220, 300, 390, 500, 640]){
+      for (let k = 0; k < 16; k++){
+        const a = k * Math.PI / 8, cx = x + Math.cos(a) * (rad + W / 2), cy = y + Math.sin(a) * (rad * .6 + H / 2);
+        const b = [cx - W / 2, cy - H / 2, cx + W / 2, cy + H / 2];
+        if (freeBox(b, extra)) return b;
+      }
+    }
+    return null;
+  }
+  function pick(x, y, W, H, cur, curBox, away, caps, extra){
+    const list = cands(x, y, W, H, away, caps);
+    if (cur && cur !== "free"){ const c = list.find((q) => q[0] === cur); if (c && freeBox(c[1], extra)) return c; }
+    if (cur === "free" && curBox){
+      const b = [x + curBox[0], y + curBox[1], x + curBox[0] + W, y + curBox[1] + H];
+      if (freeBox(b, extra)) return ["free", b];
+    }
+    for (const c of list) if (freeBox(c[1], extra)) return c;
+    const f = nearestFree(x, y, W, H, extra);
+    return f ? ["free", f] : list[0];
+  }
+  function setBlock(el2, mode, b, x, y, isCaps){
+    // placed relative to the eye's own box (it moves by transform), so while the mode
+    // holds, nothing is written per frame
+    const l = Math.round(b[0] - (x - 30)), t = Math.round(b[1] - (y - 30));
+    const key = mode + (mode === "free" ? ":" + (l >> 3) + ":" + (t >> 3) : "");
+    if (el2._pk === key) return;
+    el2._pk = key;
+    el2.style.left = l + "px"; el2.style.top = t + "px"; el2.style.right = "auto"; el2.style.bottom = "auto";
+    const leftOfEye = b[2] <= x;
+    el2.classList.toggle("flip-x", leftOfEye);                       // the tail points back toward her
+    el2.classList.toggle("flip-y", !isCaps && (mode === "ru" || mode === "lu" || (mode !== "rd" && mode !== "ld" && b[3] < y)));
+    el2.classList.toggle("far", mode === "free" || mode === "a" || mode === "b");
+  }
+  function applySide(x, y){
+    if (!eye) return;
+    if (!chipEl) chipEl = eye.querySelector(".he-chip");
+    if (!capsEl) capsEl = eye.querySelector(".he-caps");
+    const saying = eye.classList.contains("he-says");
+    const capsOn = !!(capsEl && capsEl.querySelector(".cx-cap.on"));
+    if (!saying && !capsOn){ chipSide = ""; return; }
+    const t = performance.now();
+    if (chipSide === "") zonesT = 0;                                // a new line or box: measure now
+    chipSide = "x";
+    refreshZones(t);
+    const away = mx < 0 ? (x < innerWidth / 2 ? "r" : "l") : (sx === 1 ? "r" : "l");
+    let cb = null;
+    if (chipEl && saying){
+      const [W, H] = chipBox;
+      const c = pick(x, y, W, H, chipMode, chipEl._rel, away, false, null);
+      chipMode = c[0]; cb = c[1];
+      chipEl._rel = [cb[0] - x, cb[1] - y];
+      setBlock(chipEl, chipMode, cb, x, y, false);
+    }
+    if (capsEl && capsOn && capsBox){
+      const [W, H] = capsBox;
+      const c = pick(x, y, W, H, capsMode, capsEl._rel, away, true, cb ? [cb] : null);
+      capsMode = c[0];
+      capsEl._rel = [c[1][0] - x, c[1][1] - y];
+      setBlock(capsEl, capsMode, c[1], x, y, true);
+    }
+    const dc = eye.querySelector(".he-dchip");
+    if (dc) dc.classList.toggle("flip-x", away === "l");
   }
   function place(x, y){
     const tr = `translate(${x - 30}px, ${y - 30}px)`;
@@ -2023,8 +2120,19 @@
       place(64, 96);
     } else {
       // quadrant with hysteresis: flip only past the dead-band, then BLINK-teleport
-      const wantX = mx < innerWidth / 2 ? 1 : -1, wantY = my < innerHeight / 2 ? 1 : -1;
-      const overX = Math.abs(mx - innerWidth / 2) > HYST, overY = Math.abs(my - innerHeight / 2) > HYST;
+      let wantX = mx < innerWidth / 2 ? 1 : -1, wantY = my < innerHeight / 2 ? 1 : -1;
+      let overX = Math.abs(mx - innerWidth / 2) > HYST, overY = Math.abs(my - innerHeight / 2) > HYST;
+      // she keeps her distance from the cursor, and she does not perch ON the dice, the
+      // machine or a case file either: if her diagonal lands on a forbidden zone and
+      // another diagonal is free, she takes that one (on a blink, as always)
+      refreshZones(t);
+      const onZone = (ex, ey) => { const q = post2(ex, ey); const bx = [q.x - 30, q.y - 30, q.x + 30, q.y + 30];
+        for (const z of zones) if (overl(bx, z)) return true; return false; };
+      if (onZone(wantX, wantY)){
+        for (const [ax, ay] of [[wantX, -wantY], [-wantX, wantY], [-wantX, -wantY]]){
+          if (!onZone(ax, ay)){ wantX = ax; wantY = ay; overX = overY = true; break; }
+        }
+      }
       const flip = (overX && wantX !== sx) || (overY && wantY !== sy);
       if (flip && t - blinkT > 320){
         blink(() => { if (overX) sx = wantX; if (overY) sy = wantY; });
@@ -2116,6 +2224,7 @@
     // a DOM node (comic.js lines, built with textContent) or her own trusted markup
     if (it.html && it.html.nodeType === 1){ chip.textContent = ""; chip.appendChild(it.html); }
     else chip.innerHTML = it.html;
+    chipSide = "";   // new words, new size: measure and place again
     // already speaking: the words swap in place (comic.js fades them in); else she opens
     if (!eye.classList.contains("he-says")){ void eye.offsetWidth; eye.classList.add("he-says"); }
     try { it.onShow && it.onShow(it.ms); } catch (e) {}
@@ -2232,6 +2341,8 @@
   window.__helaEye = { say, manifest, aimSplit, clearSplit, blink, setPost, clearPost, direct, highlight,
     caps(){ if (!capsEl && eye) capsEl = eye.querySelector(".he-caps"); return capsEl; },
     live(){ return !!(eye && eye._live); }, posted(){ return !!(standAt || glide); }, backlog,
+    relayout(){ chipSide = ""; },
+    placement(){ return { chip: chipMode, caps: capsMode, zones: zones.length, chipBox, capsBox }; },   // for checks
     pos(){ if (!eye) return { x: 64, y: 96 }; const r = eye.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 30 }; } };
   window.__helaSay = (html, opt) => say(html, opt);   // she owns her voice now
 

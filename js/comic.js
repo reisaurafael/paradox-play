@@ -26,8 +26,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609262037";
-import { mend } from "./mend.js?202609262037";
+import { roman } from "./util.js?202609262048";
+import { mend } from "./mend.js?202609262048";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, fast: 1 };     // Fast never shortens a reading time
@@ -206,6 +206,7 @@ class Comic {
       this._parts(body, parts);
       s.appendChild(body);
       s.classList.add("on");
+      try { window.__helaEye && window.__helaEye.relayout && window.__helaEye.relayout(); } catch (e) {}   // her boxes changed size
     };
     if (s.classList.contains("on") && !s.classList.contains("cx-out")) { s.classList.add("cx-out"); this._t[slot + "x"] = setTimeout(() => { s.classList.remove("cx-out"); fill(); }, 380); }
     else { s.classList.remove("cx-out"); fill(); }
@@ -229,7 +230,8 @@ class Comic {
     // it fades first (nothing vanishes at once), then gives its room back
     s.classList.add("cx-out");
     clearTimeout(this._t[slot + "o"]);
-    this._t[slot + "o"] = setTimeout(() => s.classList.remove("on", "cx-out"), 520);
+    this._t[slot + "o"] = setTimeout(() => { s.classList.remove("on", "cx-out");
+      try { window.__helaEye && window.__helaEye.relayout && window.__helaEye.relayout(); } catch (e) {} }, 520);
   }
 
   /* ---- HELA SPEAKS FROM HER EYE ------------------------------------------------
