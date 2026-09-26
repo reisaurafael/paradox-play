@@ -378,6 +378,30 @@
       <circle r="2" fill="#7fa0e0"/></g>`;
   }
   let auditCache=[];
+  // THE SKY RUNS ON: past the chart's edge the same dark field, the same dust of stars,
+  // a few far nebulae and distant galaxies. Nothing that could be read as a world.
+  function skyExtArt(EX,EY){
+    const X1=W+EX, Y1=H+EY;
+    let defs=`<radialGradient id="ccxBg" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(${W/2} ${H*.26}) scale(${W*.9} ${H*.9})"><stop offset="0" stop-color="#131333"/><stop offset=".5" stop-color="#090919"/><stop offset="1" stop-color="#04040c"/></radialGradient>`;
+    const eras=["tim","con","mod","lma","hma","ant"];
+    eras.forEach(e=>{ defs+=`<radialGradient id="ccxNeb${e}"><stop offset="0" stop-color="${HUE[e]}" stop-opacity=".30"/><stop offset=".45" stop-color="${HUE[e]}" stop-opacity=".10"/><stop offset="1" stop-color="${HUE[e]}" stop-opacity="0"/></radialGradient>`; });
+    let g=`<rect x="0" y="0" width="${X1}" height="${Y1}" fill="url(#ccxBg)"/>`;
+    const out=(x,y)=>x>W+6||y>H+6;
+    // far nebulae, soft and faint, close enough to the edge to be seen on any screen
+    const puffs=[[W+70,H*.18,150],[W+260,H*.55,230],[W+120,H*.86,170],[W+620,H*.32,260],[W*.22,H+90,170],[W*.62,H+150,210],[W+180,H+120,190]];
+    puffs.forEach((q,i)=>{ g+=`<circle cx="${q[0].toFixed(0)}" cy="${q[1].toFixed(0)}" r="${q[2]}" fill="url(#ccxNeb${eras[i%6]})"/>`; });
+    // distant galaxies, tilted discs with a bright core
+    const gal=[[W+150,H*.40,.8],[W*.40,H+110,1],[W+420,H*.75,.7],[W+900,H*.20,.9]];
+    gal.forEach((q,i)=>{ const rot=(rnd(i,31)*160-80).toFixed(0);
+      g+=`<g transform="translate(${q[0].toFixed(0)} ${q[1].toFixed(0)}) rotate(${rot}) scale(${q[2]})" opacity=".5"><ellipse rx="26" ry="7" fill="#9fb0ff" opacity=".16"/><ellipse rx="15" ry="4" fill="#cfd8ff" opacity=".28"/><path d="M -24 2 Q -8 -9 0 0 Q 8 9 24 -2" fill="none" stroke="#b8c4ff" stroke-width="1" opacity=".35"/><circle r="2.2" fill="#eef2ff" opacity=".8"/></g>`; });
+    // the same dust of stars at the chart's density
+    const N=Math.round(220*(X1*Y1-W*H)/(W*H));
+    let st="";
+    for(let i=0;i<N;i++){ const x=Math.round(rnd(i+900,1)*X1), y=Math.round(rnd(i+900,2)*Y1); if(!out(x,y)) continue;
+      st+=`<circle cx="${x}" cy="${y}" r="${(rnd(i+900,3)*1.1+.2).toFixed(1)}" fill="#cfe0ff" opacity="${(rnd(i+900,4)*.5+.1).toFixed(2)}"/>`; }
+    g+=st;
+    return `<defs>${defs}</defs>${g}`;
+  }
   function baseMap(){
     layout(); auditCache=audit(); if(auditCache.length) console.warn("STAR-CHART AUDIT:", auditCache);
     let defs=`<radialGradient id="ccBg" cx="50%" cy="26%" r="90%"><stop offset="0" stop-color="#131333"/><stop offset=".5" stop-color="#090919"/><stop offset="1" stop-color="#04040c"/></radialGradient>
@@ -698,6 +722,7 @@
     W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
     const base=baseMap();
     rail.insertAdjacentHTML("beforeend",`<div class="cplot-sing"><svg class="pc-star" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cc-base">${base.out}</g><g class="cc-live"></g><g class="cc-fx"></g><g class="cc-top"></g></svg><div class="cc-cmd"></div><div class="cc-legend">${legendHTML()}</div><div class="cc-tip"></div></div>`);
+    if(window.__pdxSheetExt) window.__pdxSheetExt(rail.querySelector(".cplot-sing"),W,H,skyExtArt);
     const svg=rail.querySelector(".cplot-sing .pc-star");
     svg.addEventListener("click",e=>{ const t=e.target.closest(".cc-hit, .cc-glow, .cc-cost, .cc-world, .cc-sun"); let c=(t&&t.dataset&&t.dataset.c!==undefined)?+t.dataset.c:nearestStar(e); if(c!=null&&!isNaN(c)) onWorldClick(c); });
     rail.querySelector(".cplot-sing .cc-cmd").addEventListener("click",e=>{ if(e.target.closest(".cc-anchor")&&mode&&mode.kind==="travel"&&app.pendingReq){ snd("chart_stamp"); app.respond({direction:1,distance:0}); mode=null; scheduleLive(); } });

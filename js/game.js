@@ -11,18 +11,19 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609261009";
-import { audio } from "./audio.js?202609261009";
+import { icon } from "./icons.js?202609261413";
+import { audio } from "./audio.js?202609261413";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609261009";
-import { CatEngine } from "./cat.js?202609261009";
-import { tutorials } from "./tutorial.js?202609261009";
-import { profile } from "./profile.js?202609261009";
-import { Camera } from "./camera.js?202609261009";
+import { juice } from "./juice.js?202609261413";
+import { comic } from "./comic.js?202609261413";
+import { CatEngine } from "./cat.js?202609261413";
+import { tutorials } from "./tutorial.js?202609261413";
+import { profile } from "./profile.js?202609261413";
+import { Camera } from "./camera.js?202609261413";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
-  roman, centuryToPct, seatColor, initials, el, eraColor, eraName,
-} from "./util.js?202609261009";
+  roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
+} from "./util.js?202609261413";
 
 // O LEILAO E A FASE 1 DO TURNO NORMAL, e nao um modo a parte (arquitetura
 // fixada em 2026-07-31): uma janela dimensional que precede Delivery, do
@@ -165,6 +166,7 @@ export class Game {
     document.body.classList.add("cam-on");
     this.camera = new Camera(document.getElementById("cam"), this);
     juice.init();
+    comic.init(this);   // the comic layer: captions, impact moments, your-move marks
     this._initCat();
     (function () {
       var grid = document.querySelector(".game-grid");
@@ -256,12 +258,15 @@ export class Game {
   // queue has backed up. Zero-delay sleeps resolve on a microtask, which is not
   // throttled in background tabs, so a hidden client always catches up instantly.
   _ms(kind) {
-    if (this.pendingDecision) return 0;
+    if (this.pendingDecision || this._skip) return 0;
     if (typeof document !== "undefined" && document.hidden) return 0;
     if (this.queue.length > 6) return 0;
     return (PACE[kind] ?? 200) * SPEED_FACTOR[this.speed];
   }
-  _sleep(ms) { return ms > 0 ? new Promise((r) => setTimeout(r, ms)) : Promise.resolve(); }
+  _sleep(ms) {
+    if (this._skip) ms = Math.min(ms, 20);   // SKIP (F): the replay races to the present
+    return ms > 0 ? new Promise((r) => setTimeout(r, ms)) : Promise.resolve();
+  }
   // Speed multiplier for direct (non-queue) animations like the Merchant journey
   // and the dice roll, so they honour the Slow/Normal/Fast setting too.
   _scale() { return SPEED_FACTOR[this.speed] || 1; }
@@ -297,6 +302,7 @@ export class Game {
       }
     } finally {
       this.busy = false;
+      if (this._skip) { this._skip = false; document.body.classList.remove("cx-skipping"); }
     }
     // Hold the curtain: if the sea chart is mid-presentation (voyage scrawls,
     // monster strikes), let it finish before a decision pulls the camera.
@@ -411,6 +417,8 @@ export class Game {
     if (!window.__seatColor) window.__seatColor = (n) => this.colorOf(n);
     // YOUR dice wear YOUR colour, the var the dice CSS drinks from
     try { if (this.seat) document.documentElement.style.setProperty("--self-col", this.colorOf(this.seat)); } catch (e) {}
+    // HELA wears MY colour, the same one my piece wears on the map (util.js setHelaColour)
+    try { if (this.seat) setHelaColour(this.colorOf(this.seat)); } catch (e) {}
     try { window.__helaLogHead && window.__helaLogHead(); } catch (e) {}
     this.view = view;
     if (view.mode === "leilao" && !this.dom.phaseTrack.querySelector('[data-phase="leilao"]')) this.renderPhaseTrack();
@@ -957,15 +965,15 @@ export class Game {
         + `<div class="bd-main">`
         + `<div class="bd-photo" style="--seat:${col}"><span>${initials(t.name)}</span></div>`
         + `<div class="bd-id">`
-        +   `<div class="bd-line1"><span class="bd-name" title="${t.name}">${t.name}</span></div>`
-        +   `<div class="bd-line2"><span class="bd-life ${tick("energy", t.energy) ? "vg-" + tick("energy", t.energy) : ""}${t.energy <= 6 ? " crit" : t.energy <= 9 ? " warn" : ""}" title="Energy ${t.energy}">`
+        +   `<div class="bd-line1"><span class="bd-name" title="${esc(t.name)}">${esc(t.name)}</span></div>`
+        +   `<div class="bd-line2"><span class="bd-life ${tick("energy", t.energy) ? "vg-" + tick("energy", t.energy) : ""}${t.energy <= 6 ? " crit" : t.energy <= 9 ? " warn" : ""}" title="Energy ${t.energy}. At 0 the traveler is terminated; 6 or less is critical.">`
         +     `<span class="bd-ekg"><svg class="ekg-svg" viewBox="0 0 64 18" preserveAspectRatio="none" fill="none"><polyline class="ekg-line" points="0,9 13,9 17,9 20,3 23,15 26,9 39,9 43,9 46,4 49,14 52,9 64,9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg></span>`
         +     `<b class="bd-life-n">${t.energy}</b></span></div>`
         + `</div>`
         + `<div class="bd-flags">`
         + (t.has_briefcase ? `<span class="cf-chip" title="Temporal Briefcase, +1 slot">${icon("briefcase")}</span>`: "")
-        + (isWanted ? `<span class="cf-stamp cf-wanted">WANTED</span>` : "")
-        + (isTerminated ? `<span class="cf-stamp cf-archived">ARCHIVED</span>` : "")
+        + (isWanted ? `<span class="cf-stamp cf-wanted" title="Wanted: whoever terminates this traveler collects 4 gold. They clear it by paying 4 gold (Declare) at a Market.">WANTED</span>` : "")
+        + (isTerminated ? `<span class="cf-stamp cf-archived" title="Terminated: their gear was recycled and they restarted at XXX. They can still deliver, earn points and win.">ARCHIVED</span>` : "")
         + `</div></div>`
         // THE GENERATOR REGISTRY, the whole lower floor, big and legible. It was
         // decorative for months (the cells were never populated); now it REGISTERS.
@@ -1092,10 +1100,10 @@ export class Game {
     if ((t.statuses || []).includes("exploded")) remarks.push("boiler burst, grounded this hour");
     if (!remarks.length) remarks.push("no irregularities on record");
     const clippings = [];
-    if (t.scored_century_x) clippings.push({ head: "MILLENNIUM MARK CLAIMED", sub: `${t.name} holds Centvry X as the Hour turns, the Division awards one contract point`, tag: "CENTVRY X" });
-    if (t.scored_century_xx) clippings.push({ head: "THE SECOND MILLENNIUM FALLS", sub: `${t.name} plants the mark at Centvry XX, historians dispute the ink`, tag: "CENTVRY XX" });
-    (t.delivered_periods || []).forEach((pk) => clippings.push({ head: `THE ${pk.toUpperCase()} STABILISED`, sub: `a relic received in its own age, the ${pk} period sealed under ${t.name}'s name`, tag: pk.toUpperCase() }));
-    if (isWanted2) clippings.push({ head: "BOUNTY DECLARED", sub: `the Division marks ${t.name}, four gold, dead or alive`, tag: "WANTED" });
+    if (t.scored_century_x) clippings.push({ head: "MILLENNIUM MARK CLAIMED", sub: `${esc(t.name)} holds Centvry X as the Hour turns, the Division awards one contract point`, tag: "CENTVRY X" });
+    if (t.scored_century_xx) clippings.push({ head: "THE SECOND MILLENNIUM FALLS", sub: `${esc(t.name)} plants the mark at Centvry XX, historians dispute the ink`, tag: "CENTVRY XX" });
+    (t.delivered_periods || []).forEach((pk) => clippings.push({ head: `THE ${pk.toUpperCase()} STABILISED`, sub: `a relic received in its own age, the ${pk} period sealed under ${esc(t.name)}'s name`, tag: pk.toUpperCase() }));
+    if (isWanted2) clippings.push({ head: "BOUNTY DECLARED", sub: `the Division marks ${esc(t.name)}, four gold, dead or alive`, tag: "WANTED" });
     this._dossierClips = clippings;
     this._dossierCP = cpn;
     let html = `<div class="do-head"><div class="do-agency">C.R.O.N.O.S. &middot; TEMPORAL ENFORCEMENT DIVISION</div>`
@@ -1104,7 +1112,7 @@ export class Game {
       + `<div class="do-topsecret">TOP SECRET</div></div>`
       + `<div class="do-ident"><div class="do-photo" style="--seat:${col2}"><span>${initials(t.name)}</span><em>SUBJ.</em></div>`
       + `<div class="do-fields">`
-      + `<div class="do-field"><label>SUBJECT</label><b>${t.name}</b></div>`
+      + `<div class="do-field"><label>SUBJECT</label><b>${esc(t.name)}</b></div>`
       + `<div class="do-field"><label>LAST KNOWN POSITION</label><b>CENTVRY ${roman(t.century)}</b> <span>&middot; ${eraName(t.century)}</span></div>`
       + `<div class="do-field"><label>STATUS</label>${isTerm2 ? `<span class="cs-stamp cs-archived">ARCHIVED</span>` : isWanted2 ? `<span class="cs-stamp cs-wanted">WANTED</span>` : "<b>AT LARGE</b>"}</div>`
       + `</div></div>`
@@ -1976,6 +1984,7 @@ export class Game {
       total: dice.length,
       unavailable: new Set(req.options.unavailable_functions || []),
     };
+    this._allocHist = [];
     this.selected = null;
     this.awaitingReveal = false;
     this.clearPrompt();
@@ -2601,7 +2610,24 @@ export class Game {
     }
     return true;
   }
+  // UNDO (Z / Backspace): a snapshot of the machine before each move, last 20 kept
+  _allocSnap() {
+    if (!this.alloc) return;
+    this._allocHist = this._allocHist || [];
+    this._allocHist.push({ m: this.alloc.matrix.map((r) => r.slice()), e: this.alloc.escape, p: this.alloc.pool.slice() });
+    if (this._allocHist.length > 20) this._allocHist.shift();
+  }
+  undoAllocation() {
+    const h = this._allocHist && this._allocHist.pop();
+    if (!h || !this.alloc) return false;
+    if (this._carry || this.selected) this._endCarry(true);
+    this.alloc.matrix = h.m; this.alloc.escape = h.e; this.alloc.pool = h.p;
+    this.selected = null; this._justSocketed = null;
+    this.afterPlace();
+    return true;
+  }
   removeFromSource(d) {
+    this._allocSnap();
     if (d.source === "pool") this.alloc.pool.splice(+d.idx, 1);
     else if (d.source === "cell") this.alloc.matrix[+d.r][+d.c] = 0;
     else if (d.source === "escape") this.alloc.escape = 0;
@@ -2740,8 +2766,9 @@ export class Game {
     this.afterPlace();
   }
   refreshSelectionUI() {
-    // re-render dice so the selected die shows its ring
-    this.renderDiceCockpit();
+    // re-render dice so the selected die shows its ring. A carry can outlive its
+    // allocation (a click lands after Confirm), and then there is no tray to redraw.
+    if (this.alloc) this.renderDiceCockpit();
   }
 
   // Pick up a die: float a ghost that tracks the cursor and hide the source die,
@@ -2971,6 +2998,7 @@ export class Game {
 
   clearAllocation() {
     if (!this.alloc) return;
+    this._allocSnap();
     const back = [];
     for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
       if (this.alloc.matrix[r][c]) { back.push(this.alloc.matrix[r][c]); this.alloc.matrix[r][c] = 0; }
@@ -2998,6 +3026,7 @@ export class Game {
   /* ======================== DECISIONS ============================== */
   onDecision(req) {
     this.pendingReq = req;
+    try { comic.onDecision(req); } catch (e) {}
     this.activeSeat = req.seat;
     const k = req.kind;
     this.updateBeacon();   // no forced camera, an arrow beckons toward the decision
@@ -3122,6 +3151,7 @@ export class Game {
     if (!this.pendingReq) return;
     this.conn.respond(this.pendingReq.request_id, data);
     this.pendingReq = null;
+    try { comic.onRespond(); } catch (e) {}
     this.activeSeat = null;
     if (this.camera) this.camera._decisionLocked = false;
     this.hideBeacon();
@@ -3880,6 +3910,9 @@ export class Game {
         console.error("[target] nenhuma carta da selecao esta alcancavel na tela ("
           + alvos.length + " desenhadas), caindo para o popup");
         this.selectReq = null;
+        // the in-place marks were drawn for a selection that no longer listens:
+        // repaint without them, or the shelf keeps offering cards that do nothing
+        try { this.renderMarket(); this.renderPlayers(); } catch (e) {}
         if (respondKey === "choice") this.promptTarget(req);
         else this.promptPickCard(req, title, "card");
       }
@@ -4364,6 +4397,7 @@ export class Game {
   async playEvent(msg) {
     const { kind, payload } = msg;
     this.logEvent(kind, payload);
+    try { comic.onEvent(kind, payload); } catch (e) {}
     // the auction phase watches its own events so the hall can play out the
     // resolution (who took what) before the window tunes back
     if (kind.startsWith("leilao_") || kind.startsWith("piece_")) {
@@ -4531,7 +4565,7 @@ export class Game {
         audio.play("heat"); break;
       }
       case "exploded": if (window.__room) window.__room.beat("danger");
-        this.toast(`${payload.seat}'s motor exploded`, "alert");
+        this.toast(`${esc(payload.seat)}'s motor exploded`, "alert");
         if (payload.seat === this.seat) this.shake("lg");
         juice.flash("danger", { intensity: 0.55 }); juice.hitPause(120); this.catStartle();
         this.flashPanel(payload.seat, "fx-hit"); audio.play("explode"); break;
@@ -5499,7 +5533,7 @@ export class Game {
     this._pressRun = this._pressRun || {};
     const run = PRESS[kind];
     const fill = (t) => String(t || "")
-      .replace(/\{NAME\}/g, opts.name || "the traveler")
+      .replace(/\{NAME\}/g, esc(opts.name || "the traveler"))
       .replace(/\{CENTURY\}/g, opts.century != null ? roman(opts.century): "--");
     let body = "The survey office issues a bulletin to all travellers upon the sea of time.";
     if (run){
@@ -5542,7 +5576,7 @@ export class Game {
     p.innerHTML = `
       <div class="wp-top">C.R.O.N.O.S.</div>
       <div class="wp-word">WANTED</div>
-      <div class="wp-name">${seat}</div>
+      <div class="wp-name">${esc(seat)}</div>
       <div class="wp-bounty">BOUNTY · 4 GOLD</div>
       <div class="wanted-stamp">${icon("wanted")}</div>`;
     if (r && r.width) {
@@ -5592,14 +5626,14 @@ export class Game {
     const o = el("div", "gameover");
     const scores = Object.entries(payload.scores).sort((a, b) => b[1] - a[1]);
     const rows = scores.map(([n, s]) =>
-      `<tr><td><span class="pcard-swatch" style="display:inline-block;background:${this.colorOf(n)}"></span> ${n}</td><td>${s}</td></tr>`).join("");
+      `<tr><td><span class="pcard-swatch" style="display:inline-block;background:${this.colorOf(n)}"></span> ${esc(n)}</td><td>${esc(s)}</td></tr>`).join("");
     const reasons = { year_zero: "A traveler reached Year Zero", full_receptor: "Temporal Receptor completed",
       last_traveler: "Last traveler standing", all_terminated: "All travelers terminated", merchant_empty: "The Merchant ran dry" };
     o.innerHTML = `
       <div class="gameover-card panel bracketed">
         <p class="overline">Time Stabilised</p>
-        <div class="winner">${payload.winner || "--"}</div>
-        <p class="muted">${reasons[payload.reason] || payload.reason} · Monarch of Time</p>
+        <div class="winner">${esc(payload.winner || "--")}</div>
+        <p class="muted">${esc(reasons[payload.reason] || payload.reason)} · Monarch of Time</p>
         <table class="score-table"><thead><tr><th>Operative</th><th>CP</th></tr></thead><tbody>${rows}</tbody></table>
         <button class="btn btn-primary" onclick="location.reload()">Return to Bureau</button>
       </div>`;
@@ -5631,27 +5665,35 @@ export class Game {
       return (e && e.name) || id;
     } catch (e) { return id; }
   }
-  humanize(kind, p) {
+  humanize(kind, p0) {
+    // Names and card names come from the server and from what players typed: every
+    // one of them is escaped before it becomes part of the log line's HTML.
+    const p = { ...(p0 || {}) };
+    for (const k of ["seat", "by", "from", "winner", "player", "category", "currency", "reason", "phase"])
+      if (typeof p[k] === "string") p[k] = esc(p[k]);
+    if (Array.isArray(p.tied)) p.tied = p.tied.map(esc);
+    const C = (n) => esc(this.nameEn(n));
+    const L = (id) => esc(this._lfName(id));
     switch (kind) {
       case "phase_started": if (p.invalid_allocation) return null; return { text: `- ${p.phase}${p.solo ? " (solo)": ""} -` };
       case "phase_skipped": return { text: `${p.phase} skipped, ${p.reason}`, cls: "" };
-      case "delivered": return { text: `${p.seat} delivered ${p.card} at ${roman(p.century)}`, cls: "cp" };
-      case "card_bought": return { text: `${p.seat} ${p.stolen ? "stole" : "bought"} ${p.card}${p.cost ? ` (${p.cost}g)` : ""}`, cls: "market" };
+      case "delivered": return { text: `${p.seat} delivered ${C(p.card)} at ${roman(p.century)}`, cls: "cp" };
+      case "card_bought": return { text: `${p.seat} ${p.stolen ? "stole" : "bought"} ${C(p.card)}${p.cost ? ` (${p.cost}g)` : ""}`, cls: "market" };
       // THE AUCTION SPEAKS. The hall resolves in secret and the table has to
       // hear it: who took what, who tied, what went into a machine.
-      case "leilao_offer_stored": return { text: `${p.seat} took ${this._lfName(p.lot)} for ${p.paid} ${p.currency}`, cls: "market" };
+      case "leilao_offer_stored": return { text: `${p.seat} took ${L(p.lot)} for ${p.paid} ${p.currency}`, cls: "market" };
       case "leilao_event": {
         const t2 = p.type;
-        if (t2 === "lot_won") return { text: `${p.player} won ${this._lfName(p.lot)} at ${p.paid}${p.contested ? ", contested" : ""}`, cls: "market" };
+        if (t2 === "lot_won") return { text: `${p.player} won ${L(p.lot)} at ${p.paid}${p.contested ? ", contested" : ""}`, cls: "market" };
         if (t2 === "lot_tied") return { text: `${(p.tied || []).join(" and ")} tied at ${p.amount}, the lot returns to the floor`, cls: "market" };
         if (t2 === "secret_vanished") return { text: `the sealed lot vanished: ${(p.tied || []).join(" and ")} tied at ${p.amount}`, cls: "paradox" };
         if (t2 === "lot_free") return { text: `${p.player} took the last lot for nothing`, cls: "market" };
         return null;
       }
-      case "piece_installed": return { text: `${p.seat} installed ${this._lfName(p.piece)}${p.row != null ? ` in row ${p.row + 1}` : ""}`, cls: "" };
-      case "piece_replaced": return { text: `${p.seat} replaced ${this._lfName(p.old)} with ${this._lfName(p.new)}`, cls: "" };
-      case "piece_discarded": return { text: `${p.seat} let ${this._lfName(p.piece)} go (${p.reason || "no room"})`, cls: "" };
-      case "card_renewed": return { text: `${p.seat} renewed ${p.card} (${p.cost}g)`, cls: "market" };
+      case "piece_installed": return { text: `${p.seat} installed ${L(p.piece)}${p.row != null ? ` in row ${p.row + 1}` : ""}`, cls: "" };
+      case "piece_replaced": return { text: `${p.seat} replaced ${L(p.old)} with ${L(p.new)}`, cls: "" };
+      case "piece_discarded": return { text: `${p.seat} let ${L(p.piece)} go (${p.reason || "no room"})`, cls: "" };
+      case "card_renewed": return { text: `${p.seat} renewed ${C(p.card)} (${p.cost}g)`, cls: "market" };
       case "declared": return { text: `${p.seat} declared, Wanted cleared`, cls: "market" };
       case "merchant_moved": {
         const barge = `<svg width="26" height="15" viewBox="0 0 26 15" style="vertical-align:-3px"><path d="M2 9 Q13 13 24 9 L22 12.5 Q13 15.5 4 12.5 Z" fill="#4a3620"/><path d="M4 5.5 Q13 2.5 22 5.5 L22 8 Q13 5 4 8 Z" fill="#8c3b2a"/><path d="M13 5 V 0 M13 0 L19 1.8 L13 3.6" stroke="#241708" stroke-width=".9" fill="#c9a45c"/></svg>`;
@@ -5671,10 +5713,10 @@ export class Game {
         </svg>`;
         return { text: `${chart} ${p.seat} sailed ${roman(p.from)} -> ${roman(p.to)}${up ? " · upstream": " · with the current"}`, cls: "travel" };
       }
-      case "activated": return { text: `${p.seat} activated ${this.nameEn(p.card)}`, cls: "market" };
-      case "recycled": return { text: `${p.seat} recycled ${this.nameEn(p.card)} (+${p.energy} energy)`, cls: "" };
-      case "card_stolen": return { text: `${p.seat} stole ${this.nameEn(p.card)}${p.from ? ` from ${p.from}` : ""} (Cauldron)`, cls: "market" };
-      case "card_destroyed": return { text: `${this.nameEn(p.card)} was destroyed${p.reason === "limbo" ? " (no room kept)" : ""}`, cls: "danger" };
+      case "activated": return { text: `${p.seat} activated ${C(p.card)}`, cls: "market" };
+      case "recycled": return { text: `${p.seat} recycled ${C(p.card)} (+${p.energy} energy)`, cls: "" };
+      case "card_stolen": return { text: `${p.seat} stole ${C(p.card)}${p.from ? ` from ${p.from}` : ""} (Cauldron)`, cls: "market" };
+      case "card_destroyed": return { text: `${C(p.card)} was destroyed${p.reason === "limbo" ? " (no room kept)" : ""}`, cls: "danger" };
       case "overloaded": return { text: `${p.seat} overloaded a function`, cls: "" };
       case "milestone": return { text: `${p.seat} reached ${roman(p.century)}, milestone`, cls: "cp" };
       case "terminated": return { text: `${p.seat} terminated${p.by ? ` by ${p.by}` : ""}`, cls: "danger" };

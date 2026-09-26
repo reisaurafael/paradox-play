@@ -30,6 +30,25 @@
   const rnd = (a, b) => { const x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); };
   const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ── THE SHEET RUNS ON (shared by all three charts; app.css THE CHART SHEET GROWS) ──
+     Mounts a decorative sheet UNDER a chart that may run past the chart's right and
+     bottom edges into the room a wider or taller screen has spare. art(EX, EY) returns SVG
+     in the chart's own units covering 0..W+EX by 0..H+EY; CSS sizes the visible part and
+     tears its edge. The chart itself never moves: this only paints beneath it. */
+  window.__pdxSheetExt = window.__pdxSheetExt || function (cp, W0, H0, art) {
+    if (!cp) return;
+    const old = cp.querySelector(":scope > .sheet-ext"); if (old) old.remove();
+    const ow = cp.offsetWidth, oh = cp.offsetHeight; if (!ow || !oh) return;
+    const k = Math.min(ow / W0, oh / H0), ox = (ow - W0 * k) / 2, oy = (oh - H0 * k) / 2;
+    // the most a screen can ever ask for, in plane px: 32:9 beside, 5:4 below
+    const EX = Math.ceil(1150 / k), EY = Math.ceil(560 / k);
+    const d = document.createElement("div");
+    d.className = "sheet-ext"; d.setAttribute("aria-hidden", "true");
+    d.innerHTML = `<svg xmlns="${"http://www.w3.org/2000/svg"}" width="100%" height="100%" preserveAspectRatio="none">`
+      + `<g transform="translate(${ox.toFixed(2)} ${oy.toFixed(2)}) scale(${k.toFixed(5)})">${art(EX, EY)}</g></svg>`;
+    cp.insertBefore(d, cp.firstChild);
+  };
+
   /* ── the five torn seams between the six era sheets ── */
   const SEAMS = [
     x => 208 + 14 * x / W,   // timeless | contemporary   (XXIII lives here)
@@ -787,6 +806,50 @@
         g += `<path d="M ${x} ${(f(x) - 3).toFixed(1)} q 6 -6 12 -1 q -5 0 -7 3.5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.1"/>`;
     });
     return g;
+  }
+  // THE SEA RUNS ON: past the chart's right edge the six seas keep their bands, seams and
+  // foam; below it the Antiquity sea keeps going. Open water only: no island, no route,
+  // no shark, nothing that could be read as a place to sail to.
+  function seaExtArt(EX, EY) {
+    const X1 = W + EX, Y1 = H + EY, L = BANDS.length;
+    const n = Math.max(2, Math.round(24 * EX / W));
+    const seamPts = SEAMS.map((f, i) => {   // one jagged line per seam, shared by both bands
+      const pts = [];
+      for (let j = 0; j <= n; j++) { const x = W + EX * j / n, jj = j === 0 ? 0 : ((j * 2654435761 % 97) / 97 - 0.5);
+        pts.push([x, f(x) + jj * BANDS[i].amp]); }
+      return pts;
+    });
+    const line = pts => pts.map(q => `L ${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(" ");
+    let defs = "", g = `<rect x="0" y="0" width="${X1}" height="${Y1}" fill="#587f8f"/>`;
+    for (let i = 0; i < L; i++) {
+      const m = BANDS[i];
+      const top = i === 0 ? `M ${W} 0 L ${X1} 0` : `M ${W} ${SEAMS[i - 1](W).toFixed(1)} ${line(seamPts[i - 1])}`;
+      const bot = i === L - 1 ? `L ${X1} ${Y1} L 0 ${Y1} L 0 ${H} L ${W} ${H}`
+                              : line(seamPts[i].slice().reverse());
+      const d = `${top} ${bot} Z`, cid = "seaxc" + m.id;
+      defs += `<clipPath id="${cid}"><path d="${d}"/></clipPath>`;
+      const y0 = i === 0 ? 0 : Math.min(SEAMS[i - 1](W), SEAMS[i - 1](X1)) - 16;
+      const y1 = i === L - 1 ? Y1 : Math.max(SEAMS[i](W), SEAMS[i](X1)) + 16;
+      let rows = "";
+      for (let y = Math.floor(y0 / 14) * 14 + 8; y < y1; y += 14) {
+        const kk = (y / 14) | 0, ph = (kk * (kk % 2 ? 29 : 17)) % 48, x0 = i === L - 1 ? -96 + ph : W - 96 + ph;
+        let pd = `M ${x0} ${y} `; for (let x = x0; x < X1 + 48; x += 48) pd += "q 12 -8 24 0 q 12 8 24 0 ";
+        rows += `<path d="${pd}" fill="none" stroke="${m.ink}" stroke-width="1" opacity="${kk % 2 ? .11 : .16}"/>`;
+      }
+      let curls = "";
+      for (let c = 0; c < 10; c++) { const cx = W + 30 + rnd(c + i * 13, 7) * (EX - 60), cy = y0 + 20 + rnd(c + i * 13, 9) * Math.max(10, y1 - y0 - 40);
+        curls += `<path d="M ${cx.toFixed(0)} ${cy.toFixed(0)} q 7 -7 14 -2 q -6 0 -8 4" fill="none" stroke="#f4f8f6" stroke-width="1" opacity=".22"/>`; }
+      if (i === L - 1) for (let c = 0; c < 18; c++) { const cx = 30 + rnd(c, 21) * (W - 60), cy = H + 20 + rnd(c, 23) * (EY - 40);
+        curls += `<path d="M ${cx.toFixed(0)} ${cy.toFixed(0)} q 7 -7 14 -2 q -6 0 -8 4" fill="none" stroke="#f4f8f6" stroke-width="1" opacity=".22"/>`; }
+      g += `<g clip-path="url(#${cid})"><rect x="0" y="0" width="${X1}" height="${Y1}" fill="${m.paper[0]}"/>`
+        + `<rect x="0" y="0" width="${X1}" height="${Y1}" fill="${m.paper[1]}"/>${rows}${curls}</g>`;
+    }
+    SEAMS.forEach((f, i) => {
+      g += `<path d="M ${W} ${(f(W) + 2).toFixed(1)} ${line(seamPts[i].map(q => [q[0], q[1] + 2]))}" fill="none" stroke="rgba(26,66,84,.28)" stroke-width="5"/>`
+        + `<path d="M ${W} ${f(W).toFixed(1)} ${line(seamPts[i])}" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="2"/>`;
+    });
+    g += `<image href="${ROUGH_TEX}" x="0" y="0" width="${X1}" height="${Y1}" preserveAspectRatio="none" opacity=".55"/>`;
+    return `<defs>${defs}</defs>${g}`;
   }
   function baseMap() {
     layout();
@@ -1774,6 +1837,7 @@
         </svg>
         <div class="sea-cmd"></div>
       </div>`);
+    window.__pdxSheetExt(rail.querySelector(".cplot"), W, H, seaExtArt);
     liveG = rail.querySelector(".sea-live");
     fxG = rail.querySelector(".sea-fx");
     topG = rail.querySelector(".sea-top");

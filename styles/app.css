@@ -3196,8 +3196,8 @@ body.cam-on .rucksack-zone .ruck-vouchers {
 .breaking-news.on { transform: translateX(0) scale(1); opacity: 1; }
 .hb-frame { position: relative; width: 372px; padding: 8px 10px 9px;
   background: linear-gradient(158deg, rgba(20,54,52,.34), rgba(8,18,20,.22));
-  border: 1px solid rgba(102,240,200,.5); border-radius: 4px;
-  box-shadow: 0 12px 42px rgba(0,0,0,.5), inset 0 0 34px rgba(102,240,200,.07);
+  border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .5); border-radius: 4px;
+  box-shadow: 0 12px 42px rgba(0,0,0,.5), inset 0 0 34px rgb(var(--vz-rgb, 102 240 200) / .07);
   backdrop-filter: blur(1.4px); -webkit-backdrop-filter: blur(1.4px);
   color: #cffdf1; font-family: var(--f-mono, monospace); }
 .hb-frame::before, .hb-frame::after { content:""; position:absolute; width:15px; height:15px;
@@ -3208,11 +3208,11 @@ body.cam-on .rucksack-zone .ruck-vouchers {
 .hb-sigil { width:15px; height:15px; flex:0 0 15px; color:var(--vz,#66f0c8); }
 .hb-sigil svg { width:100%; height:100%; }
 .hb-src { color:var(--vz,#66f0c8); font-weight:700; }
-.hb-status { margin-left:auto; color:#eafff8; border:1px solid rgba(102,240,200,.4);
+.hb-status { margin-left:auto; color:var(--vz-hot, #eafff8); border:1px solid rgb(var(--vz-rgb, 102 240 200) / .4);
   padding:1px 6px; border-radius:2px; animation:hbBlink 1.5s steps(1) infinite; }
 @keyframes hbBlink { 50% { opacity:.35; } }
-.hb-say { font-size:.66rem; line-height:1.36; font-style:italic; color:#c6f2e6;
-  margin:6px 3px 8px; letter-spacing:.005em; text-shadow:0 0 8px rgba(102,240,200,.35); }
+.hb-say { font-size:.66rem; line-height:1.36; font-style:italic; color: var(--vz-text, #c6f2e6);
+  margin:6px 3px 8px; letter-spacing:.005em; text-shadow:0 0 8px rgb(var(--vz-rgb, 102 240 200) / .35); }
 .hb-clip { position:relative; }
 .hb-clip .bn-paper { width:100%; box-shadow:0 3px 12px rgba(0,0,0,.5);
   /* translucent stock so the maleta shows through, the ink stays opaque + readable */
@@ -3220,7 +3220,7 @@ body.cam-on .rucksack-zone .ruck-vouchers {
     repeating-linear-gradient(0deg, rgba(90,69,38,.05) 0 2px, transparent 2px 4px),
     rgba(239,228,196,.86); }
 .hb-scan { position:absolute; inset:0; pointer-events:none; border-radius:2px;
-  background:repeating-linear-gradient(0deg, rgba(102,240,200,.06) 0 1px, transparent 1px 3px);
+  background:repeating-linear-gradient(0deg, rgb(var(--vz-rgb, 102 240 200) / .06) 0 1px, transparent 1px 3px);
   mix-blend-mode:screen; opacity:.5; }
 .hb-foot { font-size:.46rem; letter-spacing:.2em; color:var(--vz-dim,#2f8579);
   margin-top:7px; text-align:center; }
@@ -3348,7 +3348,7 @@ body.cabin-on { --vz:#66f0c8; --vz-dim:#2f8579; --vz-hot:#eafff8; --vz-warn:#ff6
 #hull .hull-rail.vz-rail {
   height:auto; align-items:center; padding:14px 30px 0; gap:0;
   background:none; border:0; box-shadow:none; pointer-events:none; z-index:50;
-  color:var(--vz); font-family:var(--f-mono,monospace); text-shadow:0 0 6px rgba(102,240,200,.5);
+  color:var(--vz); font-family:var(--f-mono,monospace); text-shadow:0 0 6px rgb(var(--vz-rgb, 102 240 200) / .5);
   transition:transform .18s ease-out; will-change:transform; }
 #hull .hull-rail.vz-rail::after { display:none; }
 #hull .vz-rail .hull-seam, #hull .vz-rail .hull-rail-spacer,
@@ -3377,9 +3377,9 @@ body.cabin-on { --vz:#66f0c8; --vz-dim:#2f8579; --vz-hot:#eafff8; --vz-warn:#ff6
   box-shadow:0 0 9px var(--seat,var(--vz)), inset 0 0 7px rgba(0,0,0,.35);
   text-shadow:0 0 3px #000, 0 0 2px var(--seat); }
 #hull .vz-rail .icon-btn.hull-knob { width:30px; height:30px; color:var(--vz);
-  background:radial-gradient(circle at 40% 35%, rgba(102,240,200,.28), rgba(6,26,22,.5) 70%);
+  background:radial-gradient(circle at 40% 35%, rgb(var(--vz-rgb, 102 240 200) / .28), rgba(6,26,22,.5) 70%);
   border:1.6px solid var(--vz-dim);
-  box-shadow:0 0 9px rgba(102,240,200,.32), inset 0 0 6px rgba(102,240,200,.14); }
+  box-shadow:0 0 9px rgb(var(--vz-rgb, 102 240 200) / .32), inset 0 0 6px rgb(var(--vz-rgb, 102 240 200) / .14); }
 #hull .vz-rail .icon-btn.hull-knob svg { color:var(--vz); }
 #hull .vz-rail .icon-btn.hull-knob:hover { filter:brightness(1.18); box-shadow:0 0 13px var(--vz); }
 
@@ -3397,7 +3397,7 @@ body.cabin-on { --vz:#66f0c8; --vz-dim:#2f8579; --vz-hot:#eafff8; --vz-warn:#ff6
     radial-gradient(70% 150% at -16% 50%, rgba(4,12,11,.24) 0%, transparent 20%),
     radial-gradient(70% 150% at 116% 50%, rgba(4,12,11,.24) 0%, transparent 20%); }
 #hull .vz-cnr { position:absolute; width:112px; height:112px; border:2px solid var(--vz);
-  box-shadow:0 0 11px rgba(102,240,200,.55); opacity:.62;
+  box-shadow:0 0 11px rgb(var(--vz-rgb, 102 240 200) / .55); opacity:.62;
   transition:transform .16s ease-out; will-change:transform; }
 #hull .vz-cnr.tl { top:18px; left:18px; border-right:0; border-bottom:0; border-radius:13px 0 0 0; }
 #hull .vz-cnr.tr { top:18px; right:18px; border-left:0; border-bottom:0; border-radius:0 13px 0 0; }
@@ -3420,22 +3420,22 @@ body.vz-crit #hull .vz-cnr { border-color:var(--vz-warn); box-shadow:0 0 12px rg
 /* ── ENERGY HOLOGRAM, a slim reactor readout projected in the pocket between
    the resting fingertip (~690,815) and the dimensional window/map (x~776) ── */
 #hull .vz-holo { position:fixed; left:857px; top:1031px; z-index:30; pointer-events:none;
-  color:var(--vz); font-family:var(--f-mono,monospace); text-shadow:0 0 5px rgba(102,240,200,.4);
+  color:var(--vz); font-family:var(--f-mono,monospace); text-shadow:0 0 5px rgb(var(--vz-rgb, 102 240 200) / .4);
   transform:translate(-50%,-50%) perspective(720px) rotateX(11deg);
   transform-origin:50% 100%; transition:transform .2s ease-out, opacity .45s ease; will-change:transform; }
 #hull .vz-holo-panel { position:relative; display:flex; flex-direction:column; align-items:center; gap:6px;
-  padding:11px 16px 12px; border:1px solid rgba(102,240,200,.5); border-radius:9px;
+  padding:11px 16px 12px; border:1px solid rgb(var(--vz-rgb, 102 240 200) / .5); border-radius:9px;
   background:linear-gradient(180deg, rgba(12,46,40,.32), rgba(6,22,19,.16));
-  box-shadow:0 0 26px rgba(102,240,200,.26), inset 0 0 20px rgba(102,240,200,.08); }
+  box-shadow:0 0 26px rgb(var(--vz-rgb, 102 240 200) / .26), inset 0 0 20px rgb(var(--vz-rgb, 102 240 200) / .08); }
 #hull .vz-holo-panel::after { content:""; position:absolute; inset:0; border-radius:9px; pointer-events:none;
-  border-top:1.5px solid rgba(160,255,230,.55); border-bottom:1.5px solid rgba(102,240,200,.3);
+  border-top:1.5px solid rgb(var(--vz-hot-rgb, 160 255 230) / .55); border-bottom:1.5px solid rgb(var(--vz-rgb, 102 240 200) / .3);
   -webkit-mask:linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent); }
 #hull .vz-holo-row { display:flex; align-items:center; gap:11px; }
 #hull .vz-tube { display:flex; flex-direction:column-reverse; gap:2px; width:27px; padding:4px;
   border:1px solid var(--vz); border-radius:5px; background:rgba(6,26,22,.32);
-  box-shadow:inset 0 0 9px rgba(102,240,200,.12); }
-#hull .vz-rung { position:relative; height:8px; border-radius:2px; background:rgba(102,240,200,.1);
-  box-shadow:inset 0 0 0 1px rgba(102,240,200,.2); transition:background .25s ease, box-shadow .25s ease; }
+  box-shadow:inset 0 0 9px rgb(var(--vz-rgb, 102 240 200) / .12); }
+#hull .vz-rung { position:relative; height:8px; border-radius:2px; background:rgb(var(--vz-rgb, 102 240 200) / .1);
+  box-shadow:inset 0 0 0 1px rgb(var(--vz-rgb, 102 240 200) / .2); transition:background .25s ease, box-shadow .25s ease; }
 /* the CRITICAL LINE, at or below 6 energy you are in danger (fixed, any player count) */
 #hull .vz-rung:nth-child(6)::after { content:""; position:absolute; left:-5px; right:-5px; top:-2px; height:1px;
   background:var(--vz-warn); opacity:.75; box-shadow:0 0 5px var(--vz-warn); }
@@ -3453,8 +3453,8 @@ body.vz-crit #hull .vz-cnr { border-color:var(--vz-warn); box-shadow:0 0 12px rg
 #hull .vz-holo.holo-crit { animation:vzHoloCrit 1.4s ease-in-out infinite; }
 @keyframes vzHoloCrit { 50% { filter:drop-shadow(0 0 10px rgba(255,106,74,.5)); } }
 #hull .vz-holo-base { position:absolute; left:50%; bottom:-12px; width:118px; height:12px; transform:translateX(-50%);
-  border-radius:50%; background:radial-gradient(ellipse at 50% 50%, rgba(102,240,200,.42), transparent 70%);
-  box-shadow:0 0 20px rgba(102,240,200,.28); }
+  border-radius:50%; background:radial-gradient(ellipse at 50% 50%, rgb(var(--vz-rgb, 102 240 200) / .42), transparent 70%);
+  box-shadow:0 0 20px rgb(var(--vz-rgb, 102 240 200) / .28); }
 
 /* the hologram is a PRIMARY-scene object, it powers down with the pip-boy screen */
 body.mano-away #hull .vz-holo { opacity:0; }
@@ -3467,10 +3467,10 @@ body.mano-away #hull .vz-holo { opacity:0; }
 /* ── NON-DIEGETIC MESSAGES -> visor font/colour ── */
 body.cabin-on .phase-banner { font-family:var(--f-mono,monospace); font-weight:700;
   color:var(--vz-hot,#eafff8); letter-spacing:.26em;
-  text-shadow:0 0 20px rgba(102,240,200,.7), 0 2px 12px rgba(0,0,0,.55); }
+  text-shadow:0 0 20px rgb(var(--vz-rgb, 102 240 200) / .7), 0 2px 12px rgba(0,0,0,.55); }
 body.cabin-on .phase-banner::before { content:"\25B8 "; color:var(--vz,#66f0c8); }
 body.cabin-on .phase-banner::after { content:" \25C2"; color:var(--vz,#66f0c8); }
-body.cabin-on .phase-banner .b-sub { color:var(--vz,#66f0c8); text-shadow:0 0 10px rgba(102,240,200,.5); }
+body.cabin-on .phase-banner .b-sub { color:var(--vz,#66f0c8); text-shadow:0 0 10px rgb(var(--vz-rgb, 102 240 200) / .5); }
 body.cabin-on .toast-rise { font-family:var(--f-mono,monospace); letter-spacing:.08em; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -3479,7 +3479,7 @@ body.cabin-on .toast-rise { font-family:var(--f-mono,monospace); letter-spacing:
    visor annotates over what you look at). The sacred rule, made literal.
    ═══════════════════════════════════════════════════════════════════════════ */
 .vz-sigil { display:inline-grid; place-items:center; width:30px; height:30px; flex:0 0 30px;
-  color:var(--vz,#66f0c8); filter:drop-shadow(0 0 5px rgba(102,240,200,.55)); }
+  color:var(--vz,#66f0c8); filter:drop-shadow(0 0 5px rgb(var(--vz-rgb, 102 240 200) / .55)); }
 .vz-sigil svg { width:100%; height:100%; display:block; overflow:visible; }
 .vzs-ring { transform-origin:20px 20px; animation:vzSigRot 6s linear infinite; }
 .vzs-core { transform-origin:20px 20px; animation:vzSigPulse 1.9s ease-in-out infinite; }
@@ -3490,27 +3490,27 @@ body.cabin-on .toast-rise { font-family:var(--f-mono,monospace); letter-spacing:
 
 /* ── DECISION BEACON -> Hela's directional nav voice ── */
 body.cabin-on .decision-beacon { gap:14px; padding:13px 19px; max-width:380px;
-  background:linear-gradient(90deg, rgba(10,40,34,.52), rgba(8,26,22,.32)); border:1px solid rgba(102,240,200,.45);
-  border-radius:9px; color:var(--vz); box-shadow:0 0 22px rgba(102,240,200,.2), inset 0 0 16px rgba(102,240,200,.07);
+  background:linear-gradient(90deg, rgba(10,40,34,.52), rgba(8,26,22,.32)); border:1px solid rgb(var(--vz-rgb, 102 240 200) / .45);
+  border-radius:9px; color:var(--vz); box-shadow:0 0 22px rgb(var(--vz-rgb, 102 240 200) / .2), inset 0 0 16px rgb(var(--vz-rgb, 102 240 200) / .07);
   font-family:var(--f-mono,monospace); }
 body.cabin-on .decision-beacon .bc-arrow { width:38px !important; height:38px !important; flex:0 0 38px !important;
   color:var(--vz); filter:drop-shadow(0 0 8px var(--vz)); }
 body.cabin-on .decision-beacon .bc-sigil { width:34px; height:34px; flex:0 0 34px; }
 body.cabin-on .decision-beacon .bc-text { font-family:var(--f-mono,monospace); display:flex; flex-direction:column; gap:1px; }
 body.cabin-on .decision-beacon .bc-verb { color:var(--vz-hot,#eafff8); font-weight:700; font-size:1.02rem; letter-spacing:.03em;
-  line-height:1.25; text-shadow:0 0 10px rgba(102,240,200,.55); }
+  line-height:1.25; text-shadow:0 0 10px rgb(var(--vz-rgb, 102 240 200) / .55); }
 body.cabin-on .decision-beacon .bc-where { color:var(--vz); font-size:.74rem; letter-spacing:.05em; line-height:1.35; }
 body.cabin-on .decision-beacon kbd { display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 6px;
   border:1.5px solid var(--vz); border-radius:4px; background:transparent; color:var(--vz-hot);
   font:700 .74rem var(--f-mono,monospace); vertical-align:middle;
-  box-shadow:0 0 9px rgba(102,240,200,.45), inset 0 0 6px rgba(102,240,200,.18); }
+  box-shadow:0 0 9px rgb(var(--vz-rgb, 102 240 200) / .45), inset 0 0 6px rgb(var(--vz-rgb, 102 240 200) / .18); }
 /* the sigil sits between the edge-arrow and the text on every dir- variant */
 body.cabin-on .decision-beacon.dir-up, body.cabin-on .decision-beacon.dir-down { flex-direction:row; }
 
 /* ── WAITING -> Hela standing by ── */
 body.cabin-on .waiting-chip { gap:9px; padding:7px 14px; border-radius:20px;
-  background:rgba(8,26,22,.46); border:1px solid rgba(102,240,200,.35); color:var(--vz);
-  font-family:var(--f-mono,monospace); font-size:.62rem; letter-spacing:.09em; box-shadow:0 0 18px rgba(102,240,200,.14); }
+  background:rgba(8,26,22,.46); border:1px solid rgb(var(--vz-rgb, 102 240 200) / .35); color:var(--vz);
+  font-family:var(--f-mono,monospace); font-size:.62rem; letter-spacing:.09em; box-shadow:0 0 18px rgb(var(--vz-rgb, 102 240 200) / .14); }
 body.cabin-on .waiting-chip .spin { display:none; }
 body.cabin-on .waiting-chip .vz-sigil { width:22px; height:22px; flex:0 0 22px; }
 body.cabin-on .waiting-chip .wc-text { color:var(--vz-hot); }
@@ -3521,15 +3521,15 @@ body.cabin-on .waiting-chip .wc-text { color:var(--vz-hot); }
 
 /* ── PROMPT -> Hela's decision voice (glass; the interactive body stays) ── */
 body.cabin-on .prompt { background:linear-gradient(180deg, rgba(10,42,36,.72), rgba(6,22,19,.64));
-  border:1px solid rgba(102,240,200,.4); box-shadow:0 0 26px rgba(102,240,200,.16), 0 10px 30px rgba(0,0,0,.5); color:var(--vz); }
+  border:1px solid rgb(var(--vz-rgb, 102 240 200) / .4); box-shadow:0 0 26px rgb(var(--vz-rgb, 102 240 200) / .16), 0 10px 30px rgba(0,0,0,.5); color:var(--vz); }
 body.cabin-on .prompt .prompt-title { font-family:var(--f-mono,monospace); color:var(--vz-hot); letter-spacing:.04em;
-  align-items:center; gap:7px; text-shadow:0 0 8px rgba(102,240,200,.45); }
+  align-items:center; gap:7px; text-shadow:0 0 8px rgb(var(--vz-rgb, 102 240 200) / .45); }
 body.cabin-on .prompt .prompt-title .vz-sigil { width:23px; height:23px; flex:0 0 23px; }
 body.cabin-on .prompt .prompt-sub { color:var(--vz); opacity:.92; }
 
 /* ── TUTORIAL -> Hela teaches (the future guide) ── */
 body.cabin-on .tutorial-pop { background:linear-gradient(180deg, rgba(10,42,36,.93), rgba(6,22,19,.9));
-  border:1px solid rgba(102,240,200,.5); box-shadow:0 0 30px rgba(102,240,200,.2), 0 14px 40px rgba(0,0,0,.55);
+  border:1px solid rgb(var(--vz-rgb, 102 240 200) / .5); box-shadow:0 0 30px rgb(var(--vz-rgb, 102 240 200) / .2), 0 14px 40px rgba(0,0,0,.55);
   color:var(--vz); font-family:var(--f-mono,monospace); }
 body.cabin-on .tutorial-pop .tut-head { color:var(--vz-hot); font-family:var(--f-mono,monospace); align-items:center; gap:9px; }
 body.cabin-on .tutorial-pop .tut-ico.vz-sigil { width:28px; height:28px; flex:0 0 28px; color:var(--vz); }
@@ -3542,7 +3542,7 @@ body.cabin-on .tutorial-pop .tut-close { color:var(--vz-dim); }
 body.cabin-on .tutorial-pop .tut-close:hover { color:var(--vz-hot); }
 
 /* ── MARKET HINT -> Hela's contextual coaching ── */
-body.cabin-on .ma-hint { color:var(--vz); font-family:var(--f-mono,monospace); text-shadow:0 0 6px rgba(102,240,200,.35); }
+body.cabin-on .ma-hint { color:var(--vz); font-family:var(--f-mono,monospace); text-shadow:0 0 6px rgb(var(--vz-rgb, 102 240 200) / .35); }
 
 /* ── NO ANONYMOUS LEGENDS. The drawer's old "Temporal Receptor 0/3" heading was
    text with no real-object source, so it is GONE, Hela reports it on arrival
@@ -3557,14 +3557,14 @@ body.cabin-on #drawer-zone .zone-title { display: none; }   /* no dead band abov
   transform:translateX(-50%) translateY(-10px); opacity:0;
   transition:opacity .35s ease, transform .35s ease;
   background:linear-gradient(90deg, rgba(10,40,34,.58), rgba(8,26,22,.36));
-  border:1px solid rgba(102,240,200,.45); border-radius:10px;
-  box-shadow:0 0 26px rgba(102,240,200,.2), inset 0 0 16px rgba(102,240,200,.07);
+  border:1px solid rgb(var(--vz-rgb, 102 240 200) / .45); border-radius:10px;
+  box-shadow:0 0 26px rgb(var(--vz-rgb, 102 240 200) / .2), inset 0 0 16px rgb(var(--vz-rgb, 102 240 200) / .07);
   font-family:var(--f-mono,monospace); color:var(--vz); }
 .hela-msg.on { opacity:1; transform:translateX(-50%) translateY(0); }
 .hela-msg .vz-sigil { width:27px; height:27px; flex:0 0 27px; }
 .hela-msg .hm-body { display:flex; flex-direction:column; gap:1px; min-width:0; }
 .hela-msg .hm-line { font-size:.76rem; letter-spacing:.02em; color:var(--vz-hot);
-  text-shadow:0 0 8px rgba(102,240,200,.5); }
+  text-shadow:0 0 8px rgb(var(--vz-rgb, 102 240 200) / .5); }
 .hela-msg .hm-line b { color:var(--vz); }
 @media (prefers-reduced-motion: reduce) { .hela-msg { transition:opacity .2s ease; } }
 
@@ -3607,7 +3607,7 @@ body.paradox-crt #hull .mano-scan { opacity:0; }
 .hela-msg.hela-alert .vz-sigil { color:#ff8a72; filter:drop-shadow(0 0 5px rgba(226,70,50,.7)); }
 .hela-msg.hela-alert .hm-line { color:#ffd0c4; text-shadow:0 0 8px rgba(226,70,50,.55); }
 .hela-msg.hela-alert .vz-name { color:#c46a58; }
-.hela-msg.hela-good .hm-line { color:#eafff8; text-shadow:0 0 10px rgba(102,240,200,.75); }
+.hela-msg.hela-good .hm-line { color:var(--vz-hot, #eafff8); text-shadow:0 0 10px rgb(var(--vz-rgb, 102 240 200) / .75); }
 .hela-msg.hela-note { border-color:rgba(160,130,230,.5); }
 .hela-msg.hela-note .vz-sigil { color:#b49ae8; filter:drop-shadow(0 0 5px rgba(154,127,206,.6)); }
 .hela-msg.hela-note .hm-line { color:#ded2ff; }
@@ -3620,12 +3620,12 @@ body.paradox-crt #hull .mano-scan { opacity:0; }
 /* ═══ IN-PLACE DOCKETS -> Hela's instructions (they had no object source) ═══ */
 body.cabin-on .drw-deliver, body.cabin-on .mch-travel {
   background:linear-gradient(90deg, rgba(10,40,34,.6), rgba(8,26,22,.38)) !important;
-  border:1px solid rgba(102,240,200,.45) !important;
-  box-shadow:0 0 22px rgba(102,240,200,.18), inset 0 0 14px rgba(102,240,200,.06) !important; }
+  border:1px solid rgb(var(--vz-rgb, 102 240 200) / .45) !important;
+  box-shadow:0 0 22px rgb(var(--vz-rgb, 102 240 200) / .18), inset 0 0 14px rgb(var(--vz-rgb, 102 240 200) / .06) !important; }
 body.cabin-on .dd-head { display:flex; align-items:center; gap:10px; }
 body.cabin-on .dd-sigil { width:24px; height:24px; flex:0 0 24px; }
 body.cabin-on .dd-title { font-family:var(--f-mono,monospace); color:var(--vz-hot) !important;
-  letter-spacing:.14em; text-shadow:0 0 8px rgba(102,240,200,.5); }
+  letter-spacing:.14em; text-shadow:0 0 8px rgb(var(--vz-rgb, 102 240 200) / .5); }
 body.cabin-on .dd-sub { font-family:var(--f-mono,monospace); color:var(--vz) !important; opacity:.9; }
 
 /* ═══ MAP COMMAND BANNERS -> Hela plots the course with you ═══ */
@@ -3635,17 +3635,17 @@ body.cabin-on #timeline-rail .cm-cmd {
   display:flex !important; align-items:center; gap:9px; flex-wrap:wrap;
   font-family:var(--f-mono,monospace) !important; color:var(--vz) !important;
   background:linear-gradient(90deg, rgba(10,40,34,.6), rgba(8,26,22,.34)) !important;
-  border:1px solid rgba(102,240,200,.45) !important; border-radius:9px !important;
-  box-shadow:0 0 22px rgba(102,240,200,.18) !important;
-  text-shadow:0 0 7px rgba(102,240,200,.4); }
+  border:1px solid rgb(var(--vz-rgb, 102 240 200) / .45) !important; border-radius:9px !important;
+  box-shadow:0 0 22px rgb(var(--vz-rgb, 102 240 200) / .18) !important;
+  text-shadow:0 0 7px rgb(var(--vz-rgb, 102 240 200) / .4); }
 body.cabin-on #timeline-rail .cmd-sigil { width:24px; height:24px; flex:0 0 24px; }
 
 /* ═══ MARKET BADGES + THE SECRET REVEAL -> the visor reads them ═══ */
 body.cabin-on .market-overlay .mo-badge { font-family:var(--f-mono,monospace) !important;
   letter-spacing:.2em; border-radius:8px !important; }
-body.cabin-on .market-overlay .mo-badge.buy { color:#eafff8 !important;
+body.cabin-on .market-overlay .mo-badge.buy { color:var(--vz-hot, #eafff8) !important;
   background:rgba(10,42,36,.9) !important; border:1.5px solid var(--vz) !important;
-  box-shadow:0 0 22px rgba(102,240,200,.4) !important; }
+  box-shadow:0 0 22px rgb(var(--vz-rgb, 102 240 200) / .4) !important; }
 body.cabin-on .secret-reveal-fx .srf-calc,
 body.cabin-on .secret-reveal-fx .srf-word { font-family:var(--f-mono,monospace) !important;
   letter-spacing:.24em; }
@@ -3653,10 +3653,10 @@ body.cabin-on .secret-reveal-fx .srf-word { font-family:var(--f-mono,monospace) 
 /* ═══ GAME OVER -> the visor's final readout ═══ */
 body.cabin-on .gameover .gameover-card { font-family:var(--f-mono,monospace);
   background:linear-gradient(180deg, rgba(10,42,36,.94), rgba(6,22,19,.92)) !important;
-  border:1px solid rgba(102,240,200,.5) !important;
-  box-shadow:0 0 40px rgba(102,240,200,.25), 0 20px 60px rgba(0,0,0,.6) !important; }
+  border:1px solid rgb(var(--vz-rgb, 102 240 200) / .5) !important;
+  box-shadow:0 0 40px rgb(var(--vz-rgb, 102 240 200) / .25), 0 20px 60px rgba(0,0,0,.6) !important; }
 body.cabin-on .gameover .winner { font-family:var(--f-mono,monospace) !important;
-  color:var(--vz-hot) !important; text-shadow:0 0 20px rgba(102,240,200,.7); letter-spacing:.14em; }
+  color:var(--vz-hot) !important; text-shadow:0 0 20px rgb(var(--vz-rgb, 102 240 200) / .7); letter-spacing:.14em; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    THE RECORDS CABINET IS STEEL, brushed silver drawers, gold pulls, and the
@@ -3737,7 +3737,7 @@ body.cabin-on .cab2-cell.open .cab2-front::after { color:#dfe6ea !important; }
 body.cabin-on #market-zone .secret-curtain .sc-crest {
   width:78px !important; height:90px !important; background:none !important; border-radius:0 !important;
   box-shadow:none !important; color:var(--vz) !important;
-  filter:drop-shadow(0 0 9px rgba(102,240,200,.75)) drop-shadow(0 0 22px rgba(102,240,200,.35));
+  filter:drop-shadow(0 0 9px rgb(var(--vz-rgb, 102 240 200) / .75)) drop-shadow(0 0 22px rgb(var(--vz-rgb, 102 240 200) / .35));
   animation:helaSealBreathe 3.4s ease-in-out infinite; }
 body.cabin-on #market-zone .secret-curtain .sc-crest svg { width:100% !important; height:100% !important; }
 @keyframes helaSealBreathe { 0%,100% { opacity:.82; } 50% { opacity:1; } }
@@ -3751,6 +3751,9 @@ body.cabin-on #market-zone > .secret-curtain.open .sc-crest {
    LIFE CRITICAL, the whole helmet alarms: EVERY message on the glass goes red
   . The seat colours on the contacts stay themselves, colour is a label.
    ═══════════════════════════════════════════════════════════════════════════ */
+/* HELA COLOUR rule: critical life is an ACCENT over the player's colour, not a
+   repaint. The frames of her messages take a red alarm edge; the words keep her
+   (the player's) colour. The pulsing corners and vitals live in HELA COLOUR below. */
 body.vz-crit .hela-msg,
 body.vz-crit .decision-beacon,
 body.vz-crit .waiting-chip,
@@ -3761,33 +3764,10 @@ body.vz-crit .mch-travel,
 body.vz-crit #timeline-rail .sea-cmd,
 body.vz-crit #timeline-rail .cc-cmd,
 body.vz-crit #timeline-rail .cm-cmd {
-  border-color:rgba(255,110,90,.6) !important;
-  background:linear-gradient(90deg, rgba(54,15,12,.66), rgba(28,9,8,.42)) !important;
-  box-shadow:0 0 26px rgba(226,70,50,.3), inset 0 0 16px rgba(226,70,50,.1) !important;
-  color:#ff9a86 !important; }
-body.vz-crit .hm-line, body.vz-crit .bc-verb, body.vz-crit .dd-title,
-body.vz-crit .prompt-title, body.vz-crit .tut-head, body.vz-crit .tut-title {
-  color:#ffd6cb !important; text-shadow:0 0 9px rgba(226,70,50,.65) !important; }
-body.vz-crit .bc-where, body.vz-crit .dd-sub, body.vz-crit .prompt-sub,
-body.vz-crit .tut-body, body.vz-crit .wc-text, body.vz-crit .tut-hint {
-  color:#ffb4a4 !important; }
-body.vz-crit .tut-body b { color:#ffe2d8 !important; }
-body.vz-crit .vz-sigil, body.vz-crit .sc-crest {
-  color:#ff8a72 !important; filter:drop-shadow(0 0 7px rgba(226,70,50,.8)) !important; }
-body.vz-crit .vz-name { color:#c96f5c !important; }
-body.vz-crit .decision-beacon .bc-arrow { color:#ff8a72 !important;
-  filter:drop-shadow(0 0 7px rgba(226,70,50,.85)) !important; }
-body.vz-crit .decision-beacon kbd { border-color:#ff8a72 !important; color:#ffd6cb !important;
-  box-shadow:0 0 8px rgba(226,70,50,.55), inset 0 0 5px rgba(226,70,50,.2) !important; }
-body.vz-crit .wc-dots b { background:#ff8a72 !important; }
-body.vz-crit .phase-banner { color:#ffd6cb !important; text-shadow:0 0 20px rgba(226,70,50,.75) !important; }
-body.vz-crit .phase-banner::before, body.vz-crit .phase-banner::after,
-body.vz-crit .phase-banner .b-sub { color:#ff8a72 !important; }
-/* the fixed readout alarms with them (the seat contacts keep their own colours) */
-body.vz-crit #hull .vz-hour .hull-glabel, body.vz-crit #hull .vz-ph.on {
-  color:#ffd6cb !important; text-shadow:0 0 12px rgba(226,70,50,.8) !important; }
+  border-color:rgba(255,110,90,.7) !important;
+  box-shadow:0 0 22px rgba(226,70,50,.28), inset 0 0 12px rgba(226,70,50,.08) !important; }
+body.vz-crit .decision-beacon kbd { border-color:#ff8a72 !important; }
 body.vz-crit #hull .vz-ph.on::after { background:#ff8a72 !important; box-shadow:0 0 10px #ff8a72 !important; }
-body.vz-crit #hull .vz-ph.done { color:#ff8a72 !important; }
 
 
 @media (prefers-reduced-motion: reduce) {
@@ -5845,7 +5825,7 @@ body.cabin-on .secret-reveal-fx { overflow:hidden; }
 /* her seal, dead centre, engaged */
 body.cabin-on .secret-reveal-fx .srf-lock { position:absolute; left:50%; top:44%; z-index:3;
   width:72px; height:84px; transform:translate(-50%,-50%) scale(.9); color:var(--vz);
-  filter:drop-shadow(0 0 10px rgba(102,240,200,.8)); opacity:0;
+  filter:drop-shadow(0 0 10px rgb(var(--vz-rgb, 102 240 200) / .8)); opacity:0;
   transition:transform .6s cubic-bezier(.2,1.3,.4,1), opacity .5s ease, filter .5s ease; }
 body.cabin-on .secret-reveal-fx .srf-lock svg { width:100%; height:100%; display:block; overflow:visible; }
 body.cabin-on .secret-reveal-fx.armed .srf-lock { opacity:1; transform:translate(-50%,-50%) scale(1); }
@@ -5853,7 +5833,7 @@ body.cabin-on .secret-reveal-fx.armed .srf-lock { opacity:1; transform:translate
 body.cabin-on .secret-reveal-fx .srf-lock .hl-shackle {
   transform-origin:13px 22px; transition:transform .55s cubic-bezier(.3,1.5,.4,1); }
 body.cabin-on .secret-reveal-fx.unlocked .srf-lock .hl-shackle { transform:rotate(-38deg) translateY(-2px); }
-body.cabin-on .secret-reveal-fx.unlocked .srf-lock { filter:drop-shadow(0 0 20px rgba(102,240,200,1)); }
+body.cabin-on .secret-reveal-fx.unlocked .srf-lock { filter:drop-shadow(0 0 20px rgb(var(--vz-rgb, 102 240 200) / 1)); }
 /* then the lock BLOOMS and becomes the mesh */
 body.cabin-on .secret-reveal-fx.meshing .srf-lock {
   opacity:0; transform:translate(-50%,-50%) scale(3.2); filter:blur(7px) drop-shadow(0 0 26px var(--vz)); }
@@ -5862,9 +5842,9 @@ body.cabin-on .secret-reveal-fx.meshing .srf-lock {
 body.cabin-on .secret-reveal-fx .srf-grid { position:absolute; inset:0; z-index:2; pointer-events:none;
   opacity:0; transform:scale(.35); transform-origin:50% 44%;
   background:
-    repeating-linear-gradient(90deg, rgba(102,240,200,.55) 0 1px, transparent 1px 12px),
-    repeating-linear-gradient(0deg,  rgba(102,240,200,.55) 0 1px, transparent 1px 12px);
-  box-shadow:inset 0 0 40px rgba(102,240,200,.35);
+    repeating-linear-gradient(90deg, rgb(var(--vz-rgb, 102 240 200) / .55) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(0deg,  rgb(var(--vz-rgb, 102 240 200) / .55) 0 1px, transparent 1px 12px);
+  box-shadow:inset 0 0 40px rgb(var(--vz-rgb, 102 240 200) / .35);
   mix-blend-mode:screen;
   transition:opacity .5s ease, transform .8s cubic-bezier(.2,1.15,.3,1); }
 body.cabin-on .secret-reveal-fx.meshing .srf-grid { opacity:.85; transform:scale(1);
@@ -5875,7 +5855,7 @@ body.cabin-on .secret-reveal-fx.settle .srf-grid { opacity:.16; animation:none; 
 body.cabin-on .secret-reveal-fx .srf-glitch { display:none !important; }
 /* her voice on the seal, in her colour */
 body.cabin-on .secret-reveal-fx .srf-core { z-index:4; font-family:var(--f-mono,monospace) !important;
-  text-shadow:0 0 14px rgba(102,240,200,.9) !important; }
+  text-shadow:0 0 14px rgb(var(--vz-rgb, 102 240 200) / .9) !important; }
 body.cabin-on .secret-reveal-fx .srf-calc { color:var(--vz) !important; font-size:.62rem !important;
   letter-spacing:.24em; }
 body.cabin-on .secret-reveal-fx .srf-word { color:var(--vz-hot) !important; font-size:1.05rem !important;
@@ -5947,7 +5927,7 @@ body.cabin-on #cursor-plane .hela-radar svg { width: 100%; height: 100%; display
    So nothing has to die for speed. The reticle gets its glow back, it is HELA's eye,
    and an eye without light is a wireframe. The hand gets its cast shadow back, that
    shadow IS the 2.5D plane, the thing that lifts the pointer off the board. ═════════ */
-body.cabin-on #cursor-plane .hela-radar { filter: drop-shadow(0 0 7px rgba(102,240,200,.9)); }
+body.cabin-on #cursor-plane .hela-radar { filter: drop-shadow(0 0 7px rgb(var(--vz-rgb, 102 240 200) / .9)); }
 body.cabin-on.carrying-card #cursor-plane .hela-radar { color: #ffd68a;
   filter: drop-shadow(0 0 9px rgba(255,214,138,.9)); }
 body.vz-crit #cursor-plane .hela-radar { color: var(--vz-warn);
@@ -6974,12 +6954,12 @@ body.cam-on #log-zone > .zone-title.hela-loghead {
   padding: 2px 12px 4px; color: var(--vz, #66f0c8); }
 .hela-loghead .zt-ico { display: none; }
 .hela-loghead .vz-sigil { width: 20px; height: 20px; flex: 0 0 20px; color: var(--vz, #66f0c8);
-  filter: drop-shadow(0 0 4px rgba(102,240,200,.6)); }
+  filter: drop-shadow(0 0 4px rgb(var(--vz-rgb, 102 240 200) / .6)); }
 .hela-loghead .vz-sigil svg { width: 100%; height: 100%; }
 .hela-loghead .vz-name { font: 700 .52rem var(--f-mono); letter-spacing: .3em;
   color: var(--vz-dim, #2f8579); }
 .hela-loghead .hlh-line { font: 600 .64rem var(--f-mono); letter-spacing: .1em;
-  color: var(--vz, #66f0c8); text-shadow: 0 0 8px rgba(102,240,200,.4); }
+  color: var(--vz, #66f0c8); text-shadow: 0 0 8px rgb(var(--vz-rgb, 102 240 200) / .4); }
 .hela-loghead .hlh-line b { color: var(--vz-hot, #eafff8); }
 body.vz-crit .hela-loghead .vz-sigil,
 body.vz-crit .hela-loghead .hlh-line { color: #ff6a4a; }
@@ -7005,7 +6985,7 @@ body.hand-cursor-on #hull { z-index: 5000; }
 #cursor-plane #hela-gaze { position: absolute; left: 0; top: 0; width: 116px; height: 116px;
   margin: -58px 0 0 -58px; color: var(--vz, #66f0c8); opacity: 0;
   transition: opacity .6s ease, color .7s ease; pointer-events: none;
-  filter: drop-shadow(0 0 5px rgba(102,240,200,.75)); will-change: transform; z-index: 1; }
+  filter: drop-shadow(0 0 5px rgb(var(--vz-rgb, 102 240 200) / .75)); will-change: transform; z-index: 1; }
 #cursor-plane #hela-gaze.on { opacity: .92; }
 #cursor-plane #hela-gaze svg { width: 100%; height: 100%; display: block; overflow: visible;
   transition: transform .5s cubic-bezier(.3,.8,.3,1); }
@@ -7051,7 +7031,7 @@ body.vz-crit #hela-gaze { color: #ff6a4a !important; filter: drop-shadow(0 0 10p
 #hela-hud.live { opacity: 1; }
 .hh-eye { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: none;
   color: inherit; cursor: pointer; pointer-events: auto; display: block;
-  filter: drop-shadow(0 0 6px rgba(102,240,200,.5)); transition: transform .2s ease, filter .5s ease; }
+  filter: drop-shadow(0 0 6px rgb(var(--vz-rgb, 102 240 200) / .5)); transition: transform .2s ease, filter .5s ease; }
 .hh-eye:hover { transform: scale(1.08); }
 .hh-eye svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .hh-eye .hh-ring { transform-origin: center; animation: hhRing 30s linear infinite; }
@@ -7065,33 +7045,33 @@ body.vz-crit #hela-gaze { color: #ff6a4a !important; filter: drop-shadow(0 0 10p
 .hh-badge.on { opacity: 1; transform: scale(1); animation: hhBadge 1.4s ease-in-out infinite; }
 @keyframes hhBadge { 50% { box-shadow: 0 0 15px rgba(232,170,60,1); } }
 #hela-hud.hh-ping .hh-eye { animation: hhPing .55s ease; }
-@keyframes hhPing { 40% { filter: drop-shadow(0 0 17px rgba(102,240,200,1)); transform: scale(1.12); } }
+@keyframes hhPing { 40% { filter: drop-shadow(0 0 17px rgb(var(--vz-rgb, 102 240 200) / 1)); transform: scale(1.12); } }
 
 .hh-archive { position: absolute; left: 3px; top: 50px; width: 384px; pointer-events: auto;
   transform-origin: 14px -34px; transform: scale(.5); opacity: 0; visibility: hidden;
   transition: transform .34s cubic-bezier(.2,.9,.3,1.05), opacity .28s ease, visibility .34s;
   background: linear-gradient(158deg, rgba(20,54,52,.44), rgba(8,18,20,.34));
-  border: 1px solid rgba(102,240,200,.5); border-radius: 5px; padding: 8px 10px 9px;
-  box-shadow: 0 14px 46px rgba(0,0,0,.55), inset 0 0 34px rgba(102,240,200,.07);
+  border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .5); border-radius: 5px; padding: 8px 10px 9px;
+  box-shadow: 0 14px 46px rgba(0,0,0,.55), inset 0 0 34px rgb(var(--vz-rgb, 102 240 200) / .07);
   backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
 #hela-hud.open .hh-archive { transform: scale(1); opacity: 1; visibility: visible; }
 .hh-head { display: flex; align-items: center; gap: 7px; font-size: .52rem; letter-spacing: .18em;
   text-transform: uppercase; color: var(--vz, #66f0c8); }
 .hh-sigil { width: 15px; height: 15px; flex: 0 0 15px; } .hh-sigil svg { width: 100%; height: 100%; }
 .hh-title { font-weight: 700; }
-.hh-x { margin-left: auto; background: none; border: 1px solid rgba(102,240,200,.4); color: inherit;
+.hh-x { margin-left: auto; background: none; border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .4); color: inherit;
   width: 18px; height: 18px; border-radius: 3px; cursor: pointer; font: .6rem/1 var(--f-mono,monospace); pointer-events: auto; }
-.hh-x:hover { background: rgba(102,240,200,.16); }
-.hh-say { font-size: .64rem; line-height: 1.36; font-style: italic; color: #c6f2e6; margin: 6px 3px 8px;
-  text-shadow: 0 0 8px rgba(102,240,200,.35); min-height: 1.1em; }
+.hh-x:hover { background: rgb(var(--vz-rgb, 102 240 200) / .16); }
+.hh-say { font-size: .64rem; line-height: 1.36; font-style: italic; color: var(--vz-text, #c6f2e6); margin: 6px 3px 8px;
+  text-shadow: 0 0 8px rgb(var(--vz-rgb, 102 240 200) / .35); min-height: 1.1em; }
 .hh-clip { position: relative; overflow: hidden; border-radius: 2px; }
 .hh-clip .bn-paper { width: 100%; box-shadow: 0 3px 12px rgba(0,0,0,.5);
   background: repeating-linear-gradient(0deg, rgba(90,69,38,.05) 0 2px, transparent 2px 4px), rgba(239,228,196,.92); }
 .hh-empty { padding: 24px 12px; text-align: center; font-size: .68rem; color: #9fd8cc; line-height: 1.5; font-style: italic; }
 .hh-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
-.hh-nav button { background: rgba(102,240,200,.08); border: 1px solid rgba(102,240,200,.4); color: var(--vz,#66f0c8);
+.hh-nav button { background: rgb(var(--vz-rgb, 102 240 200) / .08); border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .4); color: var(--vz,#66f0c8);
   width: 30px; height: 22px; border-radius: 3px; cursor: pointer; font-size: .8rem; line-height: 1; pointer-events: auto; }
-.hh-nav button:hover:not(:disabled) { background: rgba(102,240,200,.2); }
+.hh-nav button:hover:not(:disabled) { background: rgb(var(--vz-rgb, 102 240 200) / .2); }
 .hh-nav button:disabled { opacity: .3; cursor: default; }
 .hh-stamp { font-size: .52rem; letter-spacing: .14em; color: #9fd8cc; }
 
@@ -7170,8 +7150,8 @@ body.cabin-on.vz-paradix #hela-hud .hh-eye { filter: drop-shadow(0 0 7px rgba(21
 
 /* HELA's spoken line, a transient visor caption beside her eye (replaces tutorial walls) */
 .hh-say-cap { position: absolute; left: 50px; top: 4px; width: 250px; pointer-events: none;
-  font: italic 500 .66rem/1.34 var(--f-mono, monospace); letter-spacing: .01em; color: #cff6ea;
-  text-shadow: 0 0 8px rgba(0,0,0,.7), 0 0 12px rgba(102,240,200,.3);
+  font: italic 500 .66rem/1.34 var(--f-mono, monospace); letter-spacing: .01em; color: var(--vz-text, #cff6ea);
+  text-shadow: 0 0 8px rgba(0,0,0,.7), 0 0 12px rgb(var(--vz-rgb, 102 240 200) / .3);
   opacity: 0; transform: translateX(-6px); transition: opacity .4s ease, transform .4s ease; }
 .hh-say-cap.on { opacity: .96; transform: translateX(0); }
 
@@ -7242,8 +7222,8 @@ body.cabin-on .pcard.cfolio .bd-life-n { font-size: 1.5rem; }
 @keyframes hhFlip { 0% { transform: rotateY(-26deg) translateX(-8px); opacity: .4; } 100% { transform: rotateY(0) translateX(0); opacity: 1; } }
 /* the nav reads as brass file-tabs, not OS chevrons */
 #hela-hud .hh-nav button { width: 34px; height: 24px; border-radius: 4px;
-  background: linear-gradient(180deg, rgba(102,240,200,.16), rgba(102,240,200,.05));
-  border: 1px solid rgba(102,240,200,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 3px rgba(0,0,0,.4);
+  background: linear-gradient(180deg, rgb(var(--vz-rgb, 102 240 200) / .16), rgb(var(--vz-rgb, 102 240 200) / .05));
+  border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .5); box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 3px rgba(0,0,0,.4);
   transition: transform .12s ease, background .15s ease; }
 #hela-hud .hh-nav button:hover:not(:disabled) { transform: translateY(-1px); }
 #hela-hud .hh-nav button:active:not(:disabled) { transform: translateY(1px); }
@@ -7463,7 +7443,7 @@ body.hg-hunt .prompt .card.is-actionable {
 .hbp-line.k-cp { color: #f2dfae; border-left-color: #e2c078; }
 .hbp-quiet { opacity: .55; font-style: italic; border-left-color: transparent; }
 .hbp-sats { margin-top: 8px; padding-top: 6px; border-top: 1px dashed color-mix(in srgb, var(--vz, #6fe8c8) 30%, transparent);
-  font-size: .66rem; letter-spacing: .03em; color: #bfe8db; }
+  font-size: .66rem; letter-spacing: .03em; color: var(--vz-text, #bfe8db); }
 
 /* the ARTICLE grows out of the core, clicked open, clicked shut */
 .hb-read { position: absolute; left: 50%; top: 50%; z-index: 70; cursor: pointer;
@@ -7653,7 +7633,7 @@ body.vz-wanted #hela-eye .he-svg { transform: scale(1.12); }
 #hela-brain-full .ledger .ledger-list { max-height: 110px !important; overflow: hidden !important;
   background: none !important; padding: 4px 2px !important; }
 #hela-brain-full .ledger .ledger-row, #hela-brain-full .ledger .ledger-empty {
-  color: #bfe8db !important; text-shadow: 0 0 6px rgba(0,0,0,.9); background: none !important;
+  color: var(--vz-text, #bfe8db) !important; text-shadow: 0 0 6px rgba(0,0,0,.9); background: none !important;
   border-color: color-mix(in srgb, var(--vz, #6fe8c8) 18%, transparent) !important; }
 
 
@@ -7727,10 +7707,18 @@ body.cabin-on .gameover { background: rgba(3, 10, 9, .78) !important; }
 body.cabin-on #log-zone { background: none !important; box-shadow: none !important; border: 0 !important; }
 
 /* ═══ THE HOUR SEAL ═══ */
-body.hh-sealing #timeline-rail, body.hh-sealing #players-zone, body.hh-sealing #rucksack-zone,
-body.hh-sealing #machine-zone, body.hh-sealing #market-zone, body.hh-sealing #drawer-zone,
-body.hh-sealing #hull-console, body.hh-sealing #vz-holo {
-  filter: blur(2.6px) brightness(.78) saturate(.85); transition: filter .5s ease; }
+/* The table goes soft and dim behind the rite. This used to be `filter: blur()` on eight
+   zones inside the camera plane, which is one promoted layer: every frame of the .5s
+   fade in and out re-rastered those zones, blur included, into the plane's tiles, and a
+   full re-raster followed to sharpen it again. Measured in a bot match: 90 main-thread
+   stalls of 100 to 900ms, all waiting on that raster. One screen veil with a
+   backdrop-filter gives the same soft, dim table; the compositor applies it at draw time
+   and fades it on opacity, nothing is re-rastered. (cabin.js seal() mounts it once.) */
+.hh-veil { position: fixed; inset: 0; z-index: 59; pointer-events: none; opacity: 0; visibility: hidden;
+  -webkit-backdrop-filter: blur(2.6px) brightness(.78) saturate(.85);
+  backdrop-filter: blur(2.6px) brightness(.78) saturate(.85);
+  transition: opacity .5s ease, visibility 0s linear .5s; }
+body.hh-sealing .hh-veil { opacity: 1; visibility: visible; transition: opacity .5s ease; }
 .hh-rite { position: fixed; left: 0; top: 0; z-index: 59920; pointer-events: none;
   color: var(--vz, #6fe8c8); width: 0; height: 0; }
 .hh-rite svg { position: absolute; left: -120px; top: -120px; width: 240px; height: 240px;
@@ -7756,7 +7744,7 @@ body.hh-sealing #hull-console, body.hh-sealing #vz-holo {
   background: radial-gradient(circle, var(--vz-hot, #eafff8), var(--vz, #6fe8c8) 55%, transparent 75%);
   box-shadow: 0 0 16px var(--vz, #6fe8c8), 0 0 40px color-mix(in srgb, var(--vz, #6fe8c8) 50%, transparent); }
 @media (prefers-reduced-motion: reduce) {
-  body.hh-sealing #timeline-rail { filter: none; }
+  .hh-veil { -webkit-backdrop-filter: brightness(.78) saturate(.85); backdrop-filter: brightness(.78) saturate(.85); }
   .hh-rite.on .hr-ring2 { animation: none; } }
 
 /* ═══ THE FINALE, the record of the expedition ═══ */
@@ -8117,13 +8105,9 @@ body.gfx-low.cabin-on #players-zone .pcard.cfolio .csheet { box-shadow: 0 8px 12
 body.gfx-low .pcard.cfolio.critical .bd-fuserail,
 body.gfx-still .pcard.cfolio.critical .bd-fuserail { animation: none !important; }
 
-/* the hour seal blurs eight zones for 3.6s each hour: GPU 17% -> 78% while it lasts at
-   1080p (measured). Medium and Low keep the dimming and drop the blur. */
-body.gfx-medium.hh-sealing #timeline-rail, body.gfx-medium.hh-sealing #players-zone, body.gfx-medium.hh-sealing #rucksack-zone, body.gfx-medium.hh-sealing #machine-zone,
-body.gfx-medium.hh-sealing #market-zone, body.gfx-medium.hh-sealing #drawer-zone, body.gfx-medium.hh-sealing #hull-console, body.gfx-medium.hh-sealing #vz-holo,
-body.gfx-low.hh-sealing #timeline-rail, body.gfx-low.hh-sealing #players-zone, body.gfx-low.hh-sealing #rucksack-zone, body.gfx-low.hh-sealing #machine-zone,
-body.gfx-low.hh-sealing #market-zone, body.gfx-low.hh-sealing #drawer-zone, body.gfx-low.hh-sealing #hull-console, body.gfx-low.hh-sealing #vz-holo {
-  filter: brightness(.78) saturate(.85) !important; }
+/* the hour seal: Medium and Low keep the dimming and drop the blur (backdrop-filter is off
+   at those qualities, so the veil dims with a plain shade instead) */
+body.gfx-medium .hh-veil, body.gfx-low .hh-veil { background: rgba(8,6,4,.22); }
 
 /* a resize (fullscreen, window drag) re-rasters the promoted layers at the new scale.
    Without this, Chrome keeps the old raster scale of a will-change layer and simply
@@ -8183,6 +8167,278 @@ body.cam-on .cam-world::before {
    plane px (100vw / --fit), centred on the table. No transform: the kicks (shakeSm..Lg)
    animate transform on .vz-frame and .hull-visor. */
 body.cabin-on #hull .hull-shadow, #hull .vz-frame, body.cabin-on #hull .hull-visor {
-  inset: auto; left: calc(50% - 50vw / var(--fit, 1)); top: calc(50% - 50vh / var(--fit, 1));
+  inset: auto; left: calc(50% - 50vw / var(--fit, 1)); top: calc(100% - 100vh / var(--fit, 1));
   width: calc(100vw / var(--fit, 1)); height: calc(100vh / var(--fit, 1)); }
 body.cabin-on.vz-wanted .hull-visor::after { position: absolute; inset: 0; }
+/* the chart sheet's torn right and bottom rim and its shadow on the desk were cut by the
+   rail's overflow box, a flat line the room fill now shows on 16:10 and 21:9 screens.
+   The clip opens past the right and bottom edges only, where the desk continues. */
+body.cabin-on #timeline-rail { overflow: visible; }
+body.cabin-on:not(.chart-rolled) #timeline-rail::after { clip-path: inset(0 -90px -90px 0); }
+/* the helmet's top readout (hour, phase track, seat badges, settings) rides the SCREEN's
+   top edge too, inside the corner brackets, whatever the screen's shape */
+#hull .hull-rail.vz-rail { left: calc(50% - 50vw / var(--fit, 1)); right: auto;
+  top: calc(100% - 100vh / var(--fit, 1)); width: calc(100vw / var(--fit, 1)); }
+
+/* ═══ FRAMING: EACH SCENE KEEPS ITS SUBJECT WHOLE, THE SPARE ROOM GOES WHERE IT IS CLEAN ═══
+   The table still fits the screen whole (main.js --fit is the min of both axes). What a
+   taller screen (16:10, 4:3) has to spare no longer splits above and below:
+     main and drawer scenes : the view starts at the screen's top, exactly as on 16:9, so
+                              the Market's shelf never peeks in under the phase chips; the
+                              spare height opens BELOW, more desk and more chart sheet.
+     market scene           : the view ends at the screen's bottom; the spare height opens
+                              ABOVE, bare wallpaper, and the desk's case files stay out.
+   The hull (arm, console, hologram) and the cursor plane sit on the screen's BOTTOM edge
+   with it, and the helmet layers above reach up to the screen's top (100% - 100vh/fit).
+   Wider screens (21:9) have no spare height: nothing here moves. cabin.js v2p() matches. */
+body.cabin-on #hull, body.cabin-on #cursor-plane {
+  transform: translate(-50%, calc(-50% + 50vh - 600px * var(--fit, 1))) scale(var(--fit, 1)); }
+body.cam-on .cam-world[data-scene="main"], body.cam-on .cam-world[data-scene="timeline"],
+body.cam-on .cam-world[data-scene="drawer"] { --cam-ty: calc(600px - 50vh / var(--fit, 1)); }
+body.cam-on .cam-world[data-scene="market"] { --cam-ty: calc(50vh / var(--fit, 1)); }
+
+/* ═══ THE CHART SHEET GROWS WITH THE SCREEN ══════════════════════════════════════════
+   Where the screen has room past the table (below it on 16:10 and 4:3, beside it on 21:9)
+   the chart's sheet runs on into it with more of its own art, sea, vellum or stars, and
+   ends in the same hand-torn edge as its other borders. The playable chart does not move
+   or change size: each board mounts a .sheet-ext UNDER its chart (board_draft.js
+   window.__pdxSheetExt), drawn in the chart's own units. --ext-b and --ext-r are how far
+   the sheet may run (to 16px short of the screen edge, so the tear shows); the sheet's
+   shadow, the soiled rim and the chart's clip all follow them. main.js adds sheet-ext-b /
+   sheet-ext-r to body when they are non-zero, and the chart's own tear goes straight on
+   those sides, since the sheet no longer ends there. */
+body.cabin-on { --ext-b: max(0px, 100vh / var(--fit, 1) - 1216px);
+  --ext-r: max(0px, 50vw / var(--fit, 1) - 1082.5px);
+  --pdx-tear: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M%200.00%2C0.39%20L%201.79%2C0.81%20L%203.57%2C0.67%20L%205.36%2C0.59%20L%207.14%2C0.45%20L%208.93%2C2.92%20L%2010.71%2C0.81%20L%2012.50%2C0.63%20L%2014.29%2C0.64%20L%2016.07%2C0.64%20L%2017.86%2C1.19%20L%2019.64%2C0.69%20L%2021.43%2C2.46%20L%2023.21%2C0.55%20L%2025.00%2C0.89%20L%2026.79%2C0.51%20L%2028.57%2C0.57%20L%2030.36%2C0.43%20L%2032.14%2C3.27%20L%2033.93%2C0.78%20L%2035.71%2C0.90%20L%2037.50%2C0.89%20L%2039.29%2C1.24%20L%2041.07%2C0.72%20L%2042.86%2C0.95%20L%2044.64%2C0.42%20L%2046.43%2C0.82%20L%2048.21%2C0.37%20L%2050.00%2C3.11%20L%2051.79%2C0.38%20L%2053.57%2C0.51%20L%2055.36%2C0.67%20L%2057.14%2C0.53%20L%2058.93%2C0.55%20L%2060.71%2C0.68%20L%2062.50%2C0.34%20L%2064.29%2C0.73%20L%2066.07%2C0.97%20L%2067.86%2C0.44%20L%2069.64%2C0.45%20L%2071.43%2C0.84%20L%2073.21%2C0.89%20L%2075.00%2C0.73%20L%2076.79%2C0.31%20L%2078.57%2C0.62%20L%2080.36%2C0.86%20L%2082.14%2C0.80%20L%2083.93%2C0.32%20L%2085.71%2C0.57%20L%2087.50%2C3.27%20L%2089.29%2C0.93%20L%2091.07%2C0.61%20L%2092.86%2C0.51%20L%2094.64%2C0.62%20L%2096.43%2C0.31%20L%2098.21%2C0.93%20L%2099.73%2C0.00%20L%2099.69%2C1.79%20L%2099.48%2C3.57%20L%2099.50%2C5.36%20L%2099.04%2C7.14%20L%2099.35%2C8.93%20L%2099.32%2C10.71%20L%2097.63%2C12.50%20L%2099.32%2C14.29%20L%2099.32%2C16.07%20L%2099.47%2C17.86%20L%2099.06%2C19.64%20L%2099.14%2C21.43%20L%2099.60%2C23.21%20L%2099.19%2C25.00%20L%2099.25%2C26.79%20L%2099.03%2C28.57%20L%2099.41%2C30.36%20L%2099.06%2C32.14%20L%2099.37%2C33.93%20L%2099.36%2C35.71%20L%2099.38%2C37.50%20L%2099.67%2C39.29%20L%2099.69%2C41.07%20L%2099.44%2C42.86%20L%2099.09%2C44.64%20L%2099.32%2C46.43%20L%2099.64%2C48.21%20L%2099.34%2C50.00%20L%2099.17%2C51.79%20L%2099.74%2C53.57%20L%2099.28%2C55.36%20L%2099.72%2C57.14%20L%2099.45%2C58.93%20L%2099.60%2C60.71%20L%2099.20%2C62.50%20L%2099.21%2C64.29%20L%2099.14%2C66.07%20L%2099.40%2C67.86%20L%2099.42%2C69.64%20L%2099.43%2C71.43%20L%2099.44%2C73.21%20L%2099.68%2C75.00%20L%2099.37%2C76.79%20L%2099.38%2C78.57%20L%2099.04%2C80.36%20L%2099.57%2C82.14%20L%2096.75%2C83.93%20L%2099.26%2C85.71%20L%2099.19%2C87.50%20L%2099.27%2C89.29%20L%2099.45%2C91.07%20L%2099.43%2C92.86%20L%2099.65%2C94.64%20L%2099.47%2C96.43%20L%2099.26%2C98.21%20L%20100.00%2C99.55%20L%2098.21%2C99.44%20L%2096.43%2C99.53%20L%2094.64%2C96.91%20L%2092.86%2C99.29%20L%2091.07%2C99.07%20L%2089.29%2C99.23%20L%2087.50%2C99.66%20L%2085.71%2C99.12%20L%2083.93%2C99.71%20L%2082.14%2C99.54%20L%2080.36%2C97.26%20L%2078.57%2C99.28%20L%2076.79%2C99.65%20L%2075.00%2C99.70%20L%2073.21%2C99.59%20L%2071.43%2C99.38%20L%2069.64%2C97.90%20L%2067.86%2C99.63%20L%2066.07%2C98.79%20L%2064.29%2C99.65%20L%2062.50%2C99.28%20L%2060.71%2C99.16%20L%2058.93%2C99.61%20L%2057.14%2C99.62%20L%2055.36%2C99.68%20L%2053.57%2C99.01%20L%2051.79%2C99.70%20L%2050.00%2C99.15%20L%2048.21%2C99.46%20L%2046.43%2C99.19%20L%2044.64%2C99.12%20L%2042.86%2C99.38%20L%2041.07%2C99.63%20L%2039.29%2C99.46%20L%2037.50%2C99.23%20L%2035.71%2C99.05%20L%2033.93%2C99.65%20L%2032.14%2C99.25%20L%2030.36%2C99.48%20L%2028.57%2C99.47%20L%2026.79%2C99.25%20L%2025.00%2C99.69%20L%2023.21%2C99.71%20L%2021.43%2C99.57%20L%2019.64%2C99.44%20L%2017.86%2C98.20%20L%2016.07%2C99.47%20L%2014.29%2C99.45%20L%2012.50%2C99.29%20L%2010.71%2C99.52%20L%208.93%2C99.36%20L%207.14%2C99.30%20L%205.36%2C99.31%20L%203.57%2C99.10%20L%201.79%2C99.21%20L%200.41%2C100.00%20L%200.87%2C98.21%20L%200.65%2C96.43%20L%200.28%2C94.64%20L%200.33%2C92.86%20L%200.45%2C91.07%20L%200.98%2C89.29%20L%200.57%2C87.50%20L%200.25%2C85.71%20L%200.62%2C83.93%20L%200.68%2C82.14%20L%200.80%2C80.36%20L%202.51%2C78.57%20L%200.26%2C76.79%20L%200.57%2C75.00%20L%200.51%2C73.21%20L%200.43%2C71.43%20L%200.60%2C69.64%20L%200.50%2C67.86%20L%200.92%2C66.07%20L%200.86%2C64.29%20L%200.57%2C62.50%20L%200.97%2C60.71%20L%200.57%2C58.93%20L%200.84%2C57.14%20L%200.58%2C55.36%20L%200.98%2C53.57%20L%200.56%2C51.79%20L%200.66%2C50.00%20L%200.67%2C48.21%20L%201.67%2C46.43%20L%200.55%2C44.64%20L%200.98%2C42.86%20L%200.25%2C41.07%20L%200.88%2C39.29%20L%200.73%2C37.50%20L%200.80%2C35.71%20L%200.45%2C33.93%20L%200.68%2C32.14%20L%200.42%2C30.36%20L%200.86%2C28.57%20L%200.59%2C26.79%20L%200.69%2C25.00%20L%201.80%2C23.21%20L%200.37%2C21.43%20L%200.91%2C19.64%20L%200.76%2C17.86%20L%200.77%2C16.07%20L%200.46%2C14.29%20L%200.42%2C12.50%20L%200.36%2C10.71%20L%202.76%2C8.93%20L%200.28%2C7.14%20L%200.48%2C5.36%20L%200.46%2C3.57%20L%200.68%2C1.79%20Z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E"); }
+body.cabin-on #timeline-rail { clip-path: inset(0 calc(-90px - var(--ext-r)) calc(-90px - var(--ext-b)) 0); }
+body.cabin-on #timeline-rail::after { inset: 74px calc(-1 * var(--ext-r)) calc(-1 * var(--ext-b)) 6px; }
+body.cabin-on:not(.chart-rolled) #timeline-rail > .cplot,
+body.cabin-on:not(.chart-rolled) #timeline-rail > .cplot-sing,
+body.cabin-on:not(.chart-rolled) #timeline-rail > .cplot-ori {
+  clip-path: inset(0 calc(-1 * var(--ext-r)) calc(-1 * var(--ext-b)) 0); }
+body.cabin-on #timeline-rail > .cplot::after,
+body.cabin-on #timeline-rail > .cplot-sing::after,
+body.cabin-on #timeline-rail > .cplot-ori::after { inset: 0 calc(-1 * var(--ext-r)) calc(-1 * var(--ext-b)) 0; }
+#timeline-rail .sheet-ext { position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none;
+  width: calc(100% + var(--ext-r, 0px)); height: calc(100% + var(--ext-b, 0px));
+  -webkit-mask: var(--pdx-tear) 0 0 / 100% 100% no-repeat; mask: var(--pdx-tear) 0 0 / 100% 100% no-repeat; }
+#timeline-rail .sheet-ext > svg { display: block; width: 100%; height: 100%; }
+body:not(.cabin-on) #timeline-rail .sheet-ext { display: none; }
+body.sheet-ext-b #timeline-rail > .cplot-sing svg,
+body.sheet-ext-b #timeline-rail > .cplot-ori  svg {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M%200.00%2C0.39%20L%201.79%2C0.81%20L%203.57%2C0.67%20L%205.36%2C0.59%20L%207.14%2C0.45%20L%208.93%2C2.92%20L%2010.71%2C0.81%20L%2012.50%2C0.63%20L%2014.29%2C0.64%20L%2016.07%2C0.64%20L%2017.86%2C1.19%20L%2019.64%2C0.69%20L%2021.43%2C2.46%20L%2023.21%2C0.55%20L%2025.00%2C0.89%20L%2026.79%2C0.51%20L%2028.57%2C0.57%20L%2030.36%2C0.43%20L%2032.14%2C3.27%20L%2033.93%2C0.78%20L%2035.71%2C0.90%20L%2037.50%2C0.89%20L%2039.29%2C1.24%20L%2041.07%2C0.72%20L%2042.86%2C0.95%20L%2044.64%2C0.42%20L%2046.43%2C0.82%20L%2048.21%2C0.37%20L%2050.00%2C3.11%20L%2051.79%2C0.38%20L%2053.57%2C0.51%20L%2055.36%2C0.67%20L%2057.14%2C0.53%20L%2058.93%2C0.55%20L%2060.71%2C0.68%20L%2062.50%2C0.34%20L%2064.29%2C0.73%20L%2066.07%2C0.97%20L%2067.86%2C0.44%20L%2069.64%2C0.45%20L%2071.43%2C0.84%20L%2073.21%2C0.89%20L%2075.00%2C0.73%20L%2076.79%2C0.31%20L%2078.57%2C0.62%20L%2080.36%2C0.86%20L%2082.14%2C0.80%20L%2083.93%2C0.32%20L%2085.71%2C0.57%20L%2087.50%2C3.27%20L%2089.29%2C0.93%20L%2091.07%2C0.61%20L%2092.86%2C0.51%20L%2094.64%2C0.62%20L%2096.43%2C0.31%20L%2098.21%2C0.93%20L%2099.73%2C0.00%20L%2099.69%2C1.79%20L%2099.48%2C3.57%20L%2099.50%2C5.36%20L%2099.04%2C7.14%20L%2099.35%2C8.93%20L%2099.32%2C10.71%20L%2097.63%2C12.50%20L%2099.32%2C14.29%20L%2099.32%2C16.07%20L%2099.47%2C17.86%20L%2099.06%2C19.64%20L%2099.14%2C21.43%20L%2099.60%2C23.21%20L%2099.19%2C25.00%20L%2099.25%2C26.79%20L%2099.03%2C28.57%20L%2099.41%2C30.36%20L%2099.06%2C32.14%20L%2099.37%2C33.93%20L%2099.36%2C35.71%20L%2099.38%2C37.50%20L%2099.67%2C39.29%20L%2099.69%2C41.07%20L%2099.44%2C42.86%20L%2099.09%2C44.64%20L%2099.32%2C46.43%20L%2099.64%2C48.21%20L%2099.34%2C50.00%20L%2099.17%2C51.79%20L%2099.74%2C53.57%20L%2099.28%2C55.36%20L%2099.72%2C57.14%20L%2099.45%2C58.93%20L%2099.60%2C60.71%20L%2099.20%2C62.50%20L%2099.21%2C64.29%20L%2099.14%2C66.07%20L%2099.40%2C67.86%20L%2099.42%2C69.64%20L%2099.43%2C71.43%20L%2099.44%2C73.21%20L%2099.68%2C75.00%20L%2099.37%2C76.79%20L%2099.38%2C78.57%20L%2099.04%2C80.36%20L%2099.57%2C82.14%20L%2096.75%2C83.93%20L%2099.26%2C85.71%20L%2099.19%2C87.50%20L%2099.27%2C89.29%20L%2099.45%2C91.07%20L%2099.43%2C92.86%20L%2099.65%2C94.64%20L%2099.47%2C96.43%20L%2099.26%2C100.00%20L%20100.00%2C100.00%20L%2098.21%2C100.00%20L%2096.43%2C100.00%20L%2094.64%2C100.00%20L%2092.86%2C100.00%20L%2091.07%2C100.00%20L%2089.29%2C100.00%20L%2087.50%2C100.00%20L%2085.71%2C100.00%20L%2083.93%2C100.00%20L%2082.14%2C100.00%20L%2080.36%2C100.00%20L%2078.57%2C100.00%20L%2076.79%2C100.00%20L%2075.00%2C100.00%20L%2073.21%2C100.00%20L%2071.43%2C100.00%20L%2069.64%2C100.00%20L%2067.86%2C100.00%20L%2066.07%2C100.00%20L%2064.29%2C100.00%20L%2062.50%2C100.00%20L%2060.71%2C100.00%20L%2058.93%2C100.00%20L%2057.14%2C100.00%20L%2055.36%2C100.00%20L%2053.57%2C100.00%20L%2051.79%2C100.00%20L%2050.00%2C100.00%20L%2048.21%2C100.00%20L%2046.43%2C100.00%20L%2044.64%2C100.00%20L%2042.86%2C100.00%20L%2041.07%2C100.00%20L%2039.29%2C100.00%20L%2037.50%2C100.00%20L%2035.71%2C100.00%20L%2033.93%2C100.00%20L%2032.14%2C100.00%20L%2030.36%2C100.00%20L%2028.57%2C100.00%20L%2026.79%2C100.00%20L%2025.00%2C100.00%20L%2023.21%2C100.00%20L%2021.43%2C100.00%20L%2019.64%2C100.00%20L%2017.86%2C100.00%20L%2016.07%2C100.00%20L%2014.29%2C100.00%20L%2012.50%2C100.00%20L%2010.71%2C100.00%20L%208.93%2C100.00%20L%207.14%2C100.00%20L%205.36%2C100.00%20L%203.57%2C100.00%20L%201.79%2C100.00%20L%200.41%2C100.00%20L%200.87%2C100.00%20L%200.65%2C96.43%20L%200.28%2C94.64%20L%200.33%2C92.86%20L%200.45%2C91.07%20L%200.98%2C89.29%20L%200.57%2C87.50%20L%200.25%2C85.71%20L%200.62%2C83.93%20L%200.68%2C82.14%20L%200.80%2C80.36%20L%202.51%2C78.57%20L%200.26%2C76.79%20L%200.57%2C75.00%20L%200.51%2C73.21%20L%200.43%2C71.43%20L%200.60%2C69.64%20L%200.50%2C67.86%20L%200.92%2C66.07%20L%200.86%2C64.29%20L%200.57%2C62.50%20L%200.97%2C60.71%20L%200.57%2C58.93%20L%200.84%2C57.14%20L%200.58%2C55.36%20L%200.98%2C53.57%20L%200.56%2C51.79%20L%200.66%2C50.00%20L%200.67%2C48.21%20L%201.67%2C46.43%20L%200.55%2C44.64%20L%200.98%2C42.86%20L%200.25%2C41.07%20L%200.88%2C39.29%20L%200.73%2C37.50%20L%200.80%2C35.71%20L%200.45%2C33.93%20L%200.68%2C32.14%20L%200.42%2C30.36%20L%200.86%2C28.57%20L%200.59%2C26.79%20L%200.69%2C25.00%20L%201.80%2C23.21%20L%200.37%2C21.43%20L%200.91%2C19.64%20L%200.76%2C17.86%20L%200.77%2C16.07%20L%200.46%2C14.29%20L%200.42%2C12.50%20L%200.36%2C10.71%20L%202.76%2C8.93%20L%200.28%2C7.14%20L%200.48%2C5.36%20L%200.46%2C3.57%20L%200.68%2C1.79%20Z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E"), linear-gradient(#000 calc(100% - 48px), transparent); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M%200.00%2C0.39%20L%201.79%2C0.81%20L%203.57%2C0.67%20L%205.36%2C0.59%20L%207.14%2C0.45%20L%208.93%2C2.92%20L%2010.71%2C0.81%20L%2012.50%2C0.63%20L%2014.29%2C0.64%20L%2016.07%2C0.64%20L%2017.86%2C1.19%20L%2019.64%2C0.69%20L%2021.43%2C2.46%20L%2023.21%2C0.55%20L%2025.00%2C0.89%20L%2026.79%2C0.51%20L%2028.57%2C0.57%20L%2030.36%2C0.43%20L%2032.14%2C3.27%20L%2033.93%2C0.78%20L%2035.71%2C0.90%20L%2037.50%2C0.89%20L%2039.29%2C1.24%20L%2041.07%2C0.72%20L%2042.86%2C0.95%20L%2044.64%2C0.42%20L%2046.43%2C0.82%20L%2048.21%2C0.37%20L%2050.00%2C3.11%20L%2051.79%2C0.38%20L%2053.57%2C0.51%20L%2055.36%2C0.67%20L%2057.14%2C0.53%20L%2058.93%2C0.55%20L%2060.71%2C0.68%20L%2062.50%2C0.34%20L%2064.29%2C0.73%20L%2066.07%2C0.97%20L%2067.86%2C0.44%20L%2069.64%2C0.45%20L%2071.43%2C0.84%20L%2073.21%2C0.89%20L%2075.00%2C0.73%20L%2076.79%2C0.31%20L%2078.57%2C0.62%20L%2080.36%2C0.86%20L%2082.14%2C0.80%20L%2083.93%2C0.32%20L%2085.71%2C0.57%20L%2087.50%2C3.27%20L%2089.29%2C0.93%20L%2091.07%2C0.61%20L%2092.86%2C0.51%20L%2094.64%2C0.62%20L%2096.43%2C0.31%20L%2098.21%2C0.93%20L%2099.73%2C0.00%20L%2099.69%2C1.79%20L%2099.48%2C3.57%20L%2099.50%2C5.36%20L%2099.04%2C7.14%20L%2099.35%2C8.93%20L%2099.32%2C10.71%20L%2097.63%2C12.50%20L%2099.32%2C14.29%20L%2099.32%2C16.07%20L%2099.47%2C17.86%20L%2099.06%2C19.64%20L%2099.14%2C21.43%20L%2099.60%2C23.21%20L%2099.19%2C25.00%20L%2099.25%2C26.79%20L%2099.03%2C28.57%20L%2099.41%2C30.36%20L%2099.06%2C32.14%20L%2099.37%2C33.93%20L%2099.36%2C35.71%20L%2099.38%2C37.50%20L%2099.67%2C39.29%20L%2099.69%2C41.07%20L%2099.44%2C42.86%20L%2099.09%2C44.64%20L%2099.32%2C46.43%20L%2099.64%2C48.21%20L%2099.34%2C50.00%20L%2099.17%2C51.79%20L%2099.74%2C53.57%20L%2099.28%2C55.36%20L%2099.72%2C57.14%20L%2099.45%2C58.93%20L%2099.60%2C60.71%20L%2099.20%2C62.50%20L%2099.21%2C64.29%20L%2099.14%2C66.07%20L%2099.40%2C67.86%20L%2099.42%2C69.64%20L%2099.43%2C71.43%20L%2099.44%2C73.21%20L%2099.68%2C75.00%20L%2099.37%2C76.79%20L%2099.38%2C78.57%20L%2099.04%2C80.36%20L%2099.57%2C82.14%20L%2096.75%2C83.93%20L%2099.26%2C85.71%20L%2099.19%2C87.50%20L%2099.27%2C89.29%20L%2099.45%2C91.07%20L%2099.43%2C92.86%20L%2099.65%2C94.64%20L%2099.47%2C96.43%20L%2099.26%2C100.00%20L%20100.00%2C100.00%20L%2098.21%2C100.00%20L%2096.43%2C100.00%20L%2094.64%2C100.00%20L%2092.86%2C100.00%20L%2091.07%2C100.00%20L%2089.29%2C100.00%20L%2087.50%2C100.00%20L%2085.71%2C100.00%20L%2083.93%2C100.00%20L%2082.14%2C100.00%20L%2080.36%2C100.00%20L%2078.57%2C100.00%20L%2076.79%2C100.00%20L%2075.00%2C100.00%20L%2073.21%2C100.00%20L%2071.43%2C100.00%20L%2069.64%2C100.00%20L%2067.86%2C100.00%20L%2066.07%2C100.00%20L%2064.29%2C100.00%20L%2062.50%2C100.00%20L%2060.71%2C100.00%20L%2058.93%2C100.00%20L%2057.14%2C100.00%20L%2055.36%2C100.00%20L%2053.57%2C100.00%20L%2051.79%2C100.00%20L%2050.00%2C100.00%20L%2048.21%2C100.00%20L%2046.43%2C100.00%20L%2044.64%2C100.00%20L%2042.86%2C100.00%20L%2041.07%2C100.00%20L%2039.29%2C100.00%20L%2037.50%2C100.00%20L%2035.71%2C100.00%20L%2033.93%2C100.00%20L%2032.14%2C100.00%20L%2030.36%2C100.00%20L%2028.57%2C100.00%20L%2026.79%2C100.00%20L%2025.00%2C100.00%20L%2023.21%2C100.00%20L%2021.43%2C100.00%20L%2019.64%2C100.00%20L%2017.86%2C100.00%20L%2016.07%2C100.00%20L%2014.29%2C100.00%20L%2012.50%2C100.00%20L%2010.71%2C100.00%20L%208.93%2C100.00%20L%207.14%2C100.00%20L%205.36%2C100.00%20L%203.57%2C100.00%20L%201.79%2C100.00%20L%200.41%2C100.00%20L%200.87%2C100.00%20L%200.65%2C96.43%20L%200.28%2C94.64%20L%200.33%2C92.86%20L%200.45%2C91.07%20L%200.98%2C89.29%20L%200.57%2C87.50%20L%200.25%2C85.71%20L%200.62%2C83.93%20L%200.68%2C82.14%20L%200.80%2C80.36%20L%202.51%2C78.57%20L%200.26%2C76.79%20L%200.57%2C75.00%20L%200.51%2C73.21%20L%200.43%2C71.43%20L%200.60%2C69.64%20L%200.50%2C67.86%20L%200.92%2C66.07%20L%200.86%2C64.29%20L%200.57%2C62.50%20L%200.97%2C60.71%20L%200.57%2C58.93%20L%200.84%2C57.14%20L%200.58%2C55.36%20L%200.98%2C53.57%20L%200.56%2C51.79%20L%200.66%2C50.00%20L%200.67%2C48.21%20L%201.67%2C46.43%20L%200.55%2C44.64%20L%200.98%2C42.86%20L%200.25%2C41.07%20L%200.88%2C39.29%20L%200.73%2C37.50%20L%200.80%2C35.71%20L%200.45%2C33.93%20L%200.68%2C32.14%20L%200.42%2C30.36%20L%200.86%2C28.57%20L%200.59%2C26.79%20L%200.69%2C25.00%20L%201.80%2C23.21%20L%200.37%2C21.43%20L%200.91%2C19.64%20L%200.76%2C17.86%20L%200.77%2C16.07%20L%200.46%2C14.29%20L%200.42%2C12.50%20L%200.36%2C10.71%20L%202.76%2C8.93%20L%200.28%2C7.14%20L%200.48%2C5.36%20L%200.46%2C3.57%20L%200.68%2C1.79%20Z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E"), linear-gradient(#000 calc(100% - 48px), transparent);
+  -webkit-mask-composite: source-in, source-over; mask-composite: intersect, add;
+  }
+body.sheet-ext-r #timeline-rail > .cplot-sing svg,
+body.sheet-ext-r #timeline-rail > .cplot-ori  svg {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M%200.00%2C0.39%20L%201.79%2C0.81%20L%203.57%2C0.67%20L%205.36%2C0.59%20L%207.14%2C0.45%20L%208.93%2C2.92%20L%2010.71%2C0.81%20L%2012.50%2C0.63%20L%2014.29%2C0.64%20L%2016.07%2C0.64%20L%2017.86%2C1.19%20L%2019.64%2C0.69%20L%2021.43%2C2.46%20L%2023.21%2C0.55%20L%2025.00%2C0.89%20L%2026.79%2C0.51%20L%2028.57%2C0.57%20L%2030.36%2C0.43%20L%2032.14%2C3.27%20L%2033.93%2C0.78%20L%2035.71%2C0.90%20L%2037.50%2C0.89%20L%2039.29%2C1.24%20L%2041.07%2C0.72%20L%2042.86%2C0.95%20L%2044.64%2C0.42%20L%2046.43%2C0.82%20L%2048.21%2C0.37%20L%2050.00%2C3.11%20L%2051.79%2C0.38%20L%2053.57%2C0.51%20L%2055.36%2C0.67%20L%2057.14%2C0.53%20L%2058.93%2C0.55%20L%2060.71%2C0.68%20L%2062.50%2C0.34%20L%2064.29%2C0.73%20L%2066.07%2C0.97%20L%2067.86%2C0.44%20L%2069.64%2C0.45%20L%2071.43%2C0.84%20L%2073.21%2C0.89%20L%2075.00%2C0.73%20L%2076.79%2C0.31%20L%2078.57%2C0.62%20L%2080.36%2C0.86%20L%2082.14%2C0.80%20L%2083.93%2C0.32%20L%2085.71%2C0.57%20L%2087.50%2C3.27%20L%2089.29%2C0.93%20L%2091.07%2C0.61%20L%2092.86%2C0.51%20L%2094.64%2C0.62%20L%2096.43%2C0.31%20L%20100.00%2C0.93%20L%20100.00%2C0.00%20L%20100.00%2C1.79%20L%20100.00%2C3.57%20L%20100.00%2C5.36%20L%20100.00%2C7.14%20L%20100.00%2C8.93%20L%20100.00%2C10.71%20L%20100.00%2C12.50%20L%20100.00%2C14.29%20L%20100.00%2C16.07%20L%20100.00%2C17.86%20L%20100.00%2C19.64%20L%20100.00%2C21.43%20L%20100.00%2C23.21%20L%20100.00%2C25.00%20L%20100.00%2C26.79%20L%20100.00%2C28.57%20L%20100.00%2C30.36%20L%20100.00%2C32.14%20L%20100.00%2C33.93%20L%20100.00%2C35.71%20L%20100.00%2C37.50%20L%20100.00%2C39.29%20L%20100.00%2C41.07%20L%20100.00%2C42.86%20L%20100.00%2C44.64%20L%20100.00%2C46.43%20L%20100.00%2C48.21%20L%20100.00%2C50.00%20L%20100.00%2C51.79%20L%20100.00%2C53.57%20L%20100.00%2C55.36%20L%20100.00%2C57.14%20L%20100.00%2C58.93%20L%20100.00%2C60.71%20L%20100.00%2C62.50%20L%20100.00%2C64.29%20L%20100.00%2C66.07%20L%20100.00%2C67.86%20L%20100.00%2C69.64%20L%20100.00%2C71.43%20L%20100.00%2C73.21%20L%20100.00%2C75.00%20L%20100.00%2C76.79%20L%20100.00%2C78.57%20L%20100.00%2C80.36%20L%20100.00%2C82.14%20L%20100.00%2C83.93%20L%20100.00%2C85.71%20L%20100.00%2C87.50%20L%20100.00%2C89.29%20L%20100.00%2C91.07%20L%20100.00%2C92.86%20L%20100.00%2C94.64%20L%20100.00%2C96.43%20L%20100.00%2C98.21%20L%20100.00%2C99.55%20L%20100.00%2C99.44%20L%2096.43%2C99.53%20L%2094.64%2C96.91%20L%2092.86%2C99.29%20L%2091.07%2C99.07%20L%2089.29%2C99.23%20L%2087.50%2C99.66%20L%2085.71%2C99.12%20L%2083.93%2C99.71%20L%2082.14%2C99.54%20L%2080.36%2C97.26%20L%2078.57%2C99.28%20L%2076.79%2C99.65%20L%2075.00%2C99.70%20L%2073.21%2C99.59%20L%2071.43%2C99.38%20L%2069.64%2C97.90%20L%2067.86%2C99.63%20L%2066.07%2C98.79%20L%2064.29%2C99.65%20L%2062.50%2C99.28%20L%2060.71%2C99.16%20L%2058.93%2C99.61%20L%2057.14%2C99.62%20L%2055.36%2C99.68%20L%2053.57%2C99.01%20L%2051.79%2C99.70%20L%2050.00%2C99.15%20L%2048.21%2C99.46%20L%2046.43%2C99.19%20L%2044.64%2C99.12%20L%2042.86%2C99.38%20L%2041.07%2C99.63%20L%2039.29%2C99.46%20L%2037.50%2C99.23%20L%2035.71%2C99.05%20L%2033.93%2C99.65%20L%2032.14%2C99.25%20L%2030.36%2C99.48%20L%2028.57%2C99.47%20L%2026.79%2C99.25%20L%2025.00%2C99.69%20L%2023.21%2C99.71%20L%2021.43%2C99.57%20L%2019.64%2C99.44%20L%2017.86%2C98.20%20L%2016.07%2C99.47%20L%2014.29%2C99.45%20L%2012.50%2C99.29%20L%2010.71%2C99.52%20L%208.93%2C99.36%20L%207.14%2C99.30%20L%205.36%2C99.31%20L%203.57%2C99.10%20L%201.79%2C99.21%20L%200.41%2C100.00%20L%200.87%2C98.21%20L%200.65%2C96.43%20L%200.28%2C94.64%20L%200.33%2C92.86%20L%200.45%2C91.07%20L%200.98%2C89.29%20L%200.57%2C87.50%20L%200.25%2C85.71%20L%200.62%2C83.93%20L%200.68%2C82.14%20L%200.80%2C80.36%20L%202.51%2C78.57%20L%200.26%2C76.79%20L%200.57%2C75.00%20L%200.51%2C73.21%20L%200.43%2C71.43%20L%200.60%2C69.64%20L%200.50%2C67.86%20L%200.92%2C66.07%20L%200.86%2C64.29%20L%200.57%2C62.50%20L%200.97%2C60.71%20L%200.57%2C58.93%20L%200.84%2C57.14%20L%200.58%2C55.36%20L%200.98%2C53.57%20L%200.56%2C51.79%20L%200.66%2C50.00%20L%200.67%2C48.21%20L%201.67%2C46.43%20L%200.55%2C44.64%20L%200.98%2C42.86%20L%200.25%2C41.07%20L%200.88%2C39.29%20L%200.73%2C37.50%20L%200.80%2C35.71%20L%200.45%2C33.93%20L%200.68%2C32.14%20L%200.42%2C30.36%20L%200.86%2C28.57%20L%200.59%2C26.79%20L%200.69%2C25.00%20L%201.80%2C23.21%20L%200.37%2C21.43%20L%200.91%2C19.64%20L%200.76%2C17.86%20L%200.77%2C16.07%20L%200.46%2C14.29%20L%200.42%2C12.50%20L%200.36%2C10.71%20L%202.76%2C8.93%20L%200.28%2C7.14%20L%200.48%2C5.36%20L%200.46%2C3.57%20L%200.68%2C1.79%20Z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E"), linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M%200.00%2C0.39%20L%201.79%2C0.81%20L%203.57%2C0.67%20L%205.36%2C0.59%20L%207.14%2C0.45%20L%208.93%2C2.92%20L%2010.71%2C0.81%20L%2012.50%2C0.63%20L%2014.29%2C0.64%20L%2016.07%2C0.64%20L%2017.86%2C1.19%20L%2019.64%2C0.69%20L%2021.43%2C2.46%20L%2023.21%2C0.55%20L%2025.00%2C0.89%20L%2026.79%2C0.51%20L%2028.57%2C0.57%20L%2030.36%2C0.43%20L%2032.14%2C3.27%20L%2033.93%2C0.78%20L%2035.71%2C0.90%20L%2037.50%2C0.89%20L%2039.29%2C1.24%20L%2041.07%2C0.72%20L%2042.86%2C0.95%20L%2044.64%2C0.42%20L%2046.43%2C0.82%20L%2048.21%2C0.37%20L%2050.00%2C3.11%20L%2051.79%2C0.38%20L%2053.57%2C0.51%20L%2055.36%2C0.67%20L%2057.14%2C0.53%20L%2058.93%2C0.55%20L%2060.71%2C0.68%20L%2062.50%2C0.34%20L%2064.29%2C0.73%20L%2066.07%2C0.97%20L%2067.86%2C0.44%20L%2069.64%2C0.45%20L%2071.43%2C0.84%20L%2073.21%2C0.89%20L%2075.00%2C0.73%20L%2076.79%2C0.31%20L%2078.57%2C0.62%20L%2080.36%2C0.86%20L%2082.14%2C0.80%20L%2083.93%2C0.32%20L%2085.71%2C0.57%20L%2087.50%2C3.27%20L%2089.29%2C0.93%20L%2091.07%2C0.61%20L%2092.86%2C0.51%20L%2094.64%2C0.62%20L%2096.43%2C0.31%20L%20100.00%2C0.93%20L%20100.00%2C0.00%20L%20100.00%2C1.79%20L%20100.00%2C3.57%20L%20100.00%2C5.36%20L%20100.00%2C7.14%20L%20100.00%2C8.93%20L%20100.00%2C10.71%20L%20100.00%2C12.50%20L%20100.00%2C14.29%20L%20100.00%2C16.07%20L%20100.00%2C17.86%20L%20100.00%2C19.64%20L%20100.00%2C21.43%20L%20100.00%2C23.21%20L%20100.00%2C25.00%20L%20100.00%2C26.79%20L%20100.00%2C28.57%20L%20100.00%2C30.36%20L%20100.00%2C32.14%20L%20100.00%2C33.93%20L%20100.00%2C35.71%20L%20100.00%2C37.50%20L%20100.00%2C39.29%20L%20100.00%2C41.07%20L%20100.00%2C42.86%20L%20100.00%2C44.64%20L%20100.00%2C46.43%20L%20100.00%2C48.21%20L%20100.00%2C50.00%20L%20100.00%2C51.79%20L%20100.00%2C53.57%20L%20100.00%2C55.36%20L%20100.00%2C57.14%20L%20100.00%2C58.93%20L%20100.00%2C60.71%20L%20100.00%2C62.50%20L%20100.00%2C64.29%20L%20100.00%2C66.07%20L%20100.00%2C67.86%20L%20100.00%2C69.64%20L%20100.00%2C71.43%20L%20100.00%2C73.21%20L%20100.00%2C75.00%20L%20100.00%2C76.79%20L%20100.00%2C78.57%20L%20100.00%2C80.36%20L%20100.00%2C82.14%20L%20100.00%2C83.93%20L%20100.00%2C85.71%20L%20100.00%2C87.50%20L%20100.00%2C89.29%20L%20100.00%2C91.07%20L%20100.00%2C92.86%20L%20100.00%2C94.64%20L%20100.00%2C96.43%20L%20100.00%2C98.21%20L%20100.00%2C99.55%20L%20100.00%2C99.44%20L%2096.43%2C99.53%20L%2094.64%2C96.91%20L%2092.86%2C99.29%20L%2091.07%2C99.07%20L%2089.29%2C99.23%20L%2087.50%2C99.66%20L%2085.71%2C99.12%20L%2083.93%2C99.71%20L%2082.14%2C99.54%20L%2080.36%2C97.26%20L%2078.57%2C99.28%20L%2076.79%2C99.65%20L%2075.00%2C99.70%20L%2073.21%2C99.59%20L%2071.43%2C99.38%20L%2069.64%2C97.90%20L%2067.86%2C99.63%20L%2066.07%2C98.79%20L%2064.29%2C99.65%20L%2062.50%2C99.28%20L%2060.71%2C99.16%20L%2058.93%2C99.61%20L%2057.14%2C99.62%20L%2055.36%2C99.68%20L%2053.57%2C99.01%20L%2051.79%2C99.70%20L%2050.00%2C99.15%20L%2048.21%2C99.46%20L%2046.43%2C99.19%20L%2044.64%2C99.12%20L%2042.86%2C99.38%20L%2041.07%2C99.63%20L%2039.29%2C99.46%20L%2037.50%2C99.23%20L%2035.71%2C99.05%20L%2033.93%2C99.65%20L%2032.14%2C99.25%20L%2030.36%2C99.48%20L%2028.57%2C99.47%20L%2026.79%2C99.25%20L%2025.00%2C99.69%20L%2023.21%2C99.71%20L%2021.43%2C99.57%20L%2019.64%2C99.44%20L%2017.86%2C98.20%20L%2016.07%2C99.47%20L%2014.29%2C99.45%20L%2012.50%2C99.29%20L%2010.71%2C99.52%20L%208.93%2C99.36%20L%207.14%2C99.30%20L%205.36%2C99.31%20L%203.57%2C99.10%20L%201.79%2C99.21%20L%200.41%2C100.00%20L%200.87%2C98.21%20L%200.65%2C96.43%20L%200.28%2C94.64%20L%200.33%2C92.86%20L%200.45%2C91.07%20L%200.98%2C89.29%20L%200.57%2C87.50%20L%200.25%2C85.71%20L%200.62%2C83.93%20L%200.68%2C82.14%20L%200.80%2C80.36%20L%202.51%2C78.57%20L%200.26%2C76.79%20L%200.57%2C75.00%20L%200.51%2C73.21%20L%200.43%2C71.43%20L%200.60%2C69.64%20L%200.50%2C67.86%20L%200.92%2C66.07%20L%200.86%2C64.29%20L%200.57%2C62.50%20L%200.97%2C60.71%20L%200.57%2C58.93%20L%200.84%2C57.14%20L%200.58%2C55.36%20L%200.98%2C53.57%20L%200.56%2C51.79%20L%200.66%2C50.00%20L%200.67%2C48.21%20L%201.67%2C46.43%20L%200.55%2C44.64%20L%200.98%2C42.86%20L%200.25%2C41.07%20L%200.88%2C39.29%20L%200.73%2C37.50%20L%200.80%2C35.71%20L%200.45%2C33.93%20L%200.68%2C32.14%20L%200.42%2C30.36%20L%200.86%2C28.57%20L%200.59%2C26.79%20L%200.69%2C25.00%20L%201.80%2C23.21%20L%200.37%2C21.43%20L%200.91%2C19.64%20L%200.76%2C17.86%20L%200.77%2C16.07%20L%200.46%2C14.29%20L%200.42%2C12.50%20L%200.36%2C10.71%20L%202.76%2C8.93%20L%200.28%2C7.14%20L%200.48%2C5.36%20L%200.46%2C3.57%20L%200.68%2C1.79%20Z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E"), linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  -webkit-mask-composite: source-in, source-over; mask-composite: intersect, add;
+  }
+body.sheet-ext-b.sheet-ext-r #timeline-rail > .cplot-sing svg,
+body.sheet-ext-b.sheet-ext-r #timeline-rail > .cplot-ori  svg {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M%200.00%2C0.39%20L%201.79%2C0.81%20L%203.57%2C0.67%20L%205.36%2C0.59%20L%207.14%2C0.45%20L%208.93%2C2.92%20L%2010.71%2C0.81%20L%2012.50%2C0.63%20L%2014.29%2C0.64%20L%2016.07%2C0.64%20L%2017.86%2C1.19%20L%2019.64%2C0.69%20L%2021.43%2C2.46%20L%2023.21%2C0.55%20L%2025.00%2C0.89%20L%2026.79%2C0.51%20L%2028.57%2C0.57%20L%2030.36%2C0.43%20L%2032.14%2C3.27%20L%2033.93%2C0.78%20L%2035.71%2C0.90%20L%2037.50%2C0.89%20L%2039.29%2C1.24%20L%2041.07%2C0.72%20L%2042.86%2C0.95%20L%2044.64%2C0.42%20L%2046.43%2C0.82%20L%2048.21%2C0.37%20L%2050.00%2C3.11%20L%2051.79%2C0.38%20L%2053.57%2C0.51%20L%2055.36%2C0.67%20L%2057.14%2C0.53%20L%2058.93%2C0.55%20L%2060.71%2C0.68%20L%2062.50%2C0.34%20L%2064.29%2C0.73%20L%2066.07%2C0.97%20L%2067.86%2C0.44%20L%2069.64%2C0.45%20L%2071.43%2C0.84%20L%2073.21%2C0.89%20L%2075.00%2C0.73%20L%2076.79%2C0.31%20L%2078.57%2C0.62%20L%2080.36%2C0.86%20L%2082.14%2C0.80%20L%2083.93%2C0.32%20L%2085.71%2C0.57%20L%2087.50%2C3.27%20L%2089.29%2C0.93%20L%2091.07%2C0.61%20L%2092.86%2C0.51%20L%2094.64%2C0.62%20L%2096.43%2C0.31%20L%20100.00%2C0.93%20L%20100.00%2C0.00%20L%20100.00%2C1.79%20L%20100.00%2C3.57%20L%20100.00%2C5.36%20L%20100.00%2C7.14%20L%20100.00%2C8.93%20L%20100.00%2C10.71%20L%20100.00%2C12.50%20L%20100.00%2C14.29%20L%20100.00%2C16.07%20L%20100.00%2C17.86%20L%20100.00%2C19.64%20L%20100.00%2C21.43%20L%20100.00%2C23.21%20L%20100.00%2C25.00%20L%20100.00%2C26.79%20L%20100.00%2C28.57%20L%20100.00%2C30.36%20L%20100.00%2C32.14%20L%20100.00%2C33.93%20L%20100.00%2C35.71%20L%20100.00%2C37.50%20L%20100.00%2C39.29%20L%20100.00%2C41.07%20L%20100.00%2C42.86%20L%20100.00%2C44.64%20L%20100.00%2C46.43%20L%20100.00%2C48.21%20L%20100.00%2C50.00%20L%20100.00%2C51.79%20L%20100.00%2C53.57%20L%20100.00%2C55.36%20L%20100.00%2C57.14%20L%20100.00%2C58.93%20L%20100.00%2C60.71%20L%20100.00%2C62.50%20L%20100.00%2C64.29%20L%20100.00%2C66.07%20L%20100.00%2C67.86%20L%20100.00%2C69.64%20L%20100.00%2C71.43%20L%20100.00%2C73.21%20L%20100.00%2C75.00%20L%20100.00%2C76.79%20L%20100.00%2C78.57%20L%20100.00%2C80.36%20L%20100.00%2C82.14%20L%20100.00%2C83.93%20L%20100.00%2C85.71%20L%20100.00%2C87.50%20L%20100.00%2C89.29%20L%20100.00%2C91.07%20L%20100.00%2C92.86%20L%20100.00%2C94.64%20L%20100.00%2C96.43%20L%20100.00%2C100.00%20L%20100.00%2C100.00%20L%20100.00%2C100.00%20L%2096.43%2C100.00%20L%2094.64%2C100.00%20L%2092.86%2C100.00%20L%2091.07%2C100.00%20L%2089.29%2C100.00%20L%2087.50%2C100.00%20L%2085.71%2C100.00%20L%2083.93%2C100.00%20L%2082.14%2C100.00%20L%2080.36%2C100.00%20L%2078.57%2C100.00%20L%2076.79%2C100.00%20L%2075.00%2C100.00%20L%2073.21%2C100.00%20L%2071.43%2C100.00%20L%2069.64%2C100.00%20L%2067.86%2C100.00%20L%2066.07%2C100.00%20L%2064.29%2C100.00%20L%2062.50%2C100.00%20L%2060.71%2C100.00%20L%2058.93%2C100.00%20L%2057.14%2C100.00%20L%2055.36%2C100.00%20L%2053.57%2C100.00%20L%2051.79%2C100.00%20L%2050.00%2C100.00%20L%2048.21%2C100.00%20L%2046.43%2C100.00%20L%2044.64%2C100.00%20L%2042.86%2C100.00%20L%2041.07%2C100.00%20L%2039.29%2C100.00%20L%2037.50%2C100.00%20L%2035.71%2C100.00%20L%2033.93%2C100.00%20L%2032.14%2C100.00%20L%2030.36%2C100.00%20L%2028.57%2C100.00%20L%2026.79%2C100.00%20L%2025.00%2C100.00%20L%2023.21%2C100.00%20L%2021.43%2C100.00%20L%2019.64%2C100.00%20L%2017.86%2C100.00%20L%2016.07%2C100.00%20L%2014.29%2C100.00%20L%2012.50%2C100.00%20L%2010.71%2C100.00%20L%208.93%2C100.00%20L%207.14%2C100.00%20L%205.36%2C100.00%20L%203.57%2C100.00%20L%201.79%2C100.00%20L%200.41%2C100.00%20L%200.87%2C100.00%20L%200.65%2C96.43%20L%200.28%2C94.64%20L%200.33%2C92.86%20L%200.45%2C91.07%20L%200.98%2C89.29%20L%200.57%2C87.50%20L%200.25%2C85.71%20L%200.62%2C83.93%20L%200.68%2C82.14%20L%200.80%2C80.36%20L%202.51%2C78.57%20L%200.26%2C76.79%20L%200.57%2C75.00%20L%200.51%2C73.21%20L%200.43%2C71.43%20L%200.60%2C69.64%20L%200.50%2C67.86%20L%200.92%2C66.07%20L%200.86%2C64.29%20L%200.57%2C62.50%20L%200.97%2C60.71%20L%200.57%2C58.93%20L%200.84%2C57.14%20L%200.58%2C55.36%20L%200.98%2C53.57%20L%200.56%2C51.79%20L%200.66%2C50.00%20L%200.67%2C48.21%20L%201.67%2C46.43%20L%200.55%2C44.64%20L%200.98%2C42.86%20L%200.25%2C41.07%20L%200.88%2C39.29%20L%200.73%2C37.50%20L%200.80%2C35.71%20L%200.45%2C33.93%20L%200.68%2C32.14%20L%200.42%2C30.36%20L%200.86%2C28.57%20L%200.59%2C26.79%20L%200.69%2C25.00%20L%201.80%2C23.21%20L%200.37%2C21.43%20L%200.91%2C19.64%20L%200.76%2C17.86%20L%200.77%2C16.07%20L%200.46%2C14.29%20L%200.42%2C12.50%20L%200.36%2C10.71%20L%202.76%2C8.93%20L%200.28%2C7.14%20L%200.48%2C5.36%20L%200.46%2C3.57%20L%200.68%2C1.79%20Z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E"), linear-gradient(#000 calc(100% - 48px), transparent), linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Cpath%20d%3D%22M%200.00%2C0.39%20L%201.79%2C0.81%20L%203.57%2C0.67%20L%205.36%2C0.59%20L%207.14%2C0.45%20L%208.93%2C2.92%20L%2010.71%2C0.81%20L%2012.50%2C0.63%20L%2014.29%2C0.64%20L%2016.07%2C0.64%20L%2017.86%2C1.19%20L%2019.64%2C0.69%20L%2021.43%2C2.46%20L%2023.21%2C0.55%20L%2025.00%2C0.89%20L%2026.79%2C0.51%20L%2028.57%2C0.57%20L%2030.36%2C0.43%20L%2032.14%2C3.27%20L%2033.93%2C0.78%20L%2035.71%2C0.90%20L%2037.50%2C0.89%20L%2039.29%2C1.24%20L%2041.07%2C0.72%20L%2042.86%2C0.95%20L%2044.64%2C0.42%20L%2046.43%2C0.82%20L%2048.21%2C0.37%20L%2050.00%2C3.11%20L%2051.79%2C0.38%20L%2053.57%2C0.51%20L%2055.36%2C0.67%20L%2057.14%2C0.53%20L%2058.93%2C0.55%20L%2060.71%2C0.68%20L%2062.50%2C0.34%20L%2064.29%2C0.73%20L%2066.07%2C0.97%20L%2067.86%2C0.44%20L%2069.64%2C0.45%20L%2071.43%2C0.84%20L%2073.21%2C0.89%20L%2075.00%2C0.73%20L%2076.79%2C0.31%20L%2078.57%2C0.62%20L%2080.36%2C0.86%20L%2082.14%2C0.80%20L%2083.93%2C0.32%20L%2085.71%2C0.57%20L%2087.50%2C3.27%20L%2089.29%2C0.93%20L%2091.07%2C0.61%20L%2092.86%2C0.51%20L%2094.64%2C0.62%20L%2096.43%2C0.31%20L%20100.00%2C0.93%20L%20100.00%2C0.00%20L%20100.00%2C1.79%20L%20100.00%2C3.57%20L%20100.00%2C5.36%20L%20100.00%2C7.14%20L%20100.00%2C8.93%20L%20100.00%2C10.71%20L%20100.00%2C12.50%20L%20100.00%2C14.29%20L%20100.00%2C16.07%20L%20100.00%2C17.86%20L%20100.00%2C19.64%20L%20100.00%2C21.43%20L%20100.00%2C23.21%20L%20100.00%2C25.00%20L%20100.00%2C26.79%20L%20100.00%2C28.57%20L%20100.00%2C30.36%20L%20100.00%2C32.14%20L%20100.00%2C33.93%20L%20100.00%2C35.71%20L%20100.00%2C37.50%20L%20100.00%2C39.29%20L%20100.00%2C41.07%20L%20100.00%2C42.86%20L%20100.00%2C44.64%20L%20100.00%2C46.43%20L%20100.00%2C48.21%20L%20100.00%2C50.00%20L%20100.00%2C51.79%20L%20100.00%2C53.57%20L%20100.00%2C55.36%20L%20100.00%2C57.14%20L%20100.00%2C58.93%20L%20100.00%2C60.71%20L%20100.00%2C62.50%20L%20100.00%2C64.29%20L%20100.00%2C66.07%20L%20100.00%2C67.86%20L%20100.00%2C69.64%20L%20100.00%2C71.43%20L%20100.00%2C73.21%20L%20100.00%2C75.00%20L%20100.00%2C76.79%20L%20100.00%2C78.57%20L%20100.00%2C80.36%20L%20100.00%2C82.14%20L%20100.00%2C83.93%20L%20100.00%2C85.71%20L%20100.00%2C87.50%20L%20100.00%2C89.29%20L%20100.00%2C91.07%20L%20100.00%2C92.86%20L%20100.00%2C94.64%20L%20100.00%2C96.43%20L%20100.00%2C100.00%20L%20100.00%2C100.00%20L%20100.00%2C100.00%20L%2096.43%2C100.00%20L%2094.64%2C100.00%20L%2092.86%2C100.00%20L%2091.07%2C100.00%20L%2089.29%2C100.00%20L%2087.50%2C100.00%20L%2085.71%2C100.00%20L%2083.93%2C100.00%20L%2082.14%2C100.00%20L%2080.36%2C100.00%20L%2078.57%2C100.00%20L%2076.79%2C100.00%20L%2075.00%2C100.00%20L%2073.21%2C100.00%20L%2071.43%2C100.00%20L%2069.64%2C100.00%20L%2067.86%2C100.00%20L%2066.07%2C100.00%20L%2064.29%2C100.00%20L%2062.50%2C100.00%20L%2060.71%2C100.00%20L%2058.93%2C100.00%20L%2057.14%2C100.00%20L%2055.36%2C100.00%20L%2053.57%2C100.00%20L%2051.79%2C100.00%20L%2050.00%2C100.00%20L%2048.21%2C100.00%20L%2046.43%2C100.00%20L%2044.64%2C100.00%20L%2042.86%2C100.00%20L%2041.07%2C100.00%20L%2039.29%2C100.00%20L%2037.50%2C100.00%20L%2035.71%2C100.00%20L%2033.93%2C100.00%20L%2032.14%2C100.00%20L%2030.36%2C100.00%20L%2028.57%2C100.00%20L%2026.79%2C100.00%20L%2025.00%2C100.00%20L%2023.21%2C100.00%20L%2021.43%2C100.00%20L%2019.64%2C100.00%20L%2017.86%2C100.00%20L%2016.07%2C100.00%20L%2014.29%2C100.00%20L%2012.50%2C100.00%20L%2010.71%2C100.00%20L%208.93%2C100.00%20L%207.14%2C100.00%20L%205.36%2C100.00%20L%203.57%2C100.00%20L%201.79%2C100.00%20L%200.41%2C100.00%20L%200.87%2C100.00%20L%200.65%2C96.43%20L%200.28%2C94.64%20L%200.33%2C92.86%20L%200.45%2C91.07%20L%200.98%2C89.29%20L%200.57%2C87.50%20L%200.25%2C85.71%20L%200.62%2C83.93%20L%200.68%2C82.14%20L%200.80%2C80.36%20L%202.51%2C78.57%20L%200.26%2C76.79%20L%200.57%2C75.00%20L%200.51%2C73.21%20L%200.43%2C71.43%20L%200.60%2C69.64%20L%200.50%2C67.86%20L%200.92%2C66.07%20L%200.86%2C64.29%20L%200.57%2C62.50%20L%200.97%2C60.71%20L%200.57%2C58.93%20L%200.84%2C57.14%20L%200.58%2C55.36%20L%200.98%2C53.57%20L%200.56%2C51.79%20L%200.66%2C50.00%20L%200.67%2C48.21%20L%201.67%2C46.43%20L%200.55%2C44.64%20L%200.98%2C42.86%20L%200.25%2C41.07%20L%200.88%2C39.29%20L%200.73%2C37.50%20L%200.80%2C35.71%20L%200.45%2C33.93%20L%200.68%2C32.14%20L%200.42%2C30.36%20L%200.86%2C28.57%20L%200.59%2C26.79%20L%200.69%2C25.00%20L%201.80%2C23.21%20L%200.37%2C21.43%20L%200.91%2C19.64%20L%200.76%2C17.86%20L%200.77%2C16.07%20L%200.46%2C14.29%20L%200.42%2C12.50%20L%200.36%2C10.71%20L%202.76%2C8.93%20L%200.28%2C7.14%20L%200.48%2C5.36%20L%200.46%2C3.57%20L%200.68%2C1.79%20Z%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E"), linear-gradient(#000 calc(100% - 48px), transparent), linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  -webkit-mask-composite: source-in, source-in, source-over; mask-composite: intersect, intersect, add;
+  }
+#timeline-rail .sheet-ext svg { -webkit-mask-image: none !important; mask-image: none !important; }
+/* the Sea's chart still carried its own live drop-shadow (board_draft.js .pc-world): the
+   static sheet under it (#timeline-rail::after) already casts that shadow, and a live one
+   re-blurs the whole animated chart every frame. It also cast a dark band onto the sheet
+   where it now runs on below the chart. The Sea is the default skin. */
+#timeline-rail > .cplot svg.pc-world { filter: none !important; }
+/* where the sheet runs on, the chart's own edge fades into it over its last few px,
+   instead of ending on a hard line mid-sheet */
+body.sheet-ext-b #timeline-rail > .cplot svg.pc-world { -webkit-mask-image: linear-gradient(#000 calc(100% - 48px), transparent); mask-image: linear-gradient(#000 calc(100% - 48px), transparent); }
+body.sheet-ext-r #timeline-rail > .cplot svg.pc-world { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); }
+body.sheet-ext-b.sheet-ext-r #timeline-rail > .cplot svg.pc-world {
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 48px), transparent), linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(#000 calc(100% - 48px), transparent), linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  -webkit-mask-composite: source-in, source-over; mask-composite: intersect, add; }
+
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HELA COLOUR. HELA wears the colour of MY piece on the board. util.js
+   setHelaColour writes the --hela* tokens on :root (from the seat colour the server
+   settled, or the menu choice before a match); every --vz* token HELA's surfaces
+   read is routed through them here. Conditions only LAYER on top (cabin.js
+   helaConditions): offline (vz-paradix) > critical (vz-crit) > wanted (vz-wanted)
+   > immune (hela-immune); the last three combine.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root { --vz-rgb: var(--hela-rgb, 102 240 200); --vz-hot-rgb: var(--hela-hot-rgb, 234 255 248);
+  --vz-text: var(--hela-text, #c6f2e6); }
+body.cabin-on, body.cabin-on.vz-wanted, body.cabin-on.vz-crit {
+  --vz: var(--hela, #66f0c8); --vz-dim: var(--hela-dim, #2f8579); --vz-hot: var(--hela-hot, #eafff8); }
+/* the glass grid and the lifethread panel drew their own teal, they take hers */
+#hull .vz-scan { background: repeating-linear-gradient(0deg, rgb(var(--vz-rgb) / .6) 0 1px, transparent 1px 5px); }
+#hull .vz-holo-panel { background: linear-gradient(180deg, rgb(var(--vz-rgb) / .1), rgba(6,10,12,.18)); }
+
+/* 1 OFFLINE: terminated and awaiting respawn. Grey, a faint still static, dim readouts. */
+body.cabin-on.vz-paradix { --vz-rgb: 200 208 212; --vz-hot-rgb: 238 242 244; --vz-text: #b9c0c4; }
+body.vz-paradix #hull .vz-scan { opacity: .1;
+  background: repeating-linear-gradient(0deg, rgba(225,228,230,.55) 0 1px, transparent 1px 3px),
+              repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 2px, transparent 2px 7px); }
+body.vz-paradix #hull .hull-rail.vz-rail .vz-phases, body.vz-paradix #hull .vz-holo-panel { opacity: .5; }
+/* the tags under the HOUR readout: one word per condition, the frame says the rest */
+#hull .vz-hour { position: absolute; }
+body.vz-paradix #hull .vz-hour::after, body.vz-crit #hull .vz-hour::after,
+body.vz-wanted #hull .vz-hour::before, body.hela-immune #hull .vz-hour::before {
+  position: absolute; left: 0; top: calc(100% + 5px); white-space: nowrap;
+  font: 700 .56rem/1 var(--f-mono, monospace); letter-spacing: .2em; padding: 3px 6px 3px;
+  border: 1.5px solid currentColor; border-radius: 2px; text-shadow: none; }
+body.vz-paradix #hull .vz-hour::after { content: "HELA OFFLINE"; color: #c8d0d4; background: rgba(20,22,24,.7); }
+body.vz-crit #hull .vz-hour::after { content: "! CRITICAL LIFE"; color: #ffd6cb; background: #8e1c12; border-color: #ff6a4a; }
+body.vz-wanted #hull .vz-hour::before { content: "WANTED"; color: #1c0e02; background: #ff8a2a; border-color: #1c0e02;
+  font-family: Georgia, "Times New Roman", serif; letter-spacing: .24em; }
+body.hela-immune #hull .vz-hour::before { content: "\25C8 IMMUNE"; color: var(--vz-hot); background: rgb(var(--vz-rgb) / .2); }
+/* two tags at once stack, the second one below the first */
+body.vz-crit.vz-wanted #hull .vz-hour::before, body.vz-crit.hela-immune #hull .vz-hour::before { top: calc(100% + 26px); }
+body.vz-wanted.hela-immune #hull .vz-hour::after { content: none; }
+
+/* 2 CRITICAL: the red alarm stays an ACCENT, the corners and the vitals (rules above) */
+body.vz-crit #hull .vz-holo-panel { border-color: rgba(255,106,74,.8);
+  box-shadow: 0 0 22px rgba(226,70,50,.4), inset 0 0 16px rgba(226,70,50,.12); }
+
+/* 3 WANTED: a red-orange hazard band along the top and bottom of the helmet glass.
+   The old amber repaint of HELA is gone; she keeps the player's colour. */
+body.vz-wanted #hull .vz-frame::after { content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(-45deg, #ff7a1a 0 13px, #1c0e04 13px 26px) top / 100% 6px no-repeat,
+    repeating-linear-gradient(-45deg, #ff7a1a 0 13px, #1c0e04 13px 26px) bottom / 100% 6px no-repeat;
+  opacity: .82; }
+
+/* 4 IMMUNE: a shield shimmer in the player's colour on the lifethread. The sweep runs
+   twice when the immunity begins, then the double shield ring simply stays. */
+body.hela-immune #hull .vz-holo-panel {
+  box-shadow: 0 0 0 2px var(--vz), 0 0 0 6px rgb(var(--vz-rgb) / .28), 0 0 26px rgb(var(--vz-rgb) / .55); }
+body.hela-immune #hull .vz-holo-panel::before { content: ""; position: absolute; inset: -2px; border-radius: 10px;
+  pointer-events: none; overflow: hidden;
+  background: linear-gradient(105deg, transparent 35%, rgb(var(--vz-hot-rgb) / .55) 50%, transparent 65%) no-repeat;
+  background-size: 250% 100%; animation: helaShield 1.6s ease-in-out 2 both; }
+@keyframes helaShield { from { background-position: 130% 0; } to { background-position: -30% 0; } }
+
+/* the REBOOT after a respawn: the helmet flickers back on in the player's colour, once */
+body.hela-boot #hull .vz-cnr, body.hela-boot #hull .hull-rail.vz-rail, body.hela-boot #hull .vz-holo-panel,
+body.hela-boot #hela-eye .he-svg { animation: helaBoot 1.3s steps(1, end) both; }
+@keyframes helaBoot { 0% { opacity: 0; } 12% { opacity: .9; } 18% { opacity: .1; } 30% { opacity: .8; }
+  36% { opacity: .2; } 52% { opacity: 1; } 58% { opacity: .5; } 70%, 100% { opacity: 1; } }
+body.gfx-low.vz-wanted #hull .vz-frame::after { opacity: .6; }
+body.gfx-low.hela-immune #hull .vz-holo-panel::before { animation: none; display: none; }
+@media (prefers-reduced-motion: reduce) {
+  body.hela-boot #hull .vz-cnr, body.hela-boot #hull .hull-rail.vz-rail, body.hela-boot #hull .vz-holo-panel,
+  body.hela-boot #hela-eye .he-svg, body.hela-immune #hull .vz-holo-panel::before { animation: none; } }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COMIC LAYER (comic.js). Franco-Belgian CAPTIONS narrate, Silver Age LETTERING and
+   halftone bursts hit, Arcane/anime SPEED LINES and an IMPACT FRAME land the biggest
+   beats. All of it is pointer-events: none, animated only on transform and opacity,
+   and gone when it ends. Low graphics keeps the words and drops the heavy layers.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root { --cx-ink: #15100a; --cx-paper: #f4e6b0; }
+#cx-root { position: fixed; inset: 0; pointer-events: none; z-index: 700; }
+/* the phase banner that popped mid-screen is now the chapter caption at the top */
+body.cx-on .phase-banner { display: none !important; }
+
+/* CAPTIONS: two fixed slots (turn and event). They never move; the text swaps. */
+.cx-cap { position: absolute; left: 64%; top: 60px; display: flex; align-items: stretch;
+  max-width: min(640px, 62vw); transform: translate(-50%, -5px); opacity: 0;
+  transition: opacity .14s ease, transform .18s ease;
+  font: 500 .9rem/1.28 var(--f-display, "Oswald", sans-serif); letter-spacing: .025em; color: #1d1409;
+  background:
+    radial-gradient(circle, rgba(120,84,20,.14) 1px, transparent 1.4px) 0 0 / 5px 5px,
+    var(--cx-paper);
+  border: 2.5px solid var(--cx-ink); box-shadow: 4px 4px 0 var(--cx-ink); }
+.cx-cap.on { opacity: 1; transform: translate(-50%, 0); }
+.cx-slot-event { top: 104px; }
+.cx-tag { display: flex; align-items: center; white-space: nowrap; padding: 4px 8px 4px 9px;
+  background: var(--cx-ink); color: var(--cx-paper);
+  font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .16em; }
+.cx-txt { padding: 5px 12px 6px; }
+.cx-cap b { font-weight: 700; letter-spacing: .04em; }
+.cx-name { display: inline-block; padding: 0 5px; margin: 0 1px; border: 1.5px solid var(--cx-ink); border-radius: 2px;
+  background: var(--seat, #c9a45c); color: #120c06; font-weight: 700; line-height: 1.2; }
+.cx-cap kbd { display: inline-block; font: 700 .66rem/1.25 var(--f-mono, monospace); color: var(--cx-ink);
+  padding: 0 5px; border: 1.5px solid var(--cx-ink); border-radius: 3px; background: #fffbe8;
+  box-shadow: 1.5px 1.5px 0 var(--cx-ink); vertical-align: 1px; }
+.cx-cap.cx-big { font-size: 1rem; }
+.cx-cap.cx-big .cx-tag { font-size: .72rem; }
+.cx-cap.cx-danger { background: radial-gradient(circle, rgba(140,20,10,.14) 1px, transparent 1.4px) 0 0 / 5px 5px, #f7d9c8; }
+.cx-cap.cx-danger .cx-tag { background: #9e1e14; }
+.cx-cap.cx-good { background: radial-gradient(circle, rgba(140,100,10,.16) 1px, transparent 1.4px) 0 0 / 5px 5px, #f8e7a0; }
+/* MY move: the tab wears HELA's colour, which is my colour */
+.cx-cap.cx-you { box-shadow: 4px 4px 0 var(--cx-ink), 0 0 0 3px var(--hela-seat, #c9a45c); }
+.cx-cap.cx-you .cx-tag { background: var(--hela-seat, #c9a45c); color: var(--cx-ink); border-right: 2.5px solid var(--cx-ink); }
+body.gfx-low .cx-cap { background: var(--cx-paper); }
+body.gfx-low .cx-cap.cx-danger { background: #f7d9c8; }
+body.gfx-low .cx-cap.cx-good { background: #f8e7a0; }
+
+/* IMPACT: a starburst with halftone, speed lines, and the lettering on top */
+.cx-hit { position: absolute; width: 0; height: 0; }
+.cx-burst { position: absolute; left: 0; top: 0; width: 170px; height: 170px; background: var(--cx-ink);
+  transform: translate(-50%, -50%); will-change: transform, opacity;
+  clip-path: polygon(50% 0%, 58% 26%, 79% 9%, 72% 34%, 98% 30%, 78% 48%, 100% 62%, 74% 64%, 86% 90%,
+    62% 76%, 52% 100%, 44% 76%, 18% 92%, 28% 66%, 0% 64%, 22% 50%, 3% 30%, 29% 34%, 20% 8%, 42% 26%); }
+.cx-burst::after { content: ""; position: absolute; inset: 9px; clip-path: inherit;
+  background: radial-gradient(circle, rgba(255,250,230,.6) 27%, transparent 31%) 0 0 / 9px 9px, var(--cx-c); }
+.cx-hit-big .cx-burst { width: 250px; height: 250px; }
+.cx-hit-big .cx-burst::after { inset: 12px; background-size: 11px 11px, auto; }
+.cx-word { position: absolute; left: 0; top: 0; white-space: nowrap; will-change: transform, opacity;
+  font: italic 700 2.7rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .02em;
+  color: #fff4c6; -webkit-text-stroke: 2.5px var(--cx-ink); paint-order: stroke fill;
+  text-shadow: 4px 4px 0 var(--cx-ink); transform: translate(-50%, -50%); }
+.cx-hit-big .cx-word { font-size: 4rem; -webkit-text-stroke-width: 3px; text-shadow: 6px 6px 0 var(--cx-ink); }
+.cx-sub { position: absolute; left: 0; top: 0; transform: translate(-50%, 44px); white-space: nowrap;
+  padding: 3px 7px; background: var(--cx-ink); color: var(--cx-paper); border: 1.5px solid var(--cx-c);
+  font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .18em; }
+.cx-hit-big .cx-sub { transform: translate(-50%, 62px); font-size: .74rem; }
+.cx-lines { position: absolute; left: 0; top: 0; width: 640px; height: 640px; border-radius: 50%;
+  transform: translate(-50%, -50%); opacity: 0; will-change: transform, opacity;
+  background: repeating-conic-gradient(from 3deg, var(--cx-ink) 0deg 1.4deg, transparent 1.4deg 6.5deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 29%, #000 34%, #000 55%, transparent 71%);
+          mask: radial-gradient(circle, transparent 0 29%, #000 34%, #000 55%, transparent 71%); }
+/* the IMPACT FRAME: a flash of ink with light streaks converging on the hit */
+.cx-frame { position: absolute; inset: 0; opacity: 0; display: none; will-change: opacity;
+  background:
+    repeating-conic-gradient(from 0deg at var(--fx, 50%) var(--fy, 50%), rgba(255,244,214,.38) 0deg .7deg, transparent .7deg 4.5deg),
+    radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), transparent 0 120px, var(--cx-ink) 75%); }
+.cx-frame.on { display: block; }
+/* Low: the lettering and a flat star only */
+.cx-g-low .cx-burst::after { background: var(--cx-c); }
+.cx-g-low .cx-word { text-shadow: 3px 3px 0 var(--cx-ink); }
+
+/* YOUR MOVE: the controls that answer my decision get an ink outline in my colour */
+body.cx-your-move[data-cx-move="allocate"] #confirm-alloc:not(:disabled),
+body.cx-your-move .he-window.he-prompt .prompt-actions .btn:not(:disabled),
+body.cx-your-move .pcard-choose,
+body.cx-your-move .cell-choose,
+body.cx-your-move .drw-contract.drw-choose,
+body.cx-your-move .ruck-card.deliver-ready,
+body.cx-your-move .card.act-ready,
+body.cx-your-move .card.is-actionable,
+body.cx-your-move[data-cx-move="market"] #market-zone.shopping .side-sign {
+  outline: 3px solid var(--hela-seat, #c9a45c); outline-offset: 2px; }
+body.cx-your-move[data-cx-move="allocate"] #confirm-alloc:not(:disabled) {
+  box-shadow: 3px 3px 0 var(--cx-ink); animation: cxNudge .5s cubic-bezier(.3,1.6,.5,1) 1; }
+@keyframes cxNudge { 0% { transform: scale(.9); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .cx-cap { transition: opacity .14s ease; transform: translate(-50%, 0); }
+  body.cx-your-move[data-cx-move="allocate"] #confirm-alloc:not(:disabled) { animation: none; } }
+
+/* THE STRIP (L): the story so far as a page of comic panels, newest first.
+   Opened by the player, closed by L, Esc or a click; it does not exist while shut. */
+.cx-strip { position: fixed; inset: 0; z-index: 59850; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 40px; background: rgba(12,9,6,.62); cursor: pointer; }
+.cx-strip-head { font: 700 .8rem/1 var(--f-mono, monospace); letter-spacing: .22em; color: var(--cx-paper);
+  padding: 6px 12px; background: var(--cx-ink); border: 2px solid var(--cx-paper); }
+.cx-strip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 330px)); gap: 12px; max-width: 1040px; }
+.cx-panel { display: flex; flex-direction: column; min-height: 76px; background:
+    radial-gradient(circle, rgba(120,84,20,.14) 1px, transparent 1.4px) 0 0 / 5px 5px, var(--cx-paper);
+  border: 2.5px solid var(--cx-ink); box-shadow: 4px 4px 0 var(--cx-ink);
+  font: 500 .86rem/1.3 var(--f-display, "Oswald", sans-serif); color: #1d1409; }
+.cx-panel .cx-tag { align-self: flex-start; }
+.cx-panel.cx-danger { background: #f7d9c8; }
+.cx-panel.cx-danger .cx-tag { background: #9e1e14; }
+.cx-panel.cx-good { background: #f8e7a0; }
+.cx-panel b { font-weight: 700; }
+/* skipping: the lettering stays quiet so the replay can race */
+body.cx-skipping #cx-root .cx-hit { display: none; }

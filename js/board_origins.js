@@ -145,6 +145,33 @@
   /* ═══════════════ THE ITINERARY OF THE SIX WALLED KINGDOMS, each era a wall, the beast's coil below ═══════════════ */
   const INK="#3a2c12";
   function shd(h,f){ const g=i=>Math.max(0,Math.min(255,Math.round(parseInt(h.substr(i,2),16)*f))).toString(16).padStart(2,"0"); return "#"+g(1)+g(3)+g(5); }
+  // THE VELLUM RUNS ON: past the chart's printed border the same parchment, foxed and
+  // mottled, a margin of hills and woods and one inked cartouche. No road, no wall, no
+  // town: nothing that could be read as a place to go.
+  function vellumExtArt(EX,EY){
+    const X1=W+EX, Y1=H+EY;
+    const defs=`<radialGradient id="cmxBg" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(${W/2} ${H*.42}) scale(${W*.78} ${H*.78})"><stop offset="0" stop-color="#f0e2c0"/><stop offset=".7" stop-color="#e6d3aa"/><stop offset="1" stop-color="#d6be90"/></radialGradient>`
+      +`<radialGradient id="cmxVign" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(${W/2} ${H/2}) scale(${W*.72} ${H*.72})"><stop offset=".62" stop-color="rgba(90,60,20,0)"/><stop offset="1" stop-color="rgba(90,60,20,.22)"/></radialGradient>`;
+    const tex=(id,freq,oct,seed,c)=>"data:image/svg+xml,"+encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${X1}" height="${Y1}"><filter id="${id}"><feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="${oct}"${seed?` seed="${seed}"`:""}/>`
+      +`<feColorMatrix type="matrix" values="${c}"/></filter><rect width="100%" height="100%" filter="url(#${id})"/></svg>`);
+    let g=`<rect x="0" y="0" width="${X1}" height="${Y1}" fill="url(#cmxBg)"/>`;
+    g+=`<image href="${tex("p","0.9",2,0,"0 0 0 0 0.42  0 0 0 0 0.33  0 0 0 0 0.18  0 0 0 0.05 0")}" x="0" y="0" width="${X1}" height="${Y1}" preserveAspectRatio="none" opacity=".5"/>`;
+    g+=`<image href="${tex("m","0.006 0.02",3,7,"0 0 0 0 0.46  0 0 0 0 0.37  0 0 0 0 0.20  0 0 0 0.085 0")}" x="0" y="0" width="${X1}" height="${Y1}" preserveAspectRatio="none" opacity=".5"/>`;
+    g+=`<rect x="0" y="0" width="${X1}" height="${Y1}" fill="url(#cmxVign)"/>`;
+    const out=(x,y)=>x>W+14||y>H+14;
+    // woods and hills in the margin
+    for(let i=0;i<150;i++){ const x=Math.round(rnd(i+300,5)*X1), y=Math.round(rnd(i+300,6)*Y1); if(!out(x,y)) continue;
+      if(rnd(i+300,7)<.72){ const cl=rnd(i+300,8)>.5; for(let t=0;t<(cl?3:1);t++) g+=treeG(x+t*9-9,y+(t%2)*5,(.8+rnd(i+t,9)*.4).toFixed(2),rnd(i+t,10)>.5); }
+      else g+=`<path d="M ${x-16} ${y+6} Q ${x-6} ${y-10} ${x} ${y-4} Q ${x+8} ${y-14} ${x+18} ${y+6}" fill="none" stroke="#7a5a32" stroke-width="1.2" opacity=".45"/>`; }
+    for(let i=0;i<30;i++){ const x=Math.round(rnd(i+700,11)*X1), y=Math.round(rnd(i+700,13)*Y1); if(!out(x,y)) continue;
+      g+=`<circle cx="${x}" cy="${y}" r="${(rnd(i,17)*0.7+0.4).toFixed(2)}" fill="#4a3218" opacity=".16"/>`; }
+    // a cartouche: the old surveyors' mark for the edge of the known
+    const cart=(x,y,txt)=>`<g transform="translate(${x} ${y})" opacity=".55"><path d="M -86 -14 H 86 Q 96 0 86 14 H -86 Q -96 0 -86 -14 Z" fill="rgba(240,226,192,.55)" stroke="#7a5a24" stroke-width="1.2"/><path d="M -80 -9 H 80 M -80 9 H 80" stroke="#7a5a24" stroke-width=".5" opacity=".6"/><text y="4" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="12" letter-spacing="2" fill="#5a3e14">${txt}</text></g>`;
+    g+=cart(W+130,H*.5,"TERRA INCOGNITA");
+    g+=cart(W*.5,H+64,"HIC SVNT DRACONES");
+    return `<defs>${defs}</defs>${g}`;
+  }
   function parchmentField(){
     let g=`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#cmBg)"/>`;
     // THE VELLUM, BAKED. These were two LIVE feTurbulence filters on two full-size rects.
@@ -793,6 +820,7 @@
     W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
     const base=baseMap();
     rail.insertAdjacentHTML("beforeend",`<div class="cplot-ori"><svg class="pc-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cm-base">${base.out}</g><g class="cm-live"></g><g class="cm-fx"></g><g class="cm-top"></g></svg><div class="cm-cmd"></div><div class="cm-legend">${legendHTML()}</div><div class="cm-tip"></div></div>`);
+    if(window.__pdxSheetExt) window.__pdxSheetExt(rail.querySelector(".cplot-ori"),W,H,vellumExtArt);
     const svg=rail.querySelector(".cplot-ori .pc-chart");
     svg.addEventListener("click",e=>{ const t=e.target.closest(".cm-hit, .cm-glow, .cm-cost, .cm-world, .cm-sun"); let c=(t&&t.dataset&&t.dataset.c!==undefined)?+t.dataset.c:nearestStar(e); if(c!=null&&!isNaN(c)) onWorldClick(c); });
     rail.querySelector(".cplot-ori .cm-cmd").addEventListener("click",e=>{ if(e.target.closest(".cm-anchor")&&mode&&mode.kind==="travel"&&app.pendingReq){ snd("chart_stamp"); app.respond({direction:1,distance:0}); mode=null; scheduleLive(); } });

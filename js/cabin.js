@@ -1033,11 +1033,12 @@
   let hcSettling=0;        // and the screen re-lights only after the arm has settled
   const PLANE_W=2133, PLANE_H=1200;  // the fit-scale reference plane (app.css .cam-world/#hull)
   function v2p(x,y){ // viewport px -> plane px. The hull & cursor plane are fixed 2133x1200
-    // boxes centred and scaled by --fit, so mouse coords must be unprojected before they
-    // are written into them. Rect-free on purpose (the perf war: no layout reads per move).
+    // boxes centred across and sitting on the screen's bottom edge (app.css FRAMING),
+    // scaled by --fit, so mouse coords must be unprojected before they are written into
+    // them. Rect-free on purpose (the perf war: no layout reads per move).
     const f=window.__pdxFit||1;
     return { x:(x-(window.innerWidth-PLANE_W*f)/2)/f,
-             y:(y-(window.innerHeight-PLANE_H*f)/2)/f };
+             y:(y-(window.innerHeight-PLANE_H*f))/f };
   }
   let hcScale=1;   // lido do --mano-scale quando a pose de ponteiro engata
   let hcCons=null; // o console preso ao braco enquanto ele e ponteiro
@@ -1834,6 +1835,42 @@
   window.__helaLookAt = function(){ ping(); };
   function ping(){}
 
+  /* HELA STATES, the one place they are decided.
+     Identity: HELA is always drawn in the colour of MY piece (util.js setHelaColour,
+     the --hela* tokens that feed every --vz* token). Conditions only LAYER on top,
+     in this priority:
+       1 offline  terminated and awaiting respawn: grey, faint static, dim readouts
+                  (body.vz-paradix). It overrides everything below. On respawn she
+                  reboots into the player colour (body.hela-boot, 1.5s, once).
+       2 crit     energy at or below CRIT_ENERGY (6): red alarm accent on the frame
+                  and the vitals, the identity colour stays (body.vz-crit).
+       3 wanted   a red-orange hazard band and a WANTED tag on the frame (body.vz-wanted).
+       4 immune   a terminated traveler back in the Timeless Period (XXIV-XXX) is immune
+                  to energy loss until first reaching XXIII: a shield shimmer in the
+                  player colour (body.hela-immune).
+     2, 3 and 4 combine freely. Returns plain flags; the tick applies them on change. */
+  const HELA_CRIT = 6;     // same threshold as CRIT_ENERGY in the cabin above
+  const immunity = { spent: false, life: 0 };
+  function helaConditions(me){
+    const sts = me.statuses || [];
+    const offline = sts.includes("awaiting_respawn");
+    const terminated = !!(me.is_terminated || sts.includes("terminated"));
+    // the engine spends the immunity for this life the first time the traveler
+    // reaches XXIII or lower; a new termination grants a fresh one
+    if (offline) immunity.spent = false;
+    else if (terminated && me.century <= 23) immunity.spent = true;
+    return {
+      offline,
+      crit: (me.energy || 0) <= HELA_CRIT,
+      wanted: !!(me.is_wanted || sts.includes("wanted")),
+      immune: terminated && !offline && me.century >= 24 && !immunity.spent,
+    };
+  }
+  window.__helaConditions = function(){
+    const app = window.__game, me = app && app.view && app.view.travelers && app.view.travelers.find(x => x.is_self);
+    return me ? helaConditions(me) : null;
+  };
+
   // (the aiming pupil + sightline ray died here, the EYE ITSELF travels now)
   function tick(){
     if (hud){
@@ -1841,19 +1878,27 @@
       const live = document.body.classList.contains("cabin-on");
       if (hud._live !== live){ hud._live = live; hud.classList.toggle("live", live); }
       if (autoCloseAt && t > autoCloseAt){ autoCloseAt = 0; setOpen(false); }
-      // HER COLOUR IS YOUR CONDITION, one glance at the beacon tells you where you stand
+      // HER COLOUR IS YOUR COLOUR, her CONDITION layers on top (helaConditions below)
       const app = window.__game, me = app && app.view && app.view.travelers && app.view.travelers.find(x => x.is_self);
       if (me){
-        const st = (me.is_terminated || (me.statuses || []).includes("terminated")) ? "paradix"
-                 : (me.is_wanted    || (me.statuses || []).includes("wanted"))     ? "wanted"
-                 : (me.energy <= 6) ? "crit" : "calm";
-        if (hud.dataset.state !== st){
-          const prev = hud.dataset.state; hud.dataset.state = st;
-          // PRIMITIVE B, a single body class; every HELA surface recolours from it
-          const cl = st === "calm" ? null : "vz-" + st;
-          ["vz-crit","vz-wanted","vz-paradix"].forEach(c => document.body.classList.toggle(c, c === cl));
+        const c = helaConditions(me);
+        const st = c.offline ? "paradix" : c.crit ? "crit" : c.wanted ? "wanted" : "calm";
+        const key = c.offline ? "off" : (c.crit ? "c" : "") + (c.wanted ? "w" : "") + (c.immune ? "i" : "");
+        if (hud._condKey !== key){
+          const prevKey = hud._condKey, prev = hud.dataset.state;
+          hud._condKey = key; hud.dataset.state = st;
+          const b = document.body.classList;
+          b.toggle("vz-paradix", c.offline);
+          b.toggle("vz-crit", !c.offline && c.crit);
+          b.toggle("vz-wanted", !c.offline && c.wanted);
+          b.toggle("hela-immune", !c.offline && c.immune);
+          // back from offline: a short reboot into the traveler's colour
+          if (prevKey === "off" && !c.offline){
+            b.remove("hela-boot"); void document.body.offsetWidth; b.add("hela-boot");
+            clearTimeout(hud._bootT); hud._bootT = setTimeout(() => b.remove("hela-boot"), 1500);
+          }
           // she has OPINIONS about your condition, one line per descent, never per frame
-          if (prev && prev !== "boot"){
+          if (prevKey != null && prev !== st){
             const line = st === "crit" ? "crit_life" : st === "wanted" ? "wanted_self"
                        : st === "paradix" ? "terminated_self" : "";
             if (line && window.__helaVoice && window.__helaSay)
@@ -2372,10 +2417,10 @@
 (function helaBrain(){
   if (window.__helaBrainLog) return;
   const RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const TURN_COL = "#6fe8c8";
+  const TURN_COL = "var(--vz, #6fe8c8)";   // her own colour, which is the player's
   const KIND_COL = { relic: "#7dd87d", breach: "#e2c078", warrant: "#e8a53a", wanted: "#e8a53a",
     lost: "#ff5a44", cove: "#b48ce8", market: "#e2c078", danger: "#ff5a44", paradox: "#b48ce8",
-    cp: "#e2c078", travel: "#6fe8c8" };
+    cp: "#e2c078", travel: "var(--vz, #6fe8c8)" };
   const turns = new Map();      // hour -> { hour, logs: [{cls, text}], sats: [dispatch-idx] }
   const disp = [];              // filed dispatches {hour, kind, headline, sub, say, html}
   let greeted = false;
@@ -2727,6 +2772,15 @@
     if (sealing) return; sealing = true;
     window.__sealCount = (window.__sealCount || 0) + 1;   // telemetry for the harness
     try { window.__audio && window.__audio.play("chart_creak"); } catch (e) {}
+    // the soft, dim table behind the rite is one screen veil (app.css .hh-veil), mounted once
+    if (!document.querySelector(".hh-veil")) {
+      const veil = document.createElement("div"); veil.className = "hh-veil";
+      veil.setAttribute("aria-hidden", "true");
+      // inside the game screen: its perspective makes it a stacking context, so the veil
+      // sits over the table and under the hull (z 60), which stays sharp
+      (document.getElementById("screen-game") || document.body).appendChild(veil);
+      void veil.offsetWidth;   // let the veil start transparent, so the first seal fades in
+    }
     document.body.classList.add("hh-sealing");
     const rite = document.createElement("div");
     rite.className = "hh-rite";
@@ -2783,9 +2837,8 @@
     }, RM ? 300 : 2600);
     setTimeout(() => { cancelAnimationFrame(raf); rite.remove();
       document.body.classList.remove("hh-sealing"); sealing = false;
-      // the blur has faded (.5s transition): re-raster the table sharp, the layers the
-      // blur promoted keep a soft raster otherwise (main.js pdxRefit)
-      if (window.pdxRefit) window.pdxRefit(700); }, RM ? 800 : 3600);
+      // no re-raster here any more: the veil never touches the table's own layers
+    }, RM ? 800 : 3600);
   }
   setInterval(() => {
     const app = window.__game;

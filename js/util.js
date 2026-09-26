@@ -84,3 +84,60 @@ export function initials(name) {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
+
+/* ---- Escape any server-sent or player-typed text before it enters innerHTML ---- */
+export function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, (ch) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+}
+
+/* ---- HELA COLOUR: HELA wears the colour of MY piece on the board ----------------
+   One seat colour in, a family of tokens out, set on :root so every HELA surface
+   (visor, phase strip, readouts, eye, captions) reads them through --vz*:
+     --hela       the identity colour, lifted to glow on the dark glass
+     --hela-dim   the same hue, dark, for rules and quiet labels
+     --hela-hot   a pale tint of the hue for text (keeps contrast for every palette colour)
+     --hela-text  a softer text tint for long italic lines
+     --hela-rgb / --hela-hot-rgb  "r g b" triples for rgb(var(--x) / alpha)
+   Only writes when the colour actually changes (a :root write restyles the page). */
+function hexToHsl(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "").trim());
+  const n = m ? parseInt(m[1], 16) : 0x66f0c8;
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  let h = 0, s = 0;
+  if (mx !== mn) {
+    const d = mx - mn;
+    s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+function hslRgb(h, s, l) {
+  const k = (n) => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+  const f = (n) => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))));
+  return [f(0), f(8), f(4)];
+}
+export function helaTokens(hex) {
+  const [h, s0] = hexToHsl(hex);
+  const s = Math.max(0.55, Math.min(0.9, s0 + 0.12));
+  const main = hslRgb(h, s, 0.64), dim = hslRgb(h, s * 0.8, 0.36);
+  const hot = hslRgb(h, Math.min(1, s + 0.1), 0.91), text = hslRgb(h, s * 0.6, 0.84);
+  const css = (c) => `rgb(${c[0]} ${c[1]} ${c[2]})`;
+  return { hela: css(main), dim: css(dim), hot: css(hot), text: css(text),
+    rgb: main.join(" "), hotRgb: hot.join(" ") };
+}
+let _helaHex = null;
+export function setHelaColour(hex) {
+  if (!hex || hex === _helaHex || typeof document === "undefined") return;
+  _helaHex = hex;
+  const t = helaTokens(hex), st = document.documentElement.style;
+  st.setProperty("--hela-seat", hex);
+  st.setProperty("--hela", t.hela);
+  st.setProperty("--hela-dim", t.dim);
+  st.setProperty("--hela-hot", t.hot);
+  st.setProperty("--hela-text", t.text);
+  st.setProperty("--hela-rgb", t.rgb);
+  st.setProperty("--hela-hot-rgb", t.hotRgb);
+}

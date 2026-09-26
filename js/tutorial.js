@@ -5,47 +5,47 @@
    with an "X" to dismiss. Each tip shows at most once (persisted), and the whole
    system can be turned off in Settings for experienced players.
    ========================================================================= */
-import { icon } from "./icons.js?202609261009";
+import { icon } from "./icons.js?202609261413";
 
 const LS_SEEN = "paradoxo.tutorials.seen";
 const LS_ON = "paradoxo.tutorials.enabled";
 
-// The teaching content, keyed by trigger. Order/ίcon are cosmetic.
+// The teaching content, keyed by trigger: one plain line each, said once.
 export const TUTORIALS = {
   allocate: {
-    line: "Fill all four cells, drag a die onto a glowing slot.",
+    line: "Place all four dice, then Confirm. One value per function, filled left to right.",
     title: "The Time Machine",
     body: "Place all 4 causality generators on your Time Machine. <b>Drag</b> a die, or "
       + "<b>click</b> a die, then a glowing cell. Green = legal, dim = illegal. A function fills "
       + "left-to-right and holds one value. Confirm when all are placed.",
   },
   market: {
-    line: "Spend gold while the Merchant is in reach, what you buy delivers later, for points.",
+    line: "Buy when you stand on the Merchant's century. Deliver the card at its century for 1 point.",
     title: "The Market",
     body: "Buy items with gold while synchronic with the Merchant. Items deliver to your Temporal "
       + "Receptor at their return century for Contract Points. You can also Renew the stock or, if "
       + "Wanted, Declare to clear it.",
   },
   travel: {
-    line: "Steer for Year Zero, reach it to win.",
+    line: "Travel up to your die's value. The past costs 1 energy per century; the future is free.",
     title: "Time Travel",
     body: "Travel up to the value you generated. Moving toward the past (Year Zero) costs energy; "
-      + "toward the future is free. Reach Year Zero to win, but mind the cost.",
+      + "toward the future is free. Reaching Year Zero ends the game; the most points wins.",
   },
   paradox: {
-    line: "Paradoxes bleed energy across time. Reach zero and you are terminated.",
+    line: "Paradox 1 hits travellers ahead of you, 2 your century, 3 those behind. At 0 energy you are terminated.",
     title: "Paradoxes",
     body: "Paradoxes drain energy from travelers across time. A traveler reduced to 0 energy is "
       + "Terminated. Future paradoxes hit those ahead of you; past paradoxes hit those behind.",
   },
   activation: {
-    line: "Use each equipped item once, some will ask you for a target.",
+    line: "Click an item to use it, or the lock to pass. Each item works once per phase.",
     title: "Item Activation",
     body: "Activate your equipped items, each may be used once this phase. Weapons and effects ask "
       + "you to choose a target. Select any number, then confirm.",
   },
   recycle: {
-    line: "Recycle any item into energy, almost any time.",
+    line: "Recycle any item for energy, almost any time.",
     title: "Recycling",
     body: "Hover your panel and press <b>Recycle</b> on any equipped item to convert it into energy "
       + "instantly, an action you can take almost any time, even between Market buys.",

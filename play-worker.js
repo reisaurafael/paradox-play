@@ -1,13 +1,13 @@
 /* play-worker.js, runs the Python game (engine, bots, session) under Pyodide,
    off the page's main thread so the table never freezes while bots think. */
-import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.mjs";
+import { loadPyodide } from "./pyodide/pyodide.mjs";
 
 const queue = [];
 let server = null;
 
 async function boot() {
   const pyodide = await loadPyodide();
-  const zip = await (await fetch("game.zip?202609261009")).arrayBuffer();
+  const zip = await (await fetch("game.zip?202609261413")).arrayBuffer();
   pyodide.FS.writeFile("/game.zip", new Uint8Array(zip));
   pyodide.runPython("import sys; sys.path.insert(0, '/game.zip')");
   server = pyodide.pyimport("play_server");

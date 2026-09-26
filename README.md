@@ -8,6 +8,10 @@ Travellers race along thirty centuries, secretly allocate dice in a time machine
 
 About the game, its design and how it was built: https://reisaurafael.github.io/paradoxo-simulator/
 
+## Privacy
+
+Nothing you do in the demo leaves your browser. There are no accounts, no analytics and no requests to third parties: the game, its fonts and its Python runtime are all served from this site. Your chosen name, colour and match history are kept only in your own browser's local storage, and "Clear record" in the menu erases them.
+
 ## License
 
 Copyright © 2026 Rafael Reis Garcia. All rights reserved. This repository contains a compiled build published for playing only. The game, its rules, card names and texts, artwork, audio and code are not licensed for reuse, modification or redistribution.

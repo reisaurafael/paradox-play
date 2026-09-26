@@ -1,15 +1,15 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609261009";
-import { hydrateIcons, icon } from "./icons.js?202609261009";
-import { seatColor, initials, el } from "./util.js?202609261009";
-import { Game } from "./game.js?202609261009";
-import { audio } from "./audio.js?202609261009";
-import { tutorials } from "./tutorial.js?202609261009";
-import { profile } from "./profile.js?202609261009";
-import { launchTutorial } from "./tutorial-drive.js?202609261009";
-import { Controle } from "./controle.js?202609261009";
+import { api, Connection } from "./net.js?202609261413";
+import { hydrateIcons, icon } from "./icons.js?202609261413";
+import { seatColor, initials, el } from "./util.js?202609261413";
+import { Game } from "./game.js?202609261413";
+import { audio } from "./audio.js?202609261413";
+import { tutorials } from "./tutorial.js?202609261413";
+import { profile } from "./profile.js?202609261413";
+import { launchTutorial } from "./tutorial-drive.js?202609261413";
+import { Controle } from "./controle.js?202609261413";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -341,7 +341,8 @@ function renderLobby(room) {
     badge.textContent = s.kind === "open" ? "--": initials(s.name);
     row.appendChild(badge);
 
-    const nm = el("div", "seat-name", s.kind === "open" ? "Open seat" : s.name);
+    const nm = el("div", "seat-name");
+    nm.textContent = s.kind === "open" ? "Open seat" : s.name;   // a typed name is text, never HTML
     row.appendChild(nm);
 
     const kind = el("span", `seat-kind ${s.kind}`, s.kind === "bot" ? `bot · ${s.bot_strategy}` : s.kind);
@@ -397,6 +398,11 @@ function pdxApplyFit() {
   const changed = window.__pdxFit !== undefined && Math.abs(window.__pdxFit - fit) > 1e-4;
   window.__pdxFit = fit;   // cabin.js cursor math reads this (rect-free, perf-safe)
   document.documentElement.style.setProperty("--fit", fit.toFixed(4));
+  // the chart sheet runs on into the spare room (app.css THE CHART SHEET GROWS): these
+  // mirror its --ext-b / --ext-r so the chart's own tear goes straight where the sheet
+  // continues past it
+  document.body.classList.toggle("sheet-ext-b", window.innerHeight / fit - 1216 > 0.5);
+  document.body.classList.toggle("sheet-ext-r", window.innerWidth / fit / 2 - 1082.5 > 0.5);
   // RE-RASTER AT THE NEW SCALE. The table is one promoted layer (will-change) and Chrome
   // keeps the raster scale it first chose for it: go fullscreen from a small window and
   // it stretches the old, smaller picture, so everything turns soft. Once the resize
@@ -421,10 +427,10 @@ function pdxRefit(delay, resized) {
   }, delay);
 }
 window.pdxRefit = pdxRefit;
-// and at every phase turn: full-table effects (the hour seal blur, banners) can leave the
-// promoted table on a soft raster; on a GPU the re-raster costs no dropped frame
-new MutationObserver(() => pdxRefit(900))
-  .observe(document.body, { attributes: true, attributeFilter: ["data-phase"] });
+// NOT at every phase turn any more: a refit re-rasters the whole camera plane twice, and in
+// a bot match that was the biggest source of 100-900ms stalls (the main thread waits for
+// the raster to commit). The hour seal no longer blurs the table (app.css .hh-veil), so
+// nothing leaves it on a soft raster between resizes.
 window.pdxApplyFit = pdxApplyFit;
 window.addEventListener("resize", pdxApplyFit);
 pdxApplyFit();
