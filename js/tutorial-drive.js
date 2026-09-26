@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609261959";
-import { Game } from "./game.js?202609261959";
-import { icon } from "./icons.js?202609261959";
-import { roman } from "./util.js?202609261959";
-import { profile } from "./profile.js?202609261959";
+import { api, Connection } from "./net.js?202609262016";
+import { Game } from "./game.js?202609262016";
+import { icon } from "./icons.js?202609262016";
+import { roman } from "./util.js?202609262016";
+import { profile } from "./profile.js?202609262016";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -56,7 +56,26 @@ const L = {
   // the goal of the game, in his words (his "delivered" and "marketPromise" beats), said at once
   goal: "Hear what you are here for. Relics, carried home to the century printed on them, and the C.R.O.N.O.S. pays you a CONTRACT POINT for each. Points are how this ends: the one with the most when the last hour burns is the one who mattered.",
   you: "Look at the chart. That piece in your colour, at {c}, is you. Where it stands is where you are in time.",
+  reduced: "For now your machine has four cells. It grows.",
+  t1prompt: "Two dice, two functions. Drag a die onto a module to program it. One value per function, and fill it left to right.",
+  prompt: "New dice. Place both in the machine.",
+  // FIXED: the second paradox module strikes your own century (the engine's module 5)
+  paradox: "So I am giving you the function. PARADOX reaches across the years and tears into another traveller. Ahead of you with the first module, in your own century with the second. A third function earns a third generator too, and yours read as high as III from here on. I want you armed when you answer.",
+  mod3: "Your machine grows again. A third module on every function, and a fourth generator to feed them. That is the whole machine, traveller. Everything a real rival brings to a table, you are now holding.",
+  // FIXED: the third module is the PAST (module 6), the second the present
+  paradoxAim: "Your paradox has its third module now, and that one is the PAST: it strikes whoever is standing behind you. First ahead of you, second right on top of you, third behind you. Three modules, three directions. Pick the one they are standing in.",
+  // FIXED: the century is wherever the real wagon rolls in
+  merchantArrives: "Something new on your chart, traveller. A wagon has rolled into {c}, at the far end of the only era you can see.",
+  merchantWho: "The MERCHANT. He carries relics and he trades with one man only: whoever is standing in his own year. That wagon crawls the centuries on its own business, never on yours, so do not sit there waiting on it. If you want what he has, you cross the years and you stand in front of him.",
+  merchantSign: "That sign over his booth answers one question and only one: whether HE will trade with YOU today. It reads CLOSED from everywhere except his century.",
+  marketScene: "This is his wagon, up close. The shelf is what he is willing to sell this hour.",
+  // FIXED: the real shelf always shows four cards
+  marketCard: "One relic on it you can afford. {g} gold, which you have. Look at the century stamped on its face.",
+  marketPromise: "That number is a PROMISE. Buy the relic, carry it to that century, hand it over there, and the C.R.O.N.O.S. pays you in the only currency that decides this game.",
+  chartOpen: "Look up. You kept a promise, so the roll comes off the chart and you get the rest of the years. Thirty centuries, all of them yours to cross, and the last thing down there at the end is YEAR ZERO.",
 };
+const FIRST_ERA_LOW = 24;        // his cut: only XXIV to XXX until the Merchant arrives
+const MERCHANT_ERA_LOW = 20;     // the chart grows to the whole Singularity when he does
 
 const cardName = (c) => (c && (c.display_name || c.name)) || "the card";
 
@@ -168,6 +187,23 @@ class Stage {
     this.setRings(opts.rings || (at && opts.ring !== false ? [at] : []));
     c.classList.add("on");
     this.pointing = !opts.next && !opts.ms && (opts.rings || (at && opts.ring !== false ? [at] : [])).length > 0;
+    // A line about no place in particular RIDES THE EYE: she keeps following his
+    // cursor and the balloon travels with her. A line about a place sends her there.
+    if (!at) {
+      this.releaseEye();
+      c.classList.remove("pending");
+      this.startRide();
+      if (this._toastT) { clearTimeout(this._toastT); this._toastT = null; }
+      if (opts.next) {
+        c.classList.add("has-next");
+        setTimeout(() => { this._armed = true; }, 450);
+        return new Promise((resolve) => { this._next = resolve; });
+      }
+      c.classList.remove("has-next");
+      this._next = null;
+      return Promise.resolve();
+    }
+    this.stopRide();
     // the eye goes first; the words come out of her once she is there
     let wasAt = null;
     try { wasAt = window.__helaEye && window.__helaEye.pos(); } catch (e) {}
@@ -188,7 +224,47 @@ class Stage {
     if (opts.ms) this._toastT = setTimeout(() => this.hide(), opts.ms);
     return Promise.resolve();
   }
+  // The balloon riding the eye, every frame, on the side of her with the most room
+  // and the least of the board under it; clamped to the screen.
+  startRide() {
+    if (this._rideRaf) return;
+    const step = () => {
+      this._rideRaf = requestAnimationFrame(step);
+      const c = this.callout, E = window.__helaEye;
+      if (!c.classList.contains("on") || this.anchor || !E) return;
+      let q; try { q = E.pos(); } catch (e) { return; }
+      const cw = c.offsetWidth || 360, ch = c.offsetHeight || 110, W = innerWidth, H = innerHeight, M = 12;
+      const cands = {
+        right: [q.x + 36, q.y - 26, "left"], left: [q.x - 36 - cw, q.y - 26, "right"],
+        below: [q.x - cw / 2, q.y + 40, "above"], above: [q.x - cw / 2, q.y - 40 - ch, "below"],
+      };
+      const now = performance.now();
+      if (!this._rideSide || now - (this._rideT || 0) > 350) {
+        this._rideT = now;
+        const soft = [];
+        KEY_AREAS.forEach((sel) => { try { document.querySelectorAll(sel).forEach((n) => { const b = n.getBoundingClientRect(); if (b.width && onScreen(b)) soft.push(b); }); } catch (e) {} });
+        let best = null;
+        for (const k of ["right", "left", "below", "above"]) {
+          let [px, py] = cands[k];
+          const cx = Math.max(M, Math.min(W - cw - M, px)), cy = Math.max(M + 40, Math.min(H - ch - M, py));
+          let cover = 0;
+          soft.forEach((b) => { cover += Math.max(0, Math.min(cx + cw, b.right) - Math.max(cx, b.left)) * Math.max(0, Math.min(cy + ch, b.bottom) - Math.max(cy, b.top)); });
+          const score = cover + (Math.abs(cx - px) + Math.abs(cy - py)) * 400 + (k === this._rideSide ? -3000 : 0);
+          if (!best || score < best.s) best = { k, s: score };
+        }
+        this._rideSide = best.k;
+      }
+      const [px, py, tail] = cands[this._rideSide];
+      c.style.left = Math.round(Math.max(M, Math.min(W - cw - M, px))) + "px";
+      c.style.top = Math.round(Math.max(M + 40, Math.min(H - ch - M, py))) + "px";
+      c.dataset.eye = tail === "left" ? "left" : tail === "right" ? "right" : "";
+    };
+    this._rideRaf = requestAnimationFrame(step);
+  }
+  stopRide() { if (this._rideRaf) cancelAnimationFrame(this._rideRaf); this._rideRaf = 0; }
+
   hide() {
+    this.stopRide();
     this.releaseEye();
     this.pointing = false;
     this.point.classList.remove("on");
@@ -235,7 +311,7 @@ class Stage {
       const el = this.resolve(at);
       const r = el && el.getBoundingClientRect();
       if (!r || !r.width || !onScreen(r)) { n.style.display = "none"; return; }
-      const pad = 6;
+      const pad = 8;                          // a frame around the control, never across its label
       n.style.display = "";
       n.style.left = (r.left - pad) + "px"; n.style.top = (r.top - pad) + "px";
       n.style.width = (r.width + pad * 2) + "px"; n.style.height = (r.height + pad * 2) + "px";
@@ -248,49 +324,51 @@ class Stage {
       this.point.classList.add("on");
       this.point.classList.toggle("up", up);
       this.point.style.left = Math.round(fr.left + fr.width / 2 - 13) + "px";
-      this.point.style.top = Math.round(up ? fr.bottom + 8 : fr.top - 44) + "px";
+      this.point.style.top = Math.round(up ? fr.bottom + 14 : fr.top - 52) + "px";
     } else this.point.classList.remove("on");
-    // callout
+    // callout (a line riding the eye is placed by startRide, every frame)
     const c = this.callout;
-    if (!c.classList.contains("on")) return;
+    if (!c.classList.contains("on") || !this.anchor) return;
     const cw = c.offsetWidth || 360, ch = c.offsetHeight || 110;
     const W = innerWidth, H = innerHeight, M = 14;
     const el = this.resolve(this.anchor);
     const r = el && el.getBoundingClientRect();
     let x, y, side = "none";
-    if (r && r.width && onScreen(r)) {
-      // Try the four sides and keep the one that covers the least of what the
-      // player has to see or click: the ringed controls and the avoid list.
-      const avoid = [];
-      this.rings.forEach((a) => { const n = this.resolve(a); const q = n && n.getBoundingClientRect(); if (q && q.width) avoid.push(q); });
-      (this.avoid || []).forEach((a) => { const n = this.resolve(a); const q = n && n.getBoundingClientRect(); if (q && q.width) avoid.push(q); });
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const cand = {
-        above: [cx - cw / 2, r.top - ch - 18, "below"], below: [cx - cw / 2, r.bottom + 18, "above"],
-        right: [r.right + 18, cy - ch / 2, "left"], left: [r.left - cw - 18, cy - ch / 2, "right"],
-      };
-      const order = this.place && this.place !== "auto"
-        ? [this.place, ...["above", "right", "below", "left"].filter((k) => k !== this.place)]
-        : ["above", "right", "below", "left"];
-      let best = null;
-      order.forEach((k, i) => {
-        let [px, py] = cand[k];
-        px = Math.max(M, Math.min(W - cw - M, px));
-        py = Math.max(M + 40, Math.min(H - ch - M, py));
-        let cover = 0;
-        avoid.forEach((q) => {
-          const ox = Math.max(0, Math.min(px + cw, q.right) - Math.max(px, q.left));
-          const oy = Math.max(0, Math.min(py + ch, q.bottom) - Math.max(py, q.top));
-          cover += ox * oy;
-        });
-        // the target itself must never be covered; order breaks ties
-        const score = cover + i * 40;
-        if (!best || score < best.score) best = { k, px, py, score };
+    // The balloon goes where it covers the least of what matters: never the target
+    // or the rings, as little as possible of the machine, the dice, the chart, the
+    // files, the shelf and the case; near the target when it can.
+    const rects = (list) => {
+      const out = [];
+      (list || []).forEach((a) => {
+        try {
+          const nodes = typeof a === "string" ? [...document.querySelectorAll(a)] : [this.resolve(a)];
+          nodes.forEach((n) => { if (n && visible(n)) { const q = n.getBoundingClientRect(); if (onScreen(q)) out.push(q); } });
+        } catch (e) {}
       });
-      x = best.px; y = best.py; side = cand[best.k][2];
-    } else {
-      x = W / 2 - cw / 2; y = H * 0.36 - ch / 2;
+      return out;
+    };
+    const top0 = this.track && !this.track.classList.contains("gone") ? this.track.getBoundingClientRect().bottom + 8 : 50;
+    const hard = rects(this.rings).concat(r && r.width ? [r] : []).concat(rects(this.avoid));
+    const soft = rects(KEY_AREAS);
+    const cx0 = r && r.width ? r.left + r.width / 2 : W / 2, cy0 = r && r.width ? r.top + r.height / 2 : H * 0.4;
+    const cand = [];
+    if (r && r.width && onScreen(r)) {
+      cand.push([cx0 - cw / 2, r.top - ch - 20], [cx0 - cw / 2, r.bottom + 20],
+        [r.right + 56, cy0 - ch / 2], [r.left - cw - 56, cy0 - ch / 2]);
     }
+    for (let gx = 0; gx <= 5; gx++) for (let gy = 0; gy <= 5; gy++)
+      cand.push([M + (W - cw - 2 * M) * gx / 5, top0 + (H - ch - M - top0) * gy / 5]);
+    let best = null;
+    cand.forEach(([px, py], i) => {
+      px = Math.max(M + 44, Math.min(W - cw - M - 44, px));
+      py = Math.max(top0, Math.min(H - ch - M, py));
+      const ov = (list) => list.reduce((acc, q) => acc + Math.max(0, Math.min(px + cw, q.right) - Math.max(px, q.left))
+        * Math.max(0, Math.min(py + ch, q.bottom) - Math.max(py, q.top)), 0);
+      const d = Math.hypot(px + cw / 2 - cx0, py + ch / 2 - cy0);
+      const score = ov(hard) * 80 + ov(soft) * 50 + d * 30 + (i < 4 ? 0 : 3000);
+      if (!best || score < best.s) best = { x: px, y: py, s: score };
+    });
+    x = best.x; y = best.y;
     c.dataset.side = side;
     c.style.left = Math.round(x) + "px";
     c.style.top = Math.round(y) + "px";
@@ -371,6 +449,7 @@ class MapFog {
     return null;
   }
   apply() {
+    if (this.disabled) return;
     const sk = this.skin();
     const svg = sk && sk.rail.querySelector(sk.svg);
     if (!svg) return;
@@ -526,15 +605,13 @@ class Coach {
   }
   // His opening: he wakes, the eye speaks, the goal of the game at once, and which piece is his.
   async wake() {
+    // her first line rides the eye over the dark: the eye follows him, and speaks
     const v = document.getElementById("tut-black");
-    if (v) v.querySelector(".tb-line").textContent = L.wake[0];
-    try { window.__helaEye && window.__helaEye.setPost(innerWidth / 2, innerHeight / 2 - 92, { glide: true }); } catch (e) {}
-    this.trace("say " + L.wake[0]);
-    await this.anyClick();
-    this.stage.releaseEye();
+    if (v) { const t = v.querySelector(".tb-line"); if (t) t.textContent = ""; const h = v.querySelector(".tb-hint"); if (h) h.style.display = "none"; }
+    await this.say(null, L.wake[0]);
     this.wakeRise();
     await new Promise((r) => setTimeout(r, 1400));
-    await this.say("#hull-console", L.wake[1], { ring: false });
+    await this.say(null, L.wake[1]);
     await this.say(null, L.wake[2]);
     await this.say(".vital-chip.vc-cp", L.goal, { rings: [".vital-chip.vc-cp"] });
     const me = this.me(), c = me ? me.century : 30;
@@ -561,8 +638,13 @@ class Coach {
     window.__helaMute = true;               // her ambient remarks wait; the lessons speak
     document.body.classList.add("tut", "tut-story");
     this.wakeStart();
+    // the Merchant is not on the chart before his beat (the map's own gate)
+    try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(false); } catch (e) {}
     this.stage = new Stage(this);
     this.fog = new MapFog();
+    this.fog.disabled = true;           // his cut, not the fog: one era, then the whole chart
+    this.cut = FIRST_ERA_LOW;
+    this._cutT = setInterval(() => this.limitMap(), 600);
     this.markTrack("hour");
     this.hook();
 
@@ -594,16 +676,21 @@ class Coach {
     const play = g.playEvent.bind(g);
     g.playEvent = async (msg) => {
       try { await this.before(msg); } catch (e) { console.error("[tutorial] before", e); }
+      let why = null;
+      try { why = this.cause(msg); } catch (e) { console.error("[tutorial] cause", e); }
       const out = await play(msg);
+      try { if (why) await this.causeDone(why); } catch (e) { console.error("[tutorial] cause done", e); }
       try { await this.after(msg); } catch (e) { console.error("[tutorial] after", e); }
       return out;
     };
     // Decisions: guidance is laid over the control the game has just drawn.
     const decide = g.onDecision.bind(g);
     g.onDecision = (req) => {
-      const out = decide(req);
-      try { this.onDecision(req); } catch (e) { console.error("[tutorial] decision", e); }
-      return out;
+      const go = () => { const out = decide(req); try { this.onDecision(req); } catch (e) { console.error("[tutorial] decision", e); } return out; };
+      let pre = null;
+      try { pre = this.scripted ? this.beforeDecision(req) : null; } catch (e) { console.error("[tutorial] pre", e); }
+      if (pre && pre.then) { pre.then(go, (e) => { console.error("[tutorial] pre", e); go(); }); return; }
+      return go();
     };
     const respond = g.respond.bind(g);
     g.respond = (data) => {
@@ -616,7 +703,9 @@ class Coach {
     const canPlace = g.canPlace.bind(g);
     this._realCanPlace = canPlace;
     g.canPlace = (r, c, v, drag) => {
-      const ok = canPlace(r, c, v, drag);
+      const ok0 = canPlace(r, c, v, drag);
+      // the training wheels: only the modules his machine has yet
+      const ok = ok0 && !(this.machine && (!this.machine.functions.includes(r) || c >= this.machine.modules));
       if (!ok || !this.plan || !g.alloc) return ok;
       if (drag && drag.source === "cell" && +drag.r === r && +drag.c === c) return true;
       const s = this.nextStep();
@@ -655,12 +744,66 @@ class Coach {
   }
 
   /* ───────────── events ───────────── */
+  /* ── WHY IT HAPPENED: while his own machine resolves (the first five Hours), the
+     die that causes the effect glows on the machine for as long as the effect plays,
+     and HELA says which module did it. The first time each module fires she waits
+     for him to read it; after that the line rides along and the next replaces it. ── */
+  causeCell(r, c) { return document.querySelector(`#machine-body .cell[data-r="${r}"][data-c="${c}"]`); }
+  cause(msg) {
+    if (this.hour() > 5 && !this.scripted) return null;
+    const k = msg.kind, p = msg.payload || {}, self = this.seat;
+    const m = this.game.myLastMatrix;
+    if (!m) return null;
+    let r = -1, c = -1, text = "", key = "";
+    if (k === "recharged") {
+      const e = (p.effects || []).find((x) => x.seat === self);
+      if (!e) return null;
+      r = 0; c = (p.module || 1) - 1;
+      text = [`+${e.energy} energy: your <b>Recharge 1</b> die fed your life.`,
+        `+${e.gold} gold: your <b>Recharge 2</b> die minted it.`,
+        `+${e.energy} energy and +${e.gold} gold: your <b>Recharge 3</b> die, the greedy one.`][c];
+      key = "r" + c;
+    } else if (k === "heated" && p.seat === self) {
+      r = 2; c = 0;
+      text = `Your heat rose to ${p.booms}: that came from your <b>first Travel die</b>, the heating module. It moves you nothing. 12 heat and the motor explodes.`;
+      key = "heat";
+    } else if (k === "paradox_resolved" && typeof p.module === "number") {
+      const col = p.module - 4;
+      if (!m[1] || !m[1][col]) return null;
+      const hits = (p.hits || []).filter((h) => h.seat !== self);
+      if (!hits.length) return null;
+      r = 1; c = col;
+      const dir = ["ahead of you, on a higher century", "in your own century", "behind you, on a lower century"][col];
+      text = `${hits.map((h) => h.seat).join(" and ")} lost ${hits[0].damage} energy: your <b>Paradox ${col + 1}</b> die struck everyone ${dir}.`;
+      key = "p" + col;
+    } else if (k === "traveled" && p.seat === self && p.from !== p.to) {
+      const col = this._travelCol || 1;
+      r = 2; c = col;
+      const back = p.to < p.from, n = Math.abs(p.to - p.from), cost = p.energy_cost || 0;
+      text = `You moved ${n} ${n === 1 ? "century" : "centuries"}: your <b>${col === 1 ? "second" : "third"} Travel die</b> carried you.`
+        + (back ? ` Going back cost you ${cost} energy.` : " Forward in time is free.");
+      key = "move";
+    }
+    if (r < 0 || !m[r] || !m[r][c]) return null;
+    const cell = this.causeCell(r, c);
+    if (cell) cell.classList.add("tut-cause");
+    this.toast(null, text);
+    return { r, c, text, key };
+  }
+  async causeDone(w) {
+    if (this.once("why-" + w.key)) await this.say(null, w.text);
+    const cell = this.causeCell(w.r, w.c);
+    if (cell) cell.classList.remove("tut-cause");
+    document.querySelectorAll("#machine-body .cell.tut-cause").forEach((n) => n.classList.remove("tut-cause"));
+  }
+
   async before(msg) {
     const k = msg.kind, p = msg.payload || {};
     if (k === "hour_started") {
       this.hourNo = p.hour;
       if (p.hour === 1 && this.once("intro")) await this.wake();
-      if (this.scripted && p.hour >= 7 && !this.done.has("win")) await this.wrapUp();
+      if (p.hour >= 3 && this.scripted) await this.merchantIntro();
+      if (this.scripted && p.hour >= 10 && !this.done.has("win")) await this.wrapUp();
     }
     if ((k === "phase_started" || k === "phase_skipped") && this.hourNo === 1 && p.phase === "main") this.markTrack("machine");
     if (k === "game_over") this.gameOver(p);
@@ -669,10 +812,9 @@ class Coach {
   async after(msg) {
     const k = msg.kind, p = msg.payload || {};
     const self = this.seat;
-    if (k === "merchant_moved" && this.hourNo === 1 && this.once("merchant-moved")) {
-      await this.say(merchantOnMap,
-        `He moves after every Market phase, toward the richest traveller he is not with.`,
-        { sub: `Now he is at ${R(p.to)}. Make gold and he comes your way.` });
+    if (k === "merchant_moved" && this.done.has("merchant") && this.once("merchant-first-move")) {
+      await this.say(merchantOnMap, "He moved because the Market phase ended: he always does, toward the richest traveller he is not with.",
+        { sub: `He rolls the dice shown on his sign and goes up to that far. Now he is at ${R(p.to)}. Make gold and he comes your way; spend it and he turns away.` });
     }
     if (k === "allocations_revealed" && this.once("reveal")) {
       this.toast(null, "Everyone's dice are revealed at once, then the modules resolve from 1 to 9.", { ms: 4200 });
@@ -693,8 +835,7 @@ class Coach {
           `<b>Your paradox hit ${p.target} for ${p.damage} energy.</b> Paradox 1 strikes everyone ahead of you.`);
       }
     }
-    if (k === "traveled" && p.seat === self) await this.checkPeriod(p.to);
-    if (k === "respawned" && p.seat === self) await this.checkPeriod(p.century);
+
     if (k === "exploded" && p.seat === self && this.once("exploded")) {
       await this.say("#mano-boomg", "<b>Your motor exploded</b> at 12 heat: you lost 2 energy and sit out the rest of this Hour.");
     }
@@ -714,6 +855,11 @@ class Coach {
       this.learn("deliver");
       await this.say(".vital-chip.vc-cp",
         "<b>Delivered: +1 contract point.</b> Points decide the winner, and every point also earns you a contract.");
+      // he kept a promise: the roll comes off the chart (his chartOpen)
+      this.home && this.home();
+      this.unrollMap();
+      await new Promise((r) => setTimeout(r, 1100));
+      await this.say("#timeline-rail", L.chartOpen, { ring: false });
     }
     if (k === "reward_resolved" && p.seat === self) {
       const txt = (REWARD_TEXT[p.category] || [])[(p.roll || 1) - 1];
@@ -753,6 +899,131 @@ class Coach {
   }
 
   /* ───────────── decisions ───────────── */
+  /* ── the beat that belongs BEFORE a decision is shown ── */
+  beforeDecision(req) {
+    const h = (req.options || {}).tutorial || {};
+    if (req.kind === "allocate") return this.grow(h.machine);
+    return null;
+  }
+  // his machine grows: four cells, then Paradox, then the third module
+  async grow(m) {
+    const stage = !m ? 3 : m.modules >= 3 ? 3 : m.functions.includes(1) ? 2 : 1;
+    const b = document.body.classList;
+    if (stage === 1) { b.add("tut-2x2"); this.stageNo = 1; return; }
+    if (this.stageNo === stage || this._growing) return;
+    const from = this.stageNo || 0;
+    this.stageNo = stage;
+    if (from === 0) { if (stage === 3) b.remove("tut-2x2"); b.add("tut-show-paradox"); if (stage === 3) b.add("tut-mod3"); return; }
+    this._growing = true;
+    try {
+      if (stage >= 2 && from < 2) {
+        b.add("tut-show-paradox");
+        this.born('#machine-body .cell[data-r="1"], #machine-body .matrix-fnlabel.fn-paradox');
+        await new Promise((r) => setTimeout(r, 600));
+        await this.say("#machine-body .matrix-wrap", L.paradox, { rings: ["#machine-body .matrix-fnlabel.fn-paradox"], avoid: MACHINE });
+      }
+      if (stage === 3) {
+        b.add("tut-mod3"); b.remove("tut-2x2");
+        this.born('#machine-body .cell[data-c="2"]');
+        await new Promise((r) => setTimeout(r, 600));
+        await this.say("#machine-body .matrix-wrap", L.mod3, { rings: ['#machine-body .cell[data-c="2"]'], avoid: MACHINE });
+        await this.say("#machine-body .matrix-wrap", L.paradoxAim, { rings: ['#machine-body .cell[data-r="1"][data-c="2"]'], avoid: MACHINE });
+      }
+    } finally { this._growing = false; }
+  }
+  born(sel) {
+    document.querySelectorAll(sel).forEach((n) => { n.classList.add("tut-new"); setTimeout(() => n.classList.remove("tut-new"), 1600); });
+  }
+
+  // His cut: the chart clipped just below the era he may see, the game's own rolled
+  // chart sitting on the cut; the desk shows below it. Re-applied through redraws.
+  limitMap() {
+    if (this._mapOpen) return;
+    const rail = document.getElementById("timeline-rail");
+    if (!rail) return;
+    const cplot = rail.querySelector(".cplot-sing") || rail.querySelector(".cplot") || rail.querySelector(".cplot-ori");
+    if (!cplot) return;
+    const cRect = cplot.getBoundingClientRect();
+    if (!cRect.height) return;
+    let cut = 0;
+    rail.querySelectorAll("[data-c]").forEach((n) => {
+      const c = parseInt(n.getAttribute("data-c"), 10);
+      if (isNaN(c)) return;
+      if (c < this.cut) { n.classList.add("tut-era-hidden"); return; }
+      n.classList.remove("tut-era-hidden");
+      const bb = n.getBoundingClientRect();
+      if (bb.height && bb.bottom - cRect.top > cut) cut = bb.bottom - cRect.top;
+    });
+    if (cut <= 0) return;
+    cut += 18;
+    const pct = Math.max(0, Math.min(96, (1 - cut / cRect.height) * 100));
+    rail.style.setProperty("--tut-cut", pct.toFixed(1) + "%");
+    rail.querySelectorAll(".cplot, .cplot-sing, .cplot-ori").forEach((cp) =>
+      cp.style.setProperty("clip-path", `inset(0 0 ${pct.toFixed(1)}% 0)`, "important"));
+    const roll = document.getElementById("chart-roll");
+    if (roll) {
+      roll.style.setProperty("display", "block", "important");
+      roll.style.setProperty("opacity", "1", "important");
+      const rollH = roll.offsetHeight || 20;
+      roll.style.setProperty("top", (cplot.offsetTop + cplot.offsetHeight * (cut / cRect.height) - rollH / 2) + "px", "important");
+    }
+  }
+  // the roll comes off: every era out from behind it (his openMap)
+  unrollMap() {
+    if (this._mapOpen) return;
+    this._mapOpen = true;
+    const rail = document.getElementById("timeline-rail");
+    if (rail) {
+      rail.querySelectorAll(".tut-era-hidden").forEach((n) => n.classList.remove("tut-era-hidden"));
+      rail.querySelectorAll(".cplot, .cplot-sing, .cplot-ori").forEach((cp) => cp.style.removeProperty("clip-path"));
+    }
+    document.body.classList.add("tut-map-open");
+    const roll = document.getElementById("chart-roll");
+    if (roll) {
+      roll.style.setProperty("transition", "opacity .9s ease", "important");
+      roll.style.setProperty("opacity", "0", "important");
+      setTimeout(() => { ["display", "opacity", "top", "transition"].forEach((k) => roll.style.removeProperty(k)); }, 1000);
+    }
+  }
+
+  // THE MERCHANT, met at the far end of the era he can see: the chart grows to show
+  // him, the eye goes to him and says who he is, the wagon up close, his shelf and
+  // the promise on a relic. Only then does he move where the traveller can watch.
+  async merchantIntro() {
+    if (this.done.has("merchant") || this._introMerchant) return;
+    this._introMerchant = true;
+    this.cut = MERCHANT_ERA_LOW;            // the chart grows, on the wooden table
+    document.body.classList.add("tut-merchant", "tut-map-grow");
+    try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(true); } catch (e) {}
+    this.limitMap();
+    await new Promise((r) => setTimeout(r, 1300));
+    const v = this.game.view, me = this.me();
+    const mc = v ? v.merchant_century : 20;
+    const at = merchantOnMap;
+    await this.say(at, L.merchantArrives.replace("{c}", R(mc)), { rings: [at] });
+    await this.say(at, L.merchantWho, { rings: [at] });
+    this.learn("merchant");
+    const cam = this.game.camera;
+    cam._engage(); cam.setScene("market");
+    await new Promise((r) => setTimeout(r, 1200));
+    await this.say("#market-sign", L.merchantSign, { rings: ["#market-sign"], avoid: SHELF });
+    await this.say("#market-zone .market-row", L.marketScene, { rings: ["#market-zone .market-row"], avoid: SHELF });
+    const gold = me ? me.gold : 0;
+    const cards = [...document.querySelectorAll("#market-zone .market-row .card")];
+    // the relic the lesson will buy: affordable, promised closest to where he stands
+    const cheap = (v && v.market_revealed || []).filter((c) => c.gold_cost <= Math.max(gold, 2))
+      .sort((a, b) => Math.abs(a.delivery_century - me.century) - Math.abs(b.delivery_century - me.century) || a.gold_cost - b.gold_cost)[0];
+    const card = cheap && cards.find((n) => n.dataset.name === cheap.name);
+    if (card) {
+      await this.say(card, L.marketCard.replace("{g}", cheap.gold_cost), { rings: [card], avoid: SHELF });
+      const stamp = card.querySelector(".card-deliver") || card;
+      await this.say(stamp, L.marketPromise, { rings: [stamp], avoid: SHELF });
+    }
+    cam.setScene("main");
+    await new Promise((r) => setTimeout(r, 900));
+    this.onState && this.onState();
+  }
+
   onDecision(req) {
     const k = req.kind, o = req.options || {}, hint = o.tutorial || null;
     this.req = req;
@@ -816,6 +1087,7 @@ class Coach {
   onRespond(req, data) {
     if (!req) return;
     this.trace("answered " + req.kind);
+    if (req.kind === "travel") document.querySelectorAll("#machine-body .cell.tut-cause").forEach((n) => n.classList.remove("tut-cause"));
     this._waitScene = null;
     // A guided visit to the wagon or the records ends back at the desk, where the
     // next thing always happens. (A buy keeps him at the wagon: the shelf refills.)
@@ -841,6 +1113,7 @@ class Coach {
   allocate(req, hint) {
     this.markTrack("machine");
     const g = this.game;
+    this.machine = (hint && hint.machine) || null;
     if (hint && hint.matrix && this.scripted) {
       this.plan = { matrix: hint.matrix, valve: hint.escape_valve || 0, lesson: hint.lesson };
       this.pointing = true;
@@ -922,6 +1195,12 @@ class Coach {
       if (lesson === "travel" && s.r === 2 && s.c === 0 && this.plan.goal != null) {
         sub = `This Hour's dice are for the trip to ${R(this.plan.goal)}.` + (sub ? " " + sub : "");
       }
+      // his words open the small machine's hours; the step rides underneath
+      const placed = this.game.alloc ? this.game.alloc.matrix.flat().filter((x) => x).length : 0;
+      if (placed === 0 && (h === 1 || h === 2)) {
+        sub = (h === 1 ? L.reduced + " " : "") + text.replace(/<[^>]+>/g, "") + (h === 1 ? " Keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> pick up a die of that value." : "");
+        text = h === 1 ? L.t1prompt : L.prompt;
+      }
       void fn; void n;
       this.guide(cell, text, { sub, rings: [cell, die(v)], avoid: MACHINE });
       return;
@@ -945,6 +1224,11 @@ class Coach {
     const o = req.options || {};
     const from = o.century, max = o.max || 0;
     const goal = hint && hint.goal != null ? hint.goal : null;
+    // the move comes from a die: it glows on the machine while he plots
+    const col = o.module === 9 ? 2 : 1;
+    this._travelCol = col;
+    const fromDie = `This move comes from your ${col === 1 ? "second" : "third"} Travel die, glowing on your machine.`;
+    if (this.hour() <= 5 || this.scripted) { const cell = this.causeCell(2, col); if (cell) cell.classList.add("tut-cause"); }
     if (!this.scripted || goal == null) {
       if (this.once("free-travel")) {
         this.toast(ANY_CMD, `Click a lit century to travel up to ${max}, or HOLD to stay.`,
@@ -959,9 +1243,9 @@ class Coach {
     const why = land === goal
       ? (toMerchant ? "to reach the Merchant" : "to reach the century where your card is delivered")
       : (toMerchant ? "toward the Merchant" : `toward ${R(goal)}, where your card is delivered`);
-    let sub = "";
-    if (this.once("travel-cost")) sub = "Going into the past costs 1 energy per century. Going into the future is free.";
-    else if (dir > 0 && this.once("travel-free")) sub = "Forward in time is free.";
+    let sub = fromDie;
+    if (this.once("travel-cost")) sub += " Going into the past costs 1 energy per century. Going into the future is free.";
+    else if (dir > 0 && this.once("travel-free")) sub += " Forward in time is free.";
     this.pointing = true;
     this.atScene("main", () => this.travelGuide(from, dist, land, why, sub));
     this.learn("travel");
@@ -1118,6 +1402,7 @@ class Coach {
     this.learn("win");
     this.scripted = false;
     document.body.classList.remove("tut-story");
+    try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(null); } catch (e) {}
     this.blockPass = false;
     this.pointing = false;
     window.__helaMute = false;
@@ -1153,7 +1438,15 @@ function merchantOnMap() {
 // The Merchant's shelf: lines about it never sit on it.
 const SHELF = ["#market-zone .market-row", "#market-zone .card"];
 // The whole wrist machine: the callout never sits on it while dice are placed.
-const MACHINE = ["#machine-zone", "#dice-zone", "#hull-console"];
+const MACHINE = ["#hull-console .matrix-wrap", "#dice-body .dice-pool", "#dice-body .dice-actions", "#dice-body .escape-slot", ".cx-preview"];
+// What the traveller must be able to see: a line never sits on these if it can help it.
+const KEY_AREAS = [
+  "#hull-console .matrix-wrap", "#dice-body .dice-pool", "#dice-body .dice-actions", ".cx-preview",
+  "#dice-body .escape-slot", "#vz-holo", "#players-zone .pcard", "#market-zone .market-row",
+  "#market-sign", "#timeline-rail .cplot-sing .pc-star", "#timeline-rail .cplot .pc-world",
+  "#timeline-rail .cplot-ori .pc-chart", "#rucksack-zone", "#drawer-zone .cab2-cell",
+  ".ctd-doc", "#mano-help .mh-card",
+];
 function machineCell(r, c) { return `#machine-body .cell[data-r="${r}"][data-c="${c}"]`; }
 function passSign() {
   return [...document.querySelectorAll("#market-zone .side-sign, .market-side-signs .side-sign")]

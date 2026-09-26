@@ -131,3 +131,33 @@ body.tut-story #hela-eye .he-dchip { display: none !important; }
 #tut-black .tb-hint { color: #c77aa6; font: 600 13px "JetBrains Mono", monospace; letter-spacing: .08em; animation: tutHint 1.4s ease-in-out infinite; }
 body.tut .cam-world { transition: transform var(--cam-dur, .62s) cubic-bezier(.5, 0, .2, 1), filter 3s ease; }
 body.tut-waking .cam-world { filter: blur(9px) brightness(.5); }
+
+
+/* ════════ HIS REDUCED MACHINE AND HIS CUT CHART (on top of the reviewers' version) ════════ */
+/* four cells, then Paradox, then the third module: the missing cells are dark, and
+   they materialise in place when they arrive */
+body.tut-story.tut-2x2 #machine-body .cell[data-c="2"] { visibility: hidden !important; }
+body.tut-story:not(.tut-show-paradox) #machine-body .cell[data-r="1"],
+body.tut-story:not(.tut-show-paradox) #machine-body .matrix-fnlabel.fn-paradox { visibility: hidden !important; }
+body.tut #machine-body .cell.tut-new, body.tut #machine-body .matrix-fnlabel.tut-new { animation: tutBorn 1.5s ease-out; }
+@keyframes tutBorn { 0% { opacity: 0; transform: scale(.55); filter: brightness(2.4) blur(3px); }
+  55% { opacity: 1; filter: brightness(1.7); } 100% { opacity: 1; transform: scale(1); filter: none; } }
+
+/* the chart cut to the only era he can see, on the WOODEN table: under the cut the
+   chart's own dark frame steps aside and the desk shows through */
+body.tut-story:not(.tut-map-open) #timeline-rail { background: transparent !important; box-shadow: none !important; }
+body.tut-story:not(.tut-map-open) #timeline-rail::before,
+body.tut-story:not(.tut-map-open) #timeline-rail::after { display: none !important; }
+.tut-era-hidden { display: none !important; }
+/* the chart grows when the Merchant arrives: the cut slides down */
+body.tut-map-grow #timeline-rail > .cplot-sing,
+body.tut-map-grow #timeline-rail > .cplot { transition: clip-path 1.2s ease; }
+body.tut-map-grow #chart-roll { transition: top 1.2s ease !important; }
+
+/* the Merchant stays off the chart until his beat through the map's own gate
+   (window.__pdxMerchantReveal, board_draft.js), which also skips his voyages */
+
+/* ---- the die that causes what is happening glows on his machine, in his colour ---- */
+#machine-body .cell.tut-cause { position: relative; z-index: 6; animation: tutCause .9s ease-in-out infinite; }
+#machine-body .cell.tut-cause .die { box-shadow: 0 0 12px 4px var(--self-col, #ffd98a) !important; }
+@keyframes tutCause { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }

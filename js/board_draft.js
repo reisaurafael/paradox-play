@@ -147,10 +147,14 @@
     const w = +o.w || 40, base = Number.isFinite(+o.base) ? +o.base : 14;
     return `<ellipse class="pc-shadow pc-merch-plate" cx="1.2" cy="${base}" rx="${(w / 2).toFixed(1)}" ry="${Math.max(3, w * .12).toFixed(1)}" fill="#000" fill-opacity="${o.dark ? .55 : .3}"/>`;
   };
+  // his tag says who he is and whom he chases, in one short line ("MERCHANT → P2")
   window.__pdxMerchTag = window.__pdxMerchTag || function (y) {
+    let sub = "";
+    try { const r = window.__game && window.__game.view && window.__pdxMerchantRule(window.__game.view); if (r && r.aim) sub = " \u2192 " + r.aim; } catch (e) {}
+    const txt = "MERCHANT" + sub, w = Math.round(txt.length * 6.6 + 14);
     return `<g class="pc-tag pc-tag-merch" transform="translate(0 ${y})" pointer-events="none">`
-      + `<rect x="-31" y="-7" width="62" height="14" rx="7" fill="#e8c05a" stroke="#2a1c08" stroke-width="1.5"/>`
-      + `<text y="3.2" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="8.6" letter-spacing="1.3" fill="#1c1206">MERCHANT</text></g>`;
+      + `<rect x="${-w / 2}" y="-7.5" width="${w}" height="15" rx="7.5" fill="#e8c05a" stroke="#2a1c08" stroke-width="1.5"/>`
+      + `<text y="3.3" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="8.8" letter-spacing="1" fill="#1c1206">${txt}</text></g>`;
   };
   // FAN OUT a stack: pieces on one century push apart until their plates clear each
   // other (and stay inside the chart). pts = [{ x, y, r }], mutated in place.
@@ -203,7 +207,8 @@
     let last = null;
     const roll = v && v.merchant_last_roll, mv = v && v.merchant_last_move;
     if (roll) last = `Last move: rolled ${roll}, moved ${Math.abs(mv || 0)}${Math.abs(mv || 0) < roll ? ", stopped on reaching his target" : ""}.`;
-    return { n, who, when: "At the end of every Market phase.", how, why, last, short: `${short} · ${n} ${n === 1 ? "die" : "dice"}` };
+    const aim = p.why === "secret" ? "XI" : p.why === "future" ? "XXX" : who ? (who === "you" ? "YOU" : window.__pdxInitials(who)) : "";
+    return { n, who, aim, when: "At the end of every Market phase.", how, why, last, short: `${short} · ${n} ${n === 1 ? "die" : "dice"}` };
   };
   // which centuries can his next roll reach? (n dice of 1..3, capped at the target)
   window.__pdxMerchantReach = window.__pdxMerchantReach || function (mc, target, n) {
@@ -269,7 +274,7 @@
       + `<rect x="${px + 3}" y="${py + 3}" width="${PW - 6}" height="${(PH - 6).toFixed(1)}" rx="3" fill="none" stroke="#b8862a" stroke-width="1"/>${body}</g>`;
     // the summary pill, under his MERCHANT tag
     const sw = rule.short.length * 5.2 + 14;
-    s += `<g class="pc-mhud-pill" transform="translate(${mx} ${my + o.pillDy})"><rect x="${(-sw / 2).toFixed(1)}" y="-7" width="${sw.toFixed(1)}" height="14" rx="7" fill="${ink}" fill-opacity=".92" stroke="#e8c05a" stroke-width="1.3"/>`
+    if (o.pillDy != null) s += `<g class="pc-mhud-pill" transform="translate(${mx} ${my + o.pillDy})"><rect x="${(-sw / 2).toFixed(1)}" y="-7" width="${sw.toFixed(1)}" height="14" rx="7" fill="${ink}" fill-opacity=".92" stroke="#e8c05a" stroke-width="1.3"/>`
       + `<text y="3.2" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="8.4" fill="#f6e6b4">${esc2(rule.short)}</text></g>`;
     return s + `</g>`;
   };
@@ -412,14 +417,13 @@
     }, landAt + 3400 * k);
     later(finish, landAt + 5000 * k + 1500);   // hard cap: a stuck frame never strands the flag
   };
-  /* THE TUTORIAL'S HOOK. The Merchant stays off the chart until his story beat: while the
-     tutorial runs (body.tut, or window.__helaMute) he, his readout and his voyage are
-     hidden, until the tutorial calls window.__pdxMerchantReveal(true). false hides him
-     again; null returns to the default. Any chart repaint applies it. */
+  /* THE TUTORIAL'S HOOK. The Merchant is ALWAYS on the chart by default, in every match
+     and in the tutorial. Only a tutorial that asks for it hides him: it calls
+     window.__pdxMerchantReveal(false) before his story beat and (true) at it; he, his
+     readout and his voyage are hidden only in between. Any chart repaint applies it. */
   window.__pdxMerchantRevealed = window.__pdxMerchantRevealed === undefined ? null : window.__pdxMerchantRevealed;
   window.__pdxMerchantHiddenNow = window.__pdxMerchantHiddenNow || function () {
-    const r = window.__pdxMerchantRevealed;
-    return r === false || (r == null && (document.body.classList.contains("tut") || !!window.__helaMute));
+    return window.__pdxMerchantRevealed === false;
   };
   window.__pdxMerchantReveal = window.__pdxMerchantReveal || function (on) {
     window.__pdxMerchantRevealed = on == null ? null : !!on;
@@ -1340,6 +1344,7 @@
       // the pieces clear each other, inside the chart (a berth near the edge used to hang
       // off the frame) and clear of the Merchant.
       const PR = t => (t.is_self ? 17 : 14);
+      ts.sort((a, b) => (a.is_self ? 1 : 0) - (b.is_self ? 1 : 0));   // mine is drawn last, on top
       const berth = ts.map((t, i) => {
         let deg = SLOTS[i % SLOTS.length];
         if (x > W - 76) deg = 180 - deg;        // near an edge the berths face INLAND
@@ -1355,7 +1360,7 @@
       });
       const mcNow = R.merchantShown != null ? R.merchantShown : view.merchant_century;
       const obst = POS[mcNow] ? [{ x: POS[mcNow][0], y: POS[mcNow][1] - 47 + 10, r: 28, fixed: true }] : [];
-      window.__pdxFan(berth.concat(obst), 2, [30, 40, W - 34, H - 26]);   // clear of the torn frame and of the Merchant
+      window.__pdxFan(berth.concat(obst), 5, [30, 40, W - 34, H - 26]);   // clear of the torn frame and of the Merchant
       const pcPos = R.pcPos || (R.pcPos = {});
       const chase = view.merchant_plan && view.merchant_plan.target_seat;
       ts.forEach((t, i) => {
@@ -1495,7 +1500,7 @@
       // WHEN / HOW / WHY beside him, the chase line and the reach (window.__pdxMerchantHUD)
       if (view.merchant_plan) {
         const pl = view.merchant_plan, tt = pl.target_seat && view.travelers.find(t2 => t2.name === pl.target_seat);
-        g += window.__pdxMerchantHUD({ v: view, m: [x, y - 47 + 13], pillDy: -51,
+        g += window.__pdxMerchantHUD({ v: view, m: [x, y - 47 + 13],
           tpos: tt && tt.century !== mc && R.pcPos && R.pcPos[tt.name] || null,
           pos: c2 => POS[c2] || null, W, H, dark: false, avoid: Object.values(R.pcPos || {}) });
       }
@@ -2279,8 +2284,11 @@
         return `<b>the ${rom(c)} light, milestone of ${rom(c)}</b><br>` +
           (names.length ? `claimed by ${names.map(esc).join(", ")}` : "no traveler has claimed it yet");
       }
-      const dt = e.target.closest("[data-tip]");
-      if (dt) return esc(dt.dataset.tip);
+      // HOVER ONLY ON GAME PIECES: a traveller, the order row, a delivery flag, the secret
+      // haven, Year Zero, a century you can sail to. Scenery (sharks, signs, storms, wakes,
+      // scars, wrecks, the shared-anchorage ring, cartouches) never pops anything.
+      const dt = e.target.closest("[data-seat][data-tip], [data-hlseat][data-tip], .sea-flag, .sea-cove, .sea-well, .sea-glow");
+      if (dt && dt.dataset.tip) return esc(dt.dataset.tip);
       return "";
     }
     const world2 = rail.querySelector(".pc-world");
