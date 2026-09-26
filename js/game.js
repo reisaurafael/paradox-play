@@ -11,19 +11,19 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609262016";
-import { audio } from "./audio.js?202609262016";
+import { icon } from "./icons.js?202609262037";
+import { audio } from "./audio.js?202609262037";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609262016";
-import { comic } from "./comic.js?202609262016";
-import { CatEngine } from "./cat.js?202609262016";
-import { tutorials } from "./tutorial.js?202609262016";
-import { profile } from "./profile.js?202609262016";
-import { Camera } from "./camera.js?202609262016";
+import { juice } from "./juice.js?202609262037";
+import { comic } from "./comic.js?202609262037";
+import { CatEngine } from "./cat.js?202609262037";
+import { tutorials } from "./tutorial.js?202609262037";
+import { profile } from "./profile.js?202609262037";
+import { Camera } from "./camera.js?202609262037";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609262016";
+} from "./util.js?202609262037";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -279,6 +279,9 @@ export class Game {
         // strand the next decision and lock a player out, the non-host bug).
         try {
           if (kind === "event") {
+            // a Temporal Herald edition that opened by itself stays until clicked, and
+            // the replay waits behind it (not while skipping); it resumes on the click
+            if (!this._skip && window.__heraldWait) { const w = window.__heraldWait(); if (w) await w; }
             await this.playEvent(msg);
           } else {                   // state
             this.applyState(msg.view);
@@ -1456,7 +1459,7 @@ export class Game {
       this.dom.marketMeta.innerHTML =
         `<span class="mm-cell"><span class="mm-k">Century</span><span class="mm-v">${roman(v.merchant_century)}</span></span>` +
         `<span class="mm-cell"><span class="mm-k">Speed</span><span class="mm-v">${dice} ${dice === 1 ? "die" : "dice"}</span></span>` +
-        `<span class="mm-cell"><span class="mm-k">Deck</span><span class="mm-v">${v.merchant_card_count}</span></span>` +
+        `<span class="mm-cell" title="Relics the Merchant still carries, salvaged from the Incursion. When none are left to save, the match ends."><span class="mm-k">Relics</span><span class="mm-v">${v.merchant_card_count}</span></span>` +
         `<span class="mm-cell"><span class="mm-k">Heading</span><span class="mm-v">${dir}${lm ? ` (${Math.abs(lm)})` : ""}</span></span>`;
       // WHEN / HOW / WHY he moves, the same three facts the map shows beside him
       try {
@@ -1492,7 +1495,7 @@ export class Game {
 
     // Merchant stock, the revealed cards (left, fills the space)
     const main = el("div", "market-main");
-    main.appendChild(el("div", "market-merchant-label", "Merchant Stock"));
+    main.appendChild(el("div", "market-merchant-label", "Relics salvaged from the Incursion"));
     const row = el("div", "market-row");
     (v.market_revealed || []).forEach((c) => {
       const card = this.cardEl(c);
@@ -1588,7 +1591,7 @@ export class Game {
     const me = (v.travelers || []).find((t) => t.is_self) || {};
     const sec = el("div", "market-secret");
     sec.appendChild(el("div", "market-secret-label",
-      `Secret Market · ${open ? "DISCOVERED" : "HIDDEN"}${open ? ` · ${v.secret_market_card_count}` : ""}`));
+      `The sealed vault · ${open ? "OPEN" : "SEALED"}${open ? ` · ${v.secret_market_card_count} relics` : ""}`));
     // The Secret Market lives behind a velvet curtain: it stays CLOSED while the market
     // is Hidden (and while the discovery is still calculating), then draws OPEN and
     // stays open once it's Discovered. The bay/card is built into a "stage" the
@@ -1652,7 +1655,7 @@ export class Game {
     } else {
       const bay = el("div", "secret-bay" + (open ? " open" : ""));
       bay.innerHTML = open
-        ? `<div class="bay-text">Secret Market empty</div>`
+        ? `<div class="bay-text">The vault is empty</div>`
         : `<div class="bay-text">Sealed behind the curtain</div>`;
       stage.appendChild(bay);
     }
@@ -4531,6 +4534,8 @@ export class Game {
             || this.archPointRect(payload.century) || this._marketRowRect(),
           { tone: "deliver", spin: "flip", endScale: 0.32, duration: 780,
             onLand: () => { audio.play("deliver");   // the seal lands with its sound, not before it
+              // and the last timeline mends there, on the same beat (mend.js)
+              try { window.__pdxTimelineMend && window.__pdxTimelineMend(payload.century, null, { seat: payload.seat, sound: false }); } catch (e) {}
               this._deliverSeal(payload.century); juice.flash("gold", { intensity: 0.34 }); juice.hitPause(70); this.flashPanel(payload.seat, "fx-pulse"); } });
         this.breakingNews(`RELIC RESTORED AT CENTURY ${roman(payload.century)}`,
           `${payload.seat} lands the ${this.nameEn(payload.card)}, ${this._eraName(payload.century)} takes back its own`,
@@ -5417,7 +5422,12 @@ export class Game {
     };
     const say = HELA_LINES[kind] || "The Bureau wired a bulletin. I pulled it before the ink was dry.";
     const hour = this.view ? this.view.hour: ", ";
-    const item = { hour, kind, headline, sub, say, html: this._editionHtml(headline, sub, kind, body) };
+    // the subject of the story, in their colour, over the page: who, and what they did
+    const WHAT = { wanted: "branded a thief: 4 gold bounty", terminated: "terminated, pulled back to XXX",
+      delivered: "returned a relic: the timeline mends", milestone: "reached a milestone",
+      secret_market_opened: "opened the sealed vault" };
+    const who = opts.name ? `<div class="bn-who" style="--seat:${this.colorOf(opts.name)}"><b>${esc(opts.name)}</b><span>${WHAT[kind] || ""}</span></div>` : "";
+    const item = { hour, kind, headline, sub, say, html: who + this._editionHtml(headline, sub, kind, body) };
     try { window.__helaFileNews && window.__helaFileNews(item); } catch (e) {}
     audio.play("chart_stamp"); setTimeout(() => audio.play("chart_bell", { warm: true }), 160);
     if (this.shake) this.shake("sm");
@@ -5489,11 +5499,11 @@ export class Game {
     const scores = Object.entries(payload.scores).sort((a, b) => b[1] - a[1]);
     const rows = scores.map(([n, s]) =>
       `<tr><td><span class="pcard-swatch" style="display:inline-block;background:${this.colorOf(n)}"></span> ${esc(n)}</td><td>${esc(s)}</td></tr>`).join("");
-    const reasons = { year_zero: "A traveler reached Year Zero", full_receptor: "Temporal Receptor completed",
-      last_traveler: "Last traveler standing", all_terminated: "All travelers terminated", merchant_empty: "The Merchant ran dry" };
+    const reasons = { year_zero: "A traveler reached Year Zero", full_receptor: "A traveler mended all three periods",
+      last_traveler: "Last traveler standing", all_terminated: "All travelers terminated", merchant_empty: "No relics left to save" };
     o.innerHTML = `
       <div class="gameover-card panel bracketed">
-        <p class="overline">Time Stabilised</p>
+        <p class="overline">Time settles</p>
         <div class="winner">${esc(payload.winner || "--")}</div>
         <p class="muted">${esc(reasons[payload.reason] || payload.reason)} · Monarch of Time</p>
         <table class="score-table"><thead><tr><th>Operative</th><th>CP</th></tr></thead><tbody>${rows}</tbody></table>
@@ -5512,6 +5522,12 @@ export class Game {
     o.querySelectorAll(".go-menu").forEach((b) => b.addEventListener("click", toMenu));
     o.querySelector(".go-peek").addEventListener("click", () => o.classList.add("is-peek"));
     o.querySelector(".go-show").addEventListener("click", () => o.classList.remove("is-peek"));
+    // the restored timeline, how much was mended and each traveler's share, before the points
+    try {
+      const tl = window.__pdxTimelineSummary && window.__pdxTimelineSummary();
+      const tbl = o.querySelector(".score-table");
+      if (tl && tbl) tbl.parentNode.insertBefore(tl, tbl);
+    } catch (e) {}
     this.dom.overlay.appendChild(o);
   }
 

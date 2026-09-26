@@ -1,0 +1,282 @@
+/* =========================================================================
+   mend.js, THE LAST TIMELINE: the Incursion shattered time; one last timeline
+   remains. Every relic torn from its century unravels it; every relic returned
+   mends it; whoever mended the most when time settles wins.
+   -------------------------------------------------------------------------
+   What this draws (rules unchanged, words and pictures only):
+     - THE GAUGE, in HELA's top rail: thirty notches, I to XXX. A mended century is
+       lit in the colour of the traveller who mended it (so the race still reads as
+       a race); a century whose relic is loose on the table carries a crack; the
+       rest wait, faded. A thin bar under the notches fills with the whole repair.
+     - ON THE CHART, at each century: a faint crack where the timeline is still
+       unravelled (a sharper one where a loose relic belongs), and a ring of light
+       in the mender's colour where it is mended. Small marks beside the islands,
+       hollow in the middle, so no piece or number is ever covered.
+     - THE MEND, when a relic lands home: the broken ring closes, light returns,
+       the notch fills and pulses, the drawer the relic is filed in glows, and a
+       comic panel lands on the beat of the delivery's own sound: KA-CHUNK, THE
+       TIMELINE MENDS. HELA says it from her eye (comic.js).
+     - A TEAR, when a paradox strikes: a jagged crack runs along the chart from the
+       one who caused it to each traveller it hurt, and heals away.
+     - TIME SETTLES: the end screen's restored timeline, how much was mended and
+       each traveller's share in their colour, before the points.
+   window.__pdxTimelineMend(century, progress, opts) is the shared hook the tutorial
+   calls; progress (optional) is a fraction 0..1 of the gauge, or a whole number of
+   mended centuries. Costs: marks are rebuilt only when what they show changes;
+   every animation is transform or opacity on a few small nodes, removed when done.
+   All text enters the page through textContent.
+   ========================================================================= */
+import { roman } from "./util.js?202609262037";
+
+const N = 30;
+// the drawer a century's relic is filed in (Origins I to X, Ascension XI to XIX,
+// Singularity XX to XXX), for the glow as it is filed
+const periodOf = (c) => (c <= 10 ? "Origins" : c <= 19 ? "Ascension" : "Singularity");
+
+class Mend {
+  constructor() {
+    this.game = null;
+    this.comic = null;
+    this.menders = new Map();   // century -> seat that mended it first
+    this.loose = new Set();     // centuries whose relic is loose on the table
+    this.gaugeEl = null;
+    this.marksEl = null;
+    this._key = "";
+    this._progress = null;      // an explicit gauge value from the tutorial
+  }
+
+  init(game, comic) {
+    this.game = game; this.comic = comic;
+    try {
+      window.__pdxTimelineMend = (century, progress, opts) => this.mendAt(+century, Object.assign({ progress, sound: true }, opts || {}));
+      window.__pdxTimelineSummary = () => this.summary();
+      window.__pdxTimelineState = () => ({ mended: [...this.menders.keys()].sort((a, b) => a - b), loose: [...this.loose].sort((a, b) => a - b) });
+    } catch (e) {}
+    window.addEventListener("resize", () => { this._key = ""; this._syncSoon(); });
+  }
+  _me() { return this.game && this.game.seat; }
+  _col(seat) { try { return this.game.colorOf(seat); } catch (e) { return "#c9a45c"; } }
+  _reduced() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+  _syncSoon() { clearTimeout(this._st); this._st = setTimeout(() => this.sync(), 120); }
+
+  /* ---- read the table: who mended what (their receptor cards), which relics are loose ---- */
+  _read(view) {
+    const menders = new Map(), loose = new Set();
+    for (const t of view.travelers || []) {
+      for (const c of t.receptor_cards || []) {
+        const cc = +c.delivery_century;
+        if (cc >= 1 && cc <= N && !menders.has(cc)) menders.set(cc, t.name);
+      }
+      for (const c of t.hand || t.equipment || []) { const cc = +c.delivery_century; if (cc >= 1 && cc <= N) loose.add(cc); }
+    }
+    for (const c of view.market_revealed || []) { const cc = +c.delivery_century; if (cc >= 1 && cc <= N) loose.add(cc); }
+    const sc = view.secret_market_current; if (sc && sc.delivery_century) loose.add(+sc.delivery_century);
+    // a mend made this session (the animation) stays even if the view lags a beat
+    for (const [c, s] of this.menders) if (!menders.has(c)) menders.set(c, s);
+    for (const c of menders.keys()) loose.delete(c);
+    return { menders, loose };
+  }
+
+  /* ---- keep the gauge and the chart marks true to the table; cheap when nothing changed ---- */
+  sync() {
+    const v = this.game && this.game.view; if (!v) return;
+    const { menders, loose } = this._read(v);
+    this.menders = menders; this.loose = loose;
+    const ch = this.comic && this.comic._chart();
+    const key = [...menders].map(([c, s]) => c + ":" + s).join(",") + "|" + [...loose].join(",") + "|" + (this._progress ?? "")
+      + "|" + (ch ? ch.mark : "");
+    this._gauge();
+    if (key === this._key && this.marksEl && this.marksEl.isConnected && ch && this.marksEl.parentNode === ch.host) return;
+    this._key = key;
+    this._marks(ch);
+  }
+
+  /* ---- THE GAUGE in HELA's rail ---- */
+  _gauge() {
+    const rail = document.querySelector("#hull .vz-rail") || document.getElementById("topbar");
+    if (!rail) return;
+    let g = this.gaugeEl;
+    if (!g || !g.isConnected) {
+      g = document.createElement("div");
+      g.id = "tl-gauge";
+      const nm = document.createElement("span"); nm.className = "tlg-name"; nm.textContent = "THE LAST TIMELINE";
+      const tr = document.createElement("span"); tr.className = "tlg-track";
+      for (let c = 1; c <= N; c++) { const i = document.createElement("i"); i.dataset.c = c; tr.appendChild(i); }
+      const fill = document.createElement("span"); fill.className = "tlg-fill"; tr.appendChild(fill);
+      const ct = document.createElement("b"); ct.className = "tlg-count";
+      g.append(nm, tr, ct);
+      rail.appendChild(g);
+      this.gaugeEl = g;
+    } else if (g.parentNode !== rail) rail.appendChild(g);   // the helmet mounted after us: move in
+    const n = this.menders.size;
+    const frac = this._progress != null ? this._progress : n / N;
+    g.querySelectorAll(".tlg-track i").forEach((i) => {
+      const c = +i.dataset.c, s = this.menders.get(c);
+      const cls = s ? "m" : this.loose.has(c) ? "loose" : "";
+      if (i.className !== cls) i.className = cls;
+      if (s) i.style.setProperty("--seat", this._col(s)); else i.style.removeProperty("--seat");
+      const tip = s ? `${roman(c)}: mended by ${s === this._me() ? "you" : s}`
+        : this.loose.has(c) ? `${roman(c)}: unravelled, its relic is loose on the table` : `${roman(c)}: unravelled`;
+      if (i.title !== tip) i.title = tip;
+    });
+    g.querySelector(".tlg-fill").style.transform = `scaleX(${Math.max(0, Math.min(1, frac)).toFixed(3)})`;
+    const txt = `${n} / ${N} mended`;
+    const ct = g.querySelector(".tlg-count"); if (ct.textContent !== txt) ct.textContent = txt;
+    g.title = "The last timeline: every relic returned to its own century mends one. Whoever mended the most when time settles wins.";
+  }
+
+  /* ---- THE CHART: a crack at every unravelled century, a ring of light where it is mended ---- */
+  _marks(ch) {
+    if (this.marksEl) { this.marksEl.remove(); this.marksEl = null; }
+    if (!ch || !ch.host) return;
+    const host = ch.host;
+    const box = document.createElement("div");
+    box.className = "tl-marks";
+    host.appendChild(box);
+    this.marksEl = box;
+    const br = box.getBoundingClientRect(), k = box.offsetWidth ? br.width / box.offsetWidth : 1;
+    if (!(k > 0) || !br.width) return;
+    for (let c = 1; c <= N; c++) {
+      const el = host.querySelector(`.${ch.mark}[data-c="${c}"]`); if (!el) continue;
+      const r = el.getBoundingClientRect(); if (r.width < 2) continue;
+      const s = this.menders.get(c);
+      const m = document.createElement("i");
+      m.className = "tl-mk " + (s ? "m" : this.loose.has(c) ? "w loose" : "w");
+      m.style.left = ((r.left + r.width / 2 - br.left) / k).toFixed(1) + "px";
+      m.style.top = ((r.top + r.height / 2 - br.top) / k).toFixed(1) + "px";
+      m.style.setProperty("--r", (Math.max(r.width, r.height) / k / 2 + 6).toFixed(1) + "px");
+      if (s) m.style.setProperty("--seat", this._col(s));
+      box.appendChild(m);
+    }
+  }
+  // a point on the chart, in the marks box's own coordinates (for the moments)
+  _chartPoint(c) {
+    const ch = this.comic && this.comic._chart(); if (!ch) return null;
+    if (!this.marksEl || !this.marksEl.isConnected || this.marksEl.parentNode !== ch.host) this._marks(ch);
+    const box = this.marksEl; if (!box) return null;
+    const el = ch.host.querySelector(`.${ch.mark}[data-c="${c}"]`); if (!el) return null;
+    const r = el.getBoundingClientRect(); if (r.width < 2) return null;
+    const br = box.getBoundingClientRect(), k = box.offsetWidth ? br.width / box.offsetWidth : 1;
+    return { x: (r.left + r.width / 2 - br.left) / k, y: (r.top + r.height / 2 - br.top) / k, rect: r,
+      rad: Math.max(r.width, r.height) / k / 2 + 6 };
+  }
+
+  /* ---- THE MEND: a relic lands home. Called on the landing beat (game.js onLand) or
+     by the tutorial. A second call for the same century within 8 s only re-lights it. ---- */
+  mendAt(century, opts = {}) {
+    if (!(century >= 1 && century <= N)) return;
+    const seat = opts.seat || (this.menders.get(century)) || this._me();
+    const now = performance.now();
+    const again = this._last && this._last.c === century && now - this._last.t < 8000;
+    this._last = { c: century, t: now };
+    if (!this.menders.has(century)) this.menders.set(century, seat);
+    this.loose.delete(century);
+    if (opts.progress != null && isFinite(+opts.progress)) {
+      const p = +opts.progress;
+      this._progress = p > 0 && p < 1 ? p : Math.max(0, Math.min(1, Math.round(p) / N));
+      if (this._progress <= this.menders.size / N) this._progress = null;   // the table already shows it
+    }
+    this._key = "";
+    this.sync();
+    if (document.hidden) return;
+    // the notch: fills in the mender's colour and pulses
+    const notch = this.gaugeEl && this.gaugeEl.querySelector(`.tlg-track i[data-c="${century}"]`);
+    if (notch) { notch.classList.remove("pulse"); void notch.offsetWidth; notch.classList.add("pulse");
+      setTimeout(() => notch.classList.remove("pulse"), 1800); }
+    if (this.gaugeEl) { this.gaugeEl.classList.remove("mending"); void this.gaugeEl.offsetWidth; this.gaugeEl.classList.add("mending");
+      setTimeout(() => this.gaugeEl && this.gaugeEl.classList.remove("mending"), 1800); }
+    // the drawer the relic is filed in glows (the drawers are mine)
+    if (seat === this._me()) {
+      const cell = document.querySelector(`#drawer-zone .cab2-cell[data-drawer="${periodOf(century)}"]`);
+      if (cell) { cell.classList.remove("tl-filed"); void cell.offsetWidth; cell.classList.add("tl-filed");
+        setTimeout(() => cell.classList.remove("tl-filed"), 2200); }
+    }
+    if (again) return;
+    // on the chart: the broken ring closes, light returns
+    const pt = this._chartPoint(century);
+    if (pt && this.marksEl && !this._reduced()) {
+      const b = document.createElement("i");
+      b.className = "tl-burst";
+      b.style.left = pt.x.toFixed(1) + "px"; b.style.top = pt.y.toFixed(1) + "px";
+      b.style.setProperty("--r", pt.rad.toFixed(1) + "px");
+      b.style.setProperty("--seat", this._col(seat));
+      b.innerHTML = '<i class="tlb-a"></i><i class="tlb-b"></i><i class="tlb-rays"></i>';
+      this.marksEl.appendChild(b);
+      setTimeout(() => b.remove(), 2400);
+    }
+    // the comic panel, on the beat of the delivery's sound
+    if (opts.sound) { try { window.__audio && window.__audio.play("deliver"); } catch (e) {} }
+    try {
+      this.comic && this.comic.impact("deliver", pt ? pt.rect : null,
+        { big: true, word: "KA-CHUNK!", sub: "THE TIMELINE MENDS" });
+    } catch (e) {}
+  }
+
+  /* ---- A TEAR: a paradox strikes; a jagged crack runs from the one who caused it to
+     each traveller it hurt, then heals away. ---- */
+  tear(fromC, toCs, colour) {
+    if (document.hidden || this._reduced()) return;
+    const a = this._chartPoint(fromC); if (!a || !this.marksEl) return;
+    const pts = toCs.map((c) => this._chartPoint(c)).filter(Boolean);
+    if (!pts.length) return;
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "tl-tear");
+    svg.style.setProperty("--seat", colour || "#b98cff");
+    for (const b of pts) {
+      if (Math.hypot(b.x - a.x, b.y - a.y) < 4) continue;
+      const seg = 7, d = [];
+      for (let i = 0; i <= seg; i++) {
+        const t = i / seg, jx = i && i < seg ? (Math.random() - .5) * 34 : 0, jy = i && i < seg ? (Math.random() - .5) * 34 : 0;
+        d.push((a.x + (b.x - a.x) * t + jx).toFixed(1) + "," + (a.y + (b.y - a.y) * t + jy).toFixed(1));
+      }
+      for (const cls of ["tt-ink", "tt-line"]) {
+        const pl = document.createElementNS(NS, "polyline");
+        pl.setAttribute("points", d.join(" ")); pl.setAttribute("class", cls);
+        svg.appendChild(pl);
+      }
+    }
+    this.marksEl.appendChild(svg);
+    setTimeout(() => svg.remove(), 2600);
+  }
+
+  /* ---- TIME SETTLES: the restored timeline for the end screen ---- */
+  summary() {
+    this.sync();
+    const box = document.createElement("div");
+    box.className = "tl-summary";
+    const n = this.menders.size;
+    const h = document.createElement("div"); h.className = "tls-head";
+    const t1 = document.createElement("b"); t1.textContent = "THE LAST TIMELINE";
+    const t2 = document.createElement("span"); t2.textContent = `${n} of ${N} centuries mended`;
+    h.append(t1, t2);
+    const strip = document.createElement("div"); strip.className = "tls-strip";
+    for (let c = 1; c <= N; c++) {
+      const i = document.createElement("i"); const s = this.menders.get(c);
+      if (s) { i.className = "m"; i.style.setProperty("--seat", this._col(s)); }
+      i.title = s ? `${roman(c)}: mended by ${s}` : `${roman(c)}: still unravelled`;
+      strip.appendChild(i);
+    }
+    const share = document.createElement("div"); share.className = "tls-share";
+    const by = {};
+    for (const s of this.menders.values()) by[s] = (by[s] || 0) + 1;
+    const names = (this.game && this.game.view && this.game.view.travelers || []).map((t) => t.name);
+    names.sort((a, b) => (by[b] || 0) - (by[a] || 0));
+    for (const nm of names) {
+      const row = document.createElement("div"); row.className = "tls-row";
+      const who = document.createElement("span"); who.className = "tls-who"; who.textContent = nm === this._me() ? "You" : nm;
+      who.style.setProperty("--seat", this._col(nm));
+      const bar = document.createElement("span"); bar.className = "tls-bar";
+      const fill = document.createElement("i"); fill.style.setProperty("--seat", this._col(nm));
+      fill.style.width = (n ? (100 * (by[nm] || 0) / N) : 0).toFixed(1) + "%";
+      bar.appendChild(fill);
+      const num = document.createElement("b"); num.textContent = String(by[nm] || 0);
+      row.append(who, bar, num);
+      share.appendChild(row);
+    }
+    box.append(h, strip, share);
+    return box;
+  }
+}
+
+export const mend = new Mend();

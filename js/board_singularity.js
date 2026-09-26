@@ -621,7 +621,7 @@
     const bo=C.createOscillator(); bo.type="sine"; bo.frequency.setValueAtTime(120,t+0.7); bo.frequency.exponentialRampToValueAtTime(32,t+1.5); const bg=C.createGain(); bg.gain.value=0; bo.connect(bg); bg.connect(mas); bg.gain.setValueAtTime(0,t+0.7); bg.gain.linearRampToValueAtTime(0.22,t+0.82); bg.gain.exponentialRampToValueAtTime(0.0001,t+1.55); bo.start(t+0.7); bo.stop(t+1.6);
     [1500,2000,2700].forEach((fr,i)=>{ const sq=C.createOscillator(); sq.type="sine"; sq.frequency.value=fr; const sg=C.createGain(); sg.gain.value=0; sq.connect(sg); sg.connect(mas); const st=t+0.82+i*0.05; sg.gain.setValueAtTime(0,st); sg.gain.linearRampToValueAtTime(0.03,st+0.02); sg.gain.exponentialRampToValueAtTime(0.0001,st+0.7); sq.start(st); sq.stop(st+0.75); }); }catch(e){} }
   function playFx(f,done){
-    if(f.t==="trail"){ R.shown[f.seat]=-1; renderNow(); comet(f.from,f.to,seatColor(f.seat),()=>{ R.shown[f.seat]=f.to; renderNow(); flare(f.to,seatColor(f.seat)); snd("chart_stamp"); if(f.to===0) floatText(0,"YEAR ZERO","#efe6f8"); }, seatShip(f.seat)); const A=f.from===0?SUN:POS[f.from],B=f.to===0?SUN:POS[f.to]; const dur=A&&B?Math.min(1700,600+Math.hypot(B[0]-A[0],B[1]-A[1])*2.2):900; done(dur+260); return; }
+    if(f.t==="trail"){ R.shown[f.seat]=-1; renderNow(); comet(f.from,f.to,seatColor(f.seat),()=>{ R.shown[f.seat]=f.to; (R.pend||(R.pend={}))[f.seat]={c:f.to,t:performance.now()}; renderNow(); flare(f.to,seatColor(f.seat)); snd("chart_stamp"); if(f.to===0) floatText(0,"YEAR ZERO","#efe6f8"); }, seatShip(f.seat)); const A=f.from===0?SUN:POS[f.from],B=f.to===0?SUN:POS[f.to]; const dur=A&&B?Math.min(1700,600+Math.hypot(B[0]-A[0],B[1]-A[1])*2.2):900; done(dur+260); return; }
     if(f.t==="deliver"){ R.restored.add(f.c); renderNow(); absorbToHole(f.c,periodOf(f.c)); blackholeAbsorb(); floatText(f.c,"+1 CP","#e8b24a"); done(1250); return; }
     if(f.t==="paradox"){ floatText(f.c,"PARADOX","#b3402e"); const el=liveG()&&liveG().querySelector(`.cc-world[data-c="${f.c}"]`); if(el) el.animate([{transform:el.getAttribute("transform")},{transform:el.getAttribute("transform")+" translate(-2px,1px)"},{transform:el.getAttribute("transform")+" translate(2px,-1px)"},{transform:el.getAttribute("transform")}],{duration:300}); snd("sea_monster"); done(900); return; }
     if(f.t==="wreck"){ flare(f.c,"#b3402e"); floatText(f.c,"TERMINATED","#ff6a5a"); snd("chart_creak"); done(900); return; }
@@ -631,7 +631,7 @@
       if(from!=null&&to!=null&&from!==to&&POS[from]&&POS[to]&&window.__pdxMerchantTrip&&fxG()&&__live()){ R.merchantShown=from; renderNow(); const L=liveG();
         snd("chart_creak");
         window.__pdxMerchantTrip({layer:fxG(),piece:L&&L.querySelector(".cc-hauler.pc-merch-live"),pos:c2=>POS[c2]||null,anchor:c2=>POS[c2]?haulerAt2(c2):null,m0:haulerAt2(from),cdy:1,stopDy:46,p,W,H,dark:true,
-          tpos:(p.target&&R.pcPos&&R.pcPos[p.target])||null,onLand:()=>{ R.merchantShown=to; renderNow(); snd("chart_stamp"); },onDone:()=>done(60)}); return; }
+          tpos:(p.target&&R.pcPos&&R.pcPos[p.target])||null,onLand:()=>{ R.merchantShown=to; R.mPend={c:to,t:performance.now()}; renderNow(); snd("chart_stamp"); },onDone:()=>done(60)}); return; }
       window.__pdxTripPending=false; R.merchantShown=null; renderNow(); snd("chart_creak"); done(500); return; }
     done(60);
   }
@@ -651,18 +651,6 @@
 
   /* ═══ SKIN + RENDER ═══ */
   let skinInit=false, warping=false;
-  function vaultHTML(period){ if(!app||!app.view) return "";
-    const eras=PERIOD_ERAS[period]||[], items=R.deliveries.filter(dv=>ERAS_OF(dv.century).some(e2=>eras.includes(e2)));
-    const covered=app.view.travelers.filter(t=>(t.delivered_periods||[]).includes(period));
-    const nm=dv=>{ const c=dv.card; const id=(typeof c==="string")?c:(c&&(c.display_name||c.name)); return (app.nameMap&&app.nameMap[id])||id||"a relic"; };
-    const icon=seat=>`<svg width="17" height="17" viewBox="-11 -11 22 22" style="vertical-align:-4px">${shipSVG(seatShip(seat),seatColor(seat),{})}</svg>`;
-    const tiles=items.map(dv=>`<div class="cc-tile"><div class="cc-tn">${esc(nm(dv))}</div><div class="cc-tk">relic · at ${rom(dv.century)} · Hour ${dv.hour}</div><div class="cc-tc">${icon(dv.seat)} ${esc(dv.seat)}</div></div>`).join("");
-    const cov=covered.length?`<div style="margin-top:4px">sealed by ${covered.map(t=>`${icon(t.name)} <b style="color:${seatColor(t.name)}">${esc(t.name)}</b>`).join(" · ")}</div>`:"";
-    return `<b>${esc(period).toUpperCase()} VAULT</b>, the singularity that swallows delivered relics<div class="cc-tiles">${tiles||"<i>nothing has fallen in yet</i>"}</div>${cov}`;
-  }
-  function manifestHTML(){ if(!app||!app.view) return ""; const v=app.view, dice=v.merchant_movement_dice||1;
-    const tiles=(v.market_revealed||[]).map(c2=>`<div class="cc-tile"><div class="cc-tn">${esc(c2.display_name||c2.name||"")}</div><div class="cc-tk">${esc(c2.kind_label||"")}</div><div class="cc-td">${esc(c2.description||"")}</div><div class="cc-tc">${c2.gold_cost!=null?esc(String(c2.gold_cost))+" gold":", "}</div></div>`).join("");
-    return `<b>THE HAULER'S HOLD</b>,  docked at ${rom(v.merchant_century)}<br><span style="color:#c9a45c">${dice}d3 drift \u00b7 trade when near</span><div class="cc-tiles">${tiles||"<i>the hold stands empty</i>"}</div>`; }
   function updateSkin(){
     const r=document.getElementById("timeline-rail"); if(!r) return;
     const s=selfT(); const want=window.__forceSkin?(window.__forceSkin==="sing"):((s?periodOf(s.century):"Singularity")==="Singularity"); const cur=r.classList.contains("skin-sing");
@@ -720,7 +708,7 @@
     if (__dirty) { __dirty = false; force = true; }
     const r=document.getElementById("timeline-rail"); const lg=r&&r.querySelector(".cplot-sing .cc-live"); if(!lg||!lg.isConnected) return;
     if(fxBusy&&!force){ renderPending=true; return; }
-    if(!fxBusy&&!R.sailing&&R.fx.length===0&&app&&app.view){ app.view.travelers.forEach(t=>{ if(t.is_self&&R.pendingSelf!=null){ if(t.century===R.pendingSelf) R.pendingSelf=null; else return; } R.shown[t.name]=t.century; }); R.merchantShown=app.view.merchant_century; }
+    if(!fxBusy&&!R.sailing&&R.fx.length===0&&app&&app.view){ app.view.travelers.forEach(t=>{ if(t.is_self&&R.pendingSelf!=null){ if(t.century===R.pendingSelf) R.pendingSelf=null; else return; } /* one journey, played once: a landed piece holds until the state catches up */ const pd=R.pend&&R.pend[t.name]; if(pd){ if(t.century===pd.c||performance.now()-pd.t>20000) delete R.pend[t.name]; else return; } R.shown[t.name]=t.century; }); if(R.mPend&&(app.view.merchant_century===R.mPend.c||performance.now()-R.mPend.t>20000)) R.mPend=null; if(!R.mPend) R.merchantShown=app.view.merchant_century; }
     // the live layer is rewritten only when it changed (the 300ms poll calls this forever;
     // rebuilding it each time re-rastered the chart three times a second at rest)
     const liveHTML=liveLayer(), liveSame=!force&&lg.__pdxHTML===liveHTML;
@@ -761,11 +749,21 @@
       // hit-testing, measuring and building tooltip HTML on every single mouse event. my
       // 165Hz panel fires 165 of those a second, and TWO of the three charts are always
       // off-screen. Two thirds of this work has never been seen by anybody.
-      const bh=e.target.closest(".cc-bhole"); if(bh){ tip.innerHTML=vaultHTML(bh.getAttribute("data-period")); tip.classList.add("on","wide"); const box=rail.querySelector(".cplot-sing").getBoundingClientRect(); let tx=e.clientX-box.left+14,ty=e.clientY-box.top+12; tip.style.left="0px"; tip.style.top="0px"; const tw=tip.offsetWidth,th=tip.offsetHeight; if(tx+tw>box.width-8) tx=e.clientX-box.left-tw-12; if(ty+th>box.height-8) ty=e.clientY-box.top-th-10; tip.style.left=tx+"px"; tip.style.top=ty+"px"; return; } const hl=e.target.closest(".cc-hauler"); if(hl){ tip.innerHTML=manifestHTML(); tip.classList.add("on","wide"); const box=rail.querySelector(".cplot-sing").getBoundingClientRect(); let tx=e.clientX-box.left+14,ty=e.clientY-box.top+12; tip.style.left="0px"; tip.style.top="0px"; const tw=tip.offsetWidth,th=tip.offsetHeight; if(tx+tw>box.width-8) tx=e.clientX-box.left-tw-12; if(ty+th>box.height-8) ty=e.clientY-box.top-th-10; tip.style.left=tx+"px"; tip.style.top=ty+"px"; return; } tip.classList.remove("wide"); const dt=e.target.closest("[data-seat][data-tip],[data-hlseat][data-tip],.cc-flag,.cc-secret,.cc-beacon,.cc-glow");   /* hover only on game pieces, never on scenery */ if(dt){ tip.innerHTML=esc(dt.getAttribute("data-tip")).replace(/\n/g,"<br>"); tip.classList.add("on"); const box=rail.querySelector(".cplot-sing").getBoundingClientRect(); let tx=e.clientX-box.left+14,ty=e.clientY-box.top+12; tip.style.left="0px"; tip.style.top="0px"; const tw=tip.offsetWidth,th=tip.offsetHeight; if(tx+tw>box.width-8) tx=e.clientX-box.left-tw-12; if(ty+th>box.height-8) ty=e.clientY-box.top-th-10; tip.style.left=tx+"px"; tip.style.top=ty+"px"; } else tip.classList.remove("on");
+      // ONE TOOLTIP, AND ONLY ON PURPOSE: a tip opens only after the pointer rests ~600 ms on a
+      // traveller or the secret market, closes the moment it leaves, and never while dice are
+      // placed, a voyage is chosen, a button is held or the chart is animating. (The Merchant's
+      // own readout opens the same way, app.css .pc-mhud.) Scenery never pops anything.
+      mount._tipXY=[e.clientX,e.clientY];
+      { const pc=e.target.closest("[data-seat][data-tip],.cc-secret"); const key=pc?(pc.getAttribute("data-seat")||"secret"):null;
+        const quiet=!pc||fxBusy||R.sailing||R.fx.length||mode||e.buttons||document.body.classList.contains("allocating")||document.body.classList.contains("pc-mtrip");
+        if(quiet){ clearTimeout(mount._tipT); mount._tipKey=null; tip.classList.remove("on","wide"); }
+        else if(key!==mount._tipKey){ mount._tipKey=key; tip.classList.remove("on","wide"); clearTimeout(mount._tipT);
+          mount._tipT=setTimeout(()=>{ if(mount._tipKey!==key) return; const L=liveG(); const el3=L&&(key==="secret"?L.querySelector(".cc-secret"):L.querySelector(`.cc-shipg[data-seat="${CSS.escape(key)}"]`)); if(!el3||!el3.getAttribute("data-tip")) return;
+            tip.innerHTML=esc(el3.getAttribute("data-tip")).replace(/\n/g,"<br>"); tip.classList.add("on"); const box=rail.querySelector(".cplot-sing").getBoundingClientRect(); const [mx2,my2]=mount._tipXY; let tx=mx2-box.left+14,ty=my2-box.top+12; tip.style.left="0px"; tip.style.top="0px"; const tw=tip.offsetWidth,th=tip.offsetHeight; if(tx+tw>box.width-8) tx=mx2-box.left-tw-12; if(ty+th>box.height-8) ty=my2-box.top-th-10; tip.style.left=tx+"px"; tip.style.top=ty+"px"; },600); } }
       let pv=null; if(mode&&mode.kind==="travel"){ const el=e.target.closest(".cc-hit, .cc-glow, .cc-cost, .cc-world, .cc-sun"); const c=(el&&el.dataset.c!==undefined)?+el.dataset.c:nearestStar(e); if(c!=null){ const cand=travelCandidates(); if(c!==mode.self&&cand&&cand.has(c)) pv=c; } } if(pv!==mount._pv){ mount._pv=pv; setPreview(pv); }
       const oh=!!e.target.closest(".cc-ord"); if(oh!==ordHovered){ ordHovered=oh; const oe=rail.querySelector(".cplot-sing .cc-ord"); if(oe) oe.classList.toggle("open",oh); }
     });
-    svg.addEventListener("mouseleave",()=>{ tip.classList.remove("on"); setPreview(null); mount._pv=null; ordHovered=false; const oe=rail.querySelector(".cplot-sing .cc-ord"); if(oe) oe.classList.remove("open"); });
+    svg.addEventListener("mouseleave",()=>{ clearTimeout(mount._tipT); mount._tipKey=null; tip.classList.remove("on","wide"); setPreview(null); mount._pv=null; ordHovered=false; const oe=rail.querySelector(".cplot-sing .cc-ord"); if(oe) oe.classList.remove("open"); });
     document.addEventListener("keydown", e=>{ if((e.key==="Tab"||e.code==="Tab") && document.getElementById("timeline-rail").classList.contains("skin-sing")){ e.preventDefault(); const sv=rail.querySelector(".cplot-sing .pc-star"); if(sv) sv.classList.add("show-labels"); } });
     document.addEventListener("keyup", e=>{ if(e.key==="Tab"||e.code==="Tab"){ const sv=rail.querySelector(".cplot-sing .pc-star"); if(sv) sv.classList.remove("show-labels"); } });
     updateSkin(); renderNow();

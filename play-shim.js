@@ -9,7 +9,7 @@
   // before the first paint.
   window.PARADOX_DEMO = true;
   document.documentElement.classList.add("pdx-demo");
-  const worker = new Worker("play-worker.js?202609262016", { type: "module" });
+  const worker = new Worker("play-worker.js?202609262037", { type: "module" });
   let nextId = 1;
   const httpWaiters = new Map();
   const sockets = new Map();
@@ -18,6 +18,7 @@
   const veil = document.createElement("div");
   veil.id = "play-veil";
   veil.innerHTML = '<div class="pv-box"><div class="pv-title">PARA<span>DOX</span></div>' +
+    '<div class="pv-sub">The Last Timeline</div>' +
     '<div class="pv-line">Warming up the time machine…</div><div class="pv-bar"><i></i></div></div>';
   const css = document.createElement("style");
   css.textContent =
@@ -25,6 +26,7 @@
     "background:#13100C;color:#EFE6D0;font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;transition:opacity .5s}" +
     "#play-veil .pv-title{font-size:44px;font-weight:800;letter-spacing:.04em;margin-bottom:14px}" +
     "#play-veil .pv-title span{color:#4FD6C0}" +
+    "#play-veil .pv-sub{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C9A227;margin:-8px 0 16px}" +
     "#play-veil .pv-bar{margin-top:14px;height:2px;width:260px;background:#34291F;overflow:hidden}" +
     "#play-veil .pv-bar i{display:block;height:100%;width:40%;background:#4FD6C0;animation:pv 1.2s ease-in-out infinite}" +
     "@keyframes pv{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}" +

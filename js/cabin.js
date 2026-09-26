@@ -1909,7 +1909,9 @@
   function build(){
     if (eye || !document.body) return;
     eye = document.createElement("div"); eye.id = "hela-eye";
-    eye.innerHTML = eyeSVG("he-svg") + `<div class="he-chip" role="status"></div>`;
+    // her balloon beside her, and above her the boxes she keeps up (YOUR MOVE, the
+    // chapter, a footnote): every HELA message rides the eye, none is fixed
+    eye.innerHTML = eyeSVG("he-svg") + `<div class="he-chip" role="status"></div><div class="he-caps"></div>`;
     document.body.appendChild(eye);
     window.addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
     document.addEventListener("mouseleave", () => { mx = -1; my = -1; });
@@ -1947,12 +1949,19 @@
   // HER BALLOON (comic.js speaks through .he-chip) sits on the side AWAY from the
   // cursor, so it never covers what the hand is reaching for, and flips at the screen
   // edges. It only changes side on a blink or at an edge, never mid-read.
-  let chipSide = "", chipEl = null;
+  let chipSide = "", chipEl = null, capsEl = null, avoidR = null;
+  // which side her balloon opens on: away from the cursor, inside the screen, and not
+  // over the thing she is pointing out (avoid, a rect set by comic.js)
+  function hits(bx0, by0, bx1, by1){
+    const a = avoidR; return !!a && bx0 < a.right && bx1 > a.left && by0 < a.bottom && by1 > a.top;
+  }
   function sideFor(x, y){
-    const post = (glide && glide.np) || standAt;
-    let right = post && post.side ? post.side === "r" : (post || mx < 0) ? x < innerWidth - 400 : sx === 1;
+    const W = 350, H = 80;
+    let right = mx < 0 ? x < innerWidth - 400 : sx === 1;
     if (right && x > innerWidth - 400) right = false;
     if (!right && x < 400) right = true;
+    const box = (r) => r ? [x + 34, y - 33, x + 34 + W, y - 33 + H] : [x - 34 - W, y - 33, x - 34, y - 33 + H];
+    if (hits(...box(right)) && !hits(...box(!right)) && (right ? x > 400 : x < innerWidth - 400)) right = !right;
     return (right ? "r" : "l") + (y > innerHeight - 150 ? "u" : "d");
   }
   function applySide(x, y){
@@ -1960,12 +1969,13 @@
     if (sd === chipSide) return;
     chipSide = sd;
     if (!chipEl && eye) chipEl = eye.querySelector(".he-chip");
-    if (!chipEl) return;
-    chipEl.classList.toggle("flip-x", sd[0] === "l");
-    chipEl.classList.toggle("flip-y", sd[1] === "u");
+    if (!capsEl && eye) capsEl = eye.querySelector(".he-caps");
+    for (const el2 of [chipEl, capsEl, eye && eye.querySelector(".he-dchip")]){
+      if (!el2) continue;
+      el2.classList.toggle("flip-x", sd[0] === "l");
+      el2.classList.toggle("flip-y", sd[1] === "u");
+    }
   }
-  // every frame calls this; a write only when she actually moved (an unchanged style
-  // write still restyles, and she sits still most of the time)
   function place(x, y){
     const tr = `translate(${x - 30}px, ${y - 30}px)`;
     if (eye && eye._tr !== tr){ eye._tr = tr; eye.style.transform = tr; }
@@ -2163,60 +2173,64 @@
   }
 
   // ── THE SPLIT: one copy per valid target, her gaze multiplied, a mark on each ──
+  // the things she points at get the little yellow box (the eye itself never leaves
+  // the cursor): one box per valid target
   function aimSplit(rects, tone){
     clearSplit();
-    (rects || []).slice(0, 12).forEach((r, i) => {
+    (rects || []).slice(0, 12).forEach((r) => {
       const c = document.createElement("div");
-      c.className = "he-copy " + (tone || "");
-      c.style.setProperty("--d", (i * 70) + "ms");
-      c.innerHTML = eyeSVG("he-svg");
-      c.style.left = (r.x + r.w / 2) + "px"; c.style.top = (r.y + Math.min(34, r.h * .22)) + "px";
+      c.className = "he-ring " + (tone || "");
+      c.style.left = (r.x - 4) + "px"; c.style.top = (r.y - 4) + "px";
+      c.style.width = (r.w + 8) + "px"; c.style.height = (r.h + 8) + "px";
       document.body.appendChild(c); copies.push(c);
-      requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add("on")));
     });
-    if (rects && rects.length) blink();   // she splits on a blink, of course she does
   }
   function clearSplit(){ copies.splice(0).forEach(c => { c.classList.remove("on"); setTimeout(() => c.remove(), 240); }); }
 
   // she stands where she is SENT, arriving, as always, on a blink
-  function setPost(x, y, opt){
-    const np = { x: Math.max(30, Math.min(innerWidth - 30, x)), y: Math.max(150, Math.min(innerHeight - 34, y)),
-      orbit: (opt && opt.orbit) || 0, side: (opt && opt.side) || "" };
-    if (standAt && Math.hypot(np.x - standAt.x, np.y - standAt.y) < 8){ standAt = np; return; }
-    if (opt && opt.glide && eye){
-      // guided attention: she is SEEN crossing, the motion is the pointing finger
-      const r = eye.getBoundingClientRect();
-      glide = { x0: r.left + 30, y0: r.top + 30, np, t0: performance.now(), dur: 720 };
-      return;
-    }
-    blink(() => { standAt = np; });
+  // THE OWNER'S RULE: the eye always follows the cursor and never flies to a subject
+  // on its own. setPost and clearPost stay for their callers but no longer move her;
+  // a subject is shown with the yellow box instead (aimSplit, highlight).
+  function setPost(){}
+  function clearPost(){ glide = null; standAt = null; }
+  let hiEl = null, hiT = 0;
+  function highlight(r, ms){
+    clearTimeout(hiT);
+    if (hiEl){ hiEl.remove(); hiEl = null; }
+    avoidR = null; chipSide = "";
+    if (!r || !(r.width > 2)) return;
+    hiEl = document.createElement("div"); hiEl.className = "he-ring he-ring-hi";
+    hiEl.style.left = (r.left - 5) + "px"; hiEl.style.top = (r.top - 5) + "px";
+    hiEl.style.width = (r.width + 10) + "px"; hiEl.style.height = (r.height + 10) + "px";
+    document.body.appendChild(hiEl);
+    avoidR = { left: r.left - 12, top: r.top - 12, right: r.right + 12, bottom: r.bottom + 12 };
+    hiT = setTimeout(() => highlight(null), ms || 4000);
   }
-  function clearPost(){ glide = null; if (!standAt) return; blink(() => { standAt = null; }); }
 
   // ── SHE DIRECTS: posts at the screen edge and OPENS as the directional message ──
   let dchipEl = null;
   function direct(opt){
     if (!eye) return;
-    if (!opt){ if (dchipEl){ dchipEl.classList.remove("on"); const d = dchipEl; setTimeout(() => d.remove(), 300); dchipEl = null; eye.classList.remove("he-directs"); clearPost(); } return; }
+    if (!opt){ if (dchipEl){ dchipEl.classList.remove("on"); const d = dchipEl; setTimeout(() => d.remove(), 300); dchipEl = null; eye.classList.remove("he-directs"); } return; }
     const M = 74, W2 = innerWidth, H2 = innerHeight;
     const spot = { left:  { x: M, y: H2 * .46 },  right: { x: W2 - M, y: H2 * .46 },
                    up:    { x: W2 * .5, y: 96 },  down:  { x: W2 * .5, y: H2 - 86 },
                    upleft:  { x: 120, y: 120 },   upright: { x: W2 - 130, y: 120 },
                    downleft:{ x: 120, y: H2 - 110 }, downright:{ x: W2 - 130, y: H2 - 110 } }[opt.dir] || { x: M, y: H2 * .46 };
-    setPost(spot.x, spot.y);
-    if (!dchipEl){ dchipEl = document.createElement("div"); dchipEl.className = "he-dchip"; eye.appendChild(dchipEl); }
+    if (!dchipEl){ dchipEl = document.createElement("div"); dchipEl.className = "he-dchip"; eye.appendChild(dchipEl); chipSide = ""; }
     const rot = { left: 180, right: 0, up: -90, down: 90,
       upleft: -135, upright: -45, downleft: 135, downright: 45 }[opt.dir] != null
       ? { left: 180, right: 0, up: -90, down: 90, upleft: -135, upright: -45, downleft: 135, downright: 45 }[opt.dir] : 180;
     dchipEl.innerHTML = `<svg viewBox="0 0 40 40" style="transform:rotate(${rot}deg)"><path d="M8 20 H28 M21 12 L29 20 L21 28" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
       + `<span class="he-dverb">${opt.verb || "You are needed"}</span>`
       + (opt.key ? `<kbd>${opt.key}</kbd>` : "");
-    dchipEl.classList.toggle("flip-x", spot.x > W2 - 340);
+    void spot;   // (the arrow points where the place is; she stays with the cursor)
     dchipEl.onclick = (e) => { e.stopPropagation(); if (opt.onClick) opt.onClick(); };
     requestAnimationFrame(() => requestAnimationFrame(() => { if (dchipEl) dchipEl.classList.add("on"); eye.classList.add("he-directs"); }));
   }
 
-  window.__helaEye = { say, manifest, aimSplit, clearSplit, blink, setPost, clearPost, direct,
+  window.__helaEye = { say, manifest, aimSplit, clearSplit, blink, setPost, clearPost, direct, highlight,
+    caps(){ if (!capsEl && eye) capsEl = eye.querySelector(".he-caps"); return capsEl; },
     live(){ return !!(eye && eye._live); }, posted(){ return !!(standAt || glide); }, backlog,
     pos(){ if (!eye) return { x: 64, y: 96 }; const r = eye.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 30 }; } };
   window.__helaSay = (html, opt) => say(html, opt);   // she owns her voice now
@@ -2438,27 +2452,52 @@
     const i = disp.push(item) - 1;
     turnOf(item.hour === "--" ? 0: +item.hour || 0).sats.push(i);
     // THE NEWS IS A MESSAGE, and the eye IS the message: it opens INTO the article
-    if (document.body.classList.contains("cabin-on")) newsBloom(i);
+    if (document.body.classList.contains("cabin-on")) newsBloom(i, true);
   };
   // the one reader everywhere else routes to (starred log rows, editions)
   window.__helaOpenArchive = function(){ if (disp.length) newsBloom(disp.length - 1); };
   // the eye expands into the dispatch, holds, folds back into itself; the memory
   // stays filed as a satellite in the core, same object, two moments
   const openNews = new Map();   // disp index -> window (the press never prints twice)
-  function newsBloom(i){
+  /* THE TEMPORAL HERALD stays on the table until the player clicks it away (never a
+     timer): the first one is a shock, it must be read. It opens above the table's
+     middle, clear of the machine and the dice. While the first edition of the match
+     is up (it opened by itself), the replay waits politely behind it (__heraldWait,
+     game.js) and picks up the moment it is closed; later editions stay until clicked
+     while the table plays on. The first edition comes with HELA's line about it. */
+  let heraldFirst = true, autoWin = null;
+  const heraldWaiters = [];
+  function heraldDone(){ autoWin = null; heraldWaiters.splice(0).forEach((r) => { try { r(); } catch (e) {} }); }
+  window.__heraldSkip = function(){ if (autoWin) autoWin.close(); };   // F (skip) puts it away
+  window.__heraldWait = function(){
+    if (!autoWin || document.hidden || window.__helaMute) return null;
+    return new Promise((r) => heraldWaiters.push(r));
+  };
+  function newsBloom(i, auto){
     const it = disp[i]; if (!it || !window.__helaEye) return;
-    if (openNews.has(i)) return;                     // SAME journal already on the visor
-    const E = window.__helaEye, pnt = E.pos();
+    if (openNews.has(i)) return;                     // SAME journal already on the table
+    const E = window.__helaEye;
     const node = document.createElement("div");
     node.className = "hb-newsread"; node.innerHTML = it.html || "";
+    const hint = document.createElement("div"); hint.className = "hb-newshint";
+    hint.textContent = "Click the paper to put it away";
+    node.appendChild(hint);
     const others = openNews.size;                    // a DIFFERENT journal? sit beside it
-    const win = E.manifest({
-      x: Math.max(250, Math.min(innerWidth - 260, pnt.x + others * 340)),
-      y: Math.max(210, Math.min(innerHeight - 230, pnt.y)),
-      node, cls: "he-news", hold: 9000, assume: others === 0, wire: true,
-      onClose: () => openNews.delete(i) });
+    let win = null;
+    win = E.manifest({
+      x: Math.max(280, Math.min(innerWidth - 280, innerWidth * .56 + others * 60)),
+      y: Math.max(240, Math.min(innerHeight - 250, innerHeight * .42 + others * 40)),
+      node, cls: "he-news", wire: true,
+      onClose: () => { openNews.delete(i); if (autoWin && autoWin === win) heraldDone(); } });
     openNews.set(i, win);
+    // the replay waits behind the FIRST edition of the match only (the shock of first
+    // appearance); later ones stay until clicked while the table plays on
+    if (auto && win && heraldFirst && !window.__helaMute){ if (autoWin) heraldDone(); autoWin = win; }
     if (win && win.el) win.el.addEventListener("click", () => win.close());
+    if (heraldFirst && !window.__helaMute){
+      heraldFirst = false;
+      try { window.__helaSay && window.__helaSay("The <b>Temporal Herald</b>: the C.R.O.N.O.S. prints it for the last timeline. Rob the Merchant or terminate a traveler and it reports you, and the clipping stays on your file for everyone to read. Click the paper when you have read it.", { ms: 12000 }); } catch (e) {}
+    }
   }
 
   /* ══ HER BRAIN (#hela-brain-full): the core you spin and play with ════════════════
@@ -2528,11 +2567,11 @@
       const y0 = band * inst.R * .78;
       const y3 = y0 * cp - z0 * sp, z3 = y0 * sp + z0 * cp;    // PITCH, she turns on both axes
       const depth = (z3 / inst.R + 1) / 2;                     // 0 far .. 1 near
-      const sc = .7 + .3 * depth, op = .5 + .5 * depth;
+      const sc = .82 + .18 * depth, op = .55 + .45 * depth;   // far Hours stay readable
       const tn = turnOf(h);
       placeNode(inst, "t" + h, {
         x: x3, y: y3 - z3 * .12, sc, op, z: Math.round(depth * 40),
-        col: TURN_COL, cls: "hb-turn" + (inst.pinnedHour === h ? " pinned" : ""), label: "H" + h,
+        col: TURN_COL, cls: "hb-turn" + (inst.pinnedHour === h ? " pinned" : ""), label: "HOUR " + h,
         title: `Hour ${h}: ${tn.logs.length} ${tn.logs.length === 1 ? "entry" : "entries"}${tn.sats.length ? `, ${tn.sats.length} Herald ${tn.sats.length === 1 ? "notice" : "notices"}` : ""}. Click to read.`,
         hour: h, sat: null });
       seen.add("t" + h);
@@ -2606,7 +2645,11 @@
     el2.style.color = p.col;
     if (el2.className !== "hb-node " + p.cls) el2.className = "hb-node " + p.cls;
     if (p.title && el2.title !== p.title) el2.title = p.title;
-    if (p.label && el2.textContent !== p.label) el2.textContent = p.label;
+    if (p.label){   // the Hour's name on a small plate beside the dot, always upright
+      let lb = el2.firstElementChild;
+      if (!lb){ lb = document.createElement("span"); lb.className = "hb-lbl"; el2.appendChild(lb); }
+      if (lb.textContent !== p.label) lb.textContent = p.label;
+    }
   }
 
   // ONE law for everything the core opens: the NEXT click anywhere closes it

@@ -111,10 +111,11 @@ body.tut #vz-phases .vz-sep.tut-nophase { display: none !important; }
    only through this balloon: her eye's own small balloon and direction chip wait. */
 #tut-callout { font-size: clamp(14.5px, 1.02vw, 17px); max-width: min(440px, 34vw); }
 #tut-callout.pending { opacity: 0 !important; }
-#tut-callout::before { content: ""; position: absolute; top: 20px; width: 16px; height: 16px;
-  background: #1f1022; border: 1px solid #7a4a70; transform: rotate(45deg); }
-#tut-callout[data-eye="left"]::before { left: -9px; border-top: 0; border-right: 0; }
-#tut-callout[data-eye="right"]::before { right: -9px; border-bottom: 0; border-left: 0; }
+#tut-callout::before { content: ""; position: absolute; top: 20px; width: 16px; height: 16px; z-index: -1;
+  background: inherit; border: inherit; transform: rotate(45deg); }
+#tut-callout:not([data-eye])::before, #tut-callout[data-eye=""]::before { display: none; }
+#tut-callout[data-eye="left"]::before { left: -10px; border-top: 0; border-right: 0; }
+#tut-callout[data-eye="right"]::before { right: -10px; border-bottom: 0; border-left: 0; }
 #tut-callout .tc-hint { color: #d58ab7; font: 600 11.5px "JetBrains Mono", monospace; letter-spacing: .06em;
   animation: tutHint 1.4s ease-in-out infinite; }
 @keyframes tutHint { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
@@ -161,3 +162,14 @@ body.tut-map-grow #chart-roll { transition: top 1.2s ease !important; }
 #machine-body .cell.tut-cause { position: relative; z-index: 6; animation: tutCause .9s ease-in-out infinite; }
 #machine-body .cell.tut-cause .die { box-shadow: 0 0 12px 4px var(--self-col, #ffd98a) !important; }
 @keyframes tutCause { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+
+/* ---- the learning bar stands in the phase track's place while the story runs; at
+   the end the recap hands the place back and the phase track returns ---- */
+body.tut-story:not(.tut-phases) #vz-phases,
+body.tut-story:not(.tut-phases) #phase-track { visibility: hidden !important; }
+body.tut-story #tut-track { top: 12px; }
+body.tut-phases #vz-phases { animation: tutBorn 1.2s ease-out; }
+
+/* a rival's die blinks on their case file while it pays them, in their colour */
+#players-zone .bd-alloc b.tut-cause { animation: tutRivalCause .5s ease-in-out infinite alternate; position: relative; z-index: 2; }
+@keyframes tutRivalCause { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.35); filter: brightness(1.8); } }

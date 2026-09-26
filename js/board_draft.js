@@ -1869,6 +1869,7 @@
           }
           setTimeout(() => {   // landfall: the boat drops anchor, splash, stamp
             R.shown[f.seat] = f.to;
+            (R.pend || (R.pend = {}))[f.seat] = { c: f.to, t: performance.now() };
             renderNow();
             if (POS[f.to]) { ripple(POS[f.to][0], POS[f.to][1], seatColor(f.seat)); popIsle(f.to); snd("chart_splash"); }
             const fixg = [...liveG.querySelectorAll(`.sea-fixg[data-seat="${f.seat}"] .sea-fix-boat`)].pop();
@@ -1998,7 +1999,7 @@
             window.__pdxMerchantTrip({ layer: fxG || liveG, piece, pos: c2 => POS[c2] || null,
               m0: [POS[from][0], POS[from][1] - 47], cdy: 13, stopDy: 58, p, W, H, dark: false,
               tpos: (p.target && R.pcPos && R.pcPos[p.target]) || null,
-              onLand: () => { R.merchantShown = to; R.prevShip = to; renderNow(); snd("chart_bell"); },
+              onLand: () => { R.merchantShown = to; R.prevShip = to; R.mPend = { c: to, t: performance.now() }; renderNow(); snd("chart_bell"); },
               onDone: () => done(60) });
             return;
           }
@@ -2083,9 +2084,15 @@
           if (t.century === R.pendingSelf) R.pendingSelf = null;   // server confirmed
           else return;                                     // hold the boat at destination
         }
+        // ONE JOURNEY, PLAYED ONCE: a piece that just landed holds its new berth until the
+        // state catches up (the event plays before the state arrives; syncing to the stale
+        // century sent it back, and the state then jumped it forward again)
+        const pd = R.pend && R.pend[t.name];
+        if (pd) { if (t.century === pd.c || performance.now() - pd.t > 20000) delete R.pend[t.name]; else return; }
         R.shown[t.name] = t.century;
       });
-    if (!fxBusy && R.fx.length === 0 && app && app.view) R.merchantShown = app.view.merchant_century;
+    if (R.mPend && app && app.view && (app.view.merchant_century === R.mPend.c || performance.now() - R.mPend.t > 20000)) R.mPend = null;
+    if (!fxBusy && R.fx.length === 0 && app && app.view && !R.mPend) R.merchantShown = app.view.merchant_century;
     // THE LIVE LAYER IS REWRITTEN ONLY WHEN IT CHANGED. The 300ms poll below calls this
     // forever, and it used to rebuild the whole layer every time: a style, layout, paint
     // and tile raster of the chart three times a second on a table where nothing moved.
@@ -2218,97 +2225,42 @@
     const tipEl = document.createElement("div");
     tipEl.className = "sea-tip";
     rail.querySelector(".cplot").appendChild(tipEl);
-    function islandTip(c) {
-      if (!app || !app.view || !POS[c]) return "";
-      const v = app.view;
-      const L = [`<b>CENTURY ${rom(c)}</b>, ${ERAS_OF(c).map(e => ERA_NAME[e]).join(" + ")}`];
-      for (const t of v.travelers) if (t.century === c)
-        L.push(`<svg width="15" height="13" viewBox="-9 -14 18 20" style="vertical-align:-2px">${rigSVG(seatRig(t.name), seatColor(t.name), {})}</svg> ${esc(t.name)}${t.is_self ? " (you)" : ""} · ${t.energy} energy · ${t.gold} gold`);
-      if (v.merchant_century === c) L.push("the Merchant is anchored here");
-      if (R.restored.has(c)) L.push("restored, a delivery landed");
-      for (const t of v.travelers)
-        for (const card of ((t.is_self ? t.hand : t.equipment) || []))
-          if (card.delivery_century === c)
-            L.push(`${t.is_self ? "your" : esc(t.name) + "'s"} delivery: ${esc(card.display_name || card.name)}`);
-      if (c <= 9) L.push("<i>red waters, upstream costs 2 energy per league</i>");
-      if (mode && mode.kind === "travel" && c !== mode.self) {
-        const d = Math.abs(c - mode.self);
-        const ok = d > 0 && d <= mode.max && (mode.locked == null || Math.sign(c - mode.self) === mode.locked);
-        if (ok) L.push(c > mode.self ? "<b>with the current, free · click to sail</b>"
-          : `<b>upstream, ${stepCost(mode.self, d)} energy · click to sail</b>`);
-      }
-      return L.join("<br>");
-    }
-    function tipFor(e) {
-      const pg2 = e.target.closest(".sea-postg");
-      if (pg2 && app && app.view) {
-        const pname = pg2.getAttribute("data-period");
-        const eras2 = PERIOD_ERAS[pname] || [];
-        const items = R.deliveries.filter(dv => ERAS_OF(dv.century).some(e2 => eras2.includes(e2)));
-        const covered = app.view.travelers.filter(t => (t.delivered_periods || []).includes(pname));
-        const icon = seat => `<svg width="17" height="17" viewBox="-11 -11 22 22" style="vertical-align:-4px"><g transform="scale(.8)">${rigSVG(seatRig(seat), seatColor(seat), {})}</g></svg>`;
-        const nm = dv => { const c = dv.card; const id = (typeof c === "string") ? c : (c && (c.display_name || c.name)); return (app.nameMap && app.nameMap[id]) || id || "a relic"; };
-        const tiles = items.map(dv => `<div class="tip-card"><div class="tc-name">${esc(nm(dv))}</div><div class="tc-kind">relic · at ${rom(dv.century)} · Hour ${dv.hour}</div><div class="tc-cost">${icon(dv.seat)} ${esc(dv.seat)}</div></div>`).join("");
-        const cov = covered.length ? `<div style="margin-top:4px">covered by ${covered.map(t => `${icon(t.name)} <b style="color:${seatColor(t.name)}">${esc(t.name)}</b>`).join(" · ")}</div>` : "";
-        return `<b>${esc(pname).toUpperCase()} REGISTRY</b>, a delivery in these waters scores this period`
-          + `<div class="tip-cards">${tiles || "<i>no relic landed here yet</i>"}</div>${cov}`;
-      }
-      const ship = e.target.closest(".sea-shipg");
-      if (ship && app && app.view) {
-        const v = app.view, dice = v.merchant_movement_dice || 1;
-        const tiles = (v.market_revealed || []).map(c2 => `
-          <div class="tip-card">
-            <div class="tc-name">${esc(c2.display_name || c2.name)}</div>
-            <div class="tc-kind">${esc(c2.kind_label || "")}</div>
-            <div class="tc-desc">${esc(c2.description || "")}</div>
-            <div class="tc-cost">${c2.gold_cost != null ? esc(String(c2.gold_cost)) + " gold": "--"}</div>
-          </div>`).join("");
-        return `<b>THE MERCHANT'S BARGE</b>, anchored at ${rom(v.merchant_century)}<br>`
-          + `${dice} sail${dice > 1 ? "s" : ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? ` · hunting ${esc(R.merchantLast.target)}` : ""}`
-          + `<div class="tm-head">CARGO MANIFEST: GOODS FOR TRADE</div>`
-          + `<div class="tip-cards">${tiles || "<i>the hold stands empty</i>"}</div>`;
-      }
-      const hit = e.target.closest(".sea-hit, .sea-glow, .sea-cost");
-      if (hit) {
-        const c = hit.dataset && hit.dataset.c !== undefined ? +hit.dataset.c : nearestIsland(e);
-        if (c === 0) return "<b>THE WELLSPRING: Year Zero</b><br>reaching it ends the game (+2 CP), but the most CP wins, not the arrival";
-        if (c) return islandTip(c);
-      }
-      const isle = e.target.closest(".sea-isle");
-      if (isle) return islandTip(+isle.dataset.c);
-      const lg = e.target.closest(".sea-light");
-      if (lg) {
-        const c = +lg.dataset.c;
-        const names = (app && app.view ? app.view.travelers : [])
-          .filter(t => c === 10 ? t.scored_century_x : t.scored_century_xx).map(t => t.name);
-        return `<b>the ${rom(c)} light, milestone of ${rom(c)}</b><br>` +
-          (names.length ? `claimed by ${names.map(esc).join(", ")}` : "no traveler has claimed it yet");
-      }
-      // HOVER ONLY ON GAME PIECES: a traveller, the order row, a delivery flag, the secret
-      // haven, Year Zero, a century you can sail to. Scenery (sharks, signs, storms, wakes,
-      // scars, wrecks, the shared-anchorage ring, cartouches) never pops anything.
-      const dt = e.target.closest("[data-seat][data-tip], [data-hlseat][data-tip], .sea-flag, .sea-cove, .sea-well, .sea-glow");
-      if (dt && dt.dataset.tip) return esc(dt.dataset.tip);
-      return "";
-    }
+    // (the old hover cards on islands, posts, lights and scenery are gone: the only map
+    //  tips now are the deliberate ones on travellers and the haven, see mousemove below)
     const world2 = rail.querySelector(".pc-world");
     world2.addEventListener("mousemove", e => {
       if (!__live()) return;   // ...and the Sea, when it is not the chart on screen
-      const html = tipFor(e);
-      if (html) {
-        tipEl.innerHTML = html;
-        tipEl.classList.toggle("tip-wide", html.indexOf("tip-cards") !== -1);
-        tipEl.classList.add("on");
-        const box = rail.querySelector(".cplot").getBoundingClientRect();
-        const fit = window.__pdxFit || 1;   // .cplot is inside the fit-scaled plane; offsetW/H are plane px
-        const localW = box.width / fit, localH = box.height / fit;
-        let tx = (e.clientX - box.left) / fit + 14, ty = (e.clientY - box.top) / fit + 12;
-        tipEl.style.left = "0px"; tipEl.style.top = "0px";   // measure at natural size
-        const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
-        if (tx + tw > localW - 8) tx = (e.clientX - box.left) / fit - tw - 12;
-        if (ty + th > localH - 8) ty = (e.clientY - box.top) / fit - th - 10;
-        tipEl.style.left = tx + "px"; tipEl.style.top = ty + "px";
-      } else tipEl.classList.remove("on");
+      // ONE TOOLTIP, AND ONLY ON PURPOSE: a tip opens only after the pointer rests ~600 ms
+      // on a traveller or the secret haven, closes the moment it leaves, and never while
+      // dice are placed, a voyage is chosen, a button is held or the chart is animating.
+      // (The Merchant's own readout opens the same way, app.css .pc-mhud.)
+      mount._tipXY = [e.clientX, e.clientY];
+      const pc = e.target.closest("[data-seat][data-tip], .sea-cove");
+      const key = pc ? (pc.dataset.seat || "cove") : null;
+      const quiet = !pc || fxBusy || R.sailing || R.fx.length || mode || e.buttons
+        || document.body.classList.contains("allocating") || document.body.classList.contains("pc-mtrip");
+      if (quiet) { clearTimeout(mount._tipT); mount._tipKey = null; tipEl.classList.remove("on"); }
+      else if (key !== mount._tipKey) {
+        mount._tipKey = key; tipEl.classList.remove("on"); clearTimeout(mount._tipT);
+        mount._tipT = setTimeout(() => {
+          if (mount._tipKey !== key) return;
+          const el3 = key === "cove" ? liveG && liveG.querySelector(".sea-cove") : liveG && liveG.querySelector(`.sea-fixg[data-seat="${CSS.escape(key)}"]`);
+          if (!el3 || !el3.dataset.tip) return;
+          tipEl.innerHTML = esc(el3.dataset.tip);
+          tipEl.classList.remove("tip-wide");
+          tipEl.classList.add("on");
+          const [mx2, my2] = mount._tipXY;
+          const box = rail.querySelector(".cplot").getBoundingClientRect();
+          const fit = window.__pdxFit || 1;   // .cplot is inside the fit-scaled plane; offsetW/H are plane px
+          const localW = box.width / fit, localH = box.height / fit;
+          let tx = (mx2 - box.left) / fit + 14, ty = (my2 - box.top) / fit + 12;
+          tipEl.style.left = "0px"; tipEl.style.top = "0px";   // measure at natural size
+          const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+          if (tx + tw > localW - 8) tx = (mx2 - box.left) / fit - tw - 12;
+          if (ty + th > localH - 8) ty = (my2 - box.top) / fit - th - 10;
+          tipEl.style.left = tx + "px"; tipEl.style.top = ty + "px";
+        }, 600);
+      }
       // hovering a reachable island PREVIEWS the course before you commit
       let pv = null;
       if (mode && mode.kind === "travel") {
@@ -2334,8 +2286,8 @@
         if (ordEl) ordEl.classList.toggle("open", oh);
       }
     });
-    world2.addEventListener("mouseleave", () => { tipEl.classList.remove("on"); setPreview(null); ordHovered = false; const oe = document.querySelector(".sea-ord"); if (oe) oe.classList.remove("open"); });
-    world2.addEventListener("mousedown", () => tipEl.classList.remove("on"));
+    world2.addEventListener("mouseleave", () => { clearTimeout(mount._tipT); mount._tipKey = null; tipEl.classList.remove("on"); setPreview(null); ordHovered = false; const oe = document.querySelector(".sea-ord"); if (oe) oe.classList.remove("open"); });
+    world2.addEventListener("mousedown", () => { clearTimeout(mount._tipT); mount._tipKey = null; tipEl.classList.remove("on"); });
     renderLive();
     return true;
   }
@@ -2424,7 +2376,6 @@
     .mode-pick .sea-isle.can-go { opacity: 1; cursor: pointer; }
     .mode-pick .sea-isle.can-go:hover { transform: scale(1.07); }
     .mode-pick .sea-hit { cursor: pointer; }
-    .sea-isle:hover path { filter: brightness(1.07); }
     .sea-cmd { position: absolute; left: 50%; top: 6px; transform: translateX(-50%) scale(.9);
       background: rgba(26,20,12,.92); border: 1px solid #8a6a3a; border-radius: 4px;
       color: #e8dcc0; font: 600 11px/1.5 Georgia, serif; letter-spacing: .5px;

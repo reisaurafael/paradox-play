@@ -26,7 +26,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609262016";
+import { roman } from "./util.js?202609262037";
+import { mend } from "./mend.js?202609262037";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, fast: 1 };     // Fast never shortens a reading time
@@ -37,7 +38,7 @@ const readMs = (n) => Math.max(4000, 75 * n);
 const MOVE = {
   allocate: ["Place your dice on the machine", "then Confirm", "Enter"],
   market: ["The Merchant is open", "buy, renew or pass", "P = pass"],
-  deliver: ["Deliver a relic", "carry it to its century's drawer", ""],
+  deliver: ["Return a relic to its century", "carry it to its drawer, and the timeline mends", ""],
   reward_category: ["Claim your reward", "pick one contract", ""],
   activation: ["Fire an item", "or pass", "P = pass"],
   travel: ["Plot your voyage", "click a port on the chart", ""],
@@ -54,8 +55,8 @@ const MOVE = {
 // what each phase is, in plain words: the chapter caption and the phase line
 const PHASE = {
   leilao: ["AUCTION", "Bid for the lots on the floor."],
-  delivery: ["DELIVERY", "A traveler standing on a relic's own century may deliver it."],
-  market: ["MARKET", "Travelers at the Merchant's port may buy, renew or declare."],
+  delivery: ["DELIVERY", "A traveler standing on a relic's own century may return it there, and the timeline mends."],
+  market: ["MARKET", "Travelers at the Merchant's port may buy his relics, renew his stock or declare."],
   main: ["GENERATORS", "Everyone places four dice on their machine, in secret, at the same time."],
   activation: ["ACTIVATION", "Items with an active power may fire, once each."],
 };
@@ -103,8 +104,15 @@ class Comic {
     this.root = r;
     document.body.classList.add("cx-on");
     try { window.__comic = this; } catch (e) {}   // for the tutorial and for testing
+    mend.init(game, this);                          // the last timeline: gauge, marks, mends
     window.addEventListener("keydown", (e) => this._key(e));
     document.addEventListener("contextmenu", (e) => this._quickPlace(e));
+    // the camera turning to another desk hides or restores the move preview
+    try {
+      const cam = document.getElementById("cam");
+      if (cam) new MutationObserver(() => { if (this.prevEl || (this.game && this.game.alloc)) this.preview(); })
+        .observe(cam, { attributes: true, attributeFilter: ["data-scene"] });
+    } catch (e) {}
     const chk = document.getElementById("chk-cx-notes");
     if (chk) {
       chk.checked = this._notesOn();
@@ -159,9 +167,22 @@ class Comic {
   /* ---- NARRATOR BOXES: a slot swaps its content in place (a slow fade, never a
      jump) and the line on show keeps its reading time: a newer line waits in line
      (three at most) and follows. sticky keeps a line until it is hidden. ---- */
+  // every HELA message rides the eye: her boxes live in the eye's caps (above her,
+  // opening away from the cursor); only on a table without her eye do they sit in
+  // the corner. The order keeps YOUR MOVE nearest to her.
+  _home() {
+    const E = this._eye(), caps = E && E.caps && E.caps();
+    const host = caps || this.root;
+    if (!host) return;
+    for (const k of ["chapter", "note", "event", "turn"]) {
+      const s = this.slots[k];
+      if (s && s.parentNode !== host) host.appendChild(s);
+    }
+  }
   caption(slot, parts, opts = {}) {
     const s = this.slots[slot];
     if (!s || this._hidden() || (this._muted() && !opts.force)) return;
+    this._home();
     const skip = this.game && this.game._skip;
     if (!skip && !opts.sticky && !opts.now && (this._until[slot] || 0) > performance.now() && s.classList.contains("on")) {
       const q = this._q[slot] = this._q[slot] || [];
@@ -172,6 +193,7 @@ class Comic {
     }
     clearTimeout(this._t[slot]); clearTimeout(this._t[slot + "x"]);
     const fill = () => {
+      clearTimeout(this._t[slot + "o"]);
       s.textContent = "";
       s.className = "cx-cap cx-slot-" + slot + (opts.tone ? " cx-" + opts.tone : "") + (opts.big ? " cx-big" : "");
       if (opts.tag) {
@@ -185,8 +207,8 @@ class Comic {
       s.appendChild(body);
       s.classList.add("on");
     };
-    if (s.classList.contains("on")) { s.classList.remove("on"); this._t[slot + "x"] = setTimeout(fill, 380); }
-    else fill();
+    if (s.classList.contains("on") && !s.classList.contains("cx-out")) { s.classList.add("cx-out"); this._t[slot + "x"] = setTimeout(() => { s.classList.remove("cx-out"); fill(); }, 380); }
+    else { s.classList.remove("cx-out"); fill(); }
     const ms = Math.max(opts.ms || 0, readMs(this._len(parts) + (opts.tag ? opts.tag.length : 0))) * this._slow() + 380;
     this._until[slot] = opts.sticky ? 0 : performance.now() + ms;
     if (!opts.sticky) this._t[slot] = setTimeout(() => { if (!this._nextCaption(slot)) this.hide(slot); }, ms);
@@ -203,23 +225,27 @@ class Comic {
     const s = this.slots[slot];
     clearTimeout(this._t[slot]); clearTimeout(this._t[slot + "x"]);
     this._until[slot] = 0;
-    if (s) s.classList.remove("on");
+    if (!s || !s.classList.contains("on")) return;
+    // it fades first (nothing vanishes at once), then gives its room back
+    s.classList.add("cx-out");
+    clearTimeout(this._t[slot + "o"]);
+    this._t[slot + "o"] = setTimeout(() => s.classList.remove("on", "cx-out"), 520);
   }
 
   /* ---- HELA SPEAKS FROM HER EYE ------------------------------------------------
      Her line is a balloon on the eye (cabin.js .he-chip): her colour, her eye as
      the speaker mark, the tail on the eye, on the side away from the cursor. It
-     joins her one-line-at-a-time queue. opts: tone, prio (0 droppable, 1 normal,
-     2 major), at (a rect, or a function giving one, where she flies when the line
-     appears), impact ([kind, rect or rect function, options], landed with the
-     line), onShow (called with the line's time on screen). */
+     joins her one-line-at-a-time queue. The eye always follows the cursor; the
+     subject of a line gets the little yellow box while she speaks, and her balloon
+     opens clear of it. opts: tone, prio (0 droppable, 1 normal, 2 major), at (the
+     subject: a rect or a function giving one), impact ([kind, rect or rect
+     function, options], landed on the event's beat), onShow. */
   say(parts, opts = {}) {
     if (this._quiet()) return;
-    // the impact lands NOW, on the event's own beat (its sound plays now too); only
-    // her eye waits for her line to come up before crossing to the thing
+    // the impact lands NOW, on the event's own beat (its sound plays now too)
     if (opts.impact) { const [k, rf, o] = opts.impact; this.impact(k, typeof rf === "function" ? rf() : rf, o || {}); }
     const run = (ms) => {
-      if (opts.at) this._goTo(typeof opts.at === "function" ? opts.at() : opts.at, ms);
+      if (opts.at) this._highlight(typeof opts.at === "function" ? opts.at() : opts.at, ms);
       if (opts.onShow) { try { opts.onShow(ms); } catch (e) {} }
     };
     const E = this._eye();
@@ -233,32 +259,14 @@ class Comic {
       onShow: (ms) => run(ms) });
   }
 
-  // she crosses to what she talks about, but never while a decision of mine is open
-  // (HELA's guide owns her then) and never while skipping
-  _goTo(at, ms) {
-    const E = window.__helaEye, g = this.game;
-    if (!at || !E || !E.setPost || this._reduced() || (g && (g.pendingReq || g._skip))) return;
-    const b = document.body.classList;
-    if (b.contains("hg-hunt") || b.contains("hg-bless") || document.querySelector("#hela-eye .he-dchip.on")) return;
-    // stand just above the thing; no room above (near the top edge, where the helmet
-    // readouts live) and she stands beside it, her balloon opening away from it
-    let x = at.width != null ? at.left + at.width / 2 : at.x;
-    let y = (at.width != null ? at.top : at.y) - 40;
-    let side = "";
-    if (y < 110) {
-      if (at.width != null) {
-        y = at.top + at.height / 2;
-        if (at.left > 440) { x = at.left - 34; side = "l"; } else { x = at.right + 34; side = "r"; }
-      } else y = at.y + 60;
-    }
-    if (!(x >= 0 && y > -200)) return;
-    E.setPost(x, y, { glide: true, side });
-    this._posted = true;
-    clearTimeout(this._postT);
-    this._postT = setTimeout(() => {
-      if (this._posted && !(this.game && this.game.pendingReq) && !document.querySelector("#hela-eye .he-dchip.on")) E.clearPost();
-      this._posted = false;
-    }, ms + 300);
+  // the subject of her line: the little yellow box, for as long as she speaks (a point
+  // becomes a small box around it). Never while skipping or during the tutorial,
+  // whose own rings do this.
+  _highlight(at, ms) {
+    const E = window.__helaEye;
+    if (!at || !E || !E.highlight || this._quiet()) return;
+    const r = at.width != null ? at : { left: at.x - 28, top: at.y - 28, right: at.x + 28, bottom: at.y + 28, width: 56, height: 56 };
+    E.highlight(r, ms);
   }
 
   /* ---- anchors: where things are on screen right now (null when off screen) ---- */
@@ -279,7 +287,11 @@ class Comic {
     const sel = `.pcard[data-seat="${CSS.escape(String(seat))}"]`;
     return this._onScreen(document.querySelector(sel + " .badge") || document.querySelector(sel));
   }
-  _at(seat) { return this._seatRect(seat); }
+  // the subject box for a seat: my lifethread, or a rival's case file
+  _at(seat) {
+    if (seat === this._me()) return this._onScreen(document.getElementById("vz-holo"));
+    return this._seatRect(seat);
+  }
   // the chart skin on show: the sea (.cplot), the stars (.cplot-sing) or the origins
   // (.cplot-ori). The others stay laid out but invisible, so ask the live one only.
   _chart() {
@@ -330,8 +342,9 @@ class Comic {
     let x = innerWidth / 2, y = innerHeight * 0.42;
     if (at && at.width != null) { x = at.left + at.width / 2; y = at.top + at.height / 2; }
     else if (at && at.x != null) { x = at.x; y = at.y; }
-    x = Math.max(140, Math.min(innerWidth - 140, x));
-    y = Math.max(110, Math.min(innerHeight - 110, y));
+    const mx = opts.big ? 240 : 150, my = opts.big ? 140 : 110;   // the whole word stays on screen
+    x = Math.max(mx, Math.min(innerWidth - mx, x));
+    y = Math.max(my, Math.min(innerHeight - my, y));
     if (this.hitEl) { this.hitEl.remove(); this.hitEl = null; }
     const big = !!opts.big;
     const h = document.createElement("div");
@@ -491,6 +504,7 @@ class Comic {
     }
     this._em = next;
     this.phaseLine();
+    try { mend.sync(); } catch (e) {}
   }
 
   /* ---- THE PHASE LINE: under the phase track, in plain words, what the current
@@ -506,7 +520,7 @@ class Comic {
       el.id = "cx-phaseline";
       rail.appendChild(el);
       this.phaseEl = el;
-    }
+    } else if (el.parentNode !== rail) rail.appendChild(el);   // the helmet mounted after us: move in
     const ph = g.currentPhase, P = PHASE[ph];
     const hide = this._muted() || !P;
     el.classList.toggle("on", !hide);
@@ -525,12 +539,17 @@ class Comic {
       none = "nobody holds an item that can fire";
     }
     const parts = [{ b: P[0] + ": " }, P[1]];
-    if (ph === "market" && v.merchant_century != null) parts[1] = `Travelers at the Merchant's port (${roman(v.merchant_century)}) may buy, renew or declare.`;
+    if (ph === "market" && v.merchant_century != null) parts[1] = `Travelers at the Merchant's port (${roman(v.merchant_century)}) may buy his relics, renew his stock or declare.`;
     if (who) {
       parts.push("  Can act: ");
       if (who.length) who.forEach((t, i) => parts.push(i ? ", " : "", { name: t.name }));
       else parts.push(none + ".");
     }
+    this._phaseParts = parts;
+    // the words also sit on the phase track itself, on hover (plain text)
+    const txt = parts.map((q) => typeof q === "string" ? q : (q.name != null ? (q.name === this._me() ? "You" : q.name) : (q.b ?? ""))).join("");
+    const on = document.querySelector("#hull .vz-ph.on, #phase-track .phase-chip.active");
+    if (on && on.title !== txt) on.title = txt;
     const key = JSON.stringify(parts);
     if (el._k === key) return;
     el._k = key;
@@ -569,7 +588,7 @@ class Comic {
     else if (kind === "overloaded" && p.seat === me)
       this.note("overload", "Three dice in one function overload it: that function is shut for the next Hour.");
     else if (kind === "card_bought" && p.seat === me && !p.stolen)
-      this.note("deliver", "Deliver a card while you stand on its own century, in the Delivery phase, for a contract point.");
+      this.note("deliver", "A relic torn from its century unravels the last timeline. Return it while you stand on that century, in the Delivery phase: the timeline mends and you earn a contract point.");
     else if (kind === "heated" && p.seat === me && (p.booms || 0) >= 9)
       this.note("heat", "At 12 heat the motor explodes: -2 energy and no actions for the rest of that Hour.");
     else if (kind === "respawned" && p.seat === me)
@@ -586,6 +605,9 @@ class Comic {
   preview() {
     const g = this.game;
     if (!this.root || !g || !g.alloc || g.awaitingReveal || !g.view) return this.clearPreview();
+    // only while the machine is in view (the main desk); elsewhere it would cover the scene
+    if (g.camera && g.camera.scene && g.camera.scene !== "main") { if (this.prevEl) this.prevEl.style.display = "none"; return; }
+    if (this.prevEl) this.prevEl.style.display = "";
     const me = g._self(); if (!me) return this.clearPreview();
     const m = g.alloc.matrix, rows = [];
     const others = (g.view.travelers || []).filter((t) => t.name !== me.name && !(t.statuses || []).includes("awaiting_respawn"));
@@ -739,8 +761,11 @@ class Comic {
         if (p.invalid_allocation) return;
         const ph = PHASE[p.phase]; if (!ph) return;
         const hour = this.game && this.game.view ? this.game.view.hour : "";
-        // the chapter title only; what the phase is for and who acts is the phase line
-        this.caption("chapter", [{ b: ph[0] + (p.solo ? " (SOLO)" : "") }, " begins."], { tag: "HOUR " + hour, now: true });
+        // HELA says what the phase is for and who may act, from her eye (no fixed line)
+        this.phaseLine();
+        const pp = (this._phaseParts || [{ b: ph[0] + ": " }, ph[1]]).slice();
+        if (p.solo) pp[0] = { b: ph[0] + " (SOLO): " };
+        this.caption("chapter", pp, { tag: "HOUR " + hour, now: true });
         return;
       }
       case "phase_skipped": {
@@ -756,8 +781,17 @@ class Comic {
       case "paradox_resolved": {
         const hits = (p.hits || []).filter((h) => h.damage);
         if (!hits.length) return;
-        const parts = [{ b: "PARADOX! " }];
+        const parts = [{ b: "A paradox tears at the timeline. " }];
         hits.forEach((h, i) => { parts.push(i ? ", " : "", N(h.seat)); });
+        try {
+          const tv = (s2) => ((this.game.view && this.game.view.travelers) || []).find((t) => t.name === s2);
+          const causers = (this.game._paradoxCausers && this.game._paradoxCausers(p.module)) || [];
+          for (const c of causers.slice(0, 3)) {
+            const ct = tv(c); if (!ct) continue;
+            const tgt = hits.filter((h) => h.seat !== c).map((h) => tv(h.seat)).filter(Boolean).map((t) => t.century);
+            if (tgt.length) mend.tear(ct.century, tgt, this._col(c));
+          }
+        } catch (e) {}
         const d = hits[0].damage, same = hits.every((h) => h.damage === d);
         parts.push(hits.length === 1 && hits[0].seat !== me ? (same ? ` loses ${d} energy.` : " loses energy.") : (same ? ` lose ${d} energy.` : " lose energy."));
         const mine = hits.find((h) => h.seat === me), rival = hits.find((h) => h.seat !== me) || hits[0];
@@ -767,20 +801,22 @@ class Comic {
         return;
       }
       case "exploded":
-        this.say(p.seat === me ? [{ b: "BOOM! " }, "Your motor hit 12 heat: -2 energy, and you sit out the rest of this Hour."]
-          : [{ b: "BOOM! " }, N(p.seat), "'s motor hit 12 heat: -2 energy, out for the rest of this Hour."],
+        this.say(p.seat === me ? [{ b: "BOOM! " }, "Your machine fails to hold the years: 12 heat. -2 energy, and you sit out the rest of this Hour."]
+          : [{ b: "BOOM! " }, N(p.seat), "'s machine fails to hold the years: 12 heat. -2 energy, out for the rest of this Hour."],
           { tone: "danger", prio: 2, at: () => this._at(p.seat), impact: ["boom", () => this._seatRect(p.seat), { big: true }] });
         return;
       case "terminated":
-        this.say([N(p.seat), v(p.seat, " is", " are") + " TERMINATED", p.by ? " by " : "", p.by ? N(p.by) : "", v(p.seat, ". Their gear is recycled; they restart at XXX.", ". Your gear is recycled; you restart at XXX.")],
+        this.say([N(p.seat), v(p.seat, " is", " are") + " TERMINATED", p.by ? " by " : "", p.by ? N(p.by) : "",
+          v(p.seat, ". The C.R.O.N.O.S. pulls them back to the far future, XXX. Their gear is recycled.", ". The C.R.O.N.O.S. pulls you back to the far future, XXX. Your gear is recycled.")],
           { tone: "danger", prio: 2, at: () => this._at(p.seat), impact: ["terminated", () => this._seatRect(p.seat), { big: true, sub: "TERMINATED" }] });
         return;
       case "respawned":
         return this.say([N(p.seat), v(p.seat, " returns", " return") + ` at XXX with ${p.energy} energy.`], { prio: 0, at: () => this._at(p.seat) });
       case "delivered":
-        this.say([N(p.seat), v(p.seat, " delivers ", " deliver "), { b: this._card(p.card) }, ` to century ${roman(p.century)}.`],
-          { tone: "good", prio: 2, at: () => this._islandAt(p.century) || this._at(p.seat),
-            impact: ["deliver", () => this._islandAt(p.century) || this._seatRect(p.seat), { big: p.seat === me }] });
+        // the mend itself (the ring closing, the notch, KA-CHUNK) lands with the relic,
+        // on the beat of its sound: game.js onLand calls mend.js
+        this.say([{ b: "The timeline mends at " + roman(p.century) + ". " }, N(p.seat), v(p.seat, " returns ", " return "), { b: this._card(p.card) }, " to its own century."],
+          { tone: "good", prio: 2, at: () => this._islandAt(p.century) || this._at(p.seat) });
         return;
       case "traveled": {
         const up = p.to < p.from;
@@ -815,7 +851,7 @@ class Comic {
       case "declared":
         return this.say([N(p.seat), v(p.seat, " declares their goods.", " declare your goods.") + " Wanted is cleared."], { prio: 1, at: () => this._at(p.seat) });
       case "wanted":
-        return this.say([N(p.seat), v(p.seat, " is WANTED. 4 gold to whoever terminates them.", " are WANTED. 4 gold to whoever terminates you.")],
+        return this.say(["The C.R.O.N.O.S. brands ", N(p.seat), v(p.seat, " a thief: WANTED. The Temporal Herald posts the bounty, 4 gold to whoever terminates them.", " a thief: WANTED. The Temporal Herald posts the bounty, 4 gold to whoever terminates you.")],
           { tone: "danger", prio: 2, at: () => this._seatRect(p.seat), impact: ["wanted", () => this._seatRect(p.seat), { sub: "BOUNTY 4 GOLD" }] });
       case "milestone":
         return this.say([N(p.seat), v(p.seat, " reaches", " reach") + ` century ${roman(p.century)}: a milestone, +1 contract point.`], { tone: "good", prio: 1, at: () => this._islandAt(p.century) });
@@ -832,12 +868,12 @@ class Comic {
       case "card_stolen":
         return this.say([N(p.seat), v(p.seat, " snatches ", " snatch "), { b: this._card(p.card) }, p.from ? " from " : "", p.from ? N(p.from) : "", "."], { tone: "danger", prio: 1, at: () => this._at(p.seat) });
       case "secret_market_opened":
-        return this.say(["The Secret Market opens at century XI."], { tone: "good", prio: 1, at: () => this._islandAt(11) });
+        return this.say(["The sealed vault at century XI opens: relics the Incursion buried, for sale one at a time."], { tone: "good", prio: 1, at: () => this._islandAt(11) });
       case "briefcase_acquired":
         return this.say([N(p.seat), v(p.seat, " gains", " gain") + " a Temporal Briefcase: +1 slot."], { prio: 0, at: () => this._at(p.seat) });
       case "game_over":
         this.hide("turn");
-        return this.caption("chapter", [N(p.winner), v(p.winner, " wins", " win") + " the match."], { tone: "good", sticky: true, now: true });
+        return this.caption("chapter", [{ b: "Time settles. " }, N(p.winner), v(p.winner, " wins", " win") + "."], { tone: "good", sticky: true, now: true });
       default: return;
     }
   }
@@ -900,6 +936,7 @@ class Comic {
     if (key === "f" && g && !req && (g.busy || g.queue.length)) {
       e.preventDefault();
       g._skip = true; document.body.classList.add("cx-skipping");
+      try { window.__heraldSkip && window.__heraldSkip(); } catch (err) {}
       this._killGrid();
       if (this.hitEl) { this.hitEl.remove(); this.hitEl = null; }
       this.caption("chapter", [{ b: "SKIPPING" }, " to the present..."], { tag: "F", now: true });

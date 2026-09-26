@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609262016";
-import { Game } from "./game.js?202609262016";
-import { icon } from "./icons.js?202609262016";
-import { roman } from "./util.js?202609262016";
-import { profile } from "./profile.js?202609262016";
+import { api, Connection } from "./net.js?202609262037";
+import { Game } from "./game.js?202609262037";
+import { icon } from "./icons.js?202609262037";
+import { roman } from "./util.js?202609262037";
+import { profile } from "./profile.js?202609262037";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -53,8 +53,20 @@ const L = {
     "That tech on your arm is a time machine. I am the one who will guide you through it.",
     "I will teach you to wear it, one piece at a time. Watch, and do as I say.",
   ],
-  // the goal of the game, in his words (his "delivered" and "marketPromise" beats), said at once
-  goal: "Hear what you are here for. Relics, carried home to the century printed on them, and the C.R.O.N.O.S. pays you a CONTRACT POINT for each. Points are how this ends: the one with the most when the last hour burns is the one who mattered.",
+  // the goal of the game, approved by the owner verbatim (Paradox: The Last Timeline)
+  goal: "The Incursion broke time. This is the last timeline left, and it is falling apart. Carry each relic back to the century it was torn from, and the timeline mends. Every relic you return is a contract point. When time settles, whoever mended the most wins.",
+  // FIXED: two rivals at this table
+  rival: "Those are your rivals, sharing the table with you.",
+  files: "Their files are paper, and paper moves. Drag one anywhere on the table.",
+  filesDone: "Arrange your desk as you like. It stays where you leave it.",
+  paradoxHit: "That was a PARADOX. Your rival reached across the centuries and tore into you from where they stand, and there was nothing on your machine to answer with.",
+  herald: "The Temporal Herald: the paper of the last timeline, printed by the C.R.O.N.O.S. It reports crimes across the centuries, and the clipping stays on the offender's file.",
+  relics: "Those on his shelf are the relics: things torn out of their centuries by the Incursion. Every one of them has to go home.",
+  mended: "The timeline mends at {c}. One relic home, one tear closed.",
+  // FIXED: the engine ends a match four ways (the Merchant running out of relics too)
+  ending: "So here is how it ends, since you have earned the question. Four ways. Fill your receptor with a relic from all three periods. Or walk all the way down to Year Zero, and I promise you nobody arrives there cheaply. Or be the only traveller still breathing. Or empty the Merchant's wagon. Whichever comes first stops the clock, and then we count points. Only points.",
+  // FIXED: this match has no blade and no death in it before the lesson ends
+  gradEnd: "So I have nothing left to teach you, which means the only thing left is to see how long you last. Play the hours out, traveller. I will be watching, and I am patient. I always get my table back.",
   you: "Look at the chart. That piece in your colour, at {c}, is you. Where it stands is where you are in time.",
   reduced: "For now your machine has four cells. It grows.",
   t1prompt: "Two dice, two functions. Drag a die onto a module to program it. One value per function, and fill it left to right.",
@@ -187,32 +199,11 @@ class Stage {
     this.setRings(opts.rings || (at && opts.ring !== false ? [at] : []));
     c.classList.add("on");
     this.pointing = !opts.next && !opts.ms && (opts.rings || (at && opts.ring !== false ? [at] : [])).length > 0;
-    // A line about no place in particular RIDES THE EYE: she keeps following his
-    // cursor and the balloon travels with her. A line about a place sends her there.
-    if (!at) {
-      this.releaseEye();
-      c.classList.remove("pending");
-      this.startRide();
-      if (this._toastT) { clearTimeout(this._toastT); this._toastT = null; }
-      if (opts.next) {
-        c.classList.add("has-next");
-        setTimeout(() => { this._armed = true; }, 450);
-        return new Promise((resolve) => { this._next = resolve; });
-      }
-      c.classList.remove("has-next");
-      this._next = null;
-      return Promise.resolve();
-    }
-    this.stopRide();
-    // the eye goes first; the words come out of her once she is there
-    let wasAt = null;
-    try { wasAt = window.__helaEye && window.__helaEye.pos(); } catch (e) {}
-    c.classList.add("pending");
-    this.layout(true);
-    const far = !wasAt || !this._eyeAt || Math.hypot(wasAt.x - this._eyeAt[0], wasAt.y - this._eyeAt[1]) > 60;
-    clearTimeout(this._pendT);
-    this._pendT = setTimeout(() => c.classList.remove("pending"), far ? 700 : 60);
-    if (this._toastT) { clearTimeout(this._toastT); this._toastT = null; }
+    // EVERY LINE RIDES THE EYE: she keeps following his cursor and the balloon travels
+    // with her. What a line is about is marked with the yellow rings, never by moving her.
+    this.releaseEye();
+    c.classList.remove("pending");
+    this.startRide();
     if (opts.next) {
       c.classList.add("has-next");
       // armed a beat later, so the click that caused the line does not dismiss it
@@ -221,7 +212,6 @@ class Stage {
     }
     c.classList.remove("has-next");
     this._next = null;
-    if (opts.ms) this._toastT = setTimeout(() => this.hide(), opts.ms);
     return Promise.resolve();
   }
   // The balloon riding the eye, every frame, on the side of her with the most room
@@ -231,7 +221,7 @@ class Stage {
     const step = () => {
       this._rideRaf = requestAnimationFrame(step);
       const c = this.callout, E = window.__helaEye;
-      if (!c.classList.contains("on") || this.anchor || !E) return;
+      if (!c.classList.contains("on") || !E) return;
       let q; try { q = E.pos(); } catch (e) { return; }
       const cw = c.offsetWidth || 360, ch = c.offsetHeight || 110, W = innerWidth, H = innerHeight, M = 12;
       const cands = {
@@ -253,6 +243,14 @@ class Stage {
           if (!best || score < best.s) best = { k, s: score };
         }
         this._rideSide = best.k;
+      }
+      if (this.anchor) {
+        // never over what the line is about: if the chosen side covers it, take another
+        const t = this.resolve(this.anchor), tr = t && t.getBoundingClientRect();
+        const hit = (k) => { if (!tr || !tr.width) return false; const [x0, y0] = cands[k];
+          const x1 = Math.max(M, Math.min(W - cw - M, x0)), y1 = Math.max(M + 40, Math.min(H - ch - M, y0));
+          return x1 < tr.right && x1 + cw > tr.left && y1 < tr.bottom && y1 + ch > tr.top; };
+        if (hit(this._rideSide)) { const alt = ["right", "left", "below", "above"].find((k) => !hit(k)); if (alt) this._rideSide = alt; }
       }
       const [px, py, tail] = cands[this._rideSide];
       c.style.left = Math.round(Math.max(M, Math.min(W - cw - M, px))) + "px";
@@ -326,53 +324,7 @@ class Stage {
       this.point.style.left = Math.round(fr.left + fr.width / 2 - 13) + "px";
       this.point.style.top = Math.round(up ? fr.bottom + 14 : fr.top - 52) + "px";
     } else this.point.classList.remove("on");
-    // callout (a line riding the eye is placed by startRide, every frame)
-    const c = this.callout;
-    if (!c.classList.contains("on") || !this.anchor) return;
-    const cw = c.offsetWidth || 360, ch = c.offsetHeight || 110;
-    const W = innerWidth, H = innerHeight, M = 14;
-    const el = this.resolve(this.anchor);
-    const r = el && el.getBoundingClientRect();
-    let x, y, side = "none";
-    // The balloon goes where it covers the least of what matters: never the target
-    // or the rings, as little as possible of the machine, the dice, the chart, the
-    // files, the shelf and the case; near the target when it can.
-    const rects = (list) => {
-      const out = [];
-      (list || []).forEach((a) => {
-        try {
-          const nodes = typeof a === "string" ? [...document.querySelectorAll(a)] : [this.resolve(a)];
-          nodes.forEach((n) => { if (n && visible(n)) { const q = n.getBoundingClientRect(); if (onScreen(q)) out.push(q); } });
-        } catch (e) {}
-      });
-      return out;
-    };
-    const top0 = this.track && !this.track.classList.contains("gone") ? this.track.getBoundingClientRect().bottom + 8 : 50;
-    const hard = rects(this.rings).concat(r && r.width ? [r] : []).concat(rects(this.avoid));
-    const soft = rects(KEY_AREAS);
-    const cx0 = r && r.width ? r.left + r.width / 2 : W / 2, cy0 = r && r.width ? r.top + r.height / 2 : H * 0.4;
-    const cand = [];
-    if (r && r.width && onScreen(r)) {
-      cand.push([cx0 - cw / 2, r.top - ch - 20], [cx0 - cw / 2, r.bottom + 20],
-        [r.right + 56, cy0 - ch / 2], [r.left - cw - 56, cy0 - ch / 2]);
-    }
-    for (let gx = 0; gx <= 5; gx++) for (let gy = 0; gy <= 5; gy++)
-      cand.push([M + (W - cw - 2 * M) * gx / 5, top0 + (H - ch - M - top0) * gy / 5]);
-    let best = null;
-    cand.forEach(([px, py], i) => {
-      px = Math.max(M + 44, Math.min(W - cw - M - 44, px));
-      py = Math.max(top0, Math.min(H - ch - M, py));
-      const ov = (list) => list.reduce((acc, q) => acc + Math.max(0, Math.min(px + cw, q.right) - Math.max(px, q.left))
-        * Math.max(0, Math.min(py + ch, q.bottom) - Math.max(py, q.top)), 0);
-      const d = Math.hypot(px + cw / 2 - cx0, py + ch / 2 - cy0);
-      const score = ov(hard) * 80 + ov(soft) * 50 + d * 30 + (i < 4 ? 0 : 3000);
-      if (!best || score < best.s) best = { x: px, y: py, s: score };
-    });
-    x = best.x; y = best.y;
-    c.dataset.side = side;
-    c.style.left = Math.round(x) + "px";
-    c.style.top = Math.round(y) + "px";
-    this.postEye(x, y, cw, r && r.width ? r : null);
+    // the callout: every line rides the eye (startRide places it, every frame)
   }
 
   // The eye stands on the balloon's side that faces what she is talking about,
@@ -741,6 +693,15 @@ class Coach {
     g.updateBeacon = () => (this.scripted && this.pointing ? g.hideBeacon() : beacon());
     // follow camera pans so a "look at the Merchant" step advances by itself
     this._sceneT = setInterval(() => this.watchScene(), 250);
+    const hookBrain = () => {
+      const f = window.__helaBrainFile;
+      if (!f || f.__tut) return !!(f && f.__tut);
+      const w = (item) => { f(item); if (!this._heraldDone) this._heraldDue = true; };
+      w.__tut = true;
+      window.__helaBrainFile = w;
+      return true;
+    };
+    if (!hookBrain()) { const iv = setInterval(() => { if (hookBrain()) clearInterval(iv); }, 500); }
   }
 
   /* ───────────── events ───────────── */
@@ -749,60 +710,81 @@ class Coach {
      and HELA says which module did it. The first time each module fires she waits
      for him to read it; after that the line rides along and the next replaces it. ── */
   causeCell(r, c) { return document.querySelector(`#machine-body .cell[data-r="${r}"][data-c="${c}"]`); }
+  // a rival's die, on the dice strip of their case file
+  rivalCell(seat, r, c) {
+    const card = document.querySelector(`#players-zone .pcard[data-seat="${CSS.escape(seat)}"]`);
+    const grp = card && card.querySelectorAll(".bd-alloc .ba-fn")[r];
+    return grp ? grp.querySelectorAll("b")[c] || null : null;
+  }
   cause(msg) {
-    if (this.hour() > 5 && !this.scripted) return null;
     const k = msg.kind, p = msg.payload || {}, self = this.seat;
-    const m = this.game.myLastMatrix;
-    if (!m) return null;
-    let r = -1, c = -1, text = "", key = "";
+    if (k === "allocations_revealed") { this._allocs = p.allocations || {}; return null; }
+    if (this.hour() > 5 && !this.scripted) return null;
+    const m = this.game.myLastMatrix, allocs = this._allocs || {};
+    const theirs = (seat) => (allocs[seat] && allocs[seat].matrix) || null;
+    const cells = [];                        // every die causing this, his and the rivals'
+    let text = "", key = "";
+    const mine = (r, c) => { if (m && m[r] && m[r][c]) { const n = this.causeCell(r, c); if (n) cells.push(n); return true; } return false; };
+    const rival = (seat, r, c) => { const mm = theirs(seat); if (mm && mm[r] && mm[r][c]) { const n = this.rivalCell(seat, r, c); if (n) cells.push(n); return true; } return false; };
     if (k === "recharged") {
+      const c = (p.module || 1) - 1;
+      (p.effects || []).forEach((e) => { if (e.seat === self) mine(0, c); else rival(e.seat, 0, c); });
       const e = (p.effects || []).find((x) => x.seat === self);
-      if (!e) return null;
-      r = 0; c = (p.module || 1) - 1;
-      text = [`+${e.energy} energy: your <b>Recharge 1</b> die fed your life.`,
-        `+${e.gold} gold: your <b>Recharge 2</b> die minted it.`,
-        `+${e.energy} energy and +${e.gold} gold: your <b>Recharge 3</b> die, the greedy one.`][c];
-      key = "r" + c;
-    } else if (k === "heated" && p.seat === self) {
-      r = 2; c = 0;
-      text = `Your heat rose to ${p.booms}: that came from your <b>first Travel die</b>, the heating module. It moves you nothing. 12 heat and the motor explodes.`;
-      key = "heat";
+      if (e) {
+        text = [`+${e.energy} energy: your <b>Recharge 1</b> die fed your life.`,
+          `+${e.gold} gold: your <b>Recharge 2</b> die minted it.`,
+          `+${e.energy} energy and +${e.gold} gold: your <b>Recharge 3</b> die.`][c];
+        key = "r" + c;
+      }
+    } else if (k === "heated") {
+      if (p.seat === self) { mine(2, 0); text = `Heat ${p.booms}/12: your <b>first Travel die</b> only heats the motor. It moves you nothing.`; key = "heat"; }
+      else rival(p.seat, 2, 0);
     } else if (k === "paradox_resolved" && typeof p.module === "number") {
       const col = p.module - 4;
-      if (!m[1] || !m[1][col]) return null;
-      const hits = (p.hits || []).filter((h) => h.seat !== self);
-      if (!hits.length) return null;
-      r = 1; c = col;
-      const dir = ["ahead of you, on a higher century", "in your own century", "behind you, on a lower century"][col];
-      text = `${hits.map((h) => h.seat).join(" and ")} lost ${hits[0].damage} energy: your <b>Paradox ${col + 1}</b> die struck everyone ${dir}.`;
-      key = "p" + col;
-    } else if (k === "traveled" && p.seat === self && p.from !== p.to) {
-      const col = this._travelCol || 1;
-      r = 2; c = col;
-      const back = p.to < p.from, n = Math.abs(p.to - p.from), cost = p.energy_cost || 0;
-      text = `You moved ${n} ${n === 1 ? "century" : "centuries"}: your <b>${col === 1 ? "second" : "third"} Travel die</b> carried you.`
-        + (back ? ` Going back cost you ${cost} energy.` : " Forward in time is free.");
-      key = "move";
+      const hits = p.hits || [];
+      const causers = Object.keys(allocs).filter((seat) => { const mm = theirs(seat); return mm && mm[1] && mm[1][col]; });
+      causers.forEach((seat) => { if (seat === self) mine(1, col); else rival(seat, 1, col); });
+      const onMe = hits.find((h) => h.seat === self);
+      const others = hits.filter((h) => h.seat !== self);
+      const dir = ["ahead of", "in the same century as", "behind"][col];
+      if (onMe) {
+        const who = causers.filter((x) => x !== self).join(" and ") || "A rival";
+        text = `-${onMe.damage} energy: ${who}'s <b>Paradox ${col + 1}</b> die struck everyone ${dir} them. That was you.`;
+        key = "hit";
+      } else if (others.length && causers.includes(self)) {
+        text = `${others.map((h) => h.seat).join(" and ")} lost ${others[0].damage}: your <b>Paradox ${col + 1}</b> die struck everyone ${dir} you.`;
+        key = "p" + col;
+      }
+    } else if (k === "traveled") {
+      if (p.seat === self && p.from !== p.to) {
+        const col = this._travelCol || 1;
+        mine(2, col);
+        const back = p.to < p.from, n = Math.abs(p.to - p.from);
+        const cost = back ? Math.max(0, Math.min(p.from, 30) - Math.max(p.to, 10)) + 2 * Math.max(0, Math.min(p.from, 10) - p.to) : 0;
+        text = `Moved ${n}: your <b>${col === 1 ? "second" : "third"} Travel die</b> carried you.` + (back ? ` The past cost ${cost} energy.` : " The future is free.");
+        key = "move";
+      } else if (p.seat !== self) { rival(p.seat, 2, 1) || rival(p.seat, 2, 2); }
     }
-    if (r < 0 || !m[r] || !m[r][c]) return null;
-    const cell = this.causeCell(r, c);
-    if (cell) cell.classList.add("tut-cause");
-    this.toast(null, text);
-    return { r, c, text, key };
+    if (!cells.length && !text) return null;
+    cells.forEach((n) => n.classList.add("tut-cause"));
+    if (text) this.toast(null, text);
+    return { cells, text, key };
   }
   async causeDone(w) {
-    if (this.once("why-" + w.key)) await this.say(null, w.text);
-    const cell = this.causeCell(w.r, w.c);
-    if (cell) cell.classList.remove("tut-cause");
-    document.querySelectorAll("#machine-body .cell.tut-cause").forEach((n) => n.classList.remove("tut-cause"));
+    if (w.key === "hit" && this.once("why-hit")) await this.say(null, L.paradoxHit, { sub: w.text });
+    else if (w.text && this.once("why-" + w.key)) await this.say(null, w.text);
+    w.cells.forEach((n) => n.classList.remove("tut-cause"));
+    document.querySelectorAll(".tut-cause").forEach((n) => { if (!n.closest || !n.closest("#machine-body") || !this.req) n.classList.remove("tut-cause"); });
   }
 
   async before(msg) {
     const k = msg.kind, p = msg.payload || {};
+    if (k === "allocations_revealed" && this.scripted && this.once("rivals")) await this.rivalsLesson();
     if (k === "hour_started") {
       this.hourNo = p.hour;
       if (p.hour === 1 && this.once("intro")) await this.wake();
-      if (p.hour >= 3 && this.scripted) await this.merchantIntro();
+      await this.heraldBeat();
+      if (p.hour >= 2 && this.scripted) await this.merchantIntro();
       if (this.scripted && p.hour >= 10 && !this.done.has("win")) await this.wrapUp();
     }
     if ((k === "phase_started" || k === "phase_skipped") && this.hourNo === 1 && p.phase === "main") this.markTrack("machine");
@@ -855,6 +837,9 @@ class Coach {
       this.learn("deliver");
       await this.say(".vital-chip.vc-cp",
         "<b>Delivered: +1 contract point.</b> Points decide the winner, and every point also earns you a contract.");
+      // the timeline mends where the relic went home (the shared hook draws it)
+      try { window.__pdxTimelineMend && window.__pdxTimelineMend(p.century, 1); } catch (e) {}
+      await this.say(".vital-chip.vc-cp", L.mended.replace("{c}", R(p.century || this.me().century)), { rings: [".vital-chip.vc-cp"] });
       // he kept a promise: the roll comes off the chart (his chartOpen)
       this.home && this.home();
       this.unrollMap();
@@ -901,6 +886,7 @@ class Coach {
   /* ───────────── decisions ───────────── */
   /* ── the beat that belongs BEFORE a decision is shown ── */
   beforeDecision(req) {
+    if (this._heraldDue) return this.heraldBeat().then(() => this.beforeDecision(req));
     const h = (req.options || {}).tutorial || {};
     if (req.kind === "allocate") return this.grow(h.machine);
     return null;
@@ -1008,6 +994,7 @@ class Coach {
     await new Promise((r) => setTimeout(r, 1200));
     await this.say("#market-sign", L.merchantSign, { rings: ["#market-sign"], avoid: SHELF });
     await this.say("#market-zone .market-row", L.marketScene, { rings: ["#market-zone .market-row"], avoid: SHELF });
+    await this.say("#market-zone .market-row", L.relics, { rings: ["#market-zone .market-row"], avoid: SHELF });
     const gold = me ? me.gold : 0;
     const cards = [...document.querySelectorAll("#market-zone .market-row .card")];
     // the relic the lesson will buy: affordable, promised closest to where he stands
@@ -1088,6 +1075,10 @@ class Coach {
     if (!req) return;
     this.trace("answered " + req.kind);
     if (req.kind === "travel") document.querySelectorAll("#machine-body .cell.tut-cause").forEach((n) => n.classList.remove("tut-cause"));
+    this._did = this._did || {};
+    if (req.kind === "market" && data && data.action === "buy" && this._did.market == null) this._did.market = this.hour();
+    if (req.kind === "deliver" && this._did.delivery == null) this._did.delivery = this.hour();
+    if (req.kind === "allocate" && this._did.main == null) this._did.main = this.hour();
     this._waitScene = null;
     // A guided visit to the wagon or the records ends back at the desk, where the
     // next thing always happens. (A buy keeps him at the wagon: the shelf refills.)
@@ -1227,7 +1218,7 @@ class Coach {
     // the move comes from a die: it glows on the machine while he plots
     const col = o.module === 9 ? 2 : 1;
     this._travelCol = col;
-    const fromDie = `This move comes from your ${col === 1 ? "second" : "third"} Travel die, glowing on your machine.`;
+    const fromDie = `This move comes from your ${col === 1 ? "second" : "third"} Travel die.`;
     if (this.hour() <= 5 || this.scripted) { const cell = this.causeCell(2, col); if (cell) cell.classList.add("tut-cause"); }
     if (!this.scripted || goal == null) {
       if (this.once("free-travel")) {
@@ -1393,12 +1384,11 @@ class Coach {
     if (this.done.has("win") || this._wrapping) return;
     this._wrapping = true;
     this.markTrack("win");
-    await this.say(".vital-chip.vc-cp", "<b>How to win:</b> have the most contract points when the game ends.",
-      { sub: "+1 per delivery, +1 per termination, +1 the first time you end an Hour on XX and on X, +1 for being alive at the end." });
-    await this.say(null, "<b>The game ends</b> when someone reaches Year Zero, delivers in all three periods, is the last never terminated, or the Merchant runs out of cards.",
-      { sub: "At 0 energy you are terminated and come back at XXX. At 12 heat your motor explodes." });
-    await this.say(null, "That is everything. <b>The match is yours now</b>: play it to the end.",
-      { sub: "Press <kbd>T</kbd> for the machine reference. The map keeps opening as you travel." });
+    await this.say(null, L.ending, { sub: "At 0 energy you are terminated and come back at XXX. At 12 heat your motor explodes." });
+    await this.say(".vital-chip.vc-cp", "<b>How to win:</b> the most contract points when time settles.",
+      { sub: "+1 per relic returned, +1 per termination, +1 the first time you end an Hour on XX and on X, +1 for being alive at the end.", rings: [".vital-chip.vc-cp"] });
+    await this.phasesRecap();
+    await this.say(null, L.gradEnd, { sub: "Press <kbd>T</kbd> for the machine reference." });
     this.learn("win");
     this.scripted = false;
     document.body.classList.remove("tut-story");
@@ -1413,6 +1403,78 @@ class Coach {
       cam._engage(); cam.setScene("main");
     }
     try { this.game.updateBeacon(); } catch (e) {}
+  }
+
+  // his rivals at the table, and their files are his to arrange: a guided drag, then free
+  async rivalsLesson() {
+    const file = "#players-zone .pcard.cfolio";
+    await this.say(file, L.rival, { rings: [file] });
+    this.guide(file, L.files, { rings: [file] });
+    const moved = await new Promise((resolve) => {
+      const t0 = Date.now(); let held = false;
+      const iv = setInterval(() => {
+        const h = document.querySelector(".pcard.cfolio.dk-held");
+        if (h) held = true;
+        if ((held && !h) || Date.now() - t0 > 60000) { clearInterval(iv); resolve(held); }
+      }, 150);
+    });
+    if (moved) await this.say(null, L.filesDone);
+    this.clear();
+  }
+
+  /* ── THE FIRST HERALD, then HER MEMORY, used by doing (anchored to the memory's
+     own classes, so the lesson follows its redesign) ── */
+  async heraldBeat() {
+    if (!this._heraldDue || this._heraldDone) return;
+    this._heraldDue = false; this._heraldDone = true;
+    await this.say(".he-window.he-news, .hb-newsread", L.herald, {});
+    await this.brainLesson();
+  }
+  async brainLesson() {
+    const B = window.__helaBrain;
+    const root = () => document.getElementById("hela-brain-full") || document.getElementById("hela-brain-dock");
+    if (!B || !root()) return;
+    const q = (sel) => () => { const r = root(); return r ? [...r.querySelectorAll(sel)].filter(visible).pop() || null : null; };
+    const clickOn = (sel, ms = 60000) => new Promise((resolve) => {
+      const h = (e) => { if (e.target.closest && e.target.closest(sel)) { done(); } };
+      const done = () => { window.removeEventListener("click", h, true); clearTimeout(t); setTimeout(resolve, 500); };
+      const t = setTimeout(done, ms);
+      window.addEventListener("click", h, true);
+    });
+    const until = (fn, ms = 60000) => new Promise((resolve) => { const t0 = Date.now(); const iv = setInterval(() => { if (fn() || Date.now() - t0 > ms) { clearInterval(iv); resolve(); } }, 200); });
+    this.guide(root, "The Herald is filed in my memory. Open it: click it, or press <kbd>L</kbd>.", { rings: [root] });
+    await until(() => B.isOpen && B.isOpen());
+    const node = q(".hb-node");
+    if (node()) { this.guide(node, "Every mark is an Hour. Click one to open its page.", { rings: [node] }); await clickOn(".hb-node"); }
+    const arrow = q(".hbp-arrow");
+    if (arrow()) { this.guide(arrow, "Flip through the Hours with the arrows.", { rings: [arrow] }); await clickOn(".hbp-arrow"); }
+    const clip = q(".hbp-clip");
+    if (clip()) { this.guide(clip, "The Herald's clipping: click it to read the edition.", { rings: [clip] }); await clickOn(".hbp-clip"); }
+    if (B.isOpen && B.isOpen()) {
+      this.guide(root, "Close it with <kbd>Esc</kbd> or <kbd>L</kbd>. It keeps everything.", { rings: [root] });
+      await until(() => !(B.isOpen && B.isOpen()), 45000);
+    }
+    this.clear();
+  }
+
+  // THE HOUR, NAMED LAST: he has lived every phase several times by now, so the recap
+  // names what he did in each, and the learning bar gives its place to the phase track.
+  async phasesRecap() {
+    if (!this.once("phases")) return;
+    document.querySelectorAll("#vz-phases .vz-ph").forEach((n) => {
+      if (/auction/i.test(n.textContent || "")) { n.style.display = "none"; const sp = n.nextElementSibling; if (sp && sp.classList.contains("vz-sep")) sp.style.display = "none"; }
+    });
+    this.stage.trackOff();
+    document.body.classList.add("tut-phases");
+    await new Promise((r) => setTimeout(r, 900));
+    const chip = (label) => () => [...document.querySelectorAll("#vz-phases .vz-ph")]
+      .find((n) => (n.textContent || "").trim().toLowerCase() === label && visible(n)) || null;
+    const d = this._did || {}, h = (x) => (x != null ? ` in hour ${x}` : "");
+    await this.say(chip("delivery"), `That moment you filed the relic in the drawer${h(d.delivery)}: that was DELIVERY. Every hour opens with it: whoever stands on a relic's own century hands it in.`, { rings: [chip("delivery")] });
+    await this.say(chip("market"), `Standing in the wagon's year and buying the relic${h(d.market)}: the MARKET. It comes second, and when it ends, the wagon moves.`, { rings: [chip("market")] });
+    await this.say(chip("generators"), "Every time you set your dice: the GENERATORS. Everyone places in secret, then the machines reveal and resolve, module 1 to 9.", { rings: [chip("generators")] });
+    await this.say(chip("activation"), "Last, ACTIVATION: the items you carry that have a trigger fire here. That is the whole hour, in that order, every hour.", { rings: [chip("activation")] });
+    this.learn("hour");
   }
 
   gameOver(p) {

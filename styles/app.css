@@ -7520,13 +7520,14 @@ body.pc-merch-hidden #timeline-rail .pc-merch-live, body.pc-merch-hidden #timeli
 @media (prefers-reduced-motion: reduce) { #timeline-rail .pc-pulse { display: none; } }
 html.pdx-a11y #timeline-rail .pc-pulse { display: none; }
 /* the Merchant's readout: the one-line summary always, the full rule at the key moments */
-#timeline-rail .pc-mhud-full, #timeline-rail .pc-mhud-key { display: none; }
-#timeline-rail .pc-mhud-pill { pointer-events: auto; cursor: help; }
-#timeline-rail .pc-mhud:hover .pc-mhud-full,
-#timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-full,
-#timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-key,
-body[data-phase="market"] #timeline-rail .pc-mhud-full,
-body[data-phase="market"] #timeline-rail .pc-mhud-key { display: inline; }
+/* hover opens it only after a deliberate ~600 ms rest on him, and it closes at once; never
+   while dice are placed or while he sails */
+#timeline-rail .pc-mhud-full, #timeline-rail .pc-mhud-key { visibility: hidden; opacity: 0; }
+body:not(.allocating):not(.pc-mtrip) #timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-full,
+body:not(.allocating):not(.pc-mtrip) #timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-key {
+  visibility: visible; opacity: 1; transition: opacity .25s ease .6s, visibility 0s linear .6s; }
+body[data-phase="market"]:not(.pc-mtrip) #timeline-rail .pc-mhud-full,
+body[data-phase="market"]:not(.pc-mtrip) #timeline-rail .pc-mhud-key { visibility: visible; opacity: 1; }
 /* while he sails, his clone travels; the live piece waits out of sight */
 body.pc-mtrip #timeline-rail .pc-merch-live { visibility: hidden; }
 /* the ACCESSIBLE INTERFACE: thicker rings and rims, larger pieces and tags */
@@ -7731,3 +7732,134 @@ html:not([data-ts="2"]):not([data-ts="3"]):not(.pdx-a11y) .cx-slot-event { top: 
 #hela-brain-full .hb-node.hb-turn { text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 12px currentColor; }
 /* an open Hour page lies ON the desk, above whatever wanders it (the cat included) */
 body.cabin-on #log-zone:has(#hela-brain-full .hb-page.on), body.cabin-on #log-zone:has(.hb-read.open) { z-index: 30; }
+
+/* ═══ EVERY HELA MESSAGE RIDES THE EYE (the owner's rule) ═════════════════════════
+   Her boxes (YOUR MOVE nearest to her, then the chapter and a footnote) stack above
+   the eye, opening away from the cursor like her balloon; nothing she says is fixed
+   to the screen. What she talks about gets the little yellow box. */
+#hela-eye .he-caps { position: absolute; left: 40px; bottom: 64px; display: flex; flex-direction: column; align-items: flex-start;
+  gap: 6px; width: max-content; max-width: 400px; pointer-events: none; }
+#hela-eye .he-caps.flip-x { left: auto; right: 40px; align-items: flex-end; }
+#hela-eye .he-caps.flip-y { bottom: 150px; }
+html body #hela-eye .he-caps .cx-cap { position: relative !important; left: auto !important; top: auto !important; right: auto; bottom: auto;
+  max-width: 400px !important; transform: none; }
+html body #hela-eye .he-caps .cx-cap:not(.on) { display: none; }
+.cx-cap.cx-out { opacity: 0 !important; }
+/* the little yellow box (the same look as the tutorial's rings) */
+.he-ring { position: fixed; z-index: 59800; pointer-events: none; border-radius: 10px; border: 2px solid #ffd98a;
+  box-shadow: 0 0 0 3px rgba(255,217,138,.18), 0 0 18px 4px rgba(255,200,110,.5); opacity: 0;
+  animation: heRingIn .45s ease-out forwards; }
+@keyframes heRingIn { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: none; } }
+.he-ring.hunt { border-color: #ff8a72; box-shadow: 0 0 0 3px rgba(255,120,100,.2), 0 0 18px 4px rgba(255,90,68,.45); }
+@media (prefers-reduced-motion: reduce) { .he-ring { animation: none; opacity: 1; } }
+
+/* ═══ THE LAST TIMELINE (mend.js) ═════════════════════════════════════════════════
+   The gauge in HELA's rail: thirty notches, lit in the colour of whoever mended
+   each century, cracked where a relic is loose, faded where it is still unravelled. */
+#tl-gauge { position: absolute; right: 150px; top: 12px; display: flex; align-items: center; gap: 9px; pointer-events: auto;
+  padding: 4px 9px 7px 8px; background: rgba(8,12,12,.55); border: 1.5px solid rgb(var(--vz-rgb) / .45); border-radius: 4px;
+  box-shadow: 0 0 12px rgb(var(--vz-rgb) / .2); text-shadow: none; }
+#tl-gauge .tlg-name { font: 700 .56rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: var(--vz-hot); }
+#tl-gauge .tlg-track { position: relative; display: flex; gap: 2px; }
+#tl-gauge .tlg-track i { width: 7px; height: 15px; border-radius: 1px; background: rgba(210,200,180,.1);
+  box-shadow: inset 0 0 0 1px rgba(210,200,180,.22); transition: background .6s ease, box-shadow .6s ease; }
+#tl-gauge .tlg-track i.loose { background: linear-gradient(115deg, transparent 42%, #ff7a55 43% 55%, transparent 56%), rgba(120,40,30,.35);
+  box-shadow: inset 0 0 0 1px rgba(255,122,85,.55); }
+#tl-gauge .tlg-track i.m { background: var(--seat); box-shadow: 0 0 6px var(--seat), inset 0 0 0 1px rgba(0,0,0,.45); }
+#tl-gauge .tlg-track i.pulse { animation: tlgPulse 1.6s cubic-bezier(.2,.8,.3,1); }
+@keyframes tlgPulse { 0% { transform: scaleY(2.2); filter: brightness(2.4); } 100% { transform: none; filter: none; } }
+#tl-gauge .tlg-fill { position: absolute; left: 0; right: 0; bottom: -5px; height: 2px; background: var(--vz);
+  box-shadow: 0 0 6px var(--vz); transform-origin: left center; transform: scaleX(0); transition: transform 1.2s cubic-bezier(.2,.8,.3,1); }
+#tl-gauge .tlg-count { font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .06em; color: var(--vz-hot); white-space: nowrap; }
+#tl-gauge.mending { animation: tlgGlow 1.6s ease-out; }
+@keyframes tlgGlow { 0% { box-shadow: 0 0 0 2px var(--vz), 0 0 28px var(--vz); } 100% { box-shadow: 0 0 12px rgb(var(--vz-rgb) / .2); } }
+/* on the chart: a crack beside every unravelled century, a ring of light where mended */
+.tl-marks { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; z-index: 5; }
+.tl-mk, .tl-burst { position: absolute; width: calc(var(--r) * 2); height: calc(var(--r) * 2);
+  margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1); border-radius: 50%; pointer-events: none; }
+.tl-mk.w::after { content: ""; position: absolute; right: -10px; top: -12px; width: 14px; height: 18px; opacity: .38;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 18'%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%23e8dcc0' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.tl-mk.w.loose::after { opacity: .95; width: 17px; height: 22px; top: -15px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 18'%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%2315100a' stroke-width='3.6' stroke-linejoin='round'/%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%23ff7a55' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.tl-mk.w { box-shadow: 0 0 0 1px rgba(232,220,192,.12); }
+.tl-mk.m { box-shadow: 0 0 0 2.5px var(--seat), 0 0 12px 2px var(--seat); }
+/* the MEND: the broken ring closes and light returns */
+.tl-burst i { position: absolute; inset: 0; border-radius: 50%; }
+.tl-burst .tlb-a, .tl-burst .tlb-b { border: 3px solid transparent; }
+.tl-burst .tlb-a { border-top-color: var(--seat); border-right-color: var(--seat); animation: tlbA .8s cubic-bezier(.2,.9,.3,1) both; }
+.tl-burst .tlb-b { border-bottom-color: var(--seat); border-left-color: var(--seat); animation: tlbB .8s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes tlbA { from { transform: rotate(-70deg) scale(1.5); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tlbB { from { transform: rotate(70deg) scale(1.5); opacity: 0; } to { transform: none; opacity: 1; } }
+.tl-burst .tlb-rays { inset: -120%; background: repeating-conic-gradient(from 0deg, rgb(255 244 214 / .55) 0deg 4deg, transparent 4deg 18deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 20%, #000 24%, #000 45%, transparent 62%);
+          mask: radial-gradient(circle, transparent 0 20%, #000 24%, #000 45%, transparent 62%);
+  animation: tlbRays 2.2s ease-out both; }
+@keyframes tlbRays { 0% { transform: scale(.5) rotate(0deg); opacity: 0; } 18% { opacity: 1; } 100% { transform: scale(1.4) rotate(20deg); opacity: 0; } }
+body.gfx-low .tl-burst .tlb-rays { display: none; }
+/* a TEAR: the crack a paradox runs along the chart, then heals away */
+.tl-tear { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 6;
+  animation: tlTear 2.5s ease-in both; }
+.tl-tear polyline { fill: none; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1400; stroke-dashoffset: 1400;
+  animation: tlTearDraw .45s ease-out forwards; }
+.tl-tear .tt-ink { stroke: #15100a; stroke-width: 6; }
+.tl-tear .tt-line { stroke: var(--seat); stroke-width: 2.6; filter: drop-shadow(0 0 4px var(--seat)); }
+@keyframes tlTearDraw { to { stroke-dashoffset: 0; } }
+@keyframes tlTear { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+/* the drawer glows as the relic is filed */
+#drawer-zone .cab2-cell.tl-filed .cab2-front { animation: tlFiled 2.1s ease-out; }
+@keyframes tlFiled { 0% { box-shadow: 0 0 0 3px var(--vz), 0 0 40px var(--vz); filter: brightness(1.35); } 100% { box-shadow: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .tl-burst i, .tl-tear, .tl-tear polyline, #tl-gauge .tlg-track i.pulse, #tl-gauge.mending, #drawer-zone .cab2-cell.tl-filed .cab2-front { animation: none; }
+  .tl-tear polyline { stroke-dashoffset: 0; } }
+/* TIME SETTLES: the restored timeline on the end screen, before the points */
+.tl-summary { margin: 10px 0 14px; padding: 10px 12px 12px; text-align: left;
+  background: radial-gradient(circle, rgba(120,84,20,.12) 1px, transparent 1.4px) 0 0 / 5px 5px, #f5ecd2; color: #1d1409;
+  border: 2.5px solid var(--cx-ink, #15100a); box-shadow: 0 0 0 3px var(--vz, #c9a45c), 4px 4px 0 3px var(--cx-ink, #15100a); }
+.tl-summary .tls-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  font: 700 .95rem/1.2 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; }
+.tl-summary .tls-head span { font-weight: 500; letter-spacing: .02em; }
+.tl-summary .tls-strip { display: flex; gap: 2px; margin: 8px 0 10px; }
+.tl-summary .tls-strip i { flex: 1; height: 16px; background: rgba(60,45,25,.14); box-shadow: inset 0 0 0 1px rgba(60,45,25,.3); }
+.tl-summary .tls-strip i.m { background: var(--seat); box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); }
+.tl-summary .tls-row { display: grid; grid-template-columns: 110px 1fr 28px; align-items: center; gap: 8px; margin: 3px 0;
+  font: 500 .85rem/1.2 var(--f-display, "Oswald", sans-serif); }
+.tl-summary .tls-who { justify-self: start; padding: 0 6px; border: 1.5px solid var(--cx-ink, #15100a); background: var(--seat); font-weight: 700; }
+.tl-summary .tls-bar { height: 10px; background: rgba(60,45,25,.14); border: 1px solid rgba(60,45,25,.35); }
+.tl-summary .tls-bar i { display: block; height: 100%; background: var(--seat); }
+.tl-summary .tls-row b { text-align: right; }
+/* her pointing arrow rides below the eye; the balloon keeps its place beside her */
+#hela-eye .he-dchip { left: 0; top: 66px; transform: scaleX(.1); transform-origin: left center; }
+#hela-eye .he-dchip.on { transform: none; }
+#hela-eye .he-dchip.flip-x { left: auto; right: 0; transform-origin: right center; }
+#hela-eye.he-directs .he-chip { top: -3px; bottom: auto; }
+#hela-eye.he-directs .he-chip.flip-y { top: auto; bottom: -3px; }
+/* the phase line sits under the timeline gauge, on the chart's torn top edge: it never
+   covers a case file's name (the files hang under the phase track) */
+#cx-phaseline { left: auto; right: 150px; top: 48px; transform: translateY(-4px); max-width: min(620px, 42vw); }
+#cx-phaseline.on { transform: none; }
+#tl-gauge .tlg-track i { width: 9px; height: 17px; }
+#tl-gauge .tlg-name { font-size: .62rem; }
+#tl-gauge .tlg-count { font-size: .72rem; }
+/* the Temporal Herald: who the story is about, in their colour, over the page; and how
+   to put the paper away (it stays until clicked) */
+.hb-newsread .bn-who { display: flex; align-items: baseline; gap: 8px; margin: 0 0 6px; padding: 5px 10px;
+  background: var(--seat, #c9a45c); border: 2.5px solid var(--cx-ink, #15100a); box-shadow: 3px 3px 0 var(--cx-ink, #15100a);
+  font: 500 .9rem/1.2 var(--f-display, "Oswald", sans-serif); color: #140d06; }
+.hb-newsread .bn-who b { font-size: 1.05rem; letter-spacing: .04em; }
+.hb-newshint { margin-top: 8px; text-align: center; font: 700 .68rem/1 var(--f-mono, monospace); letter-spacing: .16em;
+  color: var(--vz-hot, #eafff8); text-shadow: 0 1px 2px #000; }
+.he-window.he-news { cursor: pointer; }
+/* the Hour's name, legible at every size: dark ink on a light plate beside the dot,
+   sized against the table's scale (--fit) so it reads the same on 1366x768 */
+#hela-brain-full .hb-node.hb-turn { text-indent: 0; font-size: 0; }
+#hela-brain-full .hb-node .hb-lbl { position: absolute; left: calc(100% + 4px); top: 50%; transform: translateY(-50%);
+  white-space: nowrap; padding: 2px 7px 3px; pointer-events: none;
+  font: 700 calc(15px / max(var(--fit, 1), .55)) / 1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em;
+  color: #140d06; text-shadow: none; background: #f6efd9; border: 2px solid var(--cx-ink, #15100a);
+  box-shadow: 0 0 0 2px var(--vz, #6fe8c8), 2px 2px 0 2px var(--cx-ink, #15100a); border-radius: 3px; }
+#hela-brain-full .hb-node.pinned .hb-lbl, #hela-brain-full .hb-node:hover .hb-lbl { background: var(--hela-hot, #eafff8); }
+html[data-ts="2"] #hela-brain-full .hb-node .hb-lbl { font-size: calc(17px / max(var(--fit, 1), .55)); }
+html[data-ts="3"] #hela-brain-full .hb-node .hb-lbl, html.pdx-a11y #hela-brain-full .hb-node .hb-lbl { font-size: calc(19px / max(var(--fit, 1), .55)); }
+/* every HELA message rides the eye: the phase explanation is now the chapter box at
+   each phase start (and the phase track's hover text); the fixed line steps down */
+#cx-phaseline { display: none !important; }
