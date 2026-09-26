@@ -49,6 +49,40 @@
     cp.insertBefore(d, cp.firstChild);
   };
 
+  /* ── THE COMIC MARKS ON A CHART PIECE (shared by all three charts) ──
+     The case files wear the comic's emanata (comic.js); the pieces on the chart wear the
+     same four, from public state only: ! Wanted, sweat drops at critical energy (6 or
+     less), stars the Hour a motor exploded, z z Z awaiting respawn. The piece's wrapper
+     gets st-wanted / st-crit / st-exploded / st-respawn, and a .pc-em-anchor group sits
+     just above the piece for anything else to hang there. The marks are static ink in the
+     seat's colour; a mark only pops once, the render it first appears (app.css). */
+  window.__pdxEmanata = window.__pdxEmanata || function (t, col, memo, dy) {
+    const st = t.statuses || [], set = [];
+    if (st.includes("awaiting_respawn") || t.awaiting_respawn) set.push("respawn");
+    else {
+      if (t.is_wanted || st.includes("wanted")) set.push("wanted");
+      if ((t.energy || 0) <= 6) set.push("crit");
+      if (st.includes("exploded")) set.push("exploded");
+    }
+    const had = new Set((memo[t.name] || "").split(" "));
+    memo[t.name] = set.join(" ");
+    const ink = `fill="${col}" stroke="#0b0806" stroke-width="2.8" paint-order="stroke"`;
+    const G = {
+      wanted: `<text y="7" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="21" ${ink}>!</text>`,
+      crit: `<path d="M -4.2 -7 Q -.8 -.8 -4.2 2.8 Q -7.6 -.8 -4.2 -7 Z M 4.8 -2.8 Q 7.8 2.8 4.8 6.2 Q 1.8 2.8 4.8 -2.8 Z" fill="${col}" stroke="#0b0806" stroke-width="1.8" paint-order="stroke"/>`,
+      exploded: `<text y="5" text-anchor="middle" font-size="13" ${ink}>\u2605\u2726\u2605</text>`,
+      respawn: `<text y="3.5" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="13.5" ${ink}>z z Z</text>`,
+    };
+    const WD = { wanted: 10, crit: 17, exploded: 38, respawn: 40 };
+    let x = -(set.reduce((a, k) => a + WD[k], 0) + (set.length - 1) * 4) / 2, marks = "";
+    for (const k of set) {
+      marks += `<g transform="translate(${(x + WD[k] / 2).toFixed(1)} 0)"><g class="pc-em-${k}${had.has(k) ? "" : " pc-em-new"}">${G[k]}</g></g>`;
+      x += WD[k] + 4;
+    }
+    return { cls: set.map((k) => " st-" + k).join(""),
+      g: `<g class="pc-em-anchor" transform="translate(0 ${dy})" pointer-events="none">${marks}</g>` };
+  };
+
 
   /* ── the five torn seams between the six era sheets ── */
   const SEAMS = [
@@ -1015,8 +1049,9 @@
         const burst = st.includes("exploded");                        // boiler burst, no sailing this hour (§5.2)
         const hunted = !!(R.merchantLast && R.merchantLast.target === t.name);
         const ini = esc(t.name.slice(0, 2).toUpperCase());
-        g += `<g class="sea-fixg${ghost ? " sea-ghost": ""}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self ? " (you)": ""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.booms}/12 booms${t.is_wanted ? " · WANTED": ""}${hunted ? " · hunted by the Merchant": ""}${burst ? " · boiler burst, cannot sail or activate this hour": ""}${ghost ? " · sheltered beyond time, the Reaches spare the terminated": ""}${dead && !ghost ? " · lost at sea (respawning)": ""}`)}" opacity="${dead && !ghost ? .45: 1}">
-          <g transform="translate(${bx} ${by})"><line x1="${(x - bx).toFixed(1)}" y1="${(y - by).toFixed(1)}" x2="0" y2="-3" stroke="${col}" stroke-width="1.6" stroke-linecap="round" opacity=".5" stroke-dasharray="2.6 2.4"/><g class="sea-fix-boat">
+        const em = window.__pdxEmanata(t, col, R.em || (R.em = {}), -46);   // above the sail
+        g += `<g class="sea-fixg${ghost ? " sea-ghost": ""}${em.cls}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self ? " (you)": ""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.booms}/12 booms${t.is_wanted ? " · WANTED": ""}${hunted ? " · hunted by the Merchant": ""}${burst ? " · boiler burst, cannot sail or activate this hour": ""}${ghost ? " · sheltered beyond time, the Reaches spare the terminated": ""}${dead && !ghost ? " · lost at sea (respawning)": ""}`)}" opacity="${dead && !ghost ? .45: 1}">
+          <g transform="translate(${bx} ${by})">${em.g}<line x1="${(x - bx).toFixed(1)}" y1="${(y - by).toFixed(1)}" x2="0" y2="-3" stroke="${col}" stroke-width="1.6" stroke-linecap="round" opacity=".5" stroke-dasharray="2.6 2.4"/><g class="sea-fix-boat">
               <!-- THE AURA. The tokens were too hard to track
                    across the three maps.
                    A token that is a small drawing in a busy chart cannot be found by its
