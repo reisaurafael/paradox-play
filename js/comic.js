@@ -22,7 +22,7 @@
    game.js calls three hooks: onEvent (every played event), onDecision (a
    decision for me), onRespond (I answered). Everything else lives here.
    ========================================================================= */
-import { roman } from "./util.js?202609261413";
+import { roman } from "./util.js?202609261421";
 
 const MAX_HITS = 3;
 const STRIP_MAX = 24, STRIP_SHOW = 12;   // the story kept, the panels shown               // concurrent impact bursts, oldest dropped first

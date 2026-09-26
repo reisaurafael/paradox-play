@@ -3,7 +3,7 @@
    client's fetch("/api/...") and WebSocket(".../ws/...") calls to that worker,
    so the game client itself runs unchanged. */
 (function () {
-  const worker = new Worker("play-worker.js?202609261413", { type: "module" });
+  const worker = new Worker("play-worker.js?202609261421", { type: "module" });
   let nextId = 1;
   const httpWaiters = new Map();
   const sockets = new Map();

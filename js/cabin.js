@@ -1863,7 +1863,9 @@
       offline,
       crit: (me.energy || 0) <= HELA_CRIT,
       wanted: !!(me.is_wanted || sts.includes("wanted")),
-      immune: terminated && !offline && me.century >= 24 && !immunity.spent,
+      // the server says it outright; the local guess only covers an older server
+      immune: "atemporal_immune" in me ? !!me.atemporal_immune && !offline
+        : terminated && !offline && me.century >= 24 && !immunity.spent,
     };
   }
   window.__helaConditions = function(){

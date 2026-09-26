@@ -14,9 +14,9 @@
    Regra do servidor que manda aqui: assento sem conexao e jogado pelo bot
    na hora. A mesa so comeca depois que TODOS os paineis estao ligados.
    ========================================================================= */
-import { normalizar } from "./controle.js?202609261413";
-import { api } from "./net.js?202609261413";
-import { PALETTE } from "./util.js?202609261413";
+import { normalizar } from "./controle.js?202609261421";
+import { api } from "./net.js?202609261421";
+import { PALETTE } from "./util.js?202609261421";
 
 const MAX_PAINEIS = 4;
 const LS_KEY = "paradoxo.mesa.v1";

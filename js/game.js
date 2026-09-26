@@ -11,19 +11,19 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609261413";
-import { audio } from "./audio.js?202609261413";
+import { icon } from "./icons.js?202609261421";
+import { audio } from "./audio.js?202609261421";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609261413";
-import { comic } from "./comic.js?202609261413";
-import { CatEngine } from "./cat.js?202609261413";
-import { tutorials } from "./tutorial.js?202609261413";
-import { profile } from "./profile.js?202609261413";
-import { Camera } from "./camera.js?202609261413";
+import { juice } from "./juice.js?202609261421";
+import { comic } from "./comic.js?202609261421";
+import { CatEngine } from "./cat.js?202609261421";
+import { tutorials } from "./tutorial.js?202609261421";
+import { profile } from "./profile.js?202609261421";
+import { Camera } from "./camera.js?202609261421";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609261413";
+} from "./util.js?202609261421";
 
 // O LEILAO E A FASE 1 DO TURNO NORMAL, e nao um modo a parte (arquitetura
 // fixada em 2026-07-31): uma janela dimensional que precede Delivery, do
