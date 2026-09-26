@@ -11,25 +11,23 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609261550";
-import { audio } from "./audio.js?202609261550";
+import { icon } from "./icons.js?202609261656";
+import { audio } from "./audio.js?202609261656";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609261550";
-import { comic } from "./comic.js?202609261550";
-import { CatEngine } from "./cat.js?202609261550";
-import { tutorials } from "./tutorial.js?202609261550";
-import { profile } from "./profile.js?202609261550";
-import { Camera } from "./camera.js?202609261550";
+import { juice } from "./juice.js?202609261656";
+import { comic } from "./comic.js?202609261656";
+import { CatEngine } from "./cat.js?202609261656";
+import { tutorials } from "./tutorial.js?202609261656";
+import { profile } from "./profile.js?202609261656";
+import { Camera } from "./camera.js?202609261656";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609261550";
+} from "./util.js?202609261656";
 
-// O LEILAO E A FASE 1 DO TURNO NORMAL, e nao um modo a parte (arquitetura
-// fixada em 2026-07-31): uma janela dimensional que precede Delivery, do
-// mesmo jeito que Delivery precede Market. Por isso ele entra na FRENTE da
-// fila, no mesmo trilho que a HELA acende no topo da tela, e nao como uma
-// tela separada que o jogador nao sabe nomear.
+// The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
+// window that comes before Delivery the way Delivery comes before Market. So it
+// leads the list, on the same track HELA lights at the top of the screen.
 const PHASES = [
   ["leilao", "Auction"], ["delivery", "Delivery"], ["market", "Market"],
   ["main", "Generators"], ["activation", "Activation"],
@@ -60,35 +58,30 @@ const REWARD_CONTRACTS = [
     ["III", "Permanent +1 buff to one Time Machine module."]] },
 ];
 
-// Overdrive / danger zone: travelling through centuries IX->Year Zero costs 2
-// energy per century (engine OVERDRIVE_THRESHOLD = X, i.e. entering ≤ IX). The
-// timeline shades 0..9 as a hazard band.
-/* 4c, per-card signature FX: flagship cards get a visual "tell" on
-   activation. Vocabulary: flare / glint / ripple (juice.signature). */
+// Signature FX: flagship cards get a visual tell when they activate
+// (flare / glint / ripple, see juice.signature).
 const CARD_FX = {
-  // art & treasure, golden flares
-  "Mona Lisa":                    { kind: "flare",  hue: 45, count: 14, size: 8 },
-  "Excalibur":                    { kind: "flare",  hue: 50, count: 16, size: 9 },
-  "Cálice do Príncipe Drácula":   { kind: "flare",  hue: 355, count: 12, size: 8 },
-  "Porcelana":                    { kind: "flare",  hue: 200, count: 10, size: 6 },
+  // art and treasure, golden flares
+  "Mona Lisa":                   { kind: "flare",  hue: 45,  count: 14, size: 8 },
+  "Excalibur":                   { kind: "flare",  hue: 50,  count: 16, size: 9 },
+  "Prince Dracula's Chalice":    { kind: "flare",  hue: 355, count: 12, size: 8 },
+  "Porcelain":                   { kind: "flare",  hue: 200, count: 10, size: 6 },
   // weapons, red glints
-  "A Espada de Átila":            { kind: "glint",  hue: 8,  count: 14, size: 9 },
-  "Lança de Fogo":                { kind: "glint",  hue: 22, count: 16, size: 9 },
-  "Canhão de Vingança da Rainha Anne": { kind: "glint", hue: 4, count: 18, size: 10 },
-  "Espada de Laser":              { kind: "glint",  hue: 120, count: 14, size: 9 },
-  // instruments & navigation, teal ripples
-  "A Máquina de Alan Turing":     { kind: "ripple", hue: 172 },
-  "Astrolábio":                   { kind: "ripple", hue: 190 },
-  "Bússola de Navegação":         { kind: "ripple", hue: 165 },
-  "Janela do Tempo":              { kind: "ripple", hue: 178 },
+  "Attila's Sword":              { kind: "glint",  hue: 8,   count: 14, size: 9 },
+  "Fire Lance":                  { kind: "glint",  hue: 22,  count: 16, size: 9 },
+  "Queen Anne's Revenge Cannon": { kind: "glint",  hue: 4,   count: 18, size: 10 },
+  "Laser Sword":                 { kind: "glint",  hue: 120, count: 14, size: 9 },
+  // instruments and navigation, teal ripples
+  "Alan Turing's Machine":       { kind: "ripple", hue: 172 },
+  "Astrolabe":                   { kind: "ripple", hue: 190 },
+  "Navigation Compass":          { kind: "ripple", hue: 165 },
+  "Window of Time":              { kind: "ripple", hue: 178 },
   // tech, violet glints
-  "A Lâmpada de Thomas Edison":   { kind: "glint",  hue: 52, count: 16, size: 9 },
-  "Computador Quântico":          { kind: "glint",  hue: 265, count: 16, size: 8 },
-  "Motor de Corrente Alternada de Tesla": { kind: "glint", hue: 275, count: 18, size: 8 },
-  "Dente Azul do Harald":         { kind: "ripple", hue: 210 },
+  "Thomas Edison's Lamp":        { kind: "glint",  hue: 52,  count: 16, size: 9 },
+  "Quantum Computer":            { kind: "glint",  hue: 265, count: 16, size: 8 },
+  "Tesla's AC Motor":            { kind: "glint",  hue: 275, count: 18, size: 8 },
+  "Harald's Bluetooth":          { kind: "ripple", hue: 210 },
 };
-
-const OVERDRIVE_ZONE_MAX = 9;
 
 // Card-pick zones that live visibly on the board (the Wagon, the Secret bay, the
 // player panels). Candidates from anywhere else (recycled, receptor) use the popup.
@@ -111,7 +104,14 @@ const PACE = {
 // each step; Slow stretches further, Fast is for veterans who know the flow.
 // Deliberately unhurried so events are easy to follow; Slow is a big stretch for
 // first-timers, Fast stays snappy for veterans.
-const SPEED_FACTOR = { slow: 3.2, normal: 1.9, fast: 0.7 };
+// SLOW IS GENUINELY SLOW: every consequence plays out and rests before the next
+// (it was 3.2, which players read as fast).
+const SPEED_FACTOR = { slow: 6, normal: 1.9, fast: 0.7 };
+// On Slow, the events that change something the player must watch hold the table
+// for a beat after they finish, so one thing happens, then the next.
+const CONSEQUENCES = new Set(["recharged", "paradox_resolved", "heated", "exploded", "traveled",
+  "merchant_moved", "delivered", "card_bought", "card_renewed", "overloaded", "cp_earned",
+  "reward_resolved", "terminated", "respawned", "wanted", "activated", "recycled", "allocations_revealed"]);
 
 export class Game {
   constructor(conn, seat) {
@@ -245,11 +245,6 @@ export class Game {
     return "primordial";
   }
 
-  // True when a century falls inside an era band (§13.3). Boundary centuries belong to
-  // two eras, e.g. V is both Antiquity (I-V) and High M.A., matching engine timeline.
-  _inEra(century, label) {
-    return ERAS.some(([a, b, l]) => l === label && century >= a && century <= b);
-  }
 
   setSpeed(s) { if (SPEED_FACTOR[s]) this.speed = s; }
   // Pacing is purely cosmetic: it must NEVER delay a decision or stall a player.
@@ -258,10 +253,13 @@ export class Game {
   // queue has backed up. Zero-delay sleeps resolve on a microtask, which is not
   // throttled in background tabs, so a hidden client always catches up instantly.
   _ms(kind) {
-    if (this.pendingDecision || this._skip) return 0;
+    if (this._skip) return 0;
+    // on Slow the lead-up to a decision still plays at its pace: the next action is
+    // offered only after the consequences before it have been seen
+    if (this.pendingDecision && this.speed !== "slow") return 0;
     if (typeof document !== "undefined" && document.hidden) return 0;
-    if (this.queue.length > 6) return 0;
-    return (PACE[kind] ?? 200) * SPEED_FACTOR[this.speed];
+    if (this.queue.length > (this.speed === "slow" ? 40 : 6)) return 0;
+    return Math.min((PACE[kind] ?? 200) * SPEED_FACTOR[this.speed], 7000);
   }
   _sleep(ms) {
     if (this._skip) ms = Math.min(ms, 20);   // SKIP (F): the replay races to the present
@@ -272,7 +270,7 @@ export class Game {
   _scale() { return SPEED_FACTOR[this.speed] || 1; }
   // Motion multiplier for the card-flight engine, honours Slow/Normal/Fast but
   // stays snappier than event lingers (a flying card should feel light, not slow).
-  _motion() { return ({ slow: 1.5, normal: 1.0, fast: 0.7 })[this.speed] || 1; }
+  _motion() { return ({ slow: 3.2, normal: 1.0, fast: 0.7 })[this.speed] || 1; }
 
   /* ---- message intake: route everything through the paced queue ---- */
   onMessage(kind, msg) {
@@ -291,7 +289,11 @@ export class Game {
         // strand the next decision and lock a player out, the non-host bug).
         try {
           if (kind === "event") {
+            // HELA reads each moment before the next one plays (comic.js gate, 12 s at most)
+            try { await comic.gate(msg.kind); } catch (e) {}
             await this.playEvent(msg);
+            if (this.speed === "slow" && CONSEQUENCES.has(msg.kind) && !document.hidden)
+              await this._sleep(1100);           // the beat after a consequence (F skips it)
           } else {                   // state
             this.applyState(msg.view);
             await this._sleep(this._ms("state"));
@@ -358,9 +360,9 @@ export class Game {
   }
 
   colorOf(name) {
-    // A COR E DE QUEM ESCOLHEU. O lobby carrega a cor que cada jogador marcou
-    // no perfil (o servidor resolve colisao), entao a mesa inteira ve a mesma
-    // pessoa da mesma cor. Sem escolha, cai na ordem dos assentos, como antes.
+    // The colour is the player's own pick. The lobby carries the colour each player
+    // chose in the profile (the server settles clashes), so the whole table sees the
+    // same person in the same colour. With no pick, it falls back to seat order.
     const picked = this._seatColours && this._seatColours[name];
     if (picked != null) return seatColor(picked);
     if (!(name in this.seatIndex)) this.seatIndex[name] = Object.keys(this.seatIndex).length;
@@ -466,11 +468,18 @@ export class Game {
         merchant: this.view.merchant_century,
       });
     this.renderPlayers();
-    this.renderMarket();
+    // THE MARKET AND THE DRAWER ARE REBUILT ONLY WHEN WHAT THEY SHOW CHANGED. Every state
+    // message rebuilt both from scratch, and the rebuilt regions then had to be restyled,
+    // repainted and re-rastered, most of the time into exactly the picture they had.
+    // Direct calls elsewhere still always render (renderMarket clears the memo itself).
+    const mSig = this._marketSig();
+    if (mSig !== this._mktSig) { this.renderMarket(); this._mktSig = mSig; }
     this.renderRucksack();
     if (!this.alloc) { this.renderMachineIdle(); this.renderDiceIdle(); }
     this.renderPriority();
-    this.renderDrawer();
+    const dSig = this._drawerSig();
+    this._drawerRebuilt = dSig !== this._drwSig;
+    if (this._drawerRebuilt) { this.renderDrawer(); this._drwSig = dSig; }
     this._rearmDecisionSurface();
   }
 
@@ -480,12 +489,44 @@ export class Game {
   // voucher in the slot or recycled a card) left the reward contracts, the traveler
   // sheets or the buff cells with nothing to click, and the match stood still.
   // Put the live decision's surface back on the fresh nodes.
+  // A stable number per decision request: every memoised surface below keys on it, so a
+  // new or answered decision always rebuilds what it had marked.
+  _reqKey() {
+    const r = this.pendingReq;
+    if (!r) return 0;
+    this._reqIds = this._reqIds || new WeakMap();
+    if (!this._reqIds.has(r)) this._reqIds.set(r, (this._reqSeq = (this._reqSeq || 0) + 1));
+    return this._reqIds.get(r);
+  }
+  _selSig() {
+    const s = this.selectReq;
+    return s ? s.mode + ":" + JSON.stringify(s.byName || {}) : "";
+  }
+  _marketSig() {
+    const v = this.view || {};
+    const pick = (o) => (o === undefined ? null : o);
+    try {
+      return JSON.stringify([v.market_revealed, v.market_access, v.merchant_century, v.merchant_movement_dice,
+        v.merchant_last_move, v.merchant_card_count, v.secret_market_open, pick(v.secret_market_current),
+        v.secret_market_card_count, this._self() || null, this._reqKey(), this.marketMode || null,
+        this._selSig(), pick(this.secretDeal), !!this._secretOpening, !!this._secretRevealing,
+        pick(this._signState), !!this._pendingSignDrop, !!this._signAnimating, (this.rolls || []).length,
+        !!this.marketReq]);
+    } catch (e) { return Math.random(); }
+  }
+  _drawerSig() {
+    try {
+      return JSON.stringify([this._self() || null, this._reqKey(), this._drawerOpen || null,
+        this._horrorFloor || null, this.camera && this.camera.scene]);
+    } catch (e) { return Math.random(); }
+  }
+
   _rearmDecisionSurface() {
     const req = this.pendingReq;
     if (!req) return;
     try {
       const o = req.options || {};
-      if (req.kind === "reward_category") this._rewardInDrawer(req);
+      if (req.kind === "reward_category") { if (this._drawerRebuilt !== false) this._rewardInDrawer(req); }
       else if (req.kind === "matrix_buff") this._buffOnMatrix(req, true);
       else if (req.kind === "target" && o.target_type === "traveler"
                && this._sheetsReq === req) this._travelerOnSheets(req);
@@ -502,6 +543,7 @@ export class Game {
   // folders, readable anytime (§5). Presentation only, reads the self traveler
   // from the view; no ingest change, and the host only exists under body.cam-on.
   renderDrawer() {
+    this._drwSig = undefined;   // a direct call always renders; applyState re-keys it
     const body = document.getElementById("drawer-body");
     if (!body) return;
     const me = this._self() || {};
@@ -861,6 +903,13 @@ export class Game {
     return pi === 0 ? "skin-ori" : pi === 2 ? "skin-sing" : "";
   }
   renderPlayers() {
+    // A CASE FILE IS REBUILT ONLY WHEN ITS SUBJECT CHANGED. Every state message used to
+    // rebuild every file; now each keeps its node (and so its paint and raster) while its
+    // traveller, their place relative to me, the turn, the targeting and the pending
+    // decision are unchanged. Anything that marks a file keys into that signature.
+    const oldCards = new Map();
+    this.dom.players.querySelectorAll(".cb-grid > .pcard[data-seat]").forEach((c) => oldCards.set(c.dataset.seat, c));
+    const reqKey = this._reqKey(), selSig = this._selSig();
     this.dom.players.innerHTML = "";
     // THE CASE BOARD v2, per rival: a hanging BADGE (credential summary) with
     // the FULL CASE FILE clipped beneath it, always open. Columns grow when
@@ -875,7 +924,13 @@ export class Game {
     const prevAll = this._prevStats || {};
     this.view.travelers.filter((t) => !(t.is_self || t.name === this.seat)).forEach((t) => {
       const col = this.colorOf(t.name);
+      const meS = this._self();
+      const relS = !meS ? "" : t.century < meS.century ? "pc-past" : t.century > meS.century ? "pc-future" : "";
+      const sig = JSON.stringify(t) + "|" + relS + "|" + (t.name === this.activeSeat) + "|" + selSig + "|" + reqKey + "|" + col;
+      const keep = oldCards.get(t.name);
+      if (keep && keep.__pdxSig === sig) { rack.appendChild(keep); return; }
       const card = el("div", "pcard cfolio");
+      card.__pdxSig = sig;
       card.dataset.seat = t.name;
       if (t.name === this.activeSeat) card.classList.add("active-turn");
       const sel = this.selectReq;
@@ -1071,7 +1126,6 @@ export class Game {
     }, { once: true }), 0);
   }
   showPanelDetail(t, anchor) {
-    clearTimeout(this._panelHideTimer);
     // Same seat already open? keep it.
     if (this.panelDetail && this.panelDetail.dataset.seat === t.name) return;
     this.hidePanelDetail();
@@ -1175,12 +1229,9 @@ export class Game {
       html += `<div class="pd-empty">Nothing delivered yet.</div>`;
     }
     fly.innerHTML = html;
-    // O BILHETE SEGURADO MORA NO BODY, e nao dentro de #screen-game. Um
-    // z-index so vale dentro do proprio contexto de empilhamento: 52 dentro
-    // de #screen-game perde para qualquer coisa de #hull, e era por isso que
-    // o pip-boy passava por cima do bilhete na mao. No body ele disputa com
-    // o mundo inteiro, e o unico que fica acima dele e o plano do cursor
-    // (z 60000), que e o certo: nada tapa a mao.
+    // On the body, not inside #screen-game: a z-index only counts inside its own
+    // stacking context, so 52 inside #screen-game loses to anything in #hull. On the
+    // body only the cursor plane (z 60000) sits above it, which is right.
     document.body.appendChild(fly);
     this.panelDetail = fly;
     // Interactive: let the cursor travel onto the flyout to read / recycle.
@@ -1300,16 +1351,11 @@ export class Game {
       }
     }
   }
-  schedulePanelHide() {
-    clearTimeout(this._panelHideTimer);
-    this._panelHideTimer = setTimeout(() => this.hidePanelDetail(), 220);
-  }
   hidePanelDetail() {
     this._hidePaper();
     if (this._attachEls) { this._attachEls.forEach((a) => a.remove()); this._attachEls = null; }
     if (this._openCard) { this._openCard.classList.remove("file-open"); this._openCard = null; }
     if (this._docCloser) { document.removeEventListener("click", this._docCloser); this._docCloser = null; }
-    clearTimeout(this._panelHideTimer);
     if (this.panelDetail) { this.panelDetail.remove(); this.panelDetail = null; }
   }
   svgInline(name) { return `<span class="ico-sm">${icon(name)}</span>`; }
@@ -1407,6 +1453,7 @@ export class Game {
     host.appendChild(ledger);
   }
   renderMarket() {
+    this._mktSig = undefined;   // a direct call always renders; applyState re-keys it
     this._mountLedger();
     const m = this.dom.market;
     const v = this.view;
@@ -1425,6 +1472,16 @@ export class Game {
         `<span class="mm-cell"><span class="mm-k">Speed</span><span class="mm-v">${dice} ${dice === 1 ? "die" : "dice"}</span></span>` +
         `<span class="mm-cell"><span class="mm-k">Deck</span><span class="mm-v">${v.merchant_card_count}</span></span>` +
         `<span class="mm-cell"><span class="mm-k">Heading</span><span class="mm-v">${dir}${lm ? ` (${Math.abs(lm)})` : ""}</span></span>`;
+      // WHEN / HOW / WHY he moves, the same three facts the map shows beside him
+      try {
+        const rule = window.__pdxMerchantRule && window.__pdxMerchantRule(v);
+        if (rule) {
+          const e2 = (t) => String(t).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+          this.dom.marketMeta.innerHTML += `<div class="mm-rule">`
+            + `<p><b>WHEN</b> ${e2(rule.when)}</p><p><b>HOW</b> ${e2(rule.how.join(" "))}</p>`
+            + `<p><b>WHY</b> ${e2(rule.why.join(" "))}</p>${rule.last ? `<p><b>LAST</b> ${e2(rule.last.replace(/^Last move: /, ""))}</p>` : ""}</div>`;
+        }
+      } catch (e) {}
     }
 
     // ---- Shopping mode: this seat is taking its Market turn, in-panel (no popup) ----
@@ -1909,6 +1966,7 @@ export class Game {
         } else {
           cell.innerHTML += `<span class="mod-ico">${icon(glyph)}</span><span class="mod-cap">${caption}</span>`;
         }
+        this._paintModFx(cell, r, c, matrix || (this.alloc ? this.alloc.matrix : null));
         if (interactive) {
           this.wireCell(cell, r, c);
           cell.addEventListener("click", () => this.onCellClick(r, c));
@@ -2066,7 +2124,7 @@ export class Game {
         if (!cell) return;
         cell.classList.toggle("locked", rowSealed);
         const val = this.alloc.matrix[r][c];
-        if (+(cell.dataset.val || 0) === val) return;   // unchanged: hands off
+        if (+(cell.dataset.val || 0) === val) { this._paintModFx(cell, r, c, this.alloc.matrix); return; }   // unchanged: hands off
         cell.dataset.val = val;
         const modNum = r * 3 + c + 1;
         const buff = cell.classList.contains("buffed")
@@ -2076,8 +2134,33 @@ export class Game {
         if (val) cell.appendChild(this.dieEl(val, { placed: true, r, c }));
         else cell.innerHTML += `<span class="mod-ico">${icon(glyph)}</span>`
           + `<span class="mod-cap">${caption}</span>`;
+        this._paintModFx(cell, r, c, this.alloc.matrix);
       });
     });
+  }
+
+  // WHAT EACH MODULE DOES, IN WORDS AND NUMBERS, always readable on the cell: its
+  // job while empty ("HEAT", "TRAVEL x1"), the result once a die sits on it
+  // ("+2 HEAT", "MOVE 2"), and, while placing, which module must be filled first
+  // ("AFTER 7"): linear progression you can see.
+  _paintModFx(cell, r, c, m) {
+    const JOB = [["ENERGY", "GOLD", "ENERGY+GOLD"], ["FUTURE", "PRESENT", "PAST"], ["HEAT", "TRAVEL x1", "TRAVEL x2"]];
+    const buffEl = cell.querySelector(".mod-buff");
+    const buff = buffEl ? parseInt(buffEl.textContent.replace("+", ""), 10) || 0 : 0;
+    const raw = m ? m[r][c] : 0, v = raw ? raw + buff : 0;
+    let text = JOB[r][c], cls = "";
+    if (v) {
+      text = [[`+${v} ENERGY`, `+${v} GOLD`, `+${v}E +${v}G`], [`-${v} AHEAD`, `-${v} HERE`, `-${v} BEHIND`],
+        [`+${v} HEAT`, `MOVE ${v}`, `MOVE ${2 * v}`]][r][c];
+      cls = "fx-set";
+    } else if (this.alloc && c > 0 && m && !m[r][c - 1]) {
+      text = `AFTER ${r * 3 + c}`;
+      cls = "fx-wait";
+    }
+    let fx = cell.querySelector(".mod-fx");
+    if (!fx) { fx = document.createElement("span"); cell.appendChild(fx); }
+    fx.className = "mod-fx" + (cls ? " " + cls : "");
+    if (fx.textContent !== text) fx.textContent = text;
   }
 
   // The cockpit toolbar is a horizontal strip: Generators · Escape valve ·
@@ -2231,7 +2314,7 @@ export class Game {
   /* =========================== THE RUCKSACK ============================
      The operative's own worn travelling bag, a distinct third personal zone.
      Equipped objects are real mini-cards tucked into the bag's mouth at slight,
-     uneven angles ("bagunçada"); consumable vouchers ride in a side pocket.
+     uneven angles (messy on purpose); consumable vouchers ride in a side pocket.
      Capacity reads as strap-loops in the header (filled loop = a tucked card). */
   renderRucksack() {
     const host = this.dom.ruck;
@@ -2305,7 +2388,7 @@ export class Game {
         + `<span class="tkt-name">${name}</span><span class="tkt-sub">${sub}</span></span>`;
       v.addEventListener("dragstart", (e) => {
         try { e.dataTransfer.setData("text/voucher", kind); e.dataTransfer.effectAllowed = "move"; } catch (err) {}
-        this._dragImageLimpa(e, v);
+        this._cleanDragImage(e, v);
         this._dragVoucher = kind;
         document.body.classList.add("voucher-drag");
       });
@@ -2313,8 +2396,8 @@ export class Game {
         this._dragVoucher = null;
         document.body.classList.remove("voucher-drag");
       });
-      // CLICAR PEGA, como na carta. O arrasto continua funcionando: dragstart
-      // so dispara quando o ponteiro anda, entao os dois gestos convivem.
+      // A click picks it up, like a card. Dragging still works: dragstart only
+      // fires once the pointer moves, so the two gestures live together.
       v.addEventListener("click", (e) => {
         e.stopPropagation();
         this._pickUpVoucher(kind, v);
@@ -2326,12 +2409,10 @@ export class Game {
       mk("market", me ? (me.market_voucher || 0) : 0, "MARKET WINDOW", "atemporal merchant access"),
       mk("item",   me ? (me.item_voucher || 0) : 0,   "ITEM WINDOW",   "extra activation window"),
     ].filter(Boolean);
-    // A FASE DO LEILAO RACKEIA NO MESMO COMPARTIMENTO. Ela nao guarda nada
-    // aqui: a cada vez que este metodo desenha o rack, ele PERGUNTA se ha
-    // bilhete de lote para mostrar (`window.__lfLotTickets`). Como a
-    // pergunta e feita toda vez, nunca existe um instante em que o rack
-    // fica com um bilhete desatualizado depois de um re-render, o defeito
-    // que a tentativa anterior (injetar de fora, depois do fato) tinha.
+    // The Auction's lot tickets rack in the same pocket. Nothing is stored here:
+    // every time this draws the rack it ASKS for the lot tickets
+    // (`window.__lfLotTickets`), so the rack never shows a stale ticket after a
+    // re-render.
     try {
       const lots = window.__lfLotTickets ? window.__lfLotTickets(me): [];
       lots.forEach((lt) => {
@@ -2342,15 +2423,15 @@ export class Game {
         if (lt.title) v.title = lt.title;
         v.innerHTML = `<span class="tkt-stub"><b>${lt.stub}</b></span>`
           + `<span class="tkt-body">${lt.face}</span>`
-          /* do quinto bilhete em diante o bolso para de empilhar papel e passa
-             a contar, que e exatamente o que os contratos ja fazem do lado. */
-          + (lt.sobra ? `<span class="rv-mais">+${lt.sobra}</span>` : "");
+          // from the fifth ticket on the pocket stops stacking paper and counts,
+          // like the contracts next to it
+          + (lt.sobra ? `<span class="rv-more">+${lt.sobra}</span>` : "");
         v.addEventListener("dragstart", (e) => {
           try {
             e.dataTransfer.setData("text/voucher", "lot:" + lt.id);
             e.dataTransfer.effectAllowed = "move";
           } catch (err) {}
-          this._dragImageLimpa(e, v);
+          this._cleanDragImage(e, v);
           this._dragVoucher = "lot:" + lt.id;
           document.body.classList.add("voucher-drag");
         });
@@ -2369,38 +2450,22 @@ export class Game {
     return wrap;
   }
 
-  /* ══════════════════════════════════════════════════════════════════════
-     PEGAR UM BILHETE COMO SE PEGA UMA CARTA
+  /* ══ PICK UP A TICKET THE WAY YOU PICK UP A CARD ══════════════════════
+     A card is clicked: it follows the cursor and the next click decides where it
+     goes. Vouchers work the same way, the classic ones and the Auction's lot
+     tickets alike. Dragging still works too, since `dragstart` only fires once the
+     pointer really moves. Dropping anywhere but the machine's mouth puts the ticket
+     back in the bag, just like a card. */
 
-     Ate aqui um voucher so podia ser ARRASTADO: apertar, segurar e levar ate
-     a boca do pip-boy sem soltar. A carta ja nao funciona assim ha muito
-     tempo, nela voce CLICA, ela vem junto do cursor, e o proximo clique
-     decide onde ela vai. Sao dois gestos diferentes para duas coisas que o
-     jogador entende como a mesma: "uma coisa da maleta que eu levo ate a
-     maquina".
-
-     Entao o bilhete passa a usar o mesmo gesto da carta, e isto vale para os
-     vouchers do jogo CLASSICO e para os bilhetes de lote do leilao juntos,
-     eles sao a mesma mecanica e agora tem o mesmo codigo. O arrasto continua
-     existindo para quem preferir; os dois convivem porque `dragstart` so
-     dispara quando o ponteiro realmente anda.
-
-     Soltar em qualquer lugar que nao seja a boca da maquina devolve o
-     bilhete para a maleta, que e exatamente o que a carta faz. */
-  /* ══ O RETRATO DO ARRASTO ═════════════════════════════════════════════
-     Segurar o bilhete e arrastar (o arrasto nativo do HTML) fazia ele virar
-     UM BLOCO PRETO na mao. O navegador fotografa o elemento para usar de
-     retrato do arrasto, e o bilhete de hoje e recortado (clip-path) e
-     torto (rotate): a foto dessa combinacao sai preta no Chromium.
-     Um clone limpo, sem recorte e sem giro, posa pelo original. Ele nasce
-     DENTRO da zona da maleta para vestir a mesma pele de papel, fora da
-     tela, e morre no quadro seguinte. */
-  _dragImageLimpa(e, v) {
+  /* The drag image. Chromium photographs the dragged element, and a ticket that is
+     clipped (clip-path) and rotated comes out as a black block. A clean clone, with
+     no clip and no rotation, poses for the original off screen and is gone the
+     next frame. */
+  _cleanDragImage(e, v) {
     try {
       const gp = v.cloneNode(true);
-      /* no BODY, nunca dentro da maleta: um ancestral com overflow cortando
-         o clone deixa o retrato vazio. A pele vem pela classe drag-ghost-tkt,
-         que veste o papel fora do rack. */
+      // on the BODY, never inside the bag: an ancestor with overflow clipping the
+      // clone leaves the image empty. The drag-ghost-tkt class dresses it in paper.
       gp.classList.add("drag-ghost-tkt");
       const w = v.offsetWidth || 190;
       gp.style.cssText = "position:fixed;left:-9999px;top:0;margin:0;"
@@ -2412,19 +2477,16 @@ export class Game {
     } catch (err) {}
   }
   _pickUpVoucher(kind, srcEl) {
-    if (this._vcarry) { this._dropVoucher(false); return; }   // clicar de novo devolve
-    if (this._carry) return;                 // ja esta com uma carta na mao
+    if (this._vcarry) { this._dropVoucher(false); return; }   // a second click puts it back
+    if (this._carry) return;                 // already holding a card
     const fly = el("div", "voucher-carry");
     const ghost = srcEl.cloneNode(true);
     ghost.classList.add("vc-held");
     ghost.removeAttribute("draggable");
     fly.appendChild(ghost);
-    // O BILHETE SEGURADO MORA NO BODY, e nao dentro de #screen-game. Um
-    // z-index so vale dentro do proprio contexto de empilhamento: 52 dentro
-    // de #screen-game perde para qualquer coisa de #hull, e era por isso que
-    // o pip-boy passava por cima do bilhete na mao. No body ele disputa com
-    // o mundo inteiro, e o unico que fica acima dele e o plano do cursor
-    // (z 60000), que e o certo: nada tapa a mao.
+    // On the body, not inside #screen-game: a z-index only counts inside its own
+    // stacking context, so 52 inside #screen-game loses to anything in #hull. On the
+    // body only the cursor plane (z 60000) sits above it, which is right.
     document.body.appendChild(fly);
     this._vcarry = { kind, fly, srcEl };
     document.body.classList.add("carrying-voucher");
@@ -2436,7 +2498,7 @@ export class Game {
     const move = (e) => {
       fly.style.left = e.clientX + "px";
       fly.style.top = e.clientY + "px";
-      // a boca da maquina acende quando o bilhete passa por cima dela
+      // the machine's mouth lights up while the ticket is over it
       const td = document.getElementById("ticket-drop");
       if (td) {
         const b = td.getBoundingClientRect();
@@ -2448,57 +2510,46 @@ export class Game {
     window.addEventListener("mousemove", move);
     this._vcarryMove = move;
     try { audio.play("lift"); } catch (e) {}
-    // o clique SEGUINTE decide (um tique depois, para o clique que pegou o
-    // bilhete nao ser o mesmo que o solta)
+    // the NEXT click decides (one tick later, so the click that picked the ticket
+    // up is not the one that drops it)
     setTimeout(() => {
       const onClick = (e) => {
         if (!this._vcarry) return;
         if (e.target.closest(".voucher-carry")) return;
         const k = this._vcarry.kind;
-        // QUEM ESTA DEBAIXO DO CURSOR, e nao quem recebeu o evento. Com o
-        // bilhete voando junto do ponteiro, o alvo do clique pode ser um
-        // painel qualquer que esta por cima da boca, e ai a entrega falhava
-        // sem motivo aparente.
-        /* PELO RETANGULO, e nao por quem atende o ponto. `elementFromPoint`
-           devolve o PLANO DO CURSOR, que cobre a tela inteira e nao e filho
-           do leitor, entao `closest` voltava vazio e o bilhete era recusado
-           mesmo caindo em cima da boca. Medido numa partida: nenhuma chamada
-           ao leitor, tres bilhetes empilhados na maleta, nada instalado.
-           A pergunta certa e geometrica: o ponto onde eu soltei esta DENTRO
-           da boca? Isso nenhum painel por cima consegue mentir. */
-        const dentro = (sel) => {
+        // Test the drop point against the target's RECTANGLE, not the element under
+        // the point: elementFromPoint returns the cursor plane, which covers the whole
+        // screen, so `closest` came back empty and a ticket dropped right on the mouth
+        // was refused.
+        const inside = (sel) => {
           const el = document.querySelector(sel);
           if (!el) return false;
           const b = el.getBoundingClientRect();
           if (b.width < 2 || b.height < 2) return false;
-          const folga = 10;         // a boca perdoa a mao um pouco torta
-          return e.clientX >= b.left - folga && e.clientX <= b.right + folga
-            && e.clientY >= b.top - folga && e.clientY <= b.bottom + folga;
+          const slack = 10;         // the mouth forgives a slightly crooked hand
+          return e.clientX >= b.left - slack && e.clientX <= b.right + slack
+            && e.clientY >= b.top - slack && e.clientY <= b.bottom + slack;
         };
-        /* ══ SOLTAR NO LEILAO E DESCARTAR ═════════════════════════════
-           O mesmo gesto que recicla carta no mercado, aplicado ao bilhete:
-           levar ele de volta para a sala do leilao devolve o lote ao Bureau.
-           Serve para quando a maleta enche e voce prefere abrir espaco a
-           carregar papel que nao vai usar. */
-        const naSala = dentro(".lf-house") || dentro(".lf-turntable");
-        const mouth = dentro("#ticket-drop") || dentro("#hull-console")
+        // Dropping a lot ticket back on the Auction room returns the lot to the
+        // Bureau, the same gesture that recycles a card at the Market: for when the
+        // bag is full and you would rather free room than carry paper you won't use.
+        const onAuction = inside(".lf-house") || inside(".lf-turntable");
+        const mouth = inside("#ticket-drop") || inside("#hull-console")
           || (e.target.closest
               && e.target.closest("#ticket-drop, #hull-console, .hull-manopla"));
-        if (!mouth && naSala && k && k.indexOf("lot:") === 0){
+        if (!mouth && onAuction && k && k.indexOf("lot:") === 0){
           const id = k.slice(4);
-          let queimou = false;
-          try { queimou = !!(window.__lfBurnTicket && window.__lfBurnTicket(id)); }
+          let burned = false;
+          try { burned = !!(window.__lfBurnTicket && window.__lfBurnTicket(id)); }
           catch (err) {}
-          this._dropVoucher(queimou);
+          this._dropVoucher(burned);
           return;
         }
         if (!mouth) { this._dropVoucher(false); return; }
-        // O BILHETE SO SOME SE FOR ENGOLIDO DE VERDADE. Antes ele sumia da
-        // mao ANTES da tentativa, entao uma recusa da maquina (fora da hora
-        // de instalar, por exemplo) parecia que o bilhete tinha voltado
-        // sozinho para a maleta. Agora quem decide e a resposta da boca.
-        const engoliu = this.useVoucher(k);
-        this._dropVoucher(engoliu !== false);
+        // The ticket only leaves the hand if the machine really takes it: the
+        // mouth's answer decides, so a refusal sends it back to the bag.
+        const swallowed = this.useVoucher(k);
+        this._dropVoucher(swallowed !== false);
       };
       document.addEventListener("click", onClick, true);
       this._vcarryClick = onClick;
@@ -2513,24 +2564,21 @@ export class Game {
     document.body.classList.remove("carrying-voucher");
     const td = document.getElementById("ticket-drop");
     if (td) td.classList.remove("hot");
-    /* A RECUSA TEM QUE TER CARA DE RECUSA. Ate aqui o bilhete simplesmente
-       desaparecia da mao, e desaparecer e o que ele faz quando E aceito
-       tambem: os dois finais eram o mesmo quadro, entao uma recusa legitima
-       (a maquina nao esta pedindo nada agora) parecia defeito.
-       Agora ele VOLTA VOANDO para o bolso de onde saiu. O olho segue o
-       papel, entende que ele nao foi engolido, e vai procurar o porque. */
+    /* A refusal has to look like one. Vanishing is what the ticket does when it
+       IS accepted, so a refused ticket flies back to the pocket it came from: the
+       eye follows the paper and sees it was not swallowed. */
     if (!consumed && vc.fly && vc.srcEl && vc.srcEl.isConnected && vc.fly.animate) {
       const a = vc.fly.getBoundingClientRect();
       const b = vc.srcEl.getBoundingClientRect();
       const dx = (b.left + b.width / 2) - (a.left + a.width / 2);
       const dy = (b.top + b.height / 2) - (a.top + a.height / 2);
-      const volta = vc.fly.animate(
+      const back = vc.fly.animate(
         [{ transform: "translate(-50%,-50%) rotate(-3deg)", opacity: 1 },
          { transform: "translate(calc(-50% + " + dx + "px), calc(-50% + "
            + dy + "px)) rotate(4deg) scale(.86)", opacity: .1 }],
         { duration: 240, easing: "cubic-bezier(.4,0,.7,1)" });
       const fly = vc.fly, src = vc.srcEl;
-      volta.onfinish = () => { fly.remove(); src.classList.remove("voucher-lifted"); };
+      back.onfinish = () => { fly.remove(); src.classList.remove("voucher-lifted"); };
       try { audio.play("whiff"); } catch (e) {}
       return;
     }
@@ -2538,13 +2586,13 @@ export class Game {
     if (vc.fly) vc.fly.remove();
     if (!consumed) { try { audio.play("whiff"); } catch (e) {} }
   }
-  /* UM SO CAMINHO PARA USAR UM BILHETE, seja ele qual for. O leilao usa um
-     `kind` com prefixo "lot:" e o classico usa o nome do voucher; quem sabe o
-     que fazer com cada um e este metodo, e nao cada lugar que solta. */
+  /* One way to use a ticket, whatever it is. The Auction uses a `kind` prefixed
+     "lot:" and the classic game the voucher's name; this method knows what to do
+     with each, so the places that drop it don't have to. */
   useVoucher(kind) {
     if (kind && kind.indexOf("lot:") === 0) {
-      // devolve o que a boca respondeu, para quem soltou saber se o bilhete
-      // foi engolido ou recusado
+      // return the mouth's answer, so the caller knows whether the ticket was
+      // swallowed or refused
       try { return !!(window.__lfUseTicket && window.__lfUseTicket(kind.slice(4))); }
       catch (e) { return false; }
     }
@@ -3043,8 +3091,7 @@ export class Game {
     this.renderPlayers();
     if (k === "allocate") return this.startAllocation(req);
     if (k === "travel") {
-      // Voyages are plotted ON THE CHART: the camera already focused the timeline
-      // (focusForDecision) and the sea arms click-to-travel and the anchor.
+      // Voyages are plotted ON THE CHART: the sea arms click-to-travel and the anchor.
       return;
     }
     if (k === "market") return this.promptMarket(req);
@@ -3221,13 +3268,7 @@ export class Game {
           fly.style.top = ((e.clientY - cr.top) / fit) + "px";
         } else if (fly.parentElement === cell) {
           fly.classList.remove("cc-under");
-          // O BILHETE SEGURADO MORA NO BODY, e nao dentro de #screen-game. Um
-    // z-index so vale dentro do proprio contexto de empilhamento: 52 dentro
-    // de #screen-game perde para qualquer coisa de #hull, e era por isso que
-    // o pip-boy passava por cima do bilhete na mao. No body ele disputa com
-    // o mundo inteiro, e o unico que fica acima dele e o plano do cursor
-    // (z 60000), que e o certo: nada tapa a mao.
-    document.body.appendChild(fly);
+          document.body.appendChild(fly);
           fly.style.left = e.clientX + "px"; fly.style.top = e.clientY + "px";
         } else { fly.style.left = e.clientX + "px"; fly.style.top = e.clientY + "px"; }
       } else { fly.style.left = e.clientX + "px"; fly.style.top = e.clientY + "px"; }
@@ -3355,21 +3396,6 @@ export class Game {
     }, ms);
   }
 
-  // HELA HOLDS a line, scene context that stays for as long as you are looking
-  // at that scene (not a passing toast). Released when you leave.
-  helaHold(html) {
-    if (document.body.classList.contains("cabin-on") && window.__helaSay) return window.__helaSay(html, { ms: 8000 });
-    let m = document.getElementById("hela-hold");
-    if (!m) {
-      m = el("div", "hela-msg hela-hold"); m.id = "hela-hold";
-      m.innerHTML = `<span class="vz-sigil">${icon("hela")}</span>`
-        + `<div class="hm-body"><span class="vz-name">HELA</span><span class="hm-line"></span></div>`;
-      this.dom.overlay.appendChild(m);
-      requestAnimationFrame(() => m.classList.add("on"));
-    }
-    const l = m.querySelector(".hm-line");
-    if (l && l.innerHTML !== html) l.innerHTML = html;   // update in place; the sigil keeps spinning
-  }
   helaRelease() {
     const m = document.getElementById("hela-hold");
     if (!m) return;
@@ -3477,22 +3503,6 @@ export class Game {
      onto the Time Machine plane (the manopla operates ALL travel, per the
      composition). Click + keyboard live in the same buttons; GO confirms.
      Returns false when the machine host is missing -> popup fallback. */
-  _travelOnMachine(title, sub, body, go) {
-    const zone = document.getElementById("machine-zone");
-    if (!zone) return false;
-    zone.querySelectorAll(".mch-travel").forEach((n) => n.remove());
-    const dock = el("div", "mch-travel");
-    dock.appendChild(el("div", "dd-head",
-      `<span class="vz-sigil dd-sigil">${icon("hela")}</span><span class="dd-title">${title.toUpperCase()}</span><span class="dd-sub">${sub}</span>`));
-    body.style.width = "auto";
-    dock.appendChild(body);
-    const btn = el("button", "dd-confirm", "ENGAGE");
-    btn.addEventListener("click", () => { audio.play("confirm"); go(); });
-    dock.appendChild(btn);
-    zone.appendChild(dock);
-    zone.classList.add("travel-live");
-    return true;
-  }
 
   /* DP-5, item activation WITHOUT a popup: your case is where decisions
      about YOUR cards are taken. A docket rides the maleta: the activatable
@@ -3635,6 +3645,7 @@ export class Game {
     zone.classList.add("target-live");
     this._sheetsReq = req;   // the sheets own this decision (re-armed after a render)
     for (const [panel, name] of marks) {
+      if (panel.classList.contains("pcard-choose")) continue;   // a kept file is still armed
       panel.classList.add("pcard-choose");
       panel.setAttribute("role", "button"); panel.setAttribute("tabindex", "0");
       panel.setAttribute("aria-label", `Target ${name}`);
@@ -3857,24 +3868,21 @@ export class Game {
     cands.forEach((c) => { byName[c.name] = { zone: c.zone, owner: c.owner || null }; });
     this.selectReq = { respondKey, title, mode: req.options.select_mode || "select", byName };
     this.clearPrompt();          // selection happens in place; no overlay
-    /* A REDE E REGISTRADA DEPOIS DO DESENHO, entao um erro no desenho matava
-       a rede junto. Sem rede, `selectReq` ficava preso, nenhum popup nascia,
-       e a partida parava para sempre esperando uma resposta que nao tinha
-       como ser dada: o jogo morria EM PE, sem tela de erro, sem nada.
-       Desenhar e opcional; poder responder nao e. Se qualquer uma das tres
-       pinturas estourar, a queda para o popup continua acontecendo, porque
-       os botoes dele sempre funcionam. */
-    let pinturaQuebrou = null;
+    /* The safety net is set up AFTER the drawing, so an error while drawing used to
+       take the net with it: `selectReq` stayed stuck, no popup appeared, and the
+       match waited forever for an answer nobody could give. Drawing is optional,
+       being able to answer is not: if any of the three paints throws, fall back
+       to the popup, whose buttons always work. */
+    let paintError = null;
     try {
       this.renderMarket();
       this.renderPlayers();
       this._paintBadgeAllocs();
     } catch (err) {
-      pinturaQuebrou = err;
-      console.error("[target] a pintura da selecao no lugar estourou,"
-        + " o popup assume", err);
+      paintError = err;
+      console.error("[target] the in-place selection failed to draw, the popup takes over", err);
     }
-    if (pinturaQuebrou) {
+    if (paintError) {
       this.selectReq = null;
       if (respondKey === "choice") this.promptTarget(req);
       else this.promptPickCard(req, title, "card");
@@ -3884,35 +3892,28 @@ export class Game {
     // hand can actually click, fall back to the popup (its buttons always work).
     setTimeout(() => {
       if (!this.selectReq || this.pendingReq !== req) return;
-      /* EXISTIR NAO E PODER SER CLICADO, e essa rede so conferia existencia.
-         Ela procurava um `.can-steal` no documento e, achando, dava por
-         resolvido. So que a carta pode estar renderizada e mesmo assim ser
-         inalcancavel: fora da tela, com opacidade zero herdada de um pai,
-         atras de outro painel, ou num quadrante que a camera nao mostra.
-         Nesses casos a rede dizia "tem onde clicar", nao caia para o popup,
-         e a partida ficava parada esperando uma resposta que a mao nao tinha
-         como dar. O jogo morria em pe.
-         Agora ela pergunta ao navegador quem esta NAQUELE PONTO. Se o que
-         atende no centro da carta nao e a propria carta, aquela carta nao
-         serve, e se nenhuma servir o popup entra, porque os botoes dele
-         sempre funcionam. */
-      const alvos = [...document.querySelectorAll(
+      /* Being drawn is not being clickable. A card can be rendered and still out
+         of reach: off screen, faded by a parent, behind another panel, or in a view
+         the camera is not showing. So ask the browser what sits at the centre of
+         each card; if it is not the card itself, that card does not count, and if
+         none counts the popup comes in. */
+      const targets = [...document.querySelectorAll(
         ".card.can-steal, .card.can-destroy, .mc.targetable, .pcard-choose,"
         + " .prompt .card.is-actionable, .secret-card-wrap .card.can-select")];
-      const alcancavel = alvos.some((el) => {
+      const reachable = targets.some((el) => {
         const b = el.getBoundingClientRect();
         if (b.width < 6 || b.height < 6) return false;
         if (b.right < 0 || b.bottom < 0
             || b.left > innerWidth || b.top > innerHeight) return false;
         const cs = getComputedStyle(el);
         if (cs.visibility === "hidden" || +cs.opacity < 0.05) return false;
-        const alvo = document.elementFromPoint(
+        const hit = document.elementFromPoint(
           Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2));
-        return !!(alvo && (alvo === el || el.contains(alvo) || alvo.contains(el)));
+        return !!(hit && (hit === el || el.contains(hit) || hit.contains(el)));
       });
-      if (!alcancavel) {
-        console.error("[target] nenhuma carta da selecao esta alcancavel na tela ("
-          + alvos.length + " desenhadas), caindo para o popup");
+      if (!reachable) {
+        console.error("[target] no card of the selection is reachable on screen ("
+          + targets.length + " drawn), falling back to the popup");
         this.selectReq = null;
         // the in-place marks were drawn for a selection that no longer listens:
         // repaint without them, or the shelf keeps offering cards that do nothing
@@ -4010,7 +4011,7 @@ export class Game {
     });
   }
 
-  // Shared 'limbo' interaction (§12.2 / §21 Caldeirão da Agnes): an incoming card has
+  // Shared 'limbo' interaction (§12.2 / §21 Agnes's Cauldron): an incoming card has
   // no free home. With a free slot it is a take/decline steal; with a full inventory,
   // recycle one held item to make room, or decline, and the card is destroyed / lost.
   promptCapacity(req) {
@@ -4136,27 +4137,6 @@ export class Game {
   _railHide() { clearTimeout(this._railT);
     this._railT = setTimeout(() => { const r = document.getElementById("rt-rail"); if (r) r.classList.remove("on"); }, 420); }
   /* ── a coloured causality chip between two elements (causer -> victim) ── */
-  _rtChipBetween(fromEl, toEl, color, family) {
-    if (!fromEl || !toEl) return;
-    const from = fromEl.getBoundingClientRect(), to = toEl.getBoundingClientRect();
-    if (!from.width || !to.width) return;
-    const chip = el("div", "rt-chip rt-" + family);
-    chip.innerHTML = icon(family === "paradox" ? "paradox" : "energy");
-    if (color) { chip.style.borderColor = color; chip.style.color = color;
-      chip.style.boxShadow = `0 0 10px ${color}`; }
-    chip.style.left = (from.left + from.width / 2) + "px";
-    chip.style.top = (from.top + from.height / 2) + "px";
-    document.body.appendChild(chip);
-    const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
-    const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
-    const dur = Math.max(360, Math.min(760, Math.hypot(dx, dy) * 1.6)) * this._motion();
-    chip.animate([
-      { transform: "translate(-50%,-50%) scale(.5)", opacity: 0 },
-      { transform: "translate(-50%,-50%) scale(1.1)", opacity: 1, offset: .2 },
-      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.9)`, opacity: 1, offset: .88 },
-      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.4)`, opacity: 0 },
-    ], { duration: dur, easing: "cubic-bezier(.3,.1,.3,1)" }).onfinish = () => chip.remove();
-  }
   /* ── A CARD ARRIVING ON A RIVAL'S FILE MATERIALISES, any path: buy, steal,
         delivery return. Detection by birth: compare each render against memory. ── */
   _markBornCards() {
@@ -4320,84 +4300,6 @@ export class Game {
     return out;
   }
 
-  /* ═══ O DESFILE DA HORA, the resolution theater (generators showdown) ═══
-     One aggregated engine event -> one CHAPTER, played traveler by traveler.
-     Returns only when the chapter is done (playEvent is awaited by the drain). */
-  async _theaterEffects(family, list, applyFx, opts = {}) {
-    const cab = document.body.classList.contains("cabin-on");
-    if (!cab || this.speed === "fast" || (list || []).length === 0) {
-      (list || []).forEach((e) => applyFx(e));                    // veteran burst
-      await this._sleep(this._ms(opts.paceKind || "recharged"));
-      return;
-    }
-    const beat = this.speed === "slow" ? 1660 : 830;   // slow +75%; medium = half of slow
-    this._railShow(family, opts.module);
-    document.body.classList.add("rt-stage");
-    // HELA attends the machine while its modules fire
-    try {
-      const mz = document.querySelector("#hull-console .matrix-wrap") || document.getElementById("machine-zone");
-      if (mz && window.__helaEye) { const r = mz.getBoundingClientRect();
-        if (r.width) window.__helaEye.setPost(r.x + r.width / 2, Math.max(60, r.y - 26), { glide: true }); }
-    } catch (e) {}
-    // her didactic line, once per module family per sitting, slow pace only
-    if (this.speed === "slow" && !(this._rtSaid = this._rtSaid || {})[family]) {
-      this._rtSaid[family] = true;
-      const L = { recharge: "The engines drink first, watch each traveler's gauge.",
-                  paradox: "Now the sea collects its debt. Distance is what it bills.",
-                  heat: "And the boilers remember every push." };
-      if (L[family]) this.helaSay(L[family], 4600, "note");
-    }
-    try {
-      for (const e of list) {
-        const seat = e.seat;
-        const pcard = seat && seat !== this.seat ? document.querySelector(`.pcard[data-seat="${CSS.escape(seat)}"]`) : null;
-        const selfHolo = seat === this.seat ? document.getElementById("vz-holo") : null;
-        let src = seat ? this._seatAnchor(seat, "src", family) : null;
-        if (pcard) pcard.classList.add("rt-lift");
-        if (selfHolo) selfHolo.classList.add("rt-lift-self");     // YOUR beat lifts the lifethread
-        if (src) src.classList.add("rt-src");
-        if (seat) {
-          const lifeEl = this._seatAnchor(seat, "life", family);
-          if (src && lifeEl) this._rtChipBetween(src, lifeEl, null, family);   // causality flies
-        }
-        await this._sleep(Math.round(beat * 0.44));
-        try { applyFx(e); } catch (err) { console.error("theater fx", err); }
-        await this._sleep(Math.round(beat * 0.56));
-        if (pcard) pcard.classList.remove("rt-lift");
-        if (selfHolo) selfHolo.classList.remove("rt-lift-self");
-        if (src) src.classList.remove("rt-src");
-      }
-    } finally {
-      document.body.classList.remove("rt-stage");
-      document.querySelectorAll(".pcard.rt-lift").forEach((n) => n.classList.remove("rt-lift"));
-      document.querySelectorAll(".rt-src").forEach((n) => n.classList.remove("rt-src"));
-      this._railHide();
-      try { window.__helaEye && window.__helaEye.clearPost(); } catch (e) {}
-    }
-  }
-  // the glyph-chip: born on the SOURCE (the badge's allocation strip), it flies to
-  // the life counter, where the effect is about to land. Motion IS the explanation.
-  _rtChip(pcard, srcEl, family) {
-    const from = (srcEl || pcard).getBoundingClientRect();
-    const toEl = pcard.querySelector(".bd-life-n") || pcard.querySelector(".bd-life") || pcard;
-    const to = toEl.getBoundingClientRect();
-    if (!from.width || !to.width) return;
-    const chip = el("div", "rt-chip rt-" + family);
-    chip.innerHTML = icon(family === "paradox" ? "paradox" : family === "heat" ? "booms" : "energy");
-    chip.style.left = (from.left + from.width / 2) + "px";
-    chip.style.top = (from.top + from.height / 2) + "px";
-    document.body.appendChild(chip);
-    const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
-    const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
-    const dur = Math.max(320, Math.min(620, Math.hypot(dx, dy) * 2.2)) * this._motion();
-    chip.animate([
-      { transform: "translate(-50%,-50%) scale(.5)", opacity: 0 },
-      { transform: "translate(-50%,-50%) scale(1.15)", opacity: 1, offset: .22 },
-      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.9)`, opacity: 1, offset: .86 },
-      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.4)`, opacity: 0 },
-    ], { duration: dur, easing: "cubic-bezier(.3,.1,.3,1)" }).onfinish = () => chip.remove();
-  }
-
   async playEvent(msg) {
     const { kind, payload } = msg;
     this.logEvent(kind, payload);
@@ -4406,11 +4308,9 @@ export class Game {
     // resolution (who took what) before the window tunes back
     if (kind.startsWith("leilao_") || kind.startsWith("piece_")) {
       try { window.__lfEvent && window.__lfEvent(kind, payload); } catch (e) {}
-      // A HELA PRECISA ANUNCIAR O LEILAO COMO FASE, no mesmo trilho onde ela
-      // anuncia Delivery e Market. `leilao_started` e o unico evento que a
-      // fase de leilao sempre emite ao abrir (driver.py e partida.py), entao
-      // ele e o gancho certo: mesmo tratamento que `phase_started` da as
-      // fases classicas, banner e som inclusos.
+      // HELA announces the Auction as a phase, on the same track as Delivery and
+      // Market. `leilao_started` is the one event the Auction always sends when it
+      // opens, so it gets the same banner and sound `phase_started` gives the rest.
       if (kind === "leilao_started" && this.currentPhase !== "leilao") {
         this.setPhase("leilao");
         this.banner("leilao");
@@ -4725,7 +4625,7 @@ export class Game {
         break;
       }
       case "card_stolen":
-        // Caldeirão da Agnes snatches a card another traveler recycled (§21): it
+        // Agnes's Cauldron snatches a card another traveler recycled (§21): it
         // flies from the victim's panel into the Cauldron-holder's.
         this.flyCard(payload.card, this.panelRect(payload.from) || this.panelRect(payload.seat),
           this.panelRect(payload.seat), { tone: "steal", spin: "flip",
@@ -5399,12 +5299,10 @@ export class Game {
     const rush = this._bannerQ.length > 0;                     // more waiting? play this one brisker
     const b = el("div", "phase-banner", `${text}<span class="b-sub">Hour ${this.view ? this.view.hour : ""}</span>`);
     this.dom.overlay.appendChild(b);
-    /* O ANUNCIO DA FASE E O UNICO AVISO de que o turno mudou de assunto, e
-       1,6 segundo conta o esmaecer junto: sobra pouco mais de um segundo de
-       texto legivel, e com a fila de banners um atropela o outro. Em mesa isso
-       le como "as coisas acontecem rapido demais", e le certo.
-       2,3 segundos e o tempo de ler uma palavra em caixa alta e ainda ter um
-       instante para entender que ela mudou. */
+    /* The phase banner is the only sign the turn has moved on. At 1.6s, fade
+       included, it left barely a second of readable text and queued banners ran
+       over each other. 2.3s is time to read one word in capitals and take in that
+       it changed. */
     const hold = rush ? 1400 : 2300;
     setTimeout(() => { b.classList.add("pb-out"); }, hold - 240);
     setTimeout(() => { b.remove(); this._nextBanner(); }, hold);
@@ -5599,9 +5497,8 @@ export class Game {
 
   gameOver(payload) {
     const cab = document.body.classList.contains("cabin-on");
-    // A FOLHA DE SERVICO se escreve sozinha: a partida acabou, entra no
-    // historico desta maquina (uma vez so, mesmo com o final dramatizado
-    // reentrando por causa do rito da HELA).
+    // The service record writes itself: the match is over, so it goes into this
+    // machine's history (once only, even when HELA's ending ritual re-enters here).
     if (!this._recorded) {
       this._recorded = true;
       try {
@@ -5639,8 +5536,21 @@ export class Game {
         <div class="winner">${esc(payload.winner || "--")}</div>
         <p class="muted">${esc(reasons[payload.reason] || payload.reason)} · Monarch of Time</p>
         <table class="score-table"><thead><tr><th>Operative</th><th>CP</th></tr></thead><tbody>${rows}</tbody></table>
-        <button class="btn btn-primary" onclick="location.reload()">Return to Bureau</button>
+        <div class="gameover-actions">
+          <button class="btn btn-primary go-menu" type="button">Main menu</button>
+          <button class="btn btn-ghost go-peek" type="button">Look at the table</button>
+        </div>
+      </div>
+      <div class="gameover-dock panel">
+        <span class="go-dock-txt">Match over. ${esc(payload.winner || "--")} wins.</span>
+        <button class="btn btn-ghost btn-sm go-show" type="button">Results</button>
+        <button class="btn btn-primary btn-sm go-menu" type="button">Main menu</button>
       </div>`;
+    // back to the main menu (main.js), or step aside to look at the final table
+    const toMenu = () => { if (window.__pdxLeaveMatch) window.__pdxLeaveMatch(); else location.href = location.pathname; };
+    o.querySelectorAll(".go-menu").forEach((b) => b.addEventListener("click", toMenu));
+    o.querySelector(".go-peek").addEventListener("click", () => o.classList.add("is-peek"));
+    o.querySelector(".go-show").addEventListener("click", () => o.classList.remove("is-peek"));
     this.dom.overlay.appendChild(o);
   }
 
@@ -5701,7 +5611,9 @@ export class Game {
       case "declared": return { text: `${p.seat} declared, Wanted cleared`, cls: "market" };
       case "merchant_moved": {
         const barge = `<svg width="26" height="15" viewBox="0 0 26 15" style="vertical-align:-3px"><path d="M2 9 Q13 13 24 9 L22 12.5 Q13 15.5 4 12.5 Z" fill="#4a3620"/><path d="M4 5.5 Q13 2.5 22 5.5 L22 8 Q13 5 4 8 Z" fill="#8c3b2a"/><path d="M13 5 V 0 M13 0 L19 1.8 L13 3.6" stroke="#241708" stroke-width=".9" fill="#c9a45c"/></svg>`;
-        return { text: `${barge} the Merchant made port at ${roman(p.to)}${p.teleport ? " (a temporal leap)" : ""}`, cls: "market" };
+        const trip = p.roll && !p.teleport
+          ? `, rolled ${p.rolls && p.rolls.length > 1 ? p.rolls.join("+") + "=" : ""}${p.roll}, sailed ${Math.abs(p.to - p.from)}${p.target ? `, chasing ${p.target}` : ""}` : "";
+        return { text: `${barge} the Merchant made port at ${roman(p.to)}${p.teleport ? " (a temporal leap)" : ""}${trip}`, cls: "market" };
       }
       case "paradox_resolved": return { text: `Paradox · module ${p.module}`, cls: "paradox" };
       case "exploded": return { text: `${p.seat}'s motor exploded`, cls: "danger" };

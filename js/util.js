@@ -14,7 +14,6 @@ export const PALETTE = [
 ];
 
 export const CENTURY_MAX = 30;     // XXX
-export const YEAR_ZERO = 0;
 export const MILESTONES = [10, 20]; // X, XX
 export const SECRET_MARKET = 11;    // XI
 

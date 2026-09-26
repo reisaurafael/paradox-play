@@ -94,7 +94,7 @@
     if(k==="respawned"){ const wc=(R.wreckAt||{})[p.seat]; if(wc!=null){ R.wrecks.delete(wc); delete R.wreckAt[p.seat]; } }
     if(k==="milestone") R.fx.push({t:"milestone",c:p.century});
     if(k==="delivered"){ R.restored.add(p.century); R.deliveries.push({seat:p.seat,card:p.card,century:p.century,hour:hourNow()}); R.fx.push({t:"deliver",c:p.century}); }
-    if(k==="merchant_moved") R.fx.push({t:"merchant"});
+    if(k==="merchant_moved"){ R.fx.push({t:"merchant",p}); if(__live()&&!p.teleport) window.__pdxTripPending=true; }
     if(k==="secret_market_opened") R.fx.push({t:"secret"});
     scheduleLive();
   }
@@ -122,8 +122,9 @@
   function pickCandidates(){ if(!mode) return null; return mode.kind==="travel"?travelCandidates():mode.centuries; }
 
   /* ═══ ART, ships, worlds, the void ═══ */
-  function shipSVG(kind,col,{ghost=false,dead=false}={}){
-    const ink=dead?"#8a7a5a":"#2a2012", body=ghost?"none":col, dash=ghost?' stroke-dasharray="2 2"':"";
+  function shipSVG(kind,col,{ghost=false,dead=false,plate=false}={}){
+    // on an ink plate (window.__pdxPlate) the lance is drawn in light ink, or it would vanish
+    const ink=dead?"#8a7a5a":plate?"#f3e8c8":"#2a2012", body=ghost?"none":col, dash=ghost?' stroke-dasharray="2 2"':"";
     // a knight's PENNON on a lance + a small heraldic shield in the house colour
     return `<g class="cm-ship${dead?" cm-dead":""}"><line x1="0" y1="-12" x2="0" y2="8" stroke="${ink}" stroke-width="1.2"/><path d="M0 -12 L11 -9 L2 -6 Z" fill="${body}" stroke="${ink}" stroke-width=".7"${dash}/><path d="M-5 -3 H5 V2 Q5 7 0 9 Q-5 7 -5 2 Z" fill="${body}" stroke="${ink}" stroke-width="1"${dash}/>${ghost?"":`<path d="M0 -3 V9 M-5 0 H5" stroke="rgba(255,255,255,.55)" stroke-width=".7"/>`}</g>`;
   }
@@ -143,7 +144,6 @@
     return `<rect x="-9" y="-4" width="4" height="18" fill="${stone}" stroke="${ink}" stroke-width="1.1"/><rect x="5" y="-4" width="4" height="18" fill="${stone}" stroke="${ink}" stroke-width="1.1"/><path d="M -9 -4 l 2 -8 l 2 8 z M 5 -4 l 2 -8 l 2 8 z" fill="${roof}" stroke="${ink}" stroke-width=".9"/><rect x="-6" y="2" width="12" height="12" fill="${stone}" stroke="${ink}" stroke-width="1.3"/><path d="M -6.5 2 A 6.5 6.5 0 0 1 6.5 2 Z" fill="${roof}" stroke="${ink}" stroke-width="1.3"/><path d="M 0 -4.5 V -9 M -1.6 -7 H 1.6" stroke="url(#cmGold)" stroke-width="1.7"/><rect x="-1.8" y="7" width="3.6" height="7" fill="${ink}"/>`;
   }
   /* ═══════════════ THE ITINERARY OF THE SIX WALLED KINGDOMS, each era a wall, the beast's coil below ═══════════════ */
-  const INK="#3a2c12";
   function shd(h,f){ const g=i=>Math.max(0,Math.min(255,Math.round(parseInt(h.substr(i,2),16)*f))).toString(16).padStart(2,"0"); return "#"+g(1)+g(3)+g(5); }
   // THE VELLUM RUNS ON: past the chart's printed border the same parchment, foxed and
   // mottled, a margin of hills and woods and one inked cartouche. No road, no wall, no
@@ -450,19 +450,22 @@
     for(const t of R.trails){ const d=roadSlice(t.from,t.to)||arcPath(t.from,t.to); if(!d) continue; const age=view.hour-t.hour; const op=age<=0?.9:age===1?.6:age===2?.42:Math.max(.18,.36-(age-2)*.03); const col=age<=1?seatColor(t.seat):(HUE[META[t.to]]||"#7fa0e0"); g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="${age<=0?2.6:age===1?1.9:1.3}" opacity="${op}" stroke-linecap="round" stroke-dasharray="4.5 4.5"/>`; }
     // paradox rifts
     for(const c of R.monsters){ if(!POS[c]||R.restored.has(c)) continue; const [x,y]=POS[c]; g+=`<g class="cm-rift" transform="translate(${x+worldR(c)+8} ${y-6})" data-tip="${esc(`a rift tore open near ${rom(c)}, the Paradix bleeds through`)}"><path d="M0 -8 l3 6 l-4 3 l4 5" stroke="#7a1e10" stroke-width="1.6" fill="none"/><path d="M0 -8 l-3 6 l4 3 l-4 5" stroke="#3a2c12" stroke-width="1" fill="none" opacity=".7"/></g>`; }
-    // the peddler's wagon
+    // the peddler's wagon (on the gold MERCHANT plate, window.__pdxMerchPlate)
     const mc = R.merchantShown!=null?R.merchantShown:view.merchant_century;
+    R.mAnchor=null;
     if(POS[mc]){ const [x,y]=POS[mc]; const dice=view.merchant_movement_dice||1; const side=x>W*0.82?-1:1;
       const cargo=(view.market_revealed||[]).slice(0,5).map(c2=>`  ${(c2.display_name||c2.name)}, ${c2.gold_cost!=null?c2.gold_cost+"g":"--"}`).join("\n");
       const tip=`THE PEDDLER'S WAGON: halted at ${rom(mc)}\nwanders ${dice}d3 · barter when near\n${cargo?"WARES FOR SALE:\n"+cargo:"the cart stands bare"}`;
-      g+=`<g class="cm-hauler" data-tip="${esc(tip)}" transform="translate(${(x+side*26).toFixed(0)} ${(y-2).toFixed(0)}) scale(${(side<0?-1:1)*0.85} 0.85)"><g class="cm-bob">
+      const [hx,hy]=haulerAt2(mc); R.mAnchor=[hx,hy];
+      g+=(window.__pdxPieceDefs?window.__pdxPieceDefs("cm",false):"");
+      g+=`<g class="cm-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:52,h:38,cy:1,pfx:"cm",dark:false}):""}<g transform="scale(${side<0?-1.1:1.1} 1.1) translate(-5 -1)"><g class="cm-bob">
         <circle cx="-7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="-7" cy="7" r="1" fill="#241810"/><circle cx="7" cy="7" r="1" fill="#241810"/>
         <rect x="-11" y="-1" width="22" height="8" fill="#6e4e2a" stroke="#241810" stroke-width="1"/>
         <path d="M-11 -1 Q-11 -11 0 -11 Q11 -11 11 -1 Z" fill="#b0472e" stroke="#241810" stroke-width="1"/>
         <path d="M-6 -9.6 V-1 M0 -11 V-1 M6 -9.6 V-1" stroke="#ecd6a6" stroke-width="1.3" opacity=".85"/>
         <path d="M11 3 q8 -1 10 -7 q1 -3 -2.5 -3 q-1 3.5 -4.5 3.5 q-3 2 -3 6.5 z" fill="#5a4028" stroke="#241810" stroke-width=".8"/><circle cx="18" cy="-4" r=".9" fill="#241810"/>
         ${Array.from({length:Math.min(3,dice)},(_,i)=>`<rect x="${-5+i*4}" y="10.5" width="3.2" height="4" rx="1" fill="#8a6a3a" stroke="#241810" stroke-width=".5"/>`).join("")}
-      </g></g>`; }
+      </g></g>${window.__pdxMerchTag?window.__pdxMerchTag(-28):""}</g>`; }
     // milestone beacons X / XX
     for(const c of [10,20]){ if(!POS[c]) continue; const [x,y]=POS[c]; const claim=view.travelers.filter(t=>c===10?t.scored_century_x:t.scored_century_xx); g+=`<g class="cm-beacon" data-tip="${esc(`the waymark cross at ${rom(c)}, ${claim.length?"claimed by "+claim.map(t=>t.name).join(", "):"unclaimed"} · end an Hour here for +1 CP`)}" transform="translate(${(x-worldR(c)*0.5).toFixed(0)} ${(y+worldR(c)*0.2).toFixed(0)})"><path d="M-3 6 L0 -8 L3 6 Z" fill="#c9a45c" stroke="#e8c05a" stroke-width=".7"/><circle cx="0" cy="-8" r="2.2" fill="#ffe9b0" class="cm-beam"/>${claim.map((t,i)=>`<circle cx="${-3+i*3}" cy="9" r="1.3" fill="${seatColor(t.name)}"/>`).join("")}</g>`; }
     // the Grail Chapel of Corbenic (secret market, XI)
@@ -482,6 +485,7 @@
     for(const t of view.travelers){ if(t.is_self) continue; let k2=0; for(const card of (t.equipment||[])){ const c=card.delivery_century; if(c==null||!POS[c]) continue; const [x,y]=POS[c]; g+=`<g class="cm-flag" data-tip="${esc(`${t.name} must deliver ${card.display_name||card.name} at ${rom(c)}`)}" transform="translate(${(x+worldR(c)*0.5+k2*5).toFixed(0)} ${(y-worldR(c)*0.4).toFixed(0)}) scale(.72)"><path d="M-7 5 V-2 Q-7 -4 -5 -4 H5 Q7 -4 7 -2 V5 Z M-7 -1 H7" fill="${seatColor(t.name)}" stroke="rgba(0,0,0,.5)" stroke-width=".6" opacity=".85"/></g>`; k2++; } }
     // restored (delivered) ignition rings drawn in worldG via cm-lit; here add a soft "always thus" tag on hover handled by tip
     // travelers (ships) at their worlds
+    R.pcPos={};
     const byC={}; for(const t of view.travelers){ const sc=R.shown[t.name]!=null?R.shown[t.name]:t.century; (byC[sc]=byC[sc]||[]).push(t); }
     for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue; const [x,y]=POS[c], R0=worldR(c);
       if(ts.length>1) g+=`<circle cx="${x}" cy="${y}" r="${R0+18}" fill="none" stroke="#8a6a3a" stroke-width="1" stroke-dasharray="3 4" opacity=".55" data-tip="shared orbit, agreements possible"/>`;
@@ -503,11 +507,24 @@
       //   2. a LEASH, a short line, in their colour, from the century to them. Even when
       //      two centuries crowd, the line says whose they are. You do not read it.
       const SLOTS=[[0,-1.34],[-1.34,0.10],[1.34,0.10],[-1.0,-1.0],[1.0,-1.0]];
-      ts.forEach((t,i)=>{ const col=seatColor(t.name); const [dx,dy]=SLOTS[i%SLOTS.length]; const bx=Math.round(x+dx*(R0*0.40+10)), by=Math.round(y+dy*(R0*0.40+10)); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=false;
-        const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-29):{cls:"",g:""};
-        g+=`<g class="cm-shipg${dead&&!ghost?" cm-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})">${em.g}<line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="0" stroke="${col}" stroke-width="1.8" stroke-linecap="round" opacity=".55" stroke-dasharray="2.6 2.4"/><g class="cm-aura"><circle r="14.5" fill="${col}" opacity=".16"/><circle r="14.5" fill="none" stroke="rgba(0,0,0,.52)" stroke-width="3.8"/><circle r="14.5" fill="none" stroke="${col}" stroke-width="2.4"/><circle r="12.6" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1"/></g>${t.is_self?`<circle r="20" fill="none" stroke="${col}" stroke-width="1.2" stroke-dasharray="3.4 3" opacity=".8"/>`:""}<g transform="scale(1.6)">${shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost})}</g><text y="24" text-anchor="middle" font-family="'Courier New',monospace" font-size="9.5" font-weight="bold" letter-spacing=".6" fill="${col}" stroke="#05060e" stroke-width="2.6" paint-order="stroke">${esc(initials(t.name))}</text></g>`;
+      // THE PLATES (window.__pdxPlate, board_draft.js): each piece stands on an ink disc,
+      // so the berths are FANNED until the discs clear each other, inside the chart.
+      const PR=t=>(t.is_self?19:16);
+      const berth=ts.map((t,i)=>{ const [dx,dy]=SLOTS[i%SLOTS.length]; return { x:x+dx*(R0*0.40+10), y:y+dy*(R0*0.40+10), r:PR(t)+5 }; });
+      if(window.__pdxFan) window.__pdxFan(berth,2,[24,34,W-24,H-24]);
+      const chase=view.merchant_plan&&view.merchant_plan.target_seat;
+      ts.forEach((t,i)=>{ const col=seatColor(t.name); const bx=Math.round(berth[i].x), by=Math.round(berth[i].y); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=chase===t.name&&view.merchant_century!==t.century;
+        const pr=PR(t), pcy=-1; R.pcPos[t.name]=[bx,by+pcy];
+        const memo=R.pcAt||(R.pcAt={}); const pulse=t.is_self&&memo[t.name]!=null&&memo[t.name]!==c; if(t.is_self) memo[t.name]=c;
+        const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-34):{cls:"",g:""};
+        const plate=window.__pdxPlate?window.__pdxPlate({col,self:t.is_self,r:pr,cy:pcy,pfx:"cm",dark:false,pulse}):"";
+        const tag=window.__pdxTag?window.__pdxTag(t.is_self?"YOU":esc(initials(t.name)),col,pcy+pr+(t.is_self?12:8),{self:t.is_self,dark:false}):"";
+        g+=`<g class="cm-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cm-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cm-aura">${plate}</g>${hunted?`<circle class="pc-hunted" cy="${pcy}" r="${pr+(t.is_self?10:5)}" fill="none" stroke="#e8c05a" stroke-width="2" stroke-dasharray="4 3"/>`:""}<g transform="scale(${t.is_self?1.6:1.42})">${shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost,plate:true})}</g>${tag}</g>${em.g}</g>`;
       });
     }
+    // WHEN / HOW / WHY beside the Merchant, the chase line and his reach (board_draft.js)
+    if(R.mAnchor&&view.merchant_plan&&window.__pdxMerchantHUD){ const pl=view.merchant_plan, tt=pl.target_seat&&view.travelers.find(t2=>t2.name===pl.target_seat);
+      g+=window.__pdxMerchantHUD({v:view,m:[R.mAnchor[0],R.mAnchor[1]+1],pillDy:-45,tpos:tt&&tt.century!==mc&&R.pcPos[tt.name]||null,pos:c2=>POS[c2]||null,W,H,dark:false,avoid:Object.values(R.pcPos)}); }
     g+=orderSlate();
     g+=highlights();
     return g;
@@ -570,10 +587,11 @@
       if(c) c.innerHTML=""; }catch(e){} R.fx.length=0; if(fxGuard){clearTimeout(fxGuard); fxGuard=null;}
     fxBusy=false; renderPending=false; R.sailing=false; }
   function fxG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-ori .cm-fx"); }
+  function haulerAt2(c){ const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*46), Math.round(y-2)]; }
   function liveG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-ori .cm-live"); }
   function drainFx(){ if(REDUCED){ R.fx.length=0; return; } if(fxBusy) return; const f=R.fx.shift(); if(!f) return; fxBusy=true;
     if(fxGuard) clearTimeout(fxGuard);
-    fxGuard=setTimeout(()=>{ fxGuard=null; if(fxBusy){ fxBusy=false; drainFx(); } },6000);   // watchdog: never hang the game
+    fxGuard=setTimeout(()=>{ fxGuard=null; if(fxBusy&&!window.__pdxTripBusy){ fxBusy=false; drainFx(); } },6000);   // watchdog: never hang the game
     const done=ms=>setTimeout(()=>{ if(fxGuard){clearTimeout(fxGuard); fxGuard=null;} fxBusy=false; if(renderPending){renderPending=false; renderNow();} drainFx();},ms);
     try{ playFx(f,done); }catch(e){ fxBusy=false; } }
   function comet(from,to,col,onArrive,ship){
@@ -692,19 +710,19 @@
       const cs=C.createBufferSource(); cs.buffer=cb; const hp=C.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
       const cg=C.createGain(); cg.gain.value=0.05; cs.connect(hp); hp.connect(cg); cg.connect(mas); const st=t+0.15+Math.random()*0.6; cs.start(st); cs.stop(st+0.05); }
   }catch(e){} }
-  function kintsugiChime(){ try{ const S=chrSfx(); if(!S) return; const {C,mas}=S, t=C.currentTime;
-    [523.25,659.25,783.99,1046.5].forEach((fr,i)=>{ const o=C.createOscillator(); o.type="sine"; o.frequency.value=fr; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(mas); const st=t+i*0.05; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.09/(1+i*0.4),st+0.01); g.gain.exponentialRampToValueAtTime(0.0001,st+2.2); o.start(st); o.stop(st+2.3); });
-    for(let i=0;i<4;i++){ const o=C.createOscillator(); o.type="triangle"; o.frequency.value=1568+i*220; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(mas); const st=t+0.1+i*0.06; g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.015,st+0.008); g.gain.exponentialRampToValueAtTime(0.0001,st+0.5); o.start(st); o.stop(st+0.55); } }catch(e){} }
-  function glassShatter(){ try{ const S=chrSfx(); if(!S) return; const {C,mas}=S, t=C.currentTime;
-    const nb=C.createBuffer(1,Math.ceil(C.sampleRate*0.4),C.sampleRate); const d=nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.6); const ns=C.createBufferSource(); ns.buffer=nb; const bp=C.createBiquadFilter(); bp.type="highpass"; bp.frequency.value=2300; const g=C.createGain(); g.gain.value=0.13; ns.connect(bp); bp.connect(g); g.connect(mas); ns.start(t); ns.stop(t+0.4);
-    for(let i=0;i<7;i++){ const o=C.createOscillator(); o.type="triangle"; o.frequency.value=1700+Math.random()*2400; const g2=C.createGain(); g2.gain.value=0; o.connect(g2); g2.connect(mas); const st=t+0.02+Math.random()*0.26; g2.gain.setValueAtTime(0,st); g2.gain.linearRampToValueAtTime(0.032,st+0.005); g2.gain.exponentialRampToValueAtTime(0.0001,st+0.24); o.start(st); o.stop(st+0.27); } }catch(e){} }
     function playFx(f,done){
     if(f.t==="trail"){ R.shown[f.seat]=-1; renderNow(); comet(f.from,f.to,seatColor(f.seat),()=>{ R.shown[f.seat]=f.to; renderNow(); flare(f.to,seatColor(f.seat)); snd("chart_stamp"); if(f.to===0) floatText(0,"YEAR ZERO","#efe6f8"); }, seatShip(f.seat)); const A=f.from===0?SUN:POS[f.from],B=f.to===0?SUN:POS[f.to]; const dur=A&&B?Math.min(1700,600+Math.hypot(B[0]-A[0],B[1]-A[1])*2.2):900; done(dur+260); return; }
     if(f.t==="deliver"){ R.restored.add(f.c); renderNow(); kintsugi(f.c); churchChoir(); waxSeal(f.c); const _e=singleEra(f.c); const _per=Object.keys(PERIOD_ERAS).find(pp=>PERIOD_ERAS[pp].includes(_e)); if(_per) absorbToHole(f.c,_per); floatText(f.c,"+1 CP","#f0d068"); done(1500); return; }
     if(f.t==="paradox"){ dragonFire(f.c); floatText(f.c,"PARADOX","#b3402e"); const el=liveG()&&liveG().querySelector(`.cm-world[data-c="${f.c}"]`); if(el) el.animate([{transform:el.getAttribute("transform")},{transform:el.getAttribute("transform")+" translate(-2px,1px)"},{transform:el.getAttribute("transform")+" translate(2px,-1px)"},{transform:el.getAttribute("transform")}],{duration:300}); crackGlass(f.c); dragonRoar(); done(900); return; }
     if(f.t==="wreck"){ flare(f.c,"#b3402e"); floatText(f.c,"TERMINATED","#ff6a5a"); snd("chart_creak"); done(900); return; }
     if(f.t==="milestone"){ flare(f.c,"#e8b24a"); floatText(f.c,"+1 CP","#e8b24a"); snd("chart_bell"); done(800); return; }
-    if(f.t==="merchant"){ R.merchantShown=null; renderNow(); snd("chart_creak"); done(500); return; }
+    if(f.t==="merchant"){ const p=f.p||{}, to=p.to!=null?p.to:(app&&app.view?app.view.merchant_century:null), from=p.from;
+      // THE VOYAGE, TOLD (window.__pdxMerchantTrip, board_draft.js); the queue waits for it
+      if(from!=null&&to!=null&&from!==to&&POS[from]&&POS[to]&&window.__pdxMerchantTrip&&fxG()&&__live()){ R.merchantShown=from; renderNow(); const L=liveG();
+        snd("chart_creak");
+        window.__pdxMerchantTrip({layer:fxG(),piece:L&&L.querySelector(".cm-hauler.pc-merch-live"),pos:c2=>POS[c2]||null,anchor:c2=>POS[c2]?haulerAt2(c2):null,m0:haulerAt2(from),cdy:1,stopDy:48,p,W,H,dark:false,
+          tpos:(p.target&&R.pcPos&&R.pcPos[p.target])||null,onLand:()=>{ R.merchantShown=to; renderNow(); snd("chart_stamp"); },onDone:()=>done(60)}); return; }
+      window.__pdxTripPending=false; R.merchantShown=null; renderNow(); snd("chart_creak"); done(500); return; }
     if(f.t==="secret"){ renderNow(); if(POS[11]){ flare(11,"#c9a23c"); floatText(11,"REVEALED","#c9a23c"); } snd("chart_bell",{warm:true}); done(850); return; }
     done(60);
   }

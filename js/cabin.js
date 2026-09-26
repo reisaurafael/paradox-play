@@ -12,12 +12,9 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 (function(){
   "use strict";
-  /* O LEILAO E A PRIMEIRA FASE DA HORA, e a trilha de cima e o unico lugar
-     onde o jogador le em que ponto do turno ele esta. Ela listava quatro
-     fases e o leilao nao estava entre elas: a Hora comecava com uma fase que
-     a propria interface nao reconhecia.
-     Ele entra na frente porque e ali que ele acontece: o pregao abre a Hora,
-     e so depois vem a entrega. */
+  /* The phase track at the top is the only place the player reads where the turn
+     is. The Auction leads it because that is when it happens: the bidding opens the
+     Hour, and Delivery comes after. */
   const PH_ALL=[["leilao","AUCTION"],["delivery","DELIVERY"],["market","MARKET"],["main","GENERATORS"],["activation","ACTIVATION"]];
   // The Auction step exists only in the Test Room; the classic Hour starts at Delivery.
   function phases(){ return document.body.dataset.roomMode==="leilao" ? PH_ALL : PH_ALL.slice(1); }
@@ -29,9 +26,8 @@
   try { window.__art = { armSVG, chronoSVG, telegraphSVG, rightHandSVG, helaRadarSVG }; } catch (e) {}
 
   function telegraphSVG(){
-    /* CINCO CELULAS, e nao quatro: o leilao entrou na trilha. A largura de
-       cada uma sai da conta e nao de um numero fixo, senao a quinta cai fora
-       da placa. */
+    // the cell width comes from the phase count, not a fixed number, so a fifth
+    // phase (the Auction) still fits on the plate
     const PH=phases(), W=392, X0=8, Y=6, H=34, N=PH.length, CW=(W-X0*2)/N;
     let cells="", ticks="";
     for(let i=0;i<N;i++){
@@ -340,7 +336,6 @@
      FINGERTIP = svg (538,300) = 41.1% x, 33.9% y of the viewBox. That is the
      click point, and it rides the RADAR'S CIRCUMFERENCE: never its centre.
      ═══════════════════════════════════════════════════════════════════════════ */
-  const RH_TIP=[0.411,0.339];          // the fingertip, as a fraction of the box
   function rightHandSVG(){
     return `<svg class="rh-svg" viewBox="250 90 700 620" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="rhGlove" x1="0" y1="0" x2="0" y2="1">
@@ -452,16 +447,6 @@
   let malaGold=null, malaBaseline=0, malaRewardN=0, malaContracts=[], malaBusy=false;   // THE MALETA ledger
   let origPlayEvent=null, revealed={};   // seat -> matrix (the public record after each reveal)
 
-  const FN_COL=["#5fd08a","#9a86c8","#6fb4c8"];
-  function sealsHTML(matrix){
-    let h='<span class="bd-seals">';
-    for(let r=0;r<3;r++){ const row=matrix[r]||[0,0,0];
-      h+=`<i style="--c:${FN_COL[r]}">`;
-      for(let c=0;c<3;c++){ const v=row[c]||0;
-        h+=`<b class="${v?("v"+v):""}"></b>`; }
-      h+='</i>'; }
-    return h+'</span>';
-  }
   function injectSeals(){
     if(!document.body.classList.contains("cabin-on")) return;
     document.querySelectorAll(".pcard.cfolio").forEach(card=>{
@@ -894,10 +879,9 @@
       try{ kind=e.dataTransfer.getData("text/voucher")||null; }catch(err){}
       if(!kind&&app) kind=app._dragVoucher||null;
       if(!kind||!app) return;
-      // O MESMO LEITOR SERVE OS DOIS BILHETES. Um voucher de lote do leilao
-      // (`lot:H123`) entra pela mesma boca que um voucher classico: o gesto
-      // que o jogador ja conhece nao precisava de um segundo caminho so para
-      // a fase nova. O que muda e o que a maquina faz depois de ler.
+      // The same reader takes both tickets: an Auction lot ticket (`lot:H123`) goes
+      // in the same mouth as a classic voucher. Only what the machine does after
+      // reading it changes.
       if(kind.indexOf("lot:")===0){
         const id=kind.slice(4);
         const took=window.__lfUseTicket&&window.__lfUseTicket(id);
@@ -1026,8 +1010,6 @@
   let hcPlunge=null;   // the hand dives THROUGH the window on a purchase
   let freeCursor=false;   // derived: true whenever the LEFT hand is the cursor
   let activeHand="right"; // SPACE swaps. The RIGHT hand is the primary cursor.
-  let rhPos=null;         // the right hand's eased position
-  const RH_OFF=8;        // how far behind the heart the fingertip sits (see the CSS margins)
   const LH_PULLBACK=8;   // the LEFT hand rises from below, so it is pulled back downward
   let hcEngageAt=0;        // the arm only starts moving after the screen went dark
   let hcSettling=0;        // and the screen re-lights only after the arm has settled
@@ -1040,8 +1022,8 @@
     return { x:(x-(window.innerWidth-PLANE_W*f)/2)/f,
              y:(y-(window.innerHeight-PLANE_H*f))/f };
   }
-  let hcScale=1;   // lido do --mano-scale quando a pose de ponteiro engata
-  let hcCons=null; // o console preso ao braco enquanto ele e ponteiro
+  let hcScale=1;   // read from --mano-scale when the pointer pose engages
+  let hcCons=null; // the console tied to the arm while it is the pointer
   function hcFingertip(){ // middle fingertip at rest, from fixed geometry (rect-free)
     return { x: 679, y: PLANE_H-146 }; }
   window.__handNibble=function(x,y){ if(!hcOn) return;
@@ -1108,20 +1090,16 @@
         // promote the layer NOW (don't wait for the 400ms pose tick): the
         // cursor pose brings transition:none + will-change before any write
         updatePose();
-        // a escala do instrumento vale nesta pose tambem, senao o braco
-        // encolhe no instante em que vira ponteiro. O pivo aqui ja e a PONTA
-        // DO DEDO (1509px 319px e o dedo medio em repouso), entao crescer em
-        // volta dele nao tira o dedo do alvo: nada de compensar mira.
+        // the instrument's scale holds in this pose too, or the arm shrinks the
+        // moment it becomes the pointer. The pivot is the FINGERTIP (1509px 319px is
+        // the middle finger at rest), so scaling around it keeps the finger on target.
         hcScale=parseFloat(getComputedStyle(document.documentElement)
           .getPropertyValue("--mano-scale"))||1;
         mano.style.transformOrigin="1509px 319px";
-        /* A TELA VAI JUNTO COM O APARELHO, e o preco disso e pago UMA vez
-           aqui, nao por quadro. A primeira versao desta cola fazia
-           querySelector + transformOrigin + transform no console INTEIRO a
-           cada quadro, sem promover camada: 673x405 de matriz, dados e
-           botoes repintados 60 vezes por segundo. Foi o "infinitamente mais
-           lagado" sentido na primeira fase, em mesa.
-           Promovido com will-change no engate, o resto vira composicao. */
+        /* The screen moves with the device, and the cost is paid ONCE here, not
+           per frame: promoted with will-change on engage, the rest is compositing.
+           Doing querySelector + transform on the whole console every frame without
+           a layer repainted 673x405 of matrix, dice and buttons 60 times a second. */
         hcCons=hull&&hull.querySelector("#hull-console");
         if(hcCons){
           hcCons.style.transformOrigin="709px 319px";
@@ -1129,7 +1107,7 @@
         }
         if(!hcEngageAt||performance.now()>=hcEngageAt) hcEngageAt=performance.now()+160;
       }
-      if(!on&&mano){ mano.style.transform=""; mano.style.transformOrigin="";
+      if(!on&&mano){ mano.style.transform=""; mano.style.transformOrigin=""; mano._tr=null;
         const c0=hcCons||(hull&&hull.querySelector("#hull-console"));
         if(c0){ c0.style.transform=""; c0.style.transformOrigin="";
           c0.style.willChange=""; }
@@ -1156,8 +1134,9 @@
       const sway=Math.max(-2.5,Math.min(2.5,hcVX*.5));
       hcRot+=((-90+sway)-hcRot)*.22;
       const t=`translate3d(${hcPos.x-hcRest.x}px, ${hcPos.y-hcRest.y}px, 0) rotate(${hcRot}deg) scale(${hcScale})`;
-      mano.style.transform=t;
-      if(hcCons) hcCons.style.transform=t;
+      if(mano._tr!==t||mano._trCons!==hcCons){ mano._tr=t; mano._trCons=hcCons;   // write only on a move
+        mano.style.transform=t;
+        if(hcCons) hcCons.style.transform=t; }
 
     }
     drawCursor();
@@ -1237,7 +1216,8 @@
     if(radar){
       const showR=live && x>0 && y>0;
       if(radar._on!==showR){ radar._on=showR; radar.classList.toggle("on", showR); }
-      radar.style.transform=`translate3d(${x}px, ${y}px, 0)`;
+      const tr=`translate3d(${x}px, ${y}px, 0)`;
+      if(radar._tr!==tr){ radar._tr=tr; radar.style.transform=tr; }   // write only on a move
     }
     if(rhand){
       const useR=live && activeHand==="right" && x>0 && y>0;
@@ -1245,7 +1225,8 @@
       if(useR){
         // 1:1 with the reticle, no easing. They are ONE pointer; any lag between
         // them reads as the hand "chasing" the focus, which felt awful on the dice.
-        rhand.style.transform=`translate3d(${x}px, ${y}px, 0)`;
+        const tr=`translate3d(${x}px, ${y}px, 0)`;
+        if(rhand._tr!==tr){ rhand._tr=tr; rhand.style.transform=tr; }
       }
     }
   }
@@ -1300,16 +1281,7 @@
       try{ window.__audio&&window.__audio.play("chart_creak"); }catch(e){}
     }
   }
-  let prevMatrix=null, prevAllocOn=false;
-  const SEAL_IDS=["seal-r","seal-p","seal-t"];
-  function sealPos(idx){ // seal centers in viewport coords (container at -14,-10; rotation -8 about 120,200)
-    const C=[[636,118],[668,146],[690,178]][idx];
-    const th=-8*Math.PI/180, ox=120, oy=200;
-    const dx=C[0]-ox, dy=C[1]-oy;
-    const x=ox+dx*Math.cos(th)-dy*Math.sin(th), y=oy+dx*Math.sin(th)+dy*Math.cos(th);
-    const contTop=window.innerHeight+10-260;
-    return { x: x-14, y: contTop+y };
-  }
+  let prevAllocOn=false;
   function updateMachine(){
     if(!hull) return;
     const app=window.__game; if(!app) return;
@@ -1398,29 +1370,6 @@
     const r=mano.getBoundingClientRect();
     const sc=r.width/1580;
     return { x: r.left + (sx+800)*sc, y: r.top + sy*sc };
-  }
-  function gemFlight(sealIdx, value){
-    const mano=hull.querySelector("#hull-manopla"); if(!mano) return;
-    const rail=armPt(486,149);
-    const from={ left: rail.x-13, top: rail.y-13, width:26, height:26 };
-    const to2 = armPt([648,668,686][sealIdx], [124,146,168][sealIdx]);
-    const g=document.createElement("div");
-    g.className="mano-fly";
-    g.textContent=["I","II","III"][value-1]||"";
-    g.style.left=(from.left+from.width/2)+"px"; g.style.top=(from.top+from.height/2)+"px";
-    document.body.appendChild(g);
-    const dx=to2.x-(from.left+from.width/2), dy=to2.y-(from.top+from.height/2);
-    g.animate([
-      { transform:"translate(0,0) scale(1)", opacity:1 },
-      { transform:`translate(${dx*0.8}px,${dy*0.8}px) scale(.7)`, opacity:1, offset:.75 },
-      { transform:`translate(${dx}px,${dy}px) scale(.4)`, opacity:0 }
-    ],{ duration:420, easing:"cubic-bezier(.3,.7,.4,1)" }).onfinish=()=>{
-      g.remove();
-      try{ window.__audio&&window.__audio.play("dice_lock"); }catch(e){}
-      // hit: the hand takes the stone, micro shake
-      mano.classList.add("mano-hit");
-      setTimeout(()=>mano.classList.remove("mano-hit"), 160);
-    };
   }
   function updateVitals(){ updateMachine(); }
 
@@ -2013,12 +1962,16 @@
     chipEl.classList.toggle("flip-x", sd[0] === "l");
     chipEl.classList.toggle("flip-y", sd[1] === "u");
   }
+  // every frame calls this; a write only when she actually moved (an unchanged style
+  // write still restyles, and she sits still most of the time)
   function place(x, y){
-    if (eye) eye.style.transform = `translate(${x - 30}px, ${y - 30}px)`;
+    const tr = `translate(${x - 30}px, ${y - 30}px)`;
+    if (eye && eye._tr !== tr){ eye._tr = tr; eye.style.transform = tr; }
     applySide(x, y);
     if (assumed){ // the journal is not NEAR the eye, it IS the eye, and it moves like it
-      assumed.style.left = Math.max(250, Math.min(innerWidth - 260, x)) + "px";
-      assumed.style.top  = Math.max(200, Math.min(innerHeight - 220, y)) + "px";
+      const l = Math.max(250, Math.min(innerWidth - 260, x)) + "px", tp = Math.max(200, Math.min(innerHeight - 220, y)) + "px";
+      if (assumed._l !== l){ assumed._l = l; assumed.style.left = l; }
+      if (assumed._t !== tp){ assumed._t = tp; assumed.style.top = tp; }
     }
   }
 
@@ -2085,17 +2038,31 @@
     }
   }
 
-  // ── SHE SPEAKS from her own body, and she QUEUES. Fast phases used to make her
-  //    lines devour each other; now each line holds the visor before the next. ──
-  let sayT = 0, sayQ = [], saying = false;
+  // ── SHE SPEAKS ONE LINE AT A TIME. The rule over everything: nothing appears and
+  //    vanishes fast. Every line stays at least max(4 s, 75 ms per character); a new
+  //    line never cuts one that has not had its reading time; when lines pile up, the
+  //    least important WAITING line is dropped, never the one on show. A line may
+  //    carry onShow, run the moment it appears (comic.js moves her eye and lands its
+  //    impact then, so the picture and the words arrive together). ──
+  let sayT = 0, sayQ = [], saying = null;
+  function readMs(html){
+    const n = html && html.nodeType === 1 ? (html.textContent || "").length
+      : String(html || "").replace(/<[^>]*>/g, "").length;
+    const sp = window.__game && window.__game.speed;   // twice as long on Slow
+    return Math.max(4000, 75 * n) * (sp === "slow" ? 2 : 1);
+  }
   function say(html, opt){
     opt = opt || {}; if (!html) return;
     if (window.__helaMute && !opt.force) return;   // the tutorial silences her ambient barks; only its own lines pass
-    if (opt.jump) { sayQ.length = 0; clearTimeout(sayT); saying = false; }  // reactive line: clear the queue, show now
-    sayQ.push({ html, ms: Math.max(opt.minMs || 2300, opt.ms || 4600) });
-    if (sayQ.length > 3) sayQ.splice(0, sayQ.length - 3);   // keep only the freshest three
+    sayQ.push({ html, prio: opt.prio || 0, onShow: opt.onShow || null, ms: Math.max(readMs(html), opt.ms || 0) });
+    while (sayQ.length > 2){   // keep two waiting at most: drop the least important older one
+      let k = 0; for (let i = 1; i < sayQ.length - 1; i++) if (sayQ[i].prio < sayQ[k].prio) k = i;
+      sayQ.splice(k, 1);
+    }
     if (!saying) nextSay();
   }
+  // lines on show plus waiting (comic.js paces the game's replay by it)
+  function backlog(){ return sayQ.length + (saying ? 1 : 0); }
   // a tiny synth for the parade's numbers: gains rise, losses fall, low volume
   window.__pdxTone = function(freq, dur, gain){
     try {
@@ -2127,8 +2094,8 @@
   }
   function nextSay(){
     const it = sayQ.shift();
-    if (!it || !eye){ saying = false; return; }
-    saying = true;
+    if (!it || !eye){ saying = null; return; }
+    saying = it;
     whisper();   // she clears her throat, two low notes, until the real voice ships
     const chip = eye.querySelector(".he-chip"); if (!chip){ saying = false; return; }
     // a DOM node (comic.js lines, built with textContent) or her own trusted markup
@@ -2136,9 +2103,14 @@
     else chip.innerHTML = it.html;
     // already speaking: the words swap in place (comic.js fades them in); else she opens
     if (!eye.classList.contains("he-says")){ void eye.offsetWidth; eye.classList.add("he-says"); }
+    try { it.onShow && it.onShow(it.ms); } catch (e) {}
     clearTimeout(sayT);
-    sayT = setTimeout(() => { if (eye) eye.classList.remove("he-says");
-      setTimeout(nextSay, 340); }, it.ms);
+    // the next line swaps in place; with nothing waiting she closes, slowly
+    sayT = setTimeout(() => {
+      if (sayQ.length) { nextSay(); return; }
+      if (eye) eye.classList.remove("he-says");
+      saying = null;
+    }, it.ms);
   }
 
   // ── SHE BECOMES THE MESSAGE: a window unfolds FROM an eye at (x,y).
@@ -2240,7 +2212,7 @@
   }
 
   window.__helaEye = { say, manifest, aimSplit, clearSplit, blink, setPost, clearPost, direct,
-    live(){ return !!(eye && eye._live); }, posted(){ return !!(standAt || glide); },
+    live(){ return !!(eye && eye._live); }, posted(){ return !!(standAt || glide); }, backlog,
     pos(){ if (!eye) return { x: 64, y: 96 }; const r = eye.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 30 }; } };
   window.__helaSay = (html, opt) => say(html, opt);   // she owns her voice now
 
@@ -2317,8 +2289,6 @@
    ordinary, are deliberately untouched.
    ═══════════════════════════════════════════════════════════════════════════════ */
 (function helaGuide(){
-  const ZONES = ["#rucksack-zone", "#players-zone", "#timeline-rail", "#machine-zone",
-                 "#hull-console", "#log-zone", "#market-zone", "#drawer-zone", "#vz-holo"];
   let cur = "", said = "", patrolTimer = 0, patrolIdx = 0, patrolLaps = 0, huntKey = "";
   const eye = () => window.__helaEye;
 
@@ -2482,231 +2452,160 @@
     if (win && win.el) win.el.addEventListener("click", () => win.close());
   }
 
-  /* ── an INSTANCE is one rendered body of the core ── */
-  function makeCore(id, R, mount){
-    const root = document.createElement("div");
-    root.id = id; root.className = "hb-core";
+  /* ══ HER MEMORY, AS A COMIC BOOK (#hela-brain-full, kept for the tutorial) ══════════
+     The rotating core was small, cryptic and hard to steer. Her memory is now a comic
+     book lying on the paperwork desk:
+       closed : one strip, HELA'S MEMORY, the Hour, how many new entries, and the key (L)
+       open   : one page per Hour; every entry is a panel, every Herald notice a clipping
+                (click it to read the full edition); arrows or the Hour tabs turn pages
+     Keys: L opens or closes it (and turns the camera to the desk), Left and Right turn
+     the pages, Esc closes. Nothing here runs per frame: the page is rebuilt only when
+     it is open and something changed. Entries arrive as markup that game.js already
+     escaped (humanize); Herald headlines are read back as plain text. ══ */
+  const book = { el: null, open: false, hour: 0, follow: true, seen: 0, dirty: true, raf: 0 };
+  const plain = (html) => { const t = document.createElement("template"); t.innerHTML = String(html || ""); return t.content.textContent || ""; };
+  const KIND_TAG = { cp: "CONTRACT", market: "MARKET", danger: "DANGER", paradox: "PARADOX", travel: "VOYAGE", "": "LOG" };
+  function totalEntries(){ let n = 0; for (const t of turns.values()) n += t.logs.length + t.sats.length; return n; }
+  function hoursList(){ return [...turns.keys()].filter(h => h > 0).sort((a, b) => a - b); }
+  function buildBook(){
+    if (book.el || !document.body) return;
+    const lz = document.getElementById("log-zone"); if (!lz) return;
+    const root = document.createElement("section");
+    root.id = "hela-brain-full"; root.className = "hbk"; root.setAttribute("aria-label", "HELA's memory");
     root.innerHTML = `
-      <div class="hb-armature">
-        <i class="hb-ring hb-r1"></i><i class="hb-ring hb-r2"></i><i class="hb-ring hb-r3"></i>
-        <i class="hb-heart"></i>
+      <div class="hbk-bar">
+        <button type="button" class="hbk-toggle" aria-expanded="false">
+          <i class="hbk-eye" aria-hidden="true"></i><b class="hbk-name">HELA'S MEMORY</b>
+          <span class="hbk-state"></span><span class="hbk-new"></span><kbd>L</kbd>
+        </button>
+        <nav class="hbk-nav" aria-label="Hours">
+          <button type="button" class="hbk-prev" aria-label="Previous Hour">&#9664;</button>
+          <div class="hbk-hours"></div>
+          <button type="button" class="hbk-next" aria-label="Next Hour">&#9654;</button>
+        </nav>
       </div>
-      <div class="hb-nodes"></div>
-      <div class="hb-page"></div>`;
-    mount.appendChild(root);
-    const inst = { root, R, ry: Math.PI * .3, rx: -.18, vy: 0, hover: null, drag: null,
-      nodes: root.querySelector(".hb-nodes"), page: root.querySelector(".hb-page"), els: new Map() };
-    // drag to rotate, BOTH axes; she is maleable
-    root.addEventListener("pointerdown", (e) => {
-      // nodes are CLICK targets, capturing them for drag would eat their clicks
-      if (e.target.closest(".hb-node") || e.target.closest(".hb-page") || e.target.closest(".hb-read") || e.target.closest(".ledger") || e.target.closest(".hb-heart")) return;
-      inst.drag = { x: e.clientX, y: e.clientY, ry: inst.ry, rx: inst.rx }; root.classList.add("grabbing");
-      root.setPointerCapture && root.setPointerCapture(e.pointerId);
-    });
-    root.addEventListener("pointermove", (e) => {
-      if (!inst.drag) return;
-      inst.ry = inst.drag.ry + (e.clientX - inst.drag.x) * 0.011;
-      inst.rx = Math.max(-1.1, Math.min(1.1, inst.drag.rx + (e.clientY - inst.drag.y) * 0.009));
-      inst.vy = 0;
-    });
-    const drop = () => { inst.drag = null; root.classList.remove("grabbing"); };
-    root.addEventListener("pointerup", drop); root.addEventListener("pointercancel", drop);
-    return inst;
+      <div class="hbk-body">
+        <div class="hbk-page"></div>
+        <aside class="hbk-side"><div class="hbk-side-tag">DICE ROLLED OUTSIDE THE MACHINE</div></aside>
+      </div>`;
+    lz.appendChild(root);
+    book.el = root;
+    root.querySelector(".hbk-toggle").addEventListener("click", (e) => { e.stopPropagation(); setOpen(!book.open); });
+    root.querySelector(".hbk-prev").addEventListener("click", (e) => { e.stopPropagation(); turnPage(-1); });
+    root.querySelector(".hbk-next").addEventListener("click", (e) => { e.stopPropagation(); turnPage(1); });
+    root.querySelector(".hbk-hours").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-h]"); if (!b) return; e.stopPropagation();
+      book.hour = +b.dataset.h; book.follow = book.hour === hoursList().slice(-1)[0]; book.dirty = true; schedule(); });
+    root.querySelector(".hbk-page").addEventListener("click", (e) => {
+      const c = e.target.closest("[data-di]"); if (!c) return; e.stopPropagation(); newsBloom(+c.dataset.di); });
+    // the pages scroll inside the book; the desk must not steal the wheel
+    root.addEventListener("wheel", (e) => e.stopPropagation(), { passive: true });
+    schedule();
   }
-
-  /* ── projection: hours on a golden spiral band, satellites in tow ── */
-  function project(inst, t){
-    const hours = [...turns.keys()].sort((a, b) => a - b);
-    const N = Math.max(hours.length, 1);
-    const seen = new Set();
-    const cp = Math.cos(inst.rx || 0), sp = Math.sin(inst.rx || 0);
-    hours.forEach((h, i) => {
-      const th = i * 2.399963 + inst.ry;                       // golden angle spacing
-      const band = N > 1 ? (i / (N - 1) - .5) : 0;             // vertical band -.5..+.5
-      const x3 = Math.cos(th) * inst.R, z0 = Math.sin(th) * inst.R;
-      const y0 = band * inst.R * .78;
-      const y3 = y0 * cp - z0 * sp, z3 = y0 * sp + z0 * cp;    // PITCH, she turns on both axes
-      const depth = (z3 / inst.R + 1) / 2;                     // 0 far .. 1 near
-      const sc = .62 + .38 * depth, op = .38 + .62 * depth;
-      placeNode(inst, "t" + h, {
-        x: x3, y: y3 - z3 * .12, sc, op, z: Math.round(depth * 40),
-        col: TURN_COL, cls: "hb-turn", label: "H" + h,
-        hour: h, sat: null });
-      seen.add("t" + h);
-      // satellites orbit their hour in screen space, small, bright, clickable
-      turnOf(h).sats.forEach((di, k) => {
-        const phi = t * .00022 + k * (Math.PI * 2 / Math.max(turnOf(h).sats.length, 3));   // slow, a dot you can CATCH
-        const it = disp[di];
-        const hx = x3, hy = y3 - z3 * .12;                       // the hour it belongs to
-        const sx2 = hx + Math.cos(phi) * 38, sy2 = hy + Math.sin(phi) * 25 - 3;
-        // the TETHER, the dispatch is chained to its hour, visibly, moving as one
-        placeLink(inst, "l" + di, hx, hy, sx2, sy2, KIND_COL[it.kind] || "#e2c078", op * .55, Math.round(depth * 40));
-        seen.add("l" + di);
-        placeNode(inst, "d" + di, {
-          x: sx2, y: sy2,
-          sc: sc * .78, op: Math.min(1, op + .2), z: Math.round(depth * 40) + 1,
-          col: KIND_COL[it.kind] || "#e2c078", cls: "hb-sat", label: "",
-          hour: h, sat: di });
-        seen.add("d" + di);
-      });
+  function setOpen(on){
+    buildBook(); if (!book.el) return;
+    book.open = !!on;
+    if (book.open){
+      book.seen = totalEntries();
+      if (book.follow || !book.hour) book.hour = hoursList().slice(-1)[0] || 0;
+      if (!greeted){ greeted = true;
+        try { window.__helaSay && window.__helaVoice && window.__helaSay(window.__helaVoice("brain_greeting"), { ms: 5200 }); } catch (e) {} }
+    }
+    book.el.classList.toggle("open", book.open);
+    book.el.querySelector(".hbk-toggle").setAttribute("aria-expanded", String(book.open));
+    book.dirty = true; schedule();
+  }
+  function turnPage(d){
+    const hs = hoursList(); if (!hs.length) return;
+    let i = hs.indexOf(book.hour); if (i < 0) i = hs.length - 1;
+    i = Math.max(0, Math.min(hs.length - 1, i + d));
+    book.hour = hs[i]; book.follow = i === hs.length - 1; book.dirty = true; schedule();
+    try { window.__audio && window.__audio.play("click"); } catch (e) {}
+  }
+  function schedule(){ if (book.raf) return; book.raf = requestAnimationFrame(() => { book.raf = 0; render(); }); }
+  function render(){
+    const r = book.el; if (!r) return;
+    const hs = hoursList(), last = hs.slice(-1)[0] || 0;
+    const fresh = Math.max(0, totalEntries() - book.seen);
+    r.querySelector(".hbk-state").textContent = book.open ? "close" : (last ? "Hour " + last : "empty so far");
+    r.querySelector(".hbk-new").textContent = !book.open && fresh ? fresh + " new" : "";
+    if (!book.open){ book.dirty = true; return; }
+    if (book.follow) book.hour = last;
+    book.seen = totalEntries();
+    // Hour tabs: the last twelve, the one on show inked
+    const tabs = r.querySelector(".hbk-hours");
+    const want = hs.slice(-12).map(h => h + (h === book.hour ? "*" : "")).join(",");
+    if (tabs.dataset.k !== want){ tabs.dataset.k = want; tabs.textContent = "";
+      for (const h of hs.slice(-12)){ const b = document.createElement("button"); b.type = "button";
+        b.dataset.h = h; b.textContent = "H" + h; if (h === book.hour) b.className = "on"; tabs.appendChild(b); } }
+    r.querySelector(".hbk-prev").disabled = !hs.length || book.hour <= hs[0];
+    r.querySelector(".hbk-next").disabled = !hs.length || book.hour >= last;
+    // the ledger of rolls outside the machine rides in the side column
+    const led = document.querySelector("#log-zone .ledger");
+    const side = r.querySelector(".hbk-side");
+    if (led && led.parentNode !== side) side.appendChild(led);
+    if (!book.dirty) return;
+    book.dirty = false;
+    const page = r.querySelector(".hbk-page");
+    page.textContent = "";
+    const tn = turns.get(book.hour);
+    const title = document.createElement("div"); title.className = "hbk-title";
+    title.textContent = book.hour ? "HOUR " + book.hour : "BEFORE THE FIRST HOUR";
+    page.appendChild(title);
+    const grid = document.createElement("div"); grid.className = "hbk-panels"; page.appendChild(grid);
+    if (!tn || (!tn.logs.length && !tn.sats.length)){
+      const q = document.createElement("div"); q.className = "hbk-panel hbk-quiet";
+      q.textContent = "A quiet Hour. Nothing worth ink."; grid.appendChild(q); return;
+    }
+    // the Herald's clippings first, pinned at the top of the page
+    for (const di of tn.sats){ const it = disp[di]; if (!it) continue;
+      const c = document.createElement("button"); c.type = "button"; c.className = "hbk-clip"; c.dataset.di = di;
+      const k = document.createElement("span"); k.className = "hbk-clip-kick"; k.textContent = "THE TEMPORAL HERALD";
+      const h = document.createElement("b"); h.textContent = plain(it.headline);
+      const sub = document.createElement("span"); sub.className = "hbk-clip-sub"; sub.textContent = plain(it.sub);
+      const rd = document.createElement("span"); rd.className = "hbk-clip-read"; rd.textContent = "read the edition";
+      c.append(k, h, sub, rd); grid.appendChild(c); }
+    // then every entry of the Hour, one panel each, in the order it happened
+    tn.logs.slice(-40).forEach((l, i) => {
+      if (/^\s*-\s/.test(plain(l.text)) && !l.cls) {   // a phase marker becomes a chapter strip
+        const ch = document.createElement("div"); ch.className = "hbk-chapter";
+        ch.textContent = plain(l.text).replace(/-/g, " ").trim().toUpperCase(); grid.appendChild(ch); return; }
+      const p = document.createElement("div"); p.className = "hbk-panel k-" + (l.cls || "log");
+      const tg = document.createElement("span"); tg.className = "hbk-tag"; tg.textContent = KIND_TAG[l.cls || ""] || "LOG";
+      const tx = document.createElement("span"); tx.className = "hbk-text"; tx.innerHTML = l.text;   // escaped by game.js humanize
+      p.append(tg, tx); grid.appendChild(p);
     });
-    for (const [key, el2] of inst.els) if (!seen.has(key)){ el2.remove(); inst.els.delete(key); }
+    if (book.follow) page.scrollTop = page.scrollHeight;
   }
-  function placeLink(inst, key, x1, y1, x2, y2, col, op, z){
-    let el2 = inst.els.get(key);
-    if (!el2){ el2 = document.createElement("i"); el2.className = "hb-link";
-      inst.nodes.appendChild(el2); inst.els.set(key, el2); }
-    const dx = x2 - x1, dy = y2 - y1;
-    el2.style.transform = `translate(${x1.toFixed(1)}px, ${y1.toFixed(1)}px) rotate(${Math.atan2(dy, dx).toFixed(4)}rad)`;
-    el2.style.width = Math.hypot(dx, dy).toFixed(1) + "px";
-    el2.style.opacity = op.toFixed(3); el2.style.zIndex = z; el2.style.color = col;
-  }
-  function placeNode(inst, key, p){
-    let el2 = inst.els.get(key);
-    if (!el2){
-      el2 = document.createElement("button");
-      el2.type = "button"; el2.className = "hb-node " + p.cls;
-      el2.dataset.key = key;
-      inst.nodes.appendChild(el2); inst.els.set(key, el2);
-      // hover only FREEZES the orbit for the hand; pages open on CLICK alone
-      el2.addEventListener("pointerenter", () => { inst.hover = key; });
-      el2.addEventListener("pointerleave", () => { if (inst.hover === key) inst.hover = null; });
-      if (p.sat != null){
-        el2.addEventListener("click", (e) => { e.stopPropagation();
-          if (el2._dragged){ el2._dragged = false; return; }   // a drag is not a click
-          toggleArticle(inst, p.sat); });
-        // drag a memory OUT of the core: the article PINS where you drop it
-        el2.addEventListener("pointerdown", (e) => {
-          const sx2 = e.clientX, sy2 = e.clientY; let moved = false;
-          const mv = (ev) => { if (Math.hypot(ev.clientX - sx2, ev.clientY - sy2) > 55) moved = true; };
-          const up = (ev) => { window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up);
-            if (!moved) return; el2._dragged = true;
-            const it = disp[p.sat]; if (!it || !window.__helaEye) return;
-            const node = document.createElement("div");
-            node.className = "hb-newsread"; node.innerHTML = it.html || "";
-            const win = window.__helaEye.manifest({ x: ev.clientX, y: ev.clientY, node, cls: "he-news he-pinnedclip" });
-            if (win && win.el){ win.el.addEventListener("click", () => win.close());
-              armAnyClose(() => win.close()); }
-          };
-          window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
-        });
+  // new memory: mark the book (the page itself only rebuilds while it is open)
+  const _log = window.__helaBrainLog, _file = window.__helaBrainFile;
+  window.__helaBrainLog = function(hour, cls, text){ _log(hour, cls, text);
+    if (book.open && (book.follow || hour === book.hour)) book.dirty = true; schedule(); };
+  window.__helaBrainFile = function(item){ _file(item); if (book.open) book.dirty = true; schedule(); };
+  // the tutorial and the keyboard pilot her memory through this
+  window.__helaBrain = {
+    open(hour){ if (hour){ book.hour = +hour; book.follow = false; } setOpen(true); },
+    close(){ setOpen(false); }, toggle(){ setOpen(!book.open); }, isOpen(){ return book.open; }, turn: turnPage,
+  };
+  window.addEventListener("keydown", (e) => {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+    if (!document.body.classList.contains("cabin-on")) return;
+    const t = e.target || {}; if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || "") || t.isContentEditable) return;
+    const k = (e.key || "").toLowerCase();
+    if (k === "l"){
+      e.preventDefault();
+      const g = window.__game;
+      if (!book.open && g && g.camera && g.camera.scene !== "drawer"){
+        try { g.camera._engage(); g.camera.setScene("drawer"); g.updateBeacon && g.updateBeacon(); } catch (err) {}
       }
-      else el2.addEventListener("click", (e) => { e.stopPropagation();   // an HOUR pins its page open
-        if (inst.pinnedHour === p.hour){ inst.pinnedHour = null; inst.page.classList.remove("on"); }
-        else { inst.pinnedHour = p.hour; showPage(inst, p.hour);
-          armAnyClose(() => { inst.pinnedHour = null; inst.page.classList.remove("on"); }); } });
-      requestAnimationFrame(() => el2.classList.add("born"));
+      setOpen(!book.open); return;
     }
-    el2.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) scale(${p.sc.toFixed(3)})`;
-    el2.style.opacity = p.op.toFixed(3);
-    el2.style.zIndex = p.z;
-    el2.style.color = p.col;
-    if (p.label && el2.textContent !== p.label) el2.textContent = p.label;
-  }
-
-  // ONE law for everything the core opens: the NEXT click anywhere closes it
-  // (exactly how the traveler files close). Armed after the opening click settles.
-  function armAnyClose(fn){
-    setTimeout(() => document.addEventListener("click", () => { try { fn(); } catch (e) {} },
-      { once: true, capture: true }), 0);
-  }
-  /* ── the HOUR PAGE: hover a node, read that hour's log, paper-styled ── */
-  let pageT = 0;
-  function showPage(inst, hour){
-    clearTimeout(pageT);
-    if (inst === mini) return;   // the mini core is a NOTIFIER, no paper pages on the main scene
-    const tn = turns.get(hour); if (!tn) return;
-    if (!greeted){ greeted = true;
-      try { window.__helaSay && window.__helaSay(window.__helaVoice ? window.__helaVoice("brain_greeting") : "", { ms: 5200 }); } catch (e) {}
-    }
-    const rows = tn.logs.length
-      ? tn.logs.slice(-9).map(l => `<div class="hbp-line k-${l.cls}">${l.text}</div>`).join("")
-        : `<div class="hbp-line hbp-quiet">a quiet hour, nothing worth ink</div>`;
-    const sats = tn.sats.length
-      ? `<div class="hbp-sats">${tn.sats.map(di => `<span style="color:${KIND_COL[disp[di].kind] || "#e2c078"}">◈</span> ${disp[di].headline}`).join("<br>")}</div>` : "";
-    inst.page.innerHTML = `<div class="hbp-head">HOUR ${hour}</div>${rows}${sats}`;
-    inst.page.classList.add("on");
-  }
-  function hidePageSoon(inst){ clearTimeout(pageT);
-    pageT = setTimeout(() => { if (inst.pinnedHour == null) inst.page.classList.remove("on"); }, 260); }
-
-  /* ── the ARTICLE: clicked open, clicked shut. It grows out of the core. ── */
-  function toggleArticle(inst, di){
-    const ex = document.querySelector(".hb-read");
-    if (ex && +ex.dataset.di === di){ foldArticle(ex); return; }
-    if (ex) foldArticle(ex);
-    openArticle(inst, di, {});
-  }
-  function openArticle(inst, di, opt){
-    const it = disp[di]; if (!it) return;
-    const ex = document.querySelector(".hb-read"); if (ex) foldArticle(ex);
-    const rd = document.createElement("div");
-    rd.className = "hb-read"; rd.dataset.di = di;
-    rd.innerHTML = `<div class="hb-read-inner">${it.html || ""}</div>`;
-    inst.root.appendChild(rd);
-    requestAnimationFrame(() => requestAnimationFrame(() => rd.classList.add("open")));
-    rd.addEventListener("click", () => foldArticle(rd));    // click it shut, no X
-    armAnyClose(() => foldArticle(rd));                      // ANY click anywhere folds it
-    if (opt.auto){ rd.classList.add("auto"); rd._t = setTimeout(() => foldArticle(rd), 8200); }
-  }
-  function foldArticle(rd){ clearTimeout(rd._t); rd.classList.remove("open"); setTimeout(() => rd.remove(), 320); }
-
-  /* ── bodies ── */
-  let mini = null, full = null, raf = 0;
-  function ensureBodies(){
-    if (!document.body) return;
-    // the mini core is DEAD: the main scene was drowning in repeated
-    // information. News now manifests FROM THE EYE; memory lives in ONE core.
-    if (!full){
-      const lz = document.getElementById("log-zone");
-      if (lz) full = makeCore("hela-brain-full", 196, lz);
-    }
-
-  }
-  function frame(t){
-    raf = requestAnimationFrame(frame);
-    const live = document.body && document.body.classList.contains("cabin-on");
-    if (!live) return;
-    // THE HEART IS THE REGISTRY: the ledger mounts LATE (market render), adopt it
-    // the moment it exists; the game keeps writing into it after the move
-    if (full && !full._ledger){
-      const led = document.querySelector("#log-zone .ledger");
-      if (led){ full._ledger = led;
-        const plate = document.createElement("div"); plate.className = "hb-heartplate";
-        plate.appendChild(led);
-        full.root.appendChild(plate);
-        // the CENTER DOT is the registry: hover peeks it, a click pins it, another hides it
-        const heart = full.root.querySelector(".hb-heart");
-        if (heart){
-          heart.addEventListener("pointerenter", () => plate.classList.add("peek"));
-          heart.addEventListener("pointerleave", () => plate.classList.remove("peek"));
-          heart.addEventListener("click", (e) => { e.stopPropagation();
-            const on = plate.classList.toggle("pinned");
-            if (on) armAnyClose(() => plate.classList.remove("pinned", "peek")); });
-          // pinned, the plate covers the heart, clicking the plate unpins it too
-          plate.addEventListener("click", (e) => { e.stopPropagation(); plate.classList.remove("pinned", "peek"); });
-        } }
-    }
-    if ((frame._n = (frame._n || 0) + 1) % 2 === 0)   // every 2nd frame is plenty for memory
-    for (const inst of [mini, full]){
-      if (!inst) continue;
-      // on screen, not merely laid out: the core lives on the paperwork desk, and turning
-      // its orbits (or even reading its rect, which forces a layout) while the camera
-      // looks at another desk was 0.5ms a frame for nobody
-      const cam = window.__game && window.__game.camera;
-      const camEl = document.getElementById("cam");
-      if (cam && cam.scene !== "drawer" && !(camEl && camEl.classList.contains("is-panning"))) continue;
-      const rr = inst.root.getBoundingClientRect();
-      const vis = rr.width > 0 && rr.right > 0 && rr.bottom > 0
-        && rr.left < window.innerWidth && rr.top < window.innerHeight;
-      if (!vis) continue;
-      if (!inst.drag && !inst.hover && !RM) inst.ry += .0032;   // the slow turning of memory
-      // orbits FREEZE while the hand is near, a memory you reach for holds still
-      if (!inst.hover && !inst.drag) inst.tOrb = t;
-      project(inst, inst.tOrb || t);
-    }
-  }
-  function ensure(){ ensureBodies(); if (!raf) raf = requestAnimationFrame(frame); if (!full) setTimeout(ensure, 600); }
+    if (!book.open) return;
+    if (k === "escape"){ e.preventDefault(); setOpen(false); }
+    else if (k === "arrowleft"){ e.preventDefault(); turnPage(-1); }
+    else if (k === "arrowright"){ e.preventDefault(); turnPage(1); }
+  });
+  function ensure(){ buildBook(); if (!book.el) setTimeout(ensure, 600); }
   ensure();
 })();
 
@@ -2879,7 +2778,6 @@
 (function helaFinale(){
   window.__helaFinale = function(winner){
     if (document.getElementById("hela-finale")) return;
-    const turns2 = []; // pull from the core's memory through the public stores
     const store = window.__helaNewsStore || [];
     const fin = document.createElement("div");
     fin.id = "hela-finale";

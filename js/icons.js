@@ -261,8 +261,3 @@ export function hydrateIcons(root = document) {
     if (ICONS[name]) el.innerHTML = ICONS[name];
   });
 }
-
-/** Convenience: a span wrapping an icon, for inline use. */
-export function iconSpan(name, cls = "") {
-  return `<span class="ico ${cls}">${icon(name)}</span>`;
-}

@@ -189,9 +189,9 @@ class AudioEngine {
     const saved = this._load();
     this.vol = { master: saved.master ?? 0.8, music: saved.music ?? 0.35, sfx: saved.sfx ?? 0.7 };
     this.muted = saved.muted ?? false;
-    // silencio que NAO se guarda: um painel da mesa dividida sem som. O mute
-    // de verdade vai para o localStorage, que os paineis compartilham, e
-    // calaria o painel que deveria tocar.
+    // a silence that is NOT saved: a split-table panel without sound. The real
+    // mute goes to localStorage, which the panels share, and would silence the
+    // panel that should play.
     this.quiet = false;
     this._musicTimer = null;
     this._step = 0;          // bar counter (drives the slow phrase swell)

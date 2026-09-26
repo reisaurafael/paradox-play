@@ -1,5 +1,5 @@
-/* mesa.css, a mesa dividida. Nao carrega o app.css de proposito: o fundo do
-   mundo, o grao e a vinheta sao de cada painel, nao da moldura. */
+/* mesa.css, the split-screen table. It does not load app.css on purpose: the
+   world backdrop, the grain and the vignette belong to each panel, not the frame. */
 :root {
   --ink-900: #0b0a08; --ink-800: #141210; --ink-700: #1f1b16; --ink-600: #2c2620;
   --line: #3a3128; --text: #efe4cc; --text-soft: #c9bda3; --text-mute: #8a8578;
@@ -13,7 +13,7 @@ html, body { margin: 0; height: 100%; background: var(--ink-900); color: var(--t
   font: 15px/1.45 var(--f-body); }
 .mono { font-family: var(--f-mono); }
 
-/* ------------------------------ a preparacao ---------------------------- */
+/* -------------------------------- the setup ----------------------------- */
 .setup { max-width: 980px; margin: 0 auto; padding: 34px 26px 60px; }
 .setup[hidden] { display: none; }
 .setup-head { text-align: center; margin-bottom: 26px; }
@@ -26,17 +26,17 @@ html, body { margin: 0; height: 100%; background: var(--ink-900); color: var(--t
 .slot { display: grid; grid-template-columns: 36px 1fr auto; grid-template-rows: auto auto;
   gap: 4px 12px; align-items: center; padding: 14px 16px;
   background: var(--ink-800); border: 1px solid var(--line); border-radius: 8px;
-  border-left: 4px solid var(--cor, var(--amber)); opacity: .72; transition: opacity .2s; }
-.slot.is-on { opacity: 1; box-shadow: 0 0 0 1px var(--cor), 0 0 24px -8px var(--cor); }
+  border-left: 4px solid var(--colour, var(--amber)); opacity: .72; transition: opacity .2s; }
+.slot.is-on { opacity: 1; box-shadow: 0 0 0 1px var(--colour), 0 0 24px -8px var(--colour); }
 .slot-badge { grid-row: 1 / span 2; width: 36px; height: 36px; border-radius: 50%;
-  display: grid; place-items: center; background: var(--cor); color: #1a1510;
+  display: grid; place-items: center; background: var(--colour); color: #1a1510;
   font: 700 1rem/1 var(--f-display); }
 .slot-name { grid-column: 2; font: 500 1rem/1.2 var(--f-body); color: var(--text);
   background: var(--ink-700); border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; }
 .slot-name:focus { outline: none; border-color: var(--amber-deep); }
 .slot-status { grid-column: 2; font: 500 .74rem/1.2 var(--f-mono); letter-spacing: .06em;
   text-transform: uppercase; color: var(--text-mute); }
-.slot.is-on .slot-status { color: var(--cor); }
+.slot.is-on .slot-status { color: var(--colour); }
 .slot-btn { grid-column: 3; grid-row: 1 / span 2; }
 
 .setup-row { display: flex; flex-wrap: wrap; align-items: end; gap: 14px 18px; margin-bottom: 10px; }
@@ -69,23 +69,23 @@ html, body { margin: 0; height: 100%; background: var(--ink-900); color: var(--t
 .map-grid span { color: var(--text-soft); }
 .note { color: var(--text-mute); font-size: .82rem; margin: 16px 0 0; }
 
-/* -------------------------------- a mesa -------------------------------- */
-.mesa { position: fixed; inset: 0; display: grid; gap: 2px; background: #000; }
-.mesa[hidden] { display: none; }
-.mesa.n1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
-.mesa.n2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-.mesa.n3, .mesa.n4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-.mesa.n3 .painel:nth-child(3) { grid-column: 1 / span 2; }
-.painel { position: relative; overflow: hidden; background: var(--ink-900); min-width: 0; min-height: 0; }
-.painel iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--ink-900); }
-.etiqueta { position: absolute; left: 8px; top: 6px; z-index: 2; pointer-events: none;
+/* -------------------------------- the table ----------------------------- */
+.table { position: fixed; inset: 0; display: grid; gap: 2px; background: #000; }
+.table[hidden] { display: none; }
+.table.n1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.table.n2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+.table.n3, .table.n4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.table.n3 .panel:nth-child(3) { grid-column: 1 / span 2; }
+.panel { position: relative; overflow: hidden; background: var(--ink-900); min-width: 0; min-height: 0; }
+.panel iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--ink-900); }
+.tag { position: absolute; left: 8px; top: 6px; z-index: 2; pointer-events: none;
   display: inline-flex; align-items: center; gap: 7px; padding: 3px 9px 3px 7px;
   background: rgba(11, 10, 8, .62); border: 1px solid rgba(255, 255, 255, .08); border-radius: 999px;
   font: 500 .66rem/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text-soft); }
-.et-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cor, var(--amber)); box-shadow: 0 0 8px var(--cor, var(--amber)); }
-.et-nome { color: var(--text); }
-.et-ctl { color: var(--text-mute); }
-.etiqueta.alerta .et-ctl { color: var(--danger); }
+.tag-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--colour, var(--amber)); box-shadow: 0 0 8px var(--colour, var(--amber)); }
+.tag-name { color: var(--text); }
+.tag-ctl { color: var(--text-mute); }
+.tag.alert .tag-ctl { color: var(--danger); }
 
 .leave { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 5;
   width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line);

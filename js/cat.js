@@ -531,7 +531,6 @@ export class CatEngine {
   }
   // her curl/scratch spot stays in HER quarter now, kept separate
   _logSpot() { return { x: this._clampX(-12 - Math.random() * 2), y: this._clampY(84 + Math.random() * 10) }; }
-  _goToward(p) { if (this.state === "sleep" || this.state === "curl") { this.pos = { ...p }; } else this.tgt = p; }
 
   _spawnScratch(px, py) {
     const zone = document.getElementById("log-zone");
@@ -638,13 +637,10 @@ export class CatEngine {
     const dist = Math.hypot(dx * vw(), dy * vh()); // px distance
     const fast = this._mouseV > 0.9;
 
-    // petting: slow hand ON her while she's awake-ish
-    // "a area de carinho do gato ta muito grande haha... eu to com o cursor fora dele
-    // varios pixels e faço carinho nele sem querer." 9 * vw * .5 is EIGHTY-SIX PIXELS at
-    // 1920, she is about seventy wide, so you were petting the desk on either side of
-    // her and she was purring for it. Her body, and nothing else.
-    // "carinho so quando o cursor esta encostado na imagem do gatinho": test the mouse
-    // against her RENDERED body box, not a plane-distance (which drifted with --fit).
+    // petting: slow hand ON her while she's awake-ish. Only when the cursor touches
+    // her: the old radius (9 * vw * .5) was eighty-six pixels at 1920 and she is about
+    // seventy wide, so petting the desk on either side of her made her purr. Test the
+    // mouse against her RENDERED body box, not a plane distance (which drifted with --fit).
     const onHer = this.hitTest(this._mouse.x, this._mouse.y);
     if (onHer && !fast && this.state !== "scared" && this.state !== "pounce" && this.state !== "bite") {
       this._petLast = now;

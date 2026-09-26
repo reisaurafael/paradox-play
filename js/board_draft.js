@@ -83,6 +83,327 @@
       g: `<g class="pc-em-anchor" transform="translate(0 ${dy})" pointer-events="none">${marks}</g>` };
   };
 
+  /* ── FIGURE AND GROUND: THE PIECE PLATES (shared by all three charts) ──
+     The pieces were drawn in the same inks and at the same weight as the chart under
+     them, so the eye had to hunt for them. Every actor now stands on its own PLATE: a soft
+     knockout halo that quietly washes the chart art right around it, a small static ground
+     shadow, an opaque ink disc, a light rim and a saturated seat ring. Mine is the largest,
+     wears a second ring and a YOU tag; rivals wear their initials, so colour is never the
+     only cue. The Merchant stands on a GOLD cartouche, a shape no traveller has, with a
+     MERCHANT tag. All static SVG: no filters, no blur, no loops (the one-shot arrival
+     pulse plays once, the render the piece lands). html.pdx-a11y thickens all of it. */
+  window.__pdxInitials = window.__pdxInitials || function (name) {
+    const p = String(name).trim().split(/\s+/);
+    return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase();
+  };
+  window.__pdxInkOn = window.__pdxInkOn || function (col) {
+    let r = 128, g = 128, b = 128;
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(col || "").trim());
+    const m3 = /^#?([0-9a-f]{3})$/i.exec(String(col || "").trim());
+    const mr = /rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/i.exec(String(col || ""));
+    if (m) { r = parseInt(m[1].slice(0, 2), 16); g = parseInt(m[1].slice(2, 4), 16); b = parseInt(m[1].slice(4, 6), 16); }
+    else if (m3) { r = parseInt(m3[1][0] + m3[1][0], 16); g = parseInt(m3[1][1] + m3[1][1], 16); b = parseInt(m3[1][2] + m3[1][2], 16); }
+    else if (mr) { r = +mr[1]; g = +mr[2]; b = +mr[3]; }
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? "#140e06" : "#fffaf0";
+  };
+  // one knockout gradient per chart (ids carry the chart's prefix: a gradient that lives
+  // in a hidden chart does not paint in the visible one)
+  window.__pdxPieceDefs = window.__pdxPieceDefs || function (pfx, dark) {
+    const h = dark ? "#03050c" : "#fdf7e6";
+    return `<defs><radialGradient id="${pfx}Knock"><stop offset="0" stop-color="${h}" stop-opacity="${dark ? .92 : .86}"/>`
+      + `<stop offset=".6" stop-color="${h}" stop-opacity="${dark ? .62 : .5}"/><stop offset="1" stop-color="${h}" stop-opacity="0"/></radialGradient></defs>`;
+  };
+  // o = { col, self, r, cy, pfx, dark, pulse }
+  window.__pdxPlate = window.__pdxPlate || function (o) {
+    const r = o.r, cy = o.cy || 0, ink = o.dark ? "#070a16" : "#1c150c", rim = o.dark ? "#e9f1ff" : "#fff8e4";
+    let s = `<circle class="pc-knock" cy="${cy}" r="${(r * 1.95).toFixed(1)}" fill="url(#${o.pfx}Knock)"/>`
+      + `<circle class="pc-shadow" cx="1.6" cy="${(cy + 3.4).toFixed(1)}" r="${(r + (o.self ? 6.5 : 1.2)).toFixed(1)}" fill="#000" fill-opacity="${o.dark ? .6 : .34}"/>`;
+    if (o.self) s += `<circle class="pc-crown" cy="${cy}" r="${(r + 5).toFixed(1)}" fill="none" stroke="${rim}" stroke-width="5"/>`
+      + `<circle class="pc-crown-c" cy="${cy}" r="${(r + 5).toFixed(1)}" fill="none" stroke="${o.col}" stroke-width="2.6"/>`;
+    if (o.self && o.pulse) s += `<circle class="pc-pulse" cy="${cy}" r="${(r + 5).toFixed(1)}" fill="none" stroke="${o.col}" stroke-width="3"/>`;
+    s += `<circle class="pc-disc" cy="${cy}" r="${r}" fill="${ink}" fill-opacity=".9" stroke="${rim}" stroke-width="1.7"/>`
+      + `<circle class="pc-ring" cy="${cy}" r="${(r - 2.4).toFixed(1)}" fill="none" stroke="${o.col}" stroke-width="3.2"/>`;
+    return `<g class="pc-plate">${s}</g>`;
+  };
+  // the name tag under a piece: YOU on mine (in my colour), initials on a rival's
+  window.__pdxTag = window.__pdxTag || function (text, col, y, o) {
+    o = o || {};
+    const fs = o.fs || 9, w = Math.max(20, String(text).length * fs * .7 + 9), h = fs + 5;
+    const ink = o.dark ? "#070a16" : "#1c150c";
+    const fill = o.self ? col : ink, stroke = o.self ? ink : col;
+    const txt = o.self ? window.__pdxInkOn(col) : "#fff8e4";
+    return `<g class="pc-tag${o.self ? " pc-tag-self" : ""}" transform="translate(0 ${y})" pointer-events="none">`
+      + `<rect x="${(-w / 2).toFixed(1)}" y="${(-h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="${(h / 2).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`
+      + `<text y="${(fs * .36).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="${fs}" letter-spacing=".8" fill="${txt}">${text}</text></g>`;
+  };
+  // the Merchant's gold cartouche. o = { w, h, cy, pfx, dark }
+  window.__pdxMerchPlate = window.__pdxMerchPlate || function (o) {
+    const w = o.w, h = o.h, cy = o.cy || 0, x = -w / 2, y = cy - h / 2, rx = Math.min(h / 2, 9);
+    return `<g class="pc-plate pc-merch-plate">`
+      + `<ellipse class="pc-knock" cy="${cy}" rx="${(w * .82).toFixed(1)}" ry="${(h * 1.05).toFixed(1)}" fill="url(#${o.pfx}Knock)"/>`
+      + `<rect class="pc-shadow" x="${(x + 1.6).toFixed(1)}" y="${(y + 3.4).toFixed(1)}" width="${w}" height="${h}" rx="${rx}" fill="#000" fill-opacity="${o.dark ? .6 : .34}"/>`
+      + `<rect class="pc-disc" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${h}" rx="${rx}" fill="#e2b545" stroke="#2a1c08" stroke-width="2.4"/>`
+      + `<rect class="pc-ring pc-merch-ring" x="${(x + 3.2).toFixed(1)}" y="${(y + 3.2).toFixed(1)}" width="${(w - 6.4).toFixed(1)}" height="${(h - 6.4).toFixed(1)}" rx="${Math.max(2, rx - 3)}" fill="none" stroke="#fff0c0" stroke-width="1.6"/>`
+      + `</g>`;
+  };
+  window.__pdxMerchTag = window.__pdxMerchTag || function (y) {
+    return `<g class="pc-tag pc-tag-merch" transform="translate(0 ${y})" pointer-events="none">`
+      + `<rect x="-31" y="-7" width="62" height="14" rx="7" fill="#e8c05a" stroke="#2a1c08" stroke-width="1.5"/>`
+      + `<text y="3.2" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="8.6" letter-spacing="1.3" fill="#1c1206">MERCHANT</text></g>`;
+  };
+  // FAN OUT a stack: pieces on one century push apart until their plates clear each
+  // other (and stay inside the chart). pts = [{ x, y, r }], mutated in place.
+  window.__pdxFan = window.__pdxFan || function (pts, gap, box) {
+    const cl = (v, a, b) => Math.max(a, Math.min(b, v));
+    for (let it = 0; it < 40; it++) {
+      let moved = false;
+      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+        const a = pts[i], b = pts[j];
+        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+        const need = a.r + b.r + gap;
+        if (d >= need) continue;
+        if (d < .01) { dx = (j - i) % 2 ? 1 : -1; dy = .3; d = Math.hypot(dx, dy); }
+        const push = (need - d) / 2 + .1;
+        a.x -= dx / d * push; a.y -= dy / d * push; b.x += dx / d * push; b.y += dy / d * push; moved = true;
+      }
+      if (box) for (const p of pts) { p.x = cl(p.x, box[0] + p.r, box[2] - p.r); p.y = cl(p.y, box[1] + p.r, box[3] - p.r); }
+      if (!moved) break;
+    }
+    return pts;
+  };
+
+  /* ── THE MERCHANT, READ ALOUD (shared by all three charts) ──
+     Players could not tell WHEN, HOW or WHY the Merchant moves. The rule is now written
+     next to him, in plain words, from public state (view.merchant_plan, server/serialize.py):
+     a one-line summary that is always there, and three lines (WHEN / HOW / WHY, plus his
+     last move) that open on hover, during the Market phase and while he moves. At those
+     moments the chart also draws the line to the traveller he is chasing and rings the
+     centuries his roll can reach. Static SVG shown or hidden by CSS: no loops, no filters. */
+  const MROM = c => (c >= 1 && c <= 30 ? ROM[c - 1] : String(c));
+  window.__pdxMerchantRule = window.__pdxMerchantRule || function (v) {
+    const p = (v && v.merchant_plan) || {};
+    const n = p.dice || (v && v.merchant_movement_dice) || 1;
+    const me = v && (v.travelers || []).find(t => t.is_self);
+    const who = p.target_seat ? (me && me.name === p.target_seat ? "you" : p.target_seat) : null;
+    const how = [`Rolls ${n} ${n === 1 ? "die" : "dice"} (1 to 3 each), moves up to the total,`,
+      "and stops early if he reaches his target.",
+      `Dice: 1 at the start, 2 once anyone ends an Hour on XX, 3 on X${p.harald ? ", +1 while anyone has Harald's Bluetooth" : ""}.`];
+    let why, short;
+    if (p.why === "secret") { why = ["Everyone is in his century, so he heads", "to the Secret Market at XI."]; short = "heads to XI"; }
+    else if (p.why === "future") { why = ["Everyone is with him at the Secret Market,", "so he heads to XXX."]; short = "heads to XXX"; }
+    else if (who) {
+      why = ["Chases the richest traveller not in his century:", `${who === "you" ? "YOU" : who} (${p.target_gold} gold), at ${MROM(p.target_century)}.`];
+      short = `chases ${who === "you" ? "YOU" : window.__pdxInitials(who)}`;
+    } else { why = ["Chases the richest traveller not in his century."]; short = "chases the richest"; }
+    let last = null;
+    const roll = v && v.merchant_last_roll, mv = v && v.merchant_last_move;
+    if (roll) last = `Last move: rolled ${roll}, moved ${Math.abs(mv || 0)}${Math.abs(mv || 0) < roll ? ", stopped on reaching his target" : ""}.`;
+    return { n, who, when: "At the end of every Market phase.", how, why, last, short: `${short} · ${n} ${n === 1 ? "die" : "dice"}` };
+  };
+  // which centuries can his next roll reach? (n dice of 1..3, capped at the target)
+  window.__pdxMerchantReach = window.__pdxMerchantReach || function (mc, target, n) {
+    const out = new Set();
+    if (target == null || target === mc) return [];
+    const dir = target > mc ? 1 : -1, D = Math.abs(target - mc);
+    for (let k = n; k <= 3 * n; k++) out.add(Math.max(1, Math.min(30, mc + dir * Math.min(k, D))));
+    return [...out];
+  };
+  /* The HUD beside the Merchant. o = { v, m: [x,y] his plate centre, tpos: [x,y] the chased
+     piece or null, pos: c => [x,y] or null, W, H, dark, avoid: [[x,y],...] piece centres } */
+  window.__pdxMerchantHUD = window.__pdxMerchantHUD || function (o) {
+    const esc2 = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+    const v = o.v, rule = window.__pdxMerchantRule(v), p = v.merchant_plan || {};
+    const [mx, my] = o.m, ink = o.dark ? "#070a16" : "#1c150c";
+    let s = `<g class="pc-mhud" pointer-events="none">`;
+    // the line to the traveller he chases, and the centuries his roll can reach
+    let key = "";
+    if (o.tpos) {
+      const [tx, ty] = o.tpos, d = Math.hypot(tx - mx, ty - my) || 1, ux = (tx - mx) / d, uy = (ty - my) / d;
+      const ex = tx - ux * 27, ey = ty - uy * 27, a = Math.atan2(uy, ux);
+      const hx = (dx, dy) => `${(ex + Math.cos(a) * dx - Math.sin(a) * dy).toFixed(1)} ${(ey + Math.sin(a) * dx + Math.cos(a) * dy).toFixed(1)}`;
+      key += `<line x1="${(mx + ux * 30).toFixed(1)}" y1="${(my + uy * 30).toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${ink}" stroke-width="5" stroke-linecap="round" opacity=".55"/>`
+        + `<line x1="${(mx + ux * 30).toFixed(1)}" y1="${(my + uy * 30).toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#e8c05a" stroke-width="2.4" stroke-dasharray="7 5" stroke-linecap="round"/>`
+        + `<path d="M ${hx(4, 0)} L ${hx(-8, -6)} L ${hx(-8, 6)} Z" fill="#e8c05a" stroke="${ink}" stroke-width="1.2"/>`;
+    }
+    for (const c of window.__pdxMerchantReach(v.merchant_century, p.target_century, rule.n)) {
+      const q = o.pos(c); if (!q) continue;
+      key += `<circle cx="${q[0]}" cy="${q[1]}" r="15" fill="none" stroke="${ink}" stroke-width="5" opacity=".45"/>`
+        + `<circle cx="${q[0]}" cy="${q[1]}" r="15" fill="none" stroke="#e8c05a" stroke-width="2.2" stroke-dasharray="3.5 3"/>`;
+    }
+    s += `<g class="pc-mhud-key">${key}</g>`;
+    // the readout: a one-line summary that never leaves, and the full rule that opens
+    const lines = [["WHEN", [rule.when]], ["HOW", rule.how], ["WHY", rule.why]];
+    if (rule.last) lines.push(["LAST", [rule.last.replace(/^Last move: /, "")]]);
+    const FS = 8.8, LH = 11.2, PW = 268;
+    let rows = 0; for (const [, ls] of lines) rows += ls.length;
+    const PH = 12 + rows * LH + (lines.length - 1) * 3 + 8;
+    // pick the side that covers the fewest pieces
+    const cand = [[mx + 40, my - PH / 2], [mx - 40 - PW, my - PH / 2], [mx - PW / 2, my + 44], [mx - PW / 2, my - 44 - PH]];
+    const cl = (val, lo, hi) => Math.max(lo, Math.min(hi, val));
+    let best = null, bestK = 1e9;
+    for (const [cx0, cy0] of cand) {
+      const px = cl(cx0, 6, o.W - PW - 6), py = cl(cy0, 6, o.H - PH - 6);
+      let k = Math.abs(px - cx0) + Math.abs(py - cy0);
+      for (const [ax, ay] of (o.avoid || [])) if (ax > px - 26 && ax < px + PW + 26 && ay > py - 26 && ay < py + PH + 26) k += 400;
+      if (px < mx + 30 && px + PW > mx - 30 && py < my + 30 && py + PH > my - 30) k += 900;   // never on him
+      if (k < bestK) { bestK = k; best = [px, py]; }
+    }
+    const [px, py] = best;
+    let body = "", yy = py + 16;
+    lines.forEach(([lab, ls], li) => {
+      body += `<text x="${px + 10}" y="${yy}" font-family="Georgia,serif" font-weight="bold" font-size="${FS - .6}" letter-spacing="1.2" fill="#b8862a">${lab}</text>`;
+      ls.forEach((ln, j) => { body += `<text x="${px + 50}" y="${(yy + j * LH).toFixed(1)}" font-family="Georgia,serif" font-size="${FS}" fill="#2a1c08"${li === 2 && j === ls.length - 1 && rule.who ? ' font-weight="bold"' : ""}>${esc2(ln)}</text>`; });
+      yy += ls.length * LH + 3;
+    });
+    s += `<g class="pc-mhud-full"><rect x="${px}" y="${py}" width="${PW}" height="${PH.toFixed(1)}" rx="5" fill="#f8efd6" fill-opacity=".97" stroke="#2a1c08" stroke-width="1.8"/>`
+      + `<rect x="${px + 3}" y="${py + 3}" width="${PW - 6}" height="${(PH - 6).toFixed(1)}" rx="3" fill="none" stroke="#b8862a" stroke-width="1"/>${body}</g>`;
+    // the summary pill, under his MERCHANT tag
+    const sw = rule.short.length * 5.2 + 14;
+    s += `<g class="pc-mhud-pill" transform="translate(${mx} ${my + o.pillDy})"><rect x="${(-sw / 2).toFixed(1)}" y="-7" width="${sw.toFixed(1)}" height="14" rx="7" fill="${ink}" fill-opacity=".92" stroke="#e8c05a" stroke-width="1.3"/>`
+      + `<text y="3.2" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="8.4" fill="#f6e6b4">${esc2(rule.short)}</text></g>`;
+    return s + `</g>`;
+  };
+
+  /* THE MERCHANT'S VOYAGE, TOLD. At the end of every Market phase he rolls and sails. It
+     used to be a glide across the chart that nobody could read. Now, in every chart:
+     his roll is thrown beside him (each die, then the total), he travels one century at a
+     time along a gold trail with a count at each stop, the traveller he chases is ringed,
+     and he lands on a STOP mark that says why he stopped; then the trail fades. The pace
+     follows the Presentation speed (slower in the tutorial), F skips it, calm motion and
+     Low graphics drop the tumbling, and every node it adds is removed at the end.
+     o = { layer, piece (his live node, cloned), pos: c => [x,y], m0: [x,y] his plate
+     centre at `from`, p: the merchant_moved payload, tpos, dark, onLand, onDone } */
+  window.__pdxTripBusy = false;
+  window.__pdxMerchantTrip = window.__pdxMerchantTrip || function (o) {
+    const NS = "http://www.w3.org/2000/svg", p = o.p || {}, game = window.__game;
+    const from = p.from, to = p.to;
+    const skip = () => !!(game && game._skip) || document.hidden;
+    const calm = document.documentElement.classList.contains("pdx-a11y")
+      || document.body.classList.contains("gfx-low")
+      || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    let k = ({ slow: 1.5, normal: 1, fast: .6 })[(game && game.speed) || "normal"] || 1;
+    if (document.body.dataset.roomMode === "tutorial" || document.body.classList.contains("tut-on")) k *= 1.35;
+    const ink = o.dark ? "#070a16" : "#1c150c";
+    const root = document.createElementNS(NS, "g");
+    root.setAttribute("class", "pc-mtrip-fx"); root.setAttribute("pointer-events", "none");
+    o.layer.appendChild(root);
+    const add = (html) => { const g = document.createElementNS(NS, "g"); g.innerHTML = html; root.appendChild(g); return g; };
+    const timers = [];
+    const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
+    let ended = false;
+    window.__pdxTripBusy = true; window.__pdxTripPending = false;
+    document.body.classList.add("pc-mtrip");
+    const finish = () => {
+      if (ended) return; ended = true;
+      timers.forEach(clearTimeout);
+      try { o.onLand && o.onLand(); } catch (e) {}
+      document.body.classList.remove("pc-mtrip");
+      root.remove();
+      window.__pdxTripBusy = false;
+      try { o.onDone && o.onDone(); } catch (e) {}
+    };
+    if (from == null || to == null || !o.pos(from) || !o.pos(to) || skip()) { finish(); return; }
+    const [x0, y0] = o.m0, cdy = o.cdy || 0;
+    const off = [x0 - o.pos(from)[0], y0 - o.pos(from)[1]];   // his berth sits off the century's centre
+    const at = c => { if (o.anchor) return o.anchor(c); const q = o.pos(c); return q ? [q[0] + off[0], q[1] + off[1]] : null; };
+    // his token travels as a clone (the live chart may redraw under it at any time)
+    const tok = document.createElementNS(NS, "g");
+    tok.setAttribute("class", "pc-mtrip-tok");
+    if (o.piece) {
+      const cl = o.piece.cloneNode(true);
+      cl.removeAttribute("data-tip"); cl.classList.remove("pc-merch-live");
+      cl.setAttribute("transform", (cl.getAttribute("transform") || "").replace(/translate\([^)]*\)/, "").trim());
+      tok.appendChild(cl);
+    }
+    // 1. attention: a ring at his berth, and the target ringed
+    add(`<circle cx="${x0}" cy="${y0 + cdy}" r="34" fill="none" stroke="#e8c05a" stroke-width="3" class="pc-mtrip-call"/>`);
+    if (o.tpos) add(`<circle cx="${o.tpos[0]}" cy="${o.tpos[1] - (o.tdy || 0)}" r="31" fill="none" stroke="${ink}" stroke-width="6" opacity=".5"/>`
+      + `<circle cx="${o.tpos[0]}" cy="${o.tpos[1] - (o.tdy || 0)}" r="31" fill="none" stroke="#e8c05a" stroke-width="2.6" stroke-dasharray="6 4"/>`
+      + `<g transform="translate(${o.tpos[0]} ${o.tpos[1] - (o.tdy || 0) - 42})"><rect x="-30" y="-8" width="60" height="16" rx="8" fill="#e8c05a" stroke="${ink}" stroke-width="1.5"/>`
+      + `<text y="3.6" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="9" letter-spacing="1" fill="#1c1206">CHASED</text></g>`);
+    // 2. the roll: each die, then the total
+    const rolls = (p.rolls && p.rolls.length) ? p.rolls : (p.roll ? [p.roll] : []);
+    const total = p.roll || rolls.reduce((a, b) => a + b, 0);
+    const dist = Math.abs(to - from);
+    let dice = null;
+    if (rolls.length && !p.teleport) {
+      const dw = rolls.length * 22 + 50, dx = Math.max(8, Math.min((o.W || 900) - dw - 8, x0 - dw / 2)), dy = Math.max(8, y0 + cdy - 76);
+      let faces = "";
+      rolls.forEach((r2, i) => {
+        const pips = { 1: [[0, 0]], 2: [[-3.4, -3.4], [3.4, 3.4]], 3: [[-4, -4], [0, 0], [4, 4]] }[r2] || [[0, 0]];
+        faces += `<g transform="translate(${dx + 15 + i * 22} ${dy + 14})"><g class="pc-die"><rect x="-9" y="-9" width="18" height="18" rx="3.5" fill="#fff8e4" stroke="${ink}" stroke-width="1.6"/>`
+          + pips.map(([a, b]) => `<circle cx="${a}" cy="${b}" r="1.9" fill="${ink}"/>`).join("") + `</g></g>`;
+      });
+      dice = add(`<rect x="${dx}" y="${dy}" width="${dw}" height="28" rx="6" fill="${ink}" fill-opacity=".92" stroke="#e8c05a" stroke-width="1.6"/>${faces}`
+        + `<text x="${dx + rolls.length * 22 + 10}" y="${dy + 18.5}" font-family="Georgia,serif" font-weight="bold" font-size="13" fill="#f6e6b4">= ${total}</text>`);
+      if (!calm) dice.querySelectorAll(".pc-die").forEach((d, i) => {
+        d.style.transformBox = "fill-box"; d.style.transformOrigin = "center";
+        d.animate([{ transform: "rotate(-200deg) scale(.4)", opacity: 0 }, { transform: "rotate(20deg) scale(1.15)", opacity: 1, offset: .7 }, { transform: "none", opacity: 1 }],
+          { duration: 800 * k, delay: i * 160 * k, easing: "ease-out", fill: "both" });
+      });
+    }
+    // 3. the voyage, century by century
+    const step = to > from ? 1 : -1, way = [];
+    if (p.teleport) way.push(to);
+    else for (let c = from + step; ; c += step) { if (at(c)) way.push(c); if (c === to) break; }
+    const HOP = 720 * k, START = (rolls.length && !p.teleport ? 1700 : 700) * k;   // slow and one at a time: each hop can be followed
+    root.appendChild(tok);
+    tok.setAttribute("transform", `translate(${x0} ${y0})`);
+    let prev = [x0, y0];
+    way.forEach((c, i) => later(() => {
+      if (skip()) { finish(); return; }
+      const q = at(c); if (!q) return;
+      const seg = add(`<line x1="${prev[0]}" y1="${prev[1] + cdy}" x2="${q[0]}" y2="${q[1] + cdy}" stroke="${ink}" stroke-width="6" stroke-linecap="round" opacity=".45"/>`
+        + `<line x1="${prev[0]}" y1="${prev[1] + cdy}" x2="${q[0]}" y2="${q[1] + cdy}" stroke="#e8c05a" stroke-width="3" stroke-linecap="round"/>`);
+      root.insertBefore(seg, root.firstChild);
+      const n = p.teleport ? "" : String(i + 1);
+      if (n) add(`<g transform="translate(${q[0] + 26} ${q[1] + cdy - 26})"><circle r="9" fill="#e8c05a" stroke="${ink}" stroke-width="1.6"/>`
+        + `<text y="3.6" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="10.5" fill="#1c1206">${n}</text></g>`);
+      if (calm) tok.setAttribute("transform", `translate(${q[0]} ${q[1]})`);
+      else {
+        const a = tok.animate([{ transform: `translate(${prev[0]}px,${prev[1]}px)` }, { transform: `translate(${q[0]}px,${q[1]}px)` }],
+          { duration: HOP * .8, easing: "cubic-bezier(.45,.05,.35,1)", fill: "forwards" });
+        a.onfinish = () => { tok.setAttribute("transform", `translate(${q[0]} ${q[1]})`); try { a.cancel(); } catch (e) {} };
+      }
+      try { window.__audio && window.__audio.play && window.__audio.play("merchant_step"); } catch (e) {}
+      prev = q;
+    }, START + i * HOP));
+    // 4. the STOP mark, and why he stopped there
+    const landAt = START + way.length * HOP;
+    later(() => {
+      if (skip()) { finish(); return; }
+      const q = at(to) || prev;
+      const why = p.teleport ? "sent here by a Chaos reward"
+        : (dist < total ? (p.target ? `stopped: reached ${p.target}` : "stopped: reached his target") : `stopped: used all ${total}`);
+      const tw = why.length * 5.4 + 44;
+      add(`<circle cx="${q[0]}" cy="${q[1] + cdy}" r="36" fill="none" stroke="${ink}" stroke-width="6" opacity=".5"/><circle cx="${q[0]}" cy="${q[1] + cdy}" r="36" fill="none" stroke="#e8c05a" stroke-width="3"/>`
+        + `<g transform="translate(${q[0]} ${q[1] + cdy + (o.stopDy || 54)})"><rect x="${(-tw / 2).toFixed(1)}" y="-9" width="${tw.toFixed(1)}" height="18" rx="9" fill="#e8c05a" stroke="${ink}" stroke-width="1.6"/>`
+        + `<text y="3.8" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="9.6" fill="#1c1206">STOP ${MROM(to)} · ${why}</text></g>`);
+      try { window.__audio && window.__audio.play && window.__audio.play("merchant_teleport"); } catch (e) {}
+    }, landAt);
+    // 5. hold, then the trail fades and the real piece takes over
+    later(() => {
+      if (skip()) { finish(); return; }
+      try { o.onLand && o.onLand(); } catch (e) {}
+      o.onLand = null;
+      tok.remove();
+      document.body.classList.remove("pc-mtrip");
+      const f = root.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 1400 * k, easing: "ease-in", fill: "forwards" });
+      f.onfinish = finish;
+      later(finish, 1400 * k + 300);
+    }, landAt + 2800 * k);
+    later(finish, landAt + 4600 * k + 1500);   // hard cap: a stuck frame never strands the flag
+  };
+  // the event queue waits for the voyage (capped; F or a hidden tab release it at once)
+  window.__pdxTripWait = window.__pdxTripWait || async function () {
+    for (let i = 0; i < 320 && (window.__pdxTripBusy || (window.__pdxTripPending && i < 60)); i++) {
+      const g = window.__game;
+      if ((g && g._skip) || document.hidden) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    window.__pdxTripPending = false;
+  };
+
 
   /* ── the five torn seams between the six era sheets ── */
   const SEAMS = [
@@ -203,38 +524,6 @@
     }
   }
   function lblHalfW(c) { return rom(c).length * 5.2 + 4; }
-  function lblClash(c, x, y) {
-    if (x - lblHalfW(c) < 4 || x + lblHalfW(c) > W - 4 || y < 22 || y > H - 8) return true;
-    const m = META[c];
-    if (!isStrait(c) && (y < m.top(x) + 16 || y > m.bottom(x) - 10)) return true;
-    for (let d = 1; d <= 30; d++) {
-      if (Math.abs(x - POS[d][0]) < lblHalfW(c) + 30 && Math.abs(y - POS[d][1]) < 31) return true;
-      if (d === c) continue;
-      if (Math.abs(x - LBL[d][0]) < lblHalfW(c) + lblHalfW(d) + 4 && Math.abs(y - LBL[d][1]) < 19) return true;
-    }
-    if (inObst(x, y, lblHalfW(c) + 6, 16)) return true;
-    return false;
-  }
-  function repairLabels() {
-    for (let round = 0; round < 3; round++) {
-      let dirty = false;
-      for (let c = 1; c <= 30; c++) {
-        if (!lblClash(c, LBL[c][0], LBL[c][1])) continue;
-        dirty = true;
-        const [ix, iy] = POS[c];
-        let placed = false;
-        for (const r of [40, 54, 68]) {
-          for (let a = 0; a < 8; a++) {
-            const t = a / 8 * Math.PI * 2;
-            const x = Math.round(ix + Math.cos(t) * r), y = Math.round(iy + Math.sin(t) * r * .8 + 5);
-            if (!lblClash(c, x, y)) { LBL[c] = [x, y]; placed = true; break; }
-          }
-          if (placed) break;
-        }
-      }
-      if (!dirty) break;
-    }
-  }
   function seaSpot(prefX, prefY, bandId, taken, minClear) {
     const CLEAR = minClear || 18;
     const m = BANDS.find(mm => mm.id === bandId);
@@ -352,25 +641,6 @@
     addObst(ANCH.coveLab[0] - 52, ANCH.coveLab[1] - 12, 104, 24);   // cove label
   }
   let TEARS = [];   // [{band index, rect}]
-  function findTear(bi, w, h) {
-    const m = BANDS[bi], seam = m.bottom;
-    let best = null, bestScore = -1;
-    for (let gx = 30; gx < W - 30 - w; gx += 22) {
-      for (let gy = 20; gy < H - 20 - h; gy += 22) {
-        if (gy < m.top(gx) + 22 || gy + h > seam(gx + w) - 26 || gy < m.top(gx + w) + 22 || gy + h > seam(gx) - 26) continue;
-        if (gy < seam(gx) - 132 || gy < seam(gx + w) - 132) continue;   // sheet below must exist
-        if (inObst(gx + w / 2, gy + h / 2, w / 2 + 10, h / 2 + 10)) continue;
-        let dmin = 1e9;
-        const cx = gx + w / 2, cy = gy + h / 2;
-        for (let c = 1; c <= 30; c++) {
-          dmin = Math.min(dmin, Math.hypot(cx - POS[c][0], cy - POS[c][1]) - (w / 2 + 38),
-                                Math.hypot(cx - LBL[c][0], cy - LBL[c][1]) - (w / 2 + 30));
-        }
-        if (dmin > 4 && dmin > bestScore) { bestScore = dmin; best = { x: gx, y: gy, w, h }; }
-      }
-    }
-    return best;
-  }
   function audit() {
     const v = [];
     for (let c = 1; c <= 30; c++) {
@@ -403,7 +673,11 @@
     const orig = app.playEvent.bind(app);
     app.playEvent = async msg => {
       try { onEvent(msg); } catch (e) {}
-      return orig(msg);
+      const r = await orig(msg);
+      // the Merchant's voyage is told on the chart; the next event waits for it
+      const k = msg && (msg.event || msg.kind || msg.type);
+      if (k === "merchant_moved" && window.__pdxTripWait) await window.__pdxTripWait();
+      return r;
     };
     const origDec = app.onDecision.bind(app);
     app.onDecision = req => {
@@ -476,8 +750,9 @@
   // the hull; `ghost` hollows it (terminated in the Reaches); `burst` furls + smokes.
   // ONE boat for every captain (the square-rigger reads best); the
   // CAPTAIN'S COLOUR is the hull, a bold band on the sail and the masthead pennant.
-  function rigSVG(kind, col, { ghost = false, burst = false } = {}) {
-    const dk = "rgba(20,12,4,.85)";
+  function rigSVG(kind, col, { ghost = false, burst = false, plate = false } = {}) {
+    // on an ink plate the rigging is drawn in light ink, or the mast would vanish
+    const dk = plate ? "rgba(248,240,218,.92)" : "rgba(20,12,4,.85)";
     const hull = ghost
       ? `<path d="M -9 3 Q 0 9 9 3 L 7 8 Q 0 11 -7 8 Z" fill="none" stroke="${col}" stroke-width="1.2" stroke-dasharray="2.5 2"/>`
       : `<path d="M -9 3 Q 0 9 9 3 L 7 8 Q 0 11 -7 8 Z" fill="${col}" stroke="${dk}" stroke-width="1.1"/>
@@ -565,7 +840,8 @@
         R.merchantHist.push({ from: p.from, to: p.to, hour: hourNow() });
         if (R.merchantHist.length > 6) R.merchantHist.shift();
       }
-      R.fx.push({ t: "ship" });
+      R.fx.push({ t: "ship", p });
+      if (__live() && !p.teleport) window.__pdxTripPending = true;   // the queue waits for the voyage
     }
     scheduleLive();
   }
@@ -697,7 +973,6 @@
     }
     spots.forEach(([px, py, hw], i) => {
       const r = Math.min(hw, 13 + rnd(i, 21) * 8), cw = i % 2 === 0, sw = cw ? 1 : 0;
-      const pth = `M ${(px + r).toFixed(1)} ${py.toFixed(1)} A ${r.toFixed(1)} ${(r * .72).toFixed(1)} 0 1 ${sw} ${(px - r).toFixed(1)} ${py.toFixed(1)} A ${r.toFixed(1)} ${(r * .72).toFixed(1)} 0 1 ${sw} ${(px + r).toFixed(1)} ${py.toFixed(1)} Z`;
       const T = (9 + rnd(i, 33) * 6).toFixed(1), D = (-rnd(i, 47) * 9).toFixed(1);
       // THE SHARKS SWAM ON A PAINT PROPERTY. offset-distance is not compositable: every
       // frame, all sixteen of them forced a repaint of the whole 832x1000 chart, and the
@@ -1010,6 +1285,8 @@
       }
     }
     const byC = {};
+    R.pcPos = {};
+    g += window.__pdxPieceDefs("sea", false);
     for (const t of view.travelers) {
       const sc = R.shown[t.name] != null ? R.shown[t.name] : t.century;
       (byC[sc] = byC[sc] || []).push(t);
@@ -1027,8 +1304,11 @@
       // three rivals in one port stay three rivals.
       const SLOTS = [96, 40, 152, 6, 180];    // beach berths, southern shores first
       const RING  = [0, 1, 1, 0, 1];          // ...at two depths, so neighbours never touch
-      ts.forEach((t, i) => {
-        const col = seatColor(t.name);
+      // THE PLATES (window.__pdxPlate): each piece stands on an ink disc, so the berths are
+      // FANNED until the discs clear each other, and clamped inside the chart (a berth
+      // near the edge used to hang off the frame).
+      const PR = t => (t.is_self ? 22 : 19);
+      const berth = ts.map((t, i) => {
         let deg = SLOTS[i % SLOTS.length];
         if (x > W - 76) deg = 180 - deg;        // near an edge the berths face INLAND
         else if (x < 76) deg = deg;             // (left edge already faces inland)
@@ -1039,37 +1319,32 @@
         // boats for a fleet of orphans. They come back to the SHORE; the second ring
         // is now a step, not a swim, and the mooring line carries the rest.
         const rg = RING[i % RING.length];
-        const bx = Math.round(x + Math.cos(a) * (rx + 3 + rg * 13));
-        const by = Math.round(y + Math.sin(a) * (ry + 5 + rg * 12) + 2);
+        return { x: x + Math.cos(a) * (rx + 3 + rg * 13), y: y + Math.sin(a) * (ry + 5 + rg * 12) + 2, r: PR(t) + 6 };
+      });
+      window.__pdxFan(berth, 2, [30, 40, W - 34, H - 26]);   // clear of the torn frame
+      const pcPos = R.pcPos || (R.pcPos = {});
+      const chase = view.merchant_plan && view.merchant_plan.target_seat;
+      ts.forEach((t, i) => {
+        const col = seatColor(t.name);
+        const bx = Math.round(berth[i].x), by = Math.round(berth[i].y);
         const dead = t.is_terminated && t.awaiting_respawn;
-        const chipY = Math.min(H - 8, Math.max(20, by + 30 + (i % 3) * 15));  // same-port chips stagger
-        const chipX = Math.min(W - 52, Math.max(2, bx - 25 - (i % 2) * 8));
         const st = t.statuses || [];
         const ghost = st.includes("terminated") && t.century >= 24;   // the Reaches shelter the terminated (§28)
         const burst = st.includes("exploded");                        // boiler burst, no sailing this hour (§5.2)
-        const hunted = !!(R.merchantLast && R.merchantLast.target === t.name);
-        const ini = esc(t.name.slice(0, 2).toUpperCase());
-        const em = window.__pdxEmanata(t, col, R.em || (R.em = {}), -46);   // above the sail
-        g += `<g class="sea-fixg${ghost ? " sea-ghost": ""}${em.cls}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self ? " (you)": ""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.booms}/12 booms${t.is_wanted ? " · WANTED": ""}${hunted ? " · hunted by the Merchant": ""}${burst ? " · boiler burst, cannot sail or activate this hour": ""}${ghost ? " · sheltered beyond time, the Reaches spare the terminated": ""}${dead && !ghost ? " · lost at sea (respawning)": ""}`)}" opacity="${dead && !ghost ? .45: 1}">
-          <g transform="translate(${bx} ${by})">${em.g}<line x1="${(x - bx).toFixed(1)}" y1="${(y - by).toFixed(1)}" x2="0" y2="-3" stroke="${col}" stroke-width="1.6" stroke-linecap="round" opacity=".5" stroke-dasharray="2.6 2.4"/><g class="sea-fix-boat">
-              <!-- THE AURA. The tokens were too hard to track
-                   across the three maps.
-                   A token that is a small drawing in a busy chart cannot be found by its
-                   drawing, it has to be found by its RING. So every traveller now wears one,
-                   in the exact colour of their badge: a wash, a dark contrast ring that keeps
-                   it legible on parchment AND on black, and the colour ring that IS the label.
-                   You do not read it. You see it. -->
-            <g class="sea-aura">
-              <circle cy="-3" r="15" fill="${col}" opacity=".15"/>
-              <circle cy="-3" r="15" fill="none" stroke="rgba(22,32,40,.45)" stroke-width="3.6"/>
-              <circle cy="-3" r="15" fill="none" stroke="${col}" stroke-width="2.4"/>
-              <circle cy="-3" r="13" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1"/>
-            </g>
-            <g transform="scale(1.8)${dead && !ghost ? " rotate(-24)" : ""}">
-            ${hunted ? `<g class="sea-hunt"><circle cy="-19" r="6.5" fill="none" stroke="#b8862a" stroke-width="1.4" stroke-dasharray="3 2.4"/><circle cy="-19" r="1.9" fill="#b8862a"/></g>` : ""}
-            ${t.is_self ? `<circle cy="-2" r="15" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.1" stroke-dasharray="3 2.6"/>` : ""}
-            ${rigSVG(0, col, { ghost, burst })}
-          </g></g></g></g>`;
+        const hunted = chase === t.name && view.merchant_century !== t.century;
+        const pr = PR(t), pcy = -4;
+        pcPos[t.name] = [bx, by + pcy];
+        const memo = R.pcAt || (R.pcAt = {});
+        const pulse = t.is_self && memo[t.name] != null && memo[t.name] !== c;
+        if (t.is_self) memo[t.name] = c;
+        const em = window.__pdxEmanata(t, col, R.em || (R.em = {}), -44);   // above the plate
+        g += `<g class="sea-fixg pc-piece-g${t.is_self ? " pc-self" : ""}${ghost ? " sea-ghost": ""}${em.cls}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self ? " (you)": ""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.booms}/12 booms${t.is_wanted ? " · WANTED": ""}${hunted ? " · the Merchant is chasing you (richest traveller not in his century)": ""}${burst ? " · boiler burst, cannot sail or activate this hour": ""}${ghost ? " · sheltered beyond time, the Reaches spare the terminated": ""}${dead && !ghost ? " · lost at sea (respawning)": ""}`)}" opacity="${dead && !ghost ? .5: 1}">
+          <g transform="translate(${bx} ${by})"><line x1="${(x - bx).toFixed(1)}" y1="${(y - by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="1.8" stroke-linecap="round" opacity=".7" stroke-dasharray="2.6 2.4"/><g class="sea-fix-boat"><g class="pc-piece">
+            <g class="sea-aura">${window.__pdxPlate({ col, self: t.is_self, r: pr, cy: pcy, pfx: "sea", dark: false, pulse })}</g>
+            ${hunted ? `<circle class="pc-hunted" cy="${pcy}" r="${pr + (t.is_self ? 10 : 5)}" fill="none" stroke="#e8c05a" stroke-width="2" stroke-dasharray="4 3"/>` : ""}
+            <g transform="scale(${t.is_self ? 1.62 : 1.45})${dead && !ghost ? " rotate(-24)" : ""}">${rigSVG(0, col, { ghost, burst, plate: true })}</g>
+            ${window.__pdxTag(t.is_self ? "YOU" : esc(window.__pdxInitials(t.name)), col, pcy + pr + (t.is_self ? 13 : 9), { self: t.is_self })}
+          </g></g>${em.g}</g></g>`;
       });
     }
     // ═══ PERIOD MARKERS, a carved plaque lying ON the divide, a chest beside it ═══
@@ -1130,8 +1405,6 @@
         </g>`;
       });
       const lead = order[0], leadCol = lead ? seatColor(lead.name) : "#e8dcc0";
-      const orderTip = order.map((t, i) =>
-        `${i + 1}. ${t.name}, ${rom(t.century)} · ${t.gold} gold · ${t.energy} energy`).join("   ");
       g += `<g class="sea-ord${ordHovered ? " open" : ""}" transform="translate(${ox} ${oy})">
         <g class="sea-ord-body" data-tip="when voyages tie in a module, the farthest-future traveler sails first; then the richest; then the most energised">
           <rect width="154" height="${bh}" rx="2" fill="#3c2e1a" stroke="#241708" stroke-width="1.6"/>
@@ -1158,7 +1431,8 @@
       const bands = Math.min(3, dice);
       for (let i = 0; i < bands; i++)
         stripes += `<rect x="-9.5" y="${(-18 + (i + .5) * 19 / bands).toFixed(1)}" width="19.5" height="${(19 / bands * .42).toFixed(1)}" rx="1" fill="#8c3b2a" opacity=".9"/>`;
-      g += `<g class="sea-shipg" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${x} ${y - 47})">
+      g += `<g class="sea-shipg pc-merch-live" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${x} ${y - 47})">
+        ${window.__pdxMerchPlate({ w: 58, h: 52, cy: 13, pfx: "sea", dark: false })}
         <g class="sh-slide"><g transform="scale(${dir < 0 ? -1 : 1} 1)" class="sea-ship"><g class="sh-bob">
         <g transform="translate(0 12) scale(.8)">
         <path d="M -21 14 Q -23 22 -14 25 L 9 25 Q 19 23 21 14 L 17 12 Q 0 17 -17 12 Z" fill="#6a4522" stroke="#241708" stroke-width="1.1"/>
@@ -1184,7 +1458,14 @@
           const split = dist ? d3Split(dist, dice) : new Array(dice).fill(1);
           return `<g transform="translate(${-6 - dice * 5} 30)"><g class="sea-dice">`
             + split.slice(0, 3).map((v, i) => d3Token(v, i * 10, 0)).join("") + `</g></g>`;
-        })()}</g></g></g></g>`;
+        })()}</g></g></g>${window.__pdxMerchTag(-22)}</g>`;
+      // WHEN / HOW / WHY beside him, the chase line and the reach (window.__pdxMerchantHUD)
+      if (view.merchant_plan) {
+        const pl = view.merchant_plan, tt = pl.target_seat && view.travelers.find(t2 => t2.name === pl.target_seat);
+        g += window.__pdxMerchantHUD({ v: view, m: [x, y - 47 + 13], pillDy: -51,
+          tpos: tt && tt.century !== mc && R.pcPos && R.pcPos[tt.name] || null,
+          pos: c2 => POS[c2] || null, W, H, dark: false, avoid: Object.values(R.pcPos || {}) });
+      }
     }
     {
       const [cx2, cy2] = POS[11];
@@ -1462,8 +1743,11 @@
   function drainFx() {
     if (!liveG) { R.fx.length = 0; return; }
     if (REDUCED) {   // no animation: everything is simply already there
-      R.fx.splice(0).forEach(f => { if (f.t === "trail") R.presented.add(trailKey(f)); });
-      renderNow();
+      // redraw only when something was drained: renderLive() ends by calling drainFx()
+      // again, and an unconditional redraw here recursed until the stack ran out
+      const drained = R.fx.splice(0);
+      drained.forEach(f => { if (f.t === "trail") R.presented.add(trailKey(f)); });
+      if (drained.length) renderNow();
       return;
     }
     if (fxBusy) return;
@@ -1474,7 +1758,8 @@
     // call done(), a throw inside a callback, an animation that never fires, the game
     // must not hang. Unstick and carry on.
     if (fxGuard) clearTimeout(fxGuard);
-    fxGuard = setTimeout(() => { fxGuard = null; if (fxBusy) { fxBusy = false; drainFx(); } }, 6000);
+    // (the Merchant's voyage is longer and carries its own hard cap, window.__pdxMerchantTrip)
+    fxGuard = setTimeout(() => { fxGuard = null; if (fxBusy && !window.__pdxTripBusy) { fxBusy = false; drainFx(); } }, 6000);
     const done = ms => setTimeout(() => {
       if (fxGuard) { clearTimeout(fxGuard); fxGuard = null; }
       fxBusy = false;
@@ -1662,35 +1947,24 @@
           done(950); return;
         }
         if (f.t === "ship") {
-          const to = app.view.merchant_century;
-          const from = R.prevShip;
-          if (from != null && from !== to && POS[from] && POS[to]) {
+          // THE VOYAGE, TOLD (window.__pdxMerchantTrip): the roll, the hops with a count,
+          // the chased traveller ringed, the STOP mark and why; the queue waits for it.
+          const p = f.p || R.merchantLast || {};
+          const to = p.to != null ? p.to : app.view.merchant_century;
+          const from = p.from != null ? p.from : R.prevShip;
+          if (from != null && from !== to && POS[from] && POS[to] && __live()) {
             R.merchantShown = from;   // HOLD the barge at the old port, no teleport
-            renderNow();              // draw it there with a fresh sh-slide at identity
-            const el = liveG.querySelector(".sea-shipg .sh-slide");
-            const step = to > from ? 1 : -1, way = [];
-            for (let c2 = from + step; ; c2 += step) { if (POS[c2]) way.push(c2); if (c2 === to) break; }
-            const HOP = 640, total = Math.max(1, way.length) * HOP;
-            const frames = [{ transform: "translate(0px,0px)" }];
-            way.forEach(c2 => frames.push({ transform: `translate(${POS[c2][0] - POS[from][0]}px,${POS[c2][1] - POS[from][1]}px)` }));
-            if (el) el.animate(frames, { duration: total, easing: "ease-in-out", fill: "forwards" });
-            const wake = document.createElementNS(NS, "path");
-            let wd = `M ${POS[from][0]} ${POS[from][1] - 44} `;
-            way.forEach(c2 => { wd += `L ${POS[c2][0]} ${POS[c2][1] - 44} `; });
-            wake.setAttribute("d", wd); wake.setAttribute("stroke", "#8a9aa5"); wake.setAttribute("stroke-width", "1.6");
-            wake.setAttribute("stroke-dasharray", "2 5"); wake.setAttribute("fill", "none");
-            (fxG || liveG).appendChild(wake);
-            wake.animate([{ opacity: .6 }, { opacity: 0 }], { duration: total + 900 }).onfinish = () => wake.remove();
-            snd("chart_creak"); snd("sea_sail", { dur: total });
-            for (let i = 1; i < way.length; i += 2) setTimeout(() => snd("chart_creak"), i * HOP);
-            setTimeout(() => snd("chart_bell"), Math.max(0, total - 120));
-            const dice2 = liveG.querySelector(".sea-shipg .sea-dice");
-            if (dice2) dice2.animate([{ transform: "rotate(0)" }, { transform: "rotate(-10deg)" },
-              { transform: "rotate(8deg)" }, { transform: "rotate(0)" }], { duration: 420, iterations: 2, easing: "ease-in-out" });
-            floatText(POS[from][0], POS[from][1] - 74, "sailed " + Math.abs(to - from), "#b8862a");
-            setTimeout(() => { R.merchantShown = to; R.prevShip = to; renderNow(); }, total);
-            done(total + 420); return;
+            renderNow();
+            const piece = liveG.querySelector(".sea-shipg.pc-merch-live");
+            snd("chart_creak");
+            window.__pdxMerchantTrip({ layer: fxG || liveG, piece, pos: c2 => POS[c2] || null,
+              m0: [POS[from][0], POS[from][1] - 47], cdy: 13, stopDy: 58, p, W, H, dark: false,
+              tpos: (p.target && R.pcPos && R.pcPos[p.target]) || null,
+              onLand: () => { R.merchantShown = to; R.prevShip = to; renderNow(); snd("chart_bell"); },
+              onDone: () => done(60) });
+            return;
           }
+          window.__pdxTripPending = false;
           R.prevShip = to; R.merchantShown = to;
         }
       }
@@ -1707,17 +1981,6 @@
       (fxG || liveG).appendChild(b);
       b.animate([{ offsetDistance: "0%" }, { offsetDistance: "100%" }],
         { duration: dur, easing: "cubic-bezier(.35,.1,.35,1)" }).onfinish = () => b.remove();
-    } catch (e) {}
-  }
-  function penDot(pathEl, dur, col) {
-    try {
-      const dot = document.createElementNS(NS, "circle");
-      dot.setAttribute("r", "3.2"); dot.setAttribute("fill", col);
-      dot.style.offsetPath = `path("${pathEl.getAttribute("d")}")`;
-      dot.style.offsetRotate = "0deg";
-      liveG.appendChild(dot);
-      dot.animate([{ offsetDistance: "0%" }, { offsetDistance: "100%" }],
-        { duration: dur, easing: "cubic-bezier(.35,.1,.35,1)" }).onfinish = () => dot.remove();
     } catch (e) {}
   }
   function floatText(x, y, txt, col) {

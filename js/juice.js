@@ -7,7 +7,7 @@
    micro-feedback (a sound + a lift on every interactive element). Mirrors the
    `audio` singleton; holds no game state; honours prefers-reduced-motion.
    ========================================================================= */
-import { audio } from "./audio.js?202609261550";
+import { audio } from "./audio.js?202609261656";
 
 const FLASH = {
   white:   "#fdf6e6",
@@ -76,15 +76,17 @@ class Juice {
     const nowT = performance.now();
     if (nowT - (this._lastFlash || 0) < 280) return;
     this._lastFlash = nowT;
-    const intensity = opt.intensity != null ? opt.intensity : 0.42;
-    const dur = opt.dur != null ? opt.dur : 260;
+    // no flash is a flash any more (the rule over everything: nothing appears and
+    // vanishes fast): a softer wash that rises and settles over at least 0.9 s
+    const intensity = (opt.intensity != null ? opt.intensity : 0.42) * 0.3;
+    const dur = Math.max(900, opt.dur != null ? opt.dur : 260);
     this.flashEl.style.background = FLASH[tone] || FLASH.white;
     // .fl-on carries the screen-blend + the promotion. Off the rest of the time, the
     // flash is a plain invisible div and the compositor ignores it entirely, instead
     // of blending a full-screen texture over every frame of the game for nothing.
     this.flashEl.classList.add("fl-on");
     const a = this.flashEl.animate(
-      [{ opacity: 0 }, { opacity: intensity, offset: 0.07 }, { opacity: 0 }],
+      [{ opacity: 0 }, { opacity: intensity, offset: 0.25 }, { opacity: 0 }],
       { duration: dur, easing: "cubic-bezier(.2,.7,.3,1)" }
     );
     a.onfinish = a.oncancel = () => this.flashEl.classList.remove("fl-on");

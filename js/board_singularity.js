@@ -89,7 +89,7 @@
     if(k==="respawned"){ const c=centuryOf(p.seat); if(c) R.wrecks.delete(c); }
     if(k==="milestone") R.fx.push({t:"milestone",c:p.century});
     if(k==="delivered"){ R.restored.add(p.century); R.deliveries.push({seat:p.seat,card:p.card,century:p.century,hour:hourNow()}); R.fx.push({t:"deliver",c:p.century}); }
-    if(k==="merchant_moved") R.fx.push({t:"merchant"});
+    if(k==="merchant_moved"){ R.fx.push({t:"merchant",p}); if(__live()&&!p.teleport) window.__pdxTripPending=true; }
     scheduleLive();
   }
 
@@ -116,7 +116,7 @@
   function pickCandidates(){ if(!mode) return null; return mode.kind==="travel"?travelCandidates():mode.centuries; }
 
   /* ═══ ART, ships, worlds, the void ═══ */
-  function shipSVG(kind,col,{ghost=false,dead=false}={}){
+  function shipSVG(kind,col,{ghost=false,dead=false,plate=false}={}){
     const st=ghost?col:"rgba(255,255,255,.6)", body=ghost?"none":col, dash=ghost?' stroke-dasharray="2 2"':"";
     return `<g class="cc-ship${dead?" cc-dead":""}"><path d="M0 -10 L7 7 L0 3 L-7 7 Z" fill="${body}" stroke="${st}" stroke-width="1.1"${dash}/>${ghost?"":`<circle cy="-1" r="2" fill="#fff" opacity=".85"/>`}</g>`;
   }
@@ -368,7 +368,6 @@
       <text x="${x}" y="${y+3}" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" fill="#cfc2e8">&#8734;</text>
     </g>`;
   }
-  function eraLabels(){ return ""; }
   function gyro(){
     const x=W-46,y=64;
     return `<g class="cc-gyro" transform="translate(${x} ${y})" font-family="'Courier New',monospace">
@@ -447,19 +446,23 @@
     for(const t of R.trails){ const A=(t.from===0?SUN:POS[t.from]), B=(t.to===0?SUN:POS[t.to]); if(!A||!B) continue; const age=view.hour-t.hour; const op=age<=0?.9:age===1?.6:age===2?.42:Math.max(.18,.36-(age-2)*.03); const col=age<=1?seatColor(t.seat):(HUE[META[t.to]]||"#7fa0e0"); g+=`<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="${col}" stroke-width="${age<=0?2.6:age===1?1.9:1.3}" opacity="${op}" stroke-linecap="round"/>`; }
     // paradox rifts
     for(const c of R.monsters){ if(!POS[c]||R.restored.has(c)) continue; const [x,y]=POS[c]; g+=`<g class="cc-rift" transform="translate(${x+worldR(c)+8} ${y-6})" data-tip="${esc(`a rift tore open near ${rom(c)}, the Paradix bleeds through`)}"><path d="M0 -8 l3 6 l-4 3 l4 5" stroke="#b3402e" stroke-width="1.4" fill="none"/><path d="M0 -8 l-3 6 l4 3 l-4 5" stroke="#8f6fd6" stroke-width="1" fill="none" opacity=".7"/></g>`; }
-    // merchant hauler
+    // merchant hauler (on the gold MERCHANT plate, window.__pdxMerchPlate)
+    const haulerAt=c=>{ const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*(worldR(c)*0.55+8)), Math.round(y-worldR(c)*0.15)]; };
     const mc = R.merchantShown!=null?R.merchantShown:view.merchant_century;
+    R.mAnchor=null;
     if(POS[mc]){ const [x,y]=POS[mc]; const dice=view.merchant_movement_dice||1; const side=x>W*0.82?-1:1;
       const cargo=(view.market_revealed||[]).slice(0,5).map(c2=>`  ${(c2.display_name||c2.name)}, ${c2.gold_cost!=null?c2.gold_cost+"g":"--"}`).join("\n");
       const tip=`THE HAULER: docked at ${rom(mc)}\n${dice}d3 drift · trade when near\n${cargo?"CARGO FOR TRADE:\n"+cargo:"the hold stands empty"}`;
       let str=""; for(let i=0;i<Math.min(3,dice);i++) str+=`<rect x="-10" y="${-7+i*3}" width="20" height="1.7" fill="#b3402e" opacity=".85"/>`;
-      g+=`<g class="cc-hauler" data-tip="${esc(tip)}" transform="translate(${(x+side*worldR(mc)*0.55).toFixed(0)} ${(y-worldR(mc)*0.15).toFixed(0)}) scale(${side<0?-1:1} 1)"><g class="cc-bob">
+      const [hx,hy]=haulerAt(mc); R.mAnchor=[hx,hy];
+      g+=(window.__pdxPieceDefs?window.__pdxPieceDefs("cc",true):"");
+      g+=`<g class="cc-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:58,h:36,cy:1,pfx:"cc",dark:true}):""}<g transform="scale(${side<0?-1.2:1.2} 1.2) translate(3.5 0)"><g class="cc-bob">
         <path d="M-16 0 L-7 -6 L9 -6 L16 0 L9 6 L-7 6 Z" fill="#2c2414" stroke="#d4b02a" stroke-width="1.2"/>
         <rect x="-9" y="-7" width="5" height="14" rx="1.4" fill="#3a2c16" stroke="#d4b02a" stroke-width=".7"/><rect x="-3" y="-6.5" width="5" height="13" rx="1.4" fill="#463414" stroke="#d4b02a" stroke-width=".6"/>
         <path d="M4 -6 L11 -3 L11 3 L4 6 Z" fill="#4a3a1c" stroke="#d4b02a" stroke-width=".6"/><circle cx="8" cy="0" r="1.8" fill="#e8c05a"/>
         <path d="M-16 -3 L-23 0 L-16 3 Z" fill="#ff9a5a" class="cc-beam"/><path d="M-16 -1.4 L-20 0 L-16 1.4 Z" fill="#ffe0a0"/>
         <path d="M2 -6 L6 -10 L8 -6 Z M2 6 L6 10 L8 6 Z" fill="#c9a45c"/>
-        ${Array.from({length:Math.min(3,dice)},(_,i)=>`<circle cx="${-4+i*4}" cy="11" r="1.4" fill="#e0c478"/>`).join("")}</g></g>`; }
+        ${Array.from({length:Math.min(3,dice)},(_,i)=>`<circle cx="${-4+i*4}" cy="11" r="1.4" fill="#e0c478"/>`).join("")}</g></g>${window.__pdxMerchTag?window.__pdxMerchTag(-26):""}</g>`; }
     // milestone beacons X / XX
     for(const c of [10,20]){ if(!POS[c]) continue; const [x,y]=POS[c]; const claim=view.travelers.filter(t=>c===10?t.scored_century_x:t.scored_century_xx); g+=`<g class="cc-beacon" data-tip="${esc(`millennium ${rom(c)} beacon, ${claim.length?"claimed by "+claim.map(t=>t.name).join(", "):"unclaimed"} · end an Hour here for +1 CP`)}" transform="translate(${(x-worldR(c)*0.5).toFixed(0)} ${(y+worldR(c)*0.2).toFixed(0)})"><path d="M-3 6 L0 -8 L3 6 Z" fill="#c9a45c" stroke="#e8c05a" stroke-width=".7"/><circle cx="0" cy="-8" r="2.2" fill="#ffe9b0" class="cc-beam"/>${claim.map((t,i)=>`<circle cx="${-3+i*3}" cy="9" r="1.3" fill="${seatColor(t.name)}"/>`).join("")}</g>`; }
     // secret ghost-station (XI)
@@ -479,6 +482,7 @@
     for(const t of view.travelers){ if(t.is_self) continue; let k2=0; for(const card of (t.equipment||[])){ const c=card.delivery_century; if(c==null||!POS[c]) continue; const [x,y]=POS[c]; g+=`<g class="cc-flag" data-tip="${esc(`${t.name} must deliver ${card.display_name||card.name} at ${rom(c)}`)}" transform="translate(${(x+worldR(c)*0.5+k2*5).toFixed(0)} ${(y-worldR(c)*0.4).toFixed(0)}) scale(.72)"><path d="M-7 5 V-2 Q-7 -4 -5 -4 H5 Q7 -4 7 -2 V5 Z M-7 -1 H7" fill="${seatColor(t.name)}" stroke="rgba(0,0,0,.5)" stroke-width=".6" opacity=".85"/></g>`; k2++; } }
     // restored (delivered) ignition rings drawn in worldG via cc-lit; here add a soft "always thus" tag on hover handled by tip
     // travelers (ships) at their worlds
+    R.pcPos={};
     const byC={}; for(const t of view.travelers){ const sc=R.shown[t.name]!=null?R.shown[t.name]:t.century; (byC[sc]=byC[sc]||[]).push(t); }
     for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue; const [x,y]=POS[c], R0=worldR(c);
       if(ts.length>1) g+=`<circle cx="${x}" cy="${y}" r="${R0+18}" fill="none" stroke="#8a6a3a" stroke-width="1" stroke-dasharray="3 4" opacity=".55" data-tip="shared orbit, agreements possible"/>`;
@@ -500,11 +504,24 @@
       //   2. a LEASH, a short line, in their colour, from the century to them. Even when
       //      two centuries crowd, the line says whose they are. You do not read it.
       const SLOTS=[[0,-1.34],[-1.34,0.10],[1.34,0.10],[-1.0,-1.0],[1.0,-1.0]];
-      ts.forEach((t,i)=>{ const col=seatColor(t.name); const [dx,dy]=SLOTS[i%SLOTS.length]; const bx=Math.round(x+dx*(R0*0.40+10)), by=Math.round(y+dy*(R0*0.40+10)); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=false;
-        const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-29):{cls:"",g:""};
-        g+=`<g class="cc-shipg${dead&&!ghost?" cc-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})">${em.g}<line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="0" stroke="${col}" stroke-width="1.8" stroke-linecap="round" opacity=".55" stroke-dasharray="2.6 2.4"/><g class="cc-aura"><circle r="14.5" fill="${col}" opacity=".16"/><circle r="14.5" fill="none" stroke="rgba(0,0,0,.52)" stroke-width="3.8"/><circle r="14.5" fill="none" stroke="${col}" stroke-width="2.4"/><circle r="12.6" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1"/></g>${t.is_self?`<circle r="20" fill="none" stroke="${col}" stroke-width="1.2" stroke-dasharray="3.4 3" opacity=".8"/>`:""}<g transform="scale(1.6)">${shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost})}</g><text y="24" text-anchor="middle" font-family="'Courier New',monospace" font-size="9.5" font-weight="bold" letter-spacing=".6" fill="${col}" stroke="#05060e" stroke-width="2.6" paint-order="stroke">${esc(initials(t.name))}</text></g>`;
+      // THE PLATES (window.__pdxPlate, board_draft.js): each piece stands on an ink disc,
+      // so the berths are FANNED until the discs clear each other, inside the chart.
+      const PR=t=>(t.is_self?19:16);
+      const berth=ts.map((t,i)=>{ const [dx,dy]=SLOTS[i%SLOTS.length]; return { x:x+dx*(R0*0.40+10), y:y+dy*(R0*0.40+10), r:PR(t)+5 }; });
+      if(window.__pdxFan) window.__pdxFan(berth,2,[24,34,W-24,H-24]);
+      const chase=view.merchant_plan&&view.merchant_plan.target_seat;
+      ts.forEach((t,i)=>{ const col=seatColor(t.name); const bx=Math.round(berth[i].x), by=Math.round(berth[i].y); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=chase===t.name&&view.merchant_century!==t.century;
+        const pr=PR(t), pcy=-1; R.pcPos[t.name]=[bx,by+pcy];
+        const memo=R.pcAt||(R.pcAt={}); const pulse=t.is_self&&memo[t.name]!=null&&memo[t.name]!==c; if(t.is_self) memo[t.name]=c;
+        const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-34):{cls:"",g:""};
+        const plate=window.__pdxPlate?window.__pdxPlate({col,self:t.is_self,r:pr,cy:pcy,pfx:"cc",dark:true,pulse}):"";
+        const tag=window.__pdxTag?window.__pdxTag(t.is_self?"YOU":esc(initials(t.name)),col,pcy+pr+(t.is_self?12:8),{self:t.is_self,dark:true}):"";
+        g+=`<g class="cc-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cc-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cc-aura">${plate}</g>${hunted?`<circle class="pc-hunted" cy="${pcy}" r="${pr+(t.is_self?10:5)}" fill="none" stroke="#e8c05a" stroke-width="2" stroke-dasharray="4 3"/>`:""}<g transform="scale(${t.is_self?1.6:1.42})">${shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost,plate:true})}</g>${tag}</g>${em.g}</g>`;
       });
     }
+    // WHEN / HOW / WHY beside the Merchant, the chase line and his reach (board_draft.js)
+    if(R.mAnchor&&view.merchant_plan&&window.__pdxMerchantHUD){ const pl=view.merchant_plan, tt=pl.target_seat&&view.travelers.find(t2=>t2.name===pl.target_seat);
+      g+=window.__pdxMerchantHUD({v:view,m:[R.mAnchor[0],R.mAnchor[1]+1],pillDy:-43,tpos:tt&&tt.century!==mc&&R.pcPos[tt.name]||null,pos:c2=>POS[c2]||null,W,H,dark:true,avoid:Object.values(R.pcPos)}); }
     g+=orderSlate();
     g+=highlights();
     return g;
@@ -568,10 +585,11 @@
       if(c) c.innerHTML=""; }catch(e){} R.fx.length=0; if(fxGuard){clearTimeout(fxGuard); fxGuard=null;}
     fxBusy=false; renderPending=false; R.sailing=false; }
   function fxG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-sing .cc-fx"); }
+  function haulerAt2(c){ const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*(worldR(c)*0.55+8)), Math.round(y-worldR(c)*0.15)]; }
   function liveG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-sing .cc-live"); }
   function drainFx(){ if(REDUCED){ R.fx.length=0; return; } if(fxBusy) return; const f=R.fx.shift(); if(!f) return; fxBusy=true;
     if(fxGuard) clearTimeout(fxGuard);
-    fxGuard=setTimeout(()=>{ fxGuard=null; if(fxBusy){ fxBusy=false; drainFx(); } },6000);   // watchdog: never hang the game
+    fxGuard=setTimeout(()=>{ fxGuard=null; if(fxBusy&&!window.__pdxTripBusy){ fxBusy=false; drainFx(); } },6000);   // watchdog: never hang the game
     const done=ms=>setTimeout(()=>{ if(fxGuard){clearTimeout(fxGuard); fxGuard=null;} fxBusy=false; if(renderPending){renderPending=false; renderNow();} drainFx();},ms);
     try{ playFx(f,done); }catch(e){ fxBusy=false; } }
   function comet(from,to,col,onArrive,ship){
@@ -607,7 +625,13 @@
     if(f.t==="paradox"){ floatText(f.c,"PARADOX","#b3402e"); const el=liveG()&&liveG().querySelector(`.cc-world[data-c="${f.c}"]`); if(el) el.animate([{transform:el.getAttribute("transform")},{transform:el.getAttribute("transform")+" translate(-2px,1px)"},{transform:el.getAttribute("transform")+" translate(2px,-1px)"},{transform:el.getAttribute("transform")}],{duration:300}); snd("sea_monster"); done(900); return; }
     if(f.t==="wreck"){ flare(f.c,"#b3402e"); floatText(f.c,"TERMINATED","#ff6a5a"); snd("chart_creak"); done(900); return; }
     if(f.t==="milestone"){ flare(f.c,"#e8b24a"); floatText(f.c,"+1 CP","#e8b24a"); snd("chart_bell"); done(800); return; }
-    if(f.t==="merchant"){ R.merchantShown=null; renderNow(); snd("chart_creak"); done(500); return; }
+    if(f.t==="merchant"){ const p=f.p||{}, to=p.to!=null?p.to:(app&&app.view?app.view.merchant_century:null), from=p.from;
+      // THE VOYAGE, TOLD (window.__pdxMerchantTrip, board_draft.js); the queue waits for it
+      if(from!=null&&to!=null&&from!==to&&POS[from]&&POS[to]&&window.__pdxMerchantTrip&&fxG()&&__live()){ R.merchantShown=from; renderNow(); const L=liveG();
+        snd("chart_creak");
+        window.__pdxMerchantTrip({layer:fxG(),piece:L&&L.querySelector(".cc-hauler.pc-merch-live"),pos:c2=>POS[c2]||null,anchor:c2=>POS[c2]?haulerAt2(c2):null,m0:haulerAt2(from),cdy:1,stopDy:46,p,W,H,dark:true,
+          tpos:(p.target&&R.pcPos&&R.pcPos[p.target])||null,onLand:()=>{ R.merchantShown=to; renderNow(); snd("chart_stamp"); },onDone:()=>done(60)}); return; }
+      window.__pdxTripPending=false; R.merchantShown=null; renderNow(); snd("chart_creak"); done(500); return; }
     done(60);
   }
 

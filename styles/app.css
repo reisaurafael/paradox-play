@@ -146,15 +146,12 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 /* subtle living drift so the world breathes */
 @keyframes worldDrift { 0%,100% { transform: scale(1.04) translateY(0); }
   50% { transform: scale(1.055) translateY(-6px); } }
-/* mesmo caso: fundo do tamanho da tela com animacao continua */
 .world-bg { animation: worldDrift 26s ease-in-out infinite; }
 /* dust motes drifting up through the hall's light (behind the interactive UI) */
-/* ESTA CAMADA COBRE A TELA INTEIRA e carrega OITO gradientes radiais. A
-   animacao dela e so translateY, que seria de graca, mas sem promocao a
-   camada propria o navegador re-rasteriza 1600x950 com os oito gradientes a
-   cada quadro, para sempre, em toda tela do jogo. Medido no censo: um
-   elemento so, animando sobre 1.520.000 pixels.
-   `will-change` promove uma vez e o resto vira mover textura. */
+/* This layer covers the whole screen with eight radial gradients. Its animation is
+   only translateY, but without a layer of its own the browser re-rasters all eight
+   gradients every frame. `will-change` promotes it once; after that it only moves a
+   texture. */
 .world-motes {
   position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .22;
   will-change: transform; contain: strict;
@@ -323,16 +320,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 /* THE GAUNTLET: fills the width after the Rucksack; the SVG stretches to fill it
    so the overlays (positioned by % of the viewBox 0 44 1400 250) always align. */
 .gauntlet { position: relative; height: 100%; aspect-ratio: 1400 / 250; flex: 0 0 auto; min-width: 0; order: 2; }
-.gaunt-art { position: absolute; inset: 0; pointer-events: none; }
-.gaunt-overlay { position: absolute; z-index: 1; }
-/* the back-of-hand SCREEN -> the Time Machine matrix (over the drawn studs;
-   overflow hidden so it can NEVER spill outside the gauntlet) */
-.gaunt-matrix { left: 19.1%; top: 16%; width: 12.9%; height: 44.8%; overflow: hidden; }
-/* the forearm screen -> generators + escape valve + vitals */
-.gaunt-deck { left: 42.4%; top: 21.6%; width: 38.4%; height: 41.6%; overflow: hidden; }
-/* the "placed" counter, small, tucked at the deck's top-right corner */
-.gaunt-meta { position: absolute; z-index: 2; right: 20%; top: 15%; font-family: var(--f-mono);
-  font-size: .5rem; letter-spacing: .12em; color: #8fc79a; text-transform: uppercase; }
 /* The Rucksack sits on the LEFT and takes the width the aspect-locked gauntlet leaves. */
 .stage-toolbar .rucksack-zone { flex: 1 1 250px; min-width: 230px; order: 1; align-self: stretch; }
 
@@ -386,36 +373,7 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
    room to breathe; the arc/ticks are SVG, labels/Merchant/tokens placed in JS. */
 .timeline-rail { position: relative; width: 100%; height: 100%; pointer-events: none; }
 .tl-svg { position: absolute; inset: 0; }
-.tl-num { position: absolute; transform: translate(-50%, -50%); font-family: var(--f-mono);
-  font-size: .62rem; color: var(--text-soft); white-space: nowrap; }
-.tl-num.major { font-size: .82rem; color: var(--text); font-weight: 700; }
-.tl-num.milestone { color: var(--amber-300); font-weight: 700; font-size: .92rem; }
-.tl-num.zero, .tl-num.end { color: var(--teal-300); font-weight: 700; font-size: .92rem; }
 
-/* Era-transition braids, two intertwined era streams; a faint glow lifts them. */
-.tl-spiral { filter: drop-shadow(0 0 2px rgba(0,0,0,.55)); }
-/* Danger / overdrive zone (IX->Year Zero), a red bracket framing the centuries,
-   pulsing gently, leaving the era colours beneath fully visible. */
-.tl-danger-edge { filter: drop-shadow(0 0 4px rgba(226,69,47,.9)); animation: dangerPulse 2.2s ease-in-out infinite; }
-@keyframes dangerPulse { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
-.tl-danger-label { position: absolute; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px;
-  font-family: var(--f-mono); font-size: .58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: #ffb4a4; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
-  background: rgba(50,12,8,.82); border: 1px solid rgba(226,69,47,.7); box-shadow: 0 0 10px rgba(226,69,47,.35); }
-.tl-danger-label svg { width: 12px; height: 12px; color: #e2452f; }
-/* inline energy glyph replacing the old ⚡ emoji in the overdrive labels */
-.tl-danger-label .dl-bolt { display: inline-block; vertical-align: -0.14em; }
-.tl-danger-label .dl-bolt svg { width: .82em; height: .82em; color: #f7c168; }
-.tl-era-label2 { position: absolute; transform: translate(-50%, -50%); font-family: var(--f-display);
-  font-weight: 700; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
-  padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor;
-  background: rgba(8,10,14,.72); box-shadow: 0 1px 4px rgba(0,0,0,.5); opacity: .98; }
-.tl-secret { position: absolute; transform: translate(-50%,-50%); z-index: 4; pointer-events: auto;
-  width: 22px; height: 22px; border-radius: 5px; display: grid; place-items: center;
-  color: var(--paradox); border: 1.5px solid var(--paradox); background: rgba(143,111,214,.12); transition: all .3s; }
-.tl-secret svg { width: 13px; height: 13px; }
-.tl-secret.open { color: var(--amber-300); border-color: var(--amber-300);
-  background: rgba(247,193,104,.16); box-shadow: 0 0 12px rgba(247,193,104,.5); animation: pulse 2s infinite; }
 /* The Merchant, an actual wooden wagon silhouette (not an icon in a box). */
 .tl-merchant {
   position: absolute; transform: translate(-50%,-50%); z-index: 6; pointer-events: auto;
@@ -424,48 +382,13 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   transition: left .5s cubic-bezier(.6,.05,.2,1), top .5s cubic-bezier(.6,.05,.2,1),
               transform .3s, filter .3s;
 }
-.tl-merchant .tlm-art { width: 40px; height: 34px; display: grid; place-items: center; }
 .tl-merchant svg { width: 40px; height: 34px; }
 /* When the Merchant is mid-journey: lift, glow and bob so everyone tracks it. */
 .tl-merchant.moving { transform: translate(-50%,-50%) scale(1.16); color: #ffcf87;
   filter: drop-shadow(0 0 12px rgba(247,193,104,.85)) drop-shadow(0 2px 6px rgba(0,0,0,.5));
   animation: merchantBob .4s ease-in-out infinite; z-index: 9; }
 @keyframes merchantBob { 0%,100% { margin-top: 0; } 50% { margin-top: -3px; } }
-.tl-merchant .tl-merchant-count { position: absolute; top: -8px; right: -8px;
-  min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px; background: var(--ink-900);
-  color: var(--amber-300); font-family: var(--f-mono); font-size: .56rem; font-weight: 700;
-  display: grid; place-items: center; border: 1px solid var(--amber-600); }
 
-/* Traveler pieces, an armored Time Gauntlet silhouette (Infinity-Gauntlet-ish),
-   tinted the player's colour, with their initials on a small gem. The Temporal
-   Briefcase upgrade swaps the silhouette for a briefcase. */
-.tl-token {
-  position: absolute; transform: translate(-50%,-50%); width: 28px; height: 32px; pointer-events: auto;
-  z-index: 7; display: grid; place-items: center;
-  transition: left .55s cubic-bezier(.6,.05,.2,1), top .55s cubic-bezier(.6,.05,.2,1); cursor: default;
-}
-.tl-token .tk-shape { position: absolute; inset: 0; color: var(--pc);
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.65)); }
-.tl-token .tk-shape svg { width: 100%; height: 100%; }
-/* Initials engraved into the gauntlet's back-plate, no pasted-on box; light
-   emboss + inner shadow so it reads as stamped metal, cohesive with the piece. */
-.tl-token .tk-gem { position: absolute; left: 50%; top: 55%; transform: translate(-50%,-50%); z-index: 1;
-  font-family: var(--f-display); font-weight: 800; font-size: .5rem; line-height: 1; letter-spacing: .02em;
-  color: rgba(20,18,14,.72);
-  text-shadow: 0 1px 0 rgba(255,255,255,.35), 0 -0.5px 0 rgba(0,0,0,.35); }
-.tl-token.is-self .tk-shape { filter: drop-shadow(0 0 5px var(--amber-300)) drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
-.tl-token.terminated { filter: grayscale(.7) brightness(.62); }
-.tl-token.wanted::after { content:""; position: absolute; inset: -3px; border-radius: 8px;
-  border: 1.5px dashed var(--wanted); }
-/* Atemporal immunity, a pulsing blue temporal shield around the piece (§28). */
-.tl-token.immune::before { content:""; position: absolute; inset: -5px; border-radius: 50%;
-  box-shadow: 0 0 0 2px #4aa3ff, 0 0 12px 2px rgba(74,163,255,.65);
-  animation: immPulse 1.7s ease-in-out infinite; }
-.tl-token.terminated.immune { filter: none; }
-@keyframes immPulse {
-  0%,100% { box-shadow: 0 0 0 2px #4aa3ff, 0 0 9px 1px rgba(74,163,255,.5); }
-  50%     { box-shadow: 0 0 0 2px #6cc0ff, 0 0 16px 3px rgba(74,163,255,.85); }
-}
 
 /* ----------------------------- Market ---------------------------------- */
 /* Merchant stock (revealed cards) fills the left; a right side-column holds the
@@ -475,8 +398,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .market-body { flex: 1 1 auto; min-height: 0; padding: 10px 12px; overflow: hidden; display: flex;
   flex-direction: row; gap: 11px; }
 .market-main { display: flex; flex-direction: column; gap: 7px; min-width: 0; flex: 1 1 auto; min-height: 0; overflow: visible; }
-.market-main .ma-hint { font-family: var(--f-mono); font-size: .58rem; letter-spacing: .06em;
-  color: #d6b483; text-align: center; flex: none; }
 .market-side { display: flex; flex-direction: column; gap: 9px; min-width: 0; flex: 0 0 182px; min-height: 0; }
 .market-merchant-label, .market-secret-label {
   font-family: var(--f-mono); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase;
@@ -511,26 +432,16 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   background: rgba(242,169,59,.14); border: 1px solid var(--amber-600); }
 
 /* Merchant move ghost, glides along the arch from old century to new */
-.merchant-ghost { position: fixed; z-index: 660; width: 30px; height: 30px; pointer-events: none;
-  display: grid; place-items: center; color: #1c150a; border-radius: 7px 7px 7px 2px;
-  background: linear-gradient(160deg, var(--brass), var(--amber-600)); border: 1.5px solid #2a1f0c;
-  box-shadow: 0 0 14px rgba(242,169,59,.7), var(--shadow-2); opacity: .96;
-  transition: left 1s cubic-bezier(.5,.05,.2,1), top 1s cubic-bezier(.5,.05,.2,1), opacity .4s; }
-.merchant-ghost svg { width: 19px; height: 19px; }
-.merchant-ghost.fade { opacity: 0; }
 .card.is-secret { box-shadow: var(--shadow-1), 0 0 0 2px var(--paradox); }
 .secret-bay { min-height: 64px; border-radius: var(--r-md); display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 12px;
   border: 1.5px dashed var(--line); background: repeating-linear-gradient(45deg,
     var(--ink-850), var(--ink-850) 8px, var(--ink-900) 8px, var(--ink-900) 16px); }
-.secret-bay .bay-ico { width: 30px; height: 30px; color: var(--text-dim); }
 .secret-bay .bay-text { font-family: var(--f-mono); font-size: .58rem; letter-spacing: .08em;
   color: var(--text-dim); line-height: 1.4; }
 .secret-bay.open { border-style: solid; border-color: var(--paradox); background: rgba(143,111,214,.08);
   box-shadow: inset 0 0 24px rgba(143,111,214,.12); }
-.secret-bay.open .bay-ico { color: var(--paradox); }
 .secret-bay.open .bay-text { color: var(--paradox); }
-.secret-bay .bay-count { font-family: var(--f-display); font-weight: 700; font-size: 1.6rem; color: var(--amber-300); }
 
 /* ── The Secret Market's velvet CURTAIN, it keeps the market secret ──────────────
    Drawn shut while Hidden (two panels meet in the middle, a lock crest on the seam);
@@ -618,64 +529,14 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .vardo-roof { position: absolute; left: -8px; right: -8px; top: -30px; height: 40px; z-index: 3;
   pointer-events: none; perspective: 260px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.5)); }
 
-/* the curved canopy, bold red/white vertical stripes on a domed canvas that sags a
-   touch and breathes in the breeze (a slow, gentle sway) so it never reads as rigid. */
-.vardo-roof .vr-canopy { position: absolute; left: 2%; right: 2%; top: 0; height: 26px;
-  border-radius: 62% 62% 40% 40% / 100% 100% 88% 88%;
-  transform-origin: 50% 0; transform: rotateX(24deg);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.32) 0%, transparent 24%),
-    radial-gradient(130% 150% at 50% 0%, rgba(255,255,255,.2), transparent 48%),
-    linear-gradient(90deg, rgba(0,0,0,.26), transparent 9% 91%, rgba(0,0,0,.26)),
-    repeating-linear-gradient(90deg, var(--awn-red) 0 24px, var(--awn-cream) 24px 48px);
-  box-shadow: inset 0 -6px 10px rgba(60,10,6,.36), inset 0 3px 4px rgba(255,255,255,.32);
-  animation: canopyBreathe 7s ease-in-out infinite; }
-@keyframes canopyBreathe { 0%,100% { transform: rotateX(24deg) skewX(-0.6deg); }
-  50% { transform: rotateX(22deg) skewX(0.6deg); } }
-/* faint canvas ribs bowing the stripes; a soft shade curving under the crown */
-.vardo-roof .vr-ribs { position: absolute; inset: 0; border-radius: inherit;
-  background: repeating-linear-gradient(90deg,
-    rgba(0,0,0,.14) 0 1px, transparent 1px 24px, rgba(255,255,255,.12) 24px 25px, transparent 25px 48px); }
-.vardo-roof .vr-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; border-radius: inherit;
-  background: radial-gradient(120% 90% at 50% 120%, rgba(50,8,6,.45), transparent 60%); }
 
-/* the valance, the classic CIRCUS awning fringe: an even row of rounded red/white
-   scallops hanging off the eave. Each scallop is exactly one stripe wide, so the
-   colours alternate cleanly (built with a striped fill + a repeating semicircle mask). */
-.vardo-roof .vr-valance { position: absolute; left: 1.5%; right: 1.5%; bottom: 3px; height: 20px; z-index: 1;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.3) 0%, transparent 44%, rgba(60,12,8,.34) 100%),
-    repeating-linear-gradient(90deg, var(--awn-red) 0 24px, var(--awn-cream) 24px 48px);
-  filter: drop-shadow(0 3px 3px rgba(0,0,0,.5));
-  -webkit-mask:
-    radial-gradient(12px at 50% 0, #000 98%, #0000 100%) bottom / 24px 12px repeat-x,
-    linear-gradient(#000 0 0) top / 100% 8px no-repeat;
-          mask:
-    radial-gradient(12px at 50% 0, #000 98%, #0000 100%) bottom / 24px 12px repeat-x,
-    linear-gradient(#000 0 0) top / 100% 8px no-repeat; }
 /* a slim gilded rail where the fringe attaches to the eave */
-.vardo-roof .vr-valance::before { content:""; position:absolute; left:0; right:0; top:0; height:3px;
-  background: linear-gradient(180deg, #e6c078, #9a6a26); box-shadow: 0 1px 2px rgba(0,0,0,.4); }
 
 .market-title { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px;
   /* extra top room so the awning fringe drapes over the eave, not over this text */
   padding-top: 16px; border-bottom: 1px solid #4a3a1c; }
 .market-title-text { font-family: var(--f-display); letter-spacing: .12em; color: #f0d79a;
   text-shadow: 0 1px 2px rgba(0,0,0,.6); }
-/* gilded carved valance under the title, a warm carved board with a beaded gold
-   top-rail and a scalloped lower edge, echoing the wagon's carpentry (the roof owns
-   the red/white stripes, so this stays gold so the two don't compete). */
-.market-awning { position: relative; z-index: 1; height: 12px; flex: none;
-  background:
-    linear-gradient(180deg, #7a5528 0%, #513619 60%, #3c2814 100%);
-  border-top: 1.5px solid rgba(214,168,87,.65);
-  box-shadow: inset 0 -3px 5px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,224,160,.28),
-    0 2px 4px rgba(0,0,0,.4);
-  clip-path: polygon(0 0,100% 0,100% 45%,
-    97% 100%,94% 45%,91% 100%,88% 45%,85% 100%,82% 45%,79% 100%,76% 45%,73% 100%,70% 45%,
-    67% 100%,64% 45%,61% 100%,58% 45%,55% 100%,52% 45%,49% 100%,46% 45%,43% 100%,40% 45%,
-    37% 100%,34% 45%,31% 100%,28% 45%,25% 100%,22% 45%,19% 100%,16% 45%,13% 100%,10% 45%,
-    7% 100%,4% 45%,1% 100%,0 45%); }
 
 /* A handcrafted wooden sign hung from the Merchant's wagon, carved, weathered,
    hung from twin ropes, with brass nails and engraved (inset) lettering. */
@@ -719,32 +580,14 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .market-zone .zone-title, .market-zone .market-awning { position: relative; z-index: 1; }
 .market-zone .market-body { position: relative; z-index: 1; }
 
-/* carved corbel brackets tucked under the roof at both top corners */
-.md-corbel { position: absolute; top: 0; width: 15px; height: 21px; opacity: .92;
-  background: linear-gradient(180deg, #6b4a2a, #3a2712);
-  box-shadow: inset 0 0 4px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.5); }
-.md-cl { left: 1px; clip-path: polygon(0 0, 100% 0, 100% 28%, 52% 100%, 0 62%); }
-.md-cr { right: 1px; clip-path: polygon(0 0, 100% 0, 100% 62%, 48% 100%, 0 28%); }
 
 /* hanging red hurricane lanterns (shaded SVG art) with a warm, flickering glow,
    a symmetric pair swinging gently on their hooks, one on each side of the wagon. */
 .md-lantern { position: absolute; top: 6px; width: 24px; height: 33px; z-index: 2;
   transform-origin: 50% -8px; animation: lanternSway 5.2s ease-in-out infinite; }
-.md-lantern-l { left: -12px; }
-.md-lantern-r { right: -12px; animation-delay: -2.6s; }
 .md-lantern::before { content:""; position:absolute; top:-8px; left:50%; width:2px; height:10px;
   transform:translateX(-50%); background:#2a1c0e; }   /* hook wire */
-.md-lantern-art { position: absolute; inset: 0;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)) drop-shadow(0 0 5px rgba(255,150,70,.55)); }
-.md-lantern-art svg { width: 100%; height: 100%; }
-.md-lantern-glow { position: absolute; inset: -80%; border-radius: 50%; mix-blend-mode: screen;
-  background: radial-gradient(closest-side, rgba(255,170,80,.6), rgba(255,140,50,.18) 55%, transparent 72%);
-  animation: lanternFlicker 3.4s ease-in-out infinite; }
-@keyframes lanternFlicker { 0%,100%{opacity:.72;} 42%{opacity:1;} 68%{opacity:.55;} 82%{opacity:.9;} }
 @keyframes lanternSway { 0%,100%{ transform: rotate(-3deg); } 50%{ transform: rotate(3deg); } }
-/* closed shop dims the lantern glow */
-.market-zone.closed .md-lantern-glow { opacity: .14; animation: none; }
-.market-zone.closed .md-lantern-art { filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)) grayscale(.4) brightness(.7); }
 
 /* ── Textured wooden ARROW signs stacked down the LEFT edge of the wagon ─────────
    They hang from a batten fixed to the wagon's border (touching it) and their
@@ -848,8 +691,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 }
 /* the striped canopy loses its warmth and sits in shadow */
 .market-zone.closed .vardo-roof { filter: drop-shadow(0 6px 8px rgba(0,0,0,.55)) saturate(.66) brightness(.8); }
-/* the shop packs up, the breeze stills */
-.market-zone.closed .vr-canopy { animation-play-state: paused; }
 /* CLOSED interior packs up, a cool dusk wash settles behind the stock, the ambience dims. */
 .market-zone.closed .market-decor { filter: grayscale(.4) brightness(.72);
   background: linear-gradient(180deg, rgba(22,32,54,.30), rgba(9,15,30,.44)); }
@@ -881,8 +722,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .card.is-actionable.can-select { cursor: pointer; outline: 2px solid var(--amber-400);
   box-shadow: 0 0 0 2px rgba(242,169,59,.5), 0 0 14px rgba(242,169,59,.4); }
 .card.is-actionable.can-select:hover { --lift: -4px; --sc: 1.03; }
-.market-main .ma-hint.can-steal, .market-main .ma-hint.can-destroy { color: #ff9d8e; }
-.market-main .ma-hint.can-select { color: #f2c98a; }
 /* A red aura around the whole wagon while a steal/destroy pick is pending. */
 #market-zone.selecting.sel-steal, #market-zone.selecting.sel-destroy {
   box-shadow: 0 0 0 2px rgba(210,59,44,.35), 0 0 26px rgba(210,59,44,.28); }
@@ -896,33 +735,10 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .market-zone { background: none; border: 0; box-shadow: none; overflow: visible; }
 .market-zone::before { display: none; }
 
-/* the inked booth fills the zone; its roof rises a touch above the top edge */
-.wagon-bg { display: none; }
 
 /* ambient LIFE, a breathing spotlight, chimney smoke and drifting dust motes */
 .wagon-life { position: absolute; inset: -15% -3% -5% -3%; z-index: 1;
   pointer-events: none; overflow: hidden; border-radius: 12px; }
-.wl-spot { position: absolute; left: 50%; top: -4%; width: 48%; height: 122%;
-  transform: translateX(-50%); mix-blend-mode: screen;
-  background: linear-gradient(180deg, rgba(255,214,140,.16), rgba(255,214,140,0) 72%);
-  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
-  animation: wlSpot 7s ease-in-out infinite; }
-@keyframes wlSpot { 0%,100%{ opacity:.55; } 50%{ opacity:.95; } }
-.wl-smoke { position: absolute; left: 57.5%; top: 4%; width: 10px; height: 10px;
-  border-radius: 50%; filter: blur(3px);
-  background: radial-gradient(circle, rgba(206,188,158,.45), transparent 70%);
-  animation: wlSmoke 5.5s ease-in infinite; }
-@keyframes wlSmoke { 0%{ opacity:0; transform: translateY(0) scale(.5);} 22%{ opacity:.5;}
-  100%{ opacity:0; transform: translate(-12px,-64px) scale(1.9);} }
-.wl-dust { position: absolute; inset: 8% 6% 14% 6%; opacity:.65;
-  background-image:
-    radial-gradient(1.6px 1.6px at 18% 42%, rgba(255,222,164,.55), transparent),
-    radial-gradient(1.4px 1.4px at 61% 72%, rgba(255,222,164,.4), transparent),
-    radial-gradient(1px 1px at 82% 30%, rgba(255,222,164,.45), transparent),
-    radial-gradient(1px 1px at 38% 82%, rgba(255,222,164,.32), transparent),
-    radial-gradient(1.6px 1.6px at 73% 55%, rgba(255,222,164,.45), transparent);
-  animation: wlDust 15s linear infinite; }
-@keyframes wlDust { 0%{ transform: translateY(8px);} 100%{ transform: translateY(-16px);} }
 
 /* hanging sign board under the canopy crown: shop name + OPEN/CLOSED chip */
 .market-zone .market-title { position: absolute; z-index: 4; top: 2.5%; left: 50%;
@@ -948,14 +764,8 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 
 /* closed shop cools the whole booth; shopping / stealing glows the booth itself */
 .market-zone.closed { box-shadow: none; }
-.market-zone.closed .wagon-bg { filter: saturate(.45) brightness(.62) contrast(1.06)
-  drop-shadow(0 16px 24px rgba(0,0,0,.55)); }
 .market-zone.shopping { box-shadow: none; }
-.market-zone.shopping .wagon-bg { filter: drop-shadow(0 0 18px rgba(126,196,80,.5))
-  drop-shadow(0 16px 24px rgba(0,0,0,.55)); }
 #market-zone.selecting.sel-steal, #market-zone.selecting.sel-destroy { box-shadow: none; }
-#market-zone.selecting.sel-steal .wagon-bg, #market-zone.selecting.sel-destroy .wagon-bg {
-  filter: drop-shadow(0 0 18px rgba(210,59,44,.55)) drop-shadow(0 16px 24px rgba(0,0,0,.55)); }
 /* Secret-Market deal (Edison) resolved in the bay: Take / Pass controls under the card. */
 .secret-deal-ctl { display: flex; gap: 6px; margin-top: 6px; justify-content: center; }
 .secret-deal-ctl button { font-family: var(--f-mono); font-size: .55rem; letter-spacing: .06em;
@@ -964,38 +774,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .secret-deal-ctl .sd-take.steal { border-color: var(--wanted); color: #ffd2c8; background: rgba(46,12,10,.85); }
 .secret-deal-ctl .sd-take.buy { border-color: var(--recharge); color: #d7f0c6; background: rgba(28,46,20,.85); }
 .secret-deal-ctl button:disabled { opacity: .4; cursor: not-allowed; }
-/* The Market actions ARE the Merchant's wooden signs, larger, carved placards that
-   hang on little ropes from a rail; they swing slightly and press when clicked. */
-.market-actions { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center;
-  gap: 14px; margin-top: 12px; padding: 12px 8px 4px; flex: none; position: relative; }
-/* the rail the signs hang from */
-.market-actions::before { content:""; position: absolute; top: 3px; left: 4%; right: 4%; height: 3px;
-  background: linear-gradient(180deg, #5a3f22, #3a2814); border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,.5); }
-.market-actions .ma-hint { flex: 1 1 100%; text-align: center; font-family: var(--f-mono);
-  font-size: .58rem; letter-spacing: .08em; color: #d6b483; margin-bottom: 2px; order: -1; }
-.ma-btn { position: relative; font-family: var(--f-display); font-weight: 800; font-size: .78rem;
-  letter-spacing: .1em; padding: 9px 16px 8px; cursor: pointer; color: #f2e2c2; margin-top: 8px;
-  background:
-    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 1px 8px),
-    linear-gradient(180deg, #7a5630 0%, #5a3d22 55%, #46311c 100%);
-  border: 2px solid #2a1c0c; border-radius: 3px; transform-origin: 50% -8px;
-  text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -0.5px 0 rgba(255,220,170,.15);
-  box-shadow: 0 3px 6px rgba(0,0,0,.55), inset 0 0 8px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,220,170,.15);
-  animation: maSway 5s ease-in-out infinite; transition: transform .12s ease, filter .12s ease; }
-/* the two little ropes it hangs by */
-.ma-btn::before { content:""; position: absolute; top: -9px; left: 22%; width: 2px; height: 9px;
-  background: #3a2a16; transform: rotate(-8deg); }
-.ma-btn::after { content:""; position: absolute; top: -9px; right: 22%; width: 2px; height: 9px;
-  background: #3a2a16; transform: rotate(8deg); }
-@keyframes maSway { 0%,100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
-.ma-btn:hover { filter: brightness(1.12); animation-play-state: paused; transform: rotate(0) translateY(-1px); }
-.ma-btn:active { transform: rotate(0) translateY(2px) scale(.97); }
-.ma-btn.ma-ghost { background:
-    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 1px 8px),
-    linear-gradient(180deg, #5a4028 0%, #402c18 55%, #2f2010 100%); }
-.ma-btn.ma-brief { background:
-    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 1px 8px),
-    linear-gradient(180deg, #9a7433 0%, #765420 55%, #5c3f18 100%); color: #fff2cf; }
 
 /* Secret Market in-bay buying + Old-West prison bars for Wanted travelers (§24.5). */
 .secret-card-wrap { position: relative; }
@@ -1067,7 +845,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .matrix-fnlabel { display: flex; flex-direction: column; gap: 1px; justify-content: center;
   justify-self: end; text-align: right; padding-right: 4px; }
 .matrix-fnlabel .fn { font-family: var(--f-display); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
-.matrix-fnlabel .fn-sub { font-family: var(--f-mono); font-size: .5rem; color: var(--text-mute); letter-spacing:.08em; }
 .fn-recharge { color: var(--recharge); }
 .fn-paradox  { color: var(--paradox); }
 .fn-travel   { color: var(--travel); }
@@ -1212,9 +989,7 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .dice-zone .dice-pool-label, .machine-zone .matrix-fnlabel {
   color: #cbb583; letter-spacing: .14em; font-weight: 700; text-shadow: 0 1px 1px rgba(0,0,0,.6); }
 .machine-zone .matrix-fnlabel .fn { text-shadow: 0 1px 2px rgba(0,0,0,.55); font-weight: 700; }
-.machine-zone .matrix-fnlabel .fn-sub { color: #8a7c58; font-weight: 600; }
 .dice-zone .dice-hint, .dice-zone .muted { color: #a99b7a; }
-.dice-zone .dice-hint b { color: var(--amber-300); }
 
 /* Matrix cells are GEM SOCKETS, dark wells rimmed in brass, lit when a stone is set. */
 .machine-zone .cell {
@@ -1243,9 +1018,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 
 /* A causality die held in hand, a ghost that tracks the cursor (click-to-carry),
    the source die dimmed while it's lifted. */
-.die-carry { position: fixed; z-index: 700; pointer-events: none;
-  transform: translate(-50%,-50%) scale(1.16) rotate(-4deg);
-  filter: drop-shadow(0 10px 16px rgba(0,0,0,.6)) drop-shadow(0 0 12px rgba(199,154,90,.6)); }
 .die.carry-hidden { opacity: .18; filter: grayscale(.5); }
 
 .dice-cols .dice-col { position: relative; }
@@ -1260,7 +1032,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
    so it no longer sprawls. */
 .gen-col { flex: 0 1 auto; min-width: 176px; max-width: 244px; }
 .escape-col { flex: 0 0 148px; }
-.dice-hint b { color: var(--amber-300); font-weight: 700; }
 .dice-pool { display: flex; flex-wrap: wrap; gap: 8px; flex: 0 1 auto; min-height: 46px; align-content: center; align-items: center;
   padding: 9px; border: 1px solid #4a4436; border-radius: var(--r-md);
   background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.2));
@@ -1305,54 +1076,7 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   font-size: .64rem; display: grid; place-items: center; }
 
 /* ===================== GAUNTLET OVERLAYS: the live UI on the arm ==================== */
-/* The MATRIX overlays the back-of-hand tile, compact 3×3 sockets with thin
-   function colour-bars instead of wide text labels. */
-.gaunt-matrix .machine-body { position: absolute; inset: 0; padding: 3px 3px 3px 2px; display: grid;
-  place-items: center start; overflow: hidden; }
-/* square cells: the grid height drives the row size, columns sized by the square cells */
-.gaunt-matrix .matrix-wrap { height: 100%; width: auto; max-width: 100%;
-  grid-template-columns: 13px repeat(3, auto); grid-template-rows: repeat(3, 1fr); gap: 4px; }
-/* the function studs are DRAWN INTO the gauntlet; the label is an invisible hover
-   target over each stud (function name on hover) */
-.gaunt-matrix .matrix-fnlabel { display: block; background: transparent; padding: 0; cursor: help; height: 100%; }
-.gaunt-matrix .matrix-fnlabel .fn, .gaunt-matrix .matrix-fnlabel .fn-sub { display: none; }
-.gaunt-matrix .matrix-fnlabel::after { content: none; }
-/* sockets = square HOLES punched into the green screen (recessed, dark) */
-.gaunt-matrix .cell { aspect-ratio: 1; height: 100%; width: auto; padding: 0; border-radius: 6px;
-  flex-direction: column; gap: 0; overflow: hidden;
-  background: radial-gradient(circle at 50% 32%, #08170f, #010402 82%);
-  border: 1px solid rgba(0,0,0,.55); box-shadow: inset 0 2px 6px rgba(0,0,0,.9), inset 0 -1px 1px rgba(90,170,115,.28); }
-.gaunt-matrix .cell.filled { background: radial-gradient(circle at 50% 32%, #2a2410, #0a0803 82%); border-color: var(--brass); }
-.gaunt-matrix .cell .mod-num { display: none; }
-.gaunt-matrix .cell .mod-ico { width: 12px; height: 12px; color: #6fbf8a; opacity: .7; }
-.gaunt-matrix .cell .mod-cap { display: block; font-size: .32rem; line-height: 1.05; letter-spacing: 0;
-  color: #7fc79a; text-align: center; opacity: .85; }
-.gaunt-matrix .die { width: 80%; height: 80%; min-width: 0; }
-.gaunt-matrix .die .pips-face { font-size: .8rem; }
 
-/* The DECK overlays the forearm screen: generators + escape valve + vitals, a
-   compact horizontal row on the green phosphor. */
-.gaunt-deck .dice-body { position: absolute; inset: 0; padding: 4px 10px; display: block; overflow: visible; }
-.gaunt-deck .dice-body::before { display: none; }
-.gaunt-deck .dice-cols { gap: 10px; height: 100%; justify-content: space-between; align-items: stretch; }
-.gaunt-deck .dice-col { gap: 2px; }
-.gaunt-deck .dice-pool-label { font-size: .46rem; letter-spacing: .1em; color: #8fc79a; }
-.gaunt-deck .gen-col { flex: 0 1 auto; min-width: 0; }
-.gaunt-deck .escape-col { flex: 0 0 auto; }
-.gaunt-deck .vitals-col { flex: 0 1 auto; min-width: 0; max-width: none; }
-.gaunt-deck .dice-pool { min-height: 0; padding: 4px; gap: 5px; background: rgba(0,0,0,.35); }
-.gaunt-deck .die { width: 30px; height: 30px; }
-.gaunt-deck .die .pips-face { font-size: .8rem; }
-.gaunt-deck .dice-actions { gap: 4px; margin-top: 2px; }
-.gaunt-deck .btn-sm { padding: 2px 8px; font-size: .58rem; }
-.gaunt-deck .escape-slot { padding: 4px; }
-.gaunt-deck .heat-ring { width: 42px; height: 42px; }
-.gaunt-deck .escape-drop { width: 28px; height: 28px; }
-.gaunt-deck .esc-text { display: none; }
-.gaunt-deck .vitals-wrap { gap: 4px; }
-.gaunt-deck .vital-ekg { min-height: 0; padding: 3px 6px; }
-.gaunt-deck .ekg-svg { height: 20px; }
-.gaunt-deck .dice-idle { font-size: .5rem; min-height: 0; padding: 4px; }
 
 /* ---- Personal VITALS mounted on the forearm (Wave 3b) ---- */
 .vitals-col { flex: 0 1 auto; min-width: 154px; max-width: 214px; justify-content: flex-start; }
@@ -1465,19 +1189,10 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .ruck-voucher { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px;
   width: 50px; padding: 5px 3px; border-radius: var(--r-sm); border: 1px solid #4a3a28;
   background: rgba(0,0,0,.26); color: #8f7c5c; }
-.ruck-voucher .rv-ico { width: 15px; height: 15px; opacity: .5; }
-.ruck-voucher .rv-ico svg { width: 100%; height: 100%; }
-.ruck-voucher .rv-count { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; border-radius: 8px;
-  background: var(--ink-700); border: 1px solid var(--line); color: var(--text-mute); font-family: var(--f-display);
-  font-weight: 700; font-size: .6rem; display: grid; place-items: center; }
-.ruck-voucher .rv-label { font-family: var(--f-mono); font-size: .46rem; letter-spacing: .06em; text-transform: uppercase; }
 .ruck-voucher.has { border-color: var(--teal-500); background: rgba(47,163,163,.12); color: var(--teal-300); }
-.ruck-voucher.has .rv-ico { opacity: 1; }
-.ruck-voucher.has .rv-count { background: var(--teal-700); border-color: var(--teal-400); color: #bdf3ee; }
 .ruck-voucher.usable { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
 .ruck-voucher.usable:hover { background: rgba(47,163,163,.22); box-shadow: 0 0 0 2px rgba(47,163,163,.3); transform: translateY(-2px); }
 .ruck-voucher.applied { border-color: var(--amber-500); background: rgba(242,169,59,.16); color: var(--amber-300); cursor: default; }
-.ruck-voucher.applied .rv-count { background: rgba(242,169,59,.2); border-color: var(--amber-500); color: var(--amber-300); }
 
 /* ---- Drag-to-acquire: the 3D card held in hand + the Rucksack drop target ---- */
 .card.can-drag { cursor: grab; }
@@ -1560,7 +1275,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   border-color: #2a0e0e; filter: grayscale(.5) brightness(.82);
   box-shadow: inset 0 0 30px rgba(0,0,0,.7), inset 0 0 0 1px rgba(210,59,44,.18);
 }
-.pcard.terminated .pcard-name { color: #b8635b; text-shadow: 0 0 8px rgba(210,59,44,.4); }
 .pcard.terminated .stat-val { color: #8a7a78; }
 .pcard.terminated::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: var(--r-md);
@@ -1575,45 +1289,7 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   background: linear-gradient(180deg, rgba(160,60,30,.07), transparent 45%), var(--ink-800); }
 /* the laminate itself looks sun-baked, dusty, a folio that's been out on the trail */
 .pcard.is-wanted .badge { filter: sepia(.16) saturate(.95); }
-.wanted-tag {
-  position: absolute; top: -10px; left: 50%; margin-left: -56px; z-index: 8; width: 112px;
-  transform: rotate(-4deg); transform-origin: 50% 0;
-  padding: 9px 8px 8px; text-align: center; color: #2c2417;
-  /* aged, blotchy paper */
-  background:
-    radial-gradient(80% 60% at 70% 25%, rgba(120,90,40,.16), transparent 60%),
-    radial-gradient(60% 50% at 20% 80%, rgba(120,90,40,.14), transparent 60%),
-    linear-gradient(175deg, #efe2c2, #d9c69b);
-  border: 1px solid #8a6f3c;
-  box-shadow: var(--shadow-3), 0 2px 0 rgba(0,0,0,.25);
-  /* torn / irregular edges */
-  clip-path: polygon(2% 4%, 16% 1%, 34% 5%, 52% 1%, 70% 4%, 86% 1%, 99% 6%,
-    97% 30%, 100% 60%, 98% 86%, 99% 97%, 80% 99%, 60% 96%, 42% 100%, 22% 97%, 5% 99%,
-    1% 78%, 3% 50%, 0% 24%);
-}
-.wanted-tag::before { content:""; position:absolute; inset:4px; border:1px solid rgba(70,52,24,.5); pointer-events:none; }
-.wt-nail { position:absolute; top:5px; left:50%; transform:translateX(-50%); width:7px; height:7px;
-  border-radius:50%; background:radial-gradient(circle at 35% 30%, #6b6b6b, #2a2a2a);
-  box-shadow:0 1px 2px rgba(0,0,0,.6); z-index:2; }
-.wt-head { font-family: var(--f-display); font-weight: 700; font-size: .92rem; letter-spacing: .12em;
-  color: #6e1b12; line-height: 1; margin-top: 4px; }
-.wt-sub { font-family: var(--f-mono); font-size: .42rem; letter-spacing: .14em; color: #5a3a18; margin-top: 2px; }
-.wt-face { width: 32px; height: 32px; margin: 5px auto 4px; border-radius: 4px;
-  display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: .9rem;
-  color: #3a2c14; background: rgba(90,66,30,.18); border: 1px solid rgba(70,52,24,.5);
-  filter: sepia(.4) contrast(.9); }
-.wt-bounty { display: flex; align-items: center; justify-content: center; gap: 3px;
-  font-family: var(--f-mono); font-size: .56rem; font-weight: 700; color: #4a3a16;
-  border-top: 1px solid rgba(70,52,24,.4); padding-top: 4px; }
-.wt-bounty svg { width: 11px; height: 11px; color: #9a7016; }
-.pcard-head { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
 .pcard-swatch { width: 14px; height: 14px; border-radius: 4px; flex: none; box-shadow: var(--shadow-1); }
-.pcard-name { font-family: var(--f-display); font-weight: 600; font-size: 1rem; letter-spacing: .02em; flex: 1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pcard-prio { font-family: var(--f-mono); font-size: .6rem; color: var(--text-dim); }
-.pcard-briefcase { width: 16px; height: 16px; flex: none; color: var(--amber-400);
-  filter: drop-shadow(0 0 4px rgba(247,193,104,.5)); }
-.pcard-briefcase svg { width: 100%; height: 100%; }
 
 /* Shared 'limbo' capacity prompt (§12.2) */
 .capacity-body { display: flex; flex-direction: column; gap: 8px; }
@@ -1635,7 +1311,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   55%  { transform: translateY(0) scale(.96); opacity: 1; }
   100% { transform: translateY(-10px) scale(1); opacity: 0; }
 }
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
 .stat { display: flex; align-items: center; gap: 7px; }
 .stat-ico { width: 16px; height: 16px; flex: none; }
 .stat-ico.energy { color: var(--recharge); }
@@ -1644,7 +1319,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .stat-ico.booms { color: var(--danger-400); }
 .stat-val { font-family: var(--f-mono); font-weight: 700; font-size: .98rem; }
 .stat-lbl { font-family: var(--f-mono); font-size: .54rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim); }
-.pips-row { display: flex; gap: 5px; margin-top: 9px; min-height: 22px; flex-wrap: wrap; }
 .pip {
   display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px;
   font-family: var(--f-mono); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;
@@ -1658,8 +1332,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .pip.respawn { color: var(--teal-300); border-color: var(--teal-500); }
 
 /* Panel hover hint + body-level inspection flyout (never clipped). */
-.pcard-hint { margin-top: 8px; font-family: var(--f-mono); font-size: .54rem; letter-spacing: .06em;
-  color: var(--text-dim); }
 .chip { font-size: .62rem; padding: 2px 7px; border-radius: 3px; background: var(--ink-700); border: 1px solid var(--line); color: var(--text-soft); }
 .chip.receptor { background: rgba(47,163,163,.1); border-color: var(--teal-700); color: var(--teal-300); }
 .panel-detail {
@@ -1677,9 +1349,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .pd-recycle:hover { box-shadow: 0 0 0 2px rgba(111,174,106,.4); }
 .ico-sm { width: 12px; height: 12px; display: inline-flex; }
 .ico-sm svg { width: 100%; height: 100%; }
-.pd-head { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 600;
-  font-size: .98rem; color: var(--amber-300); padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
-.pd-swatch { width: 13px; height: 13px; border-radius: 4px; flex: none; }
 .pd-label { font-family: var(--f-mono); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase;
   color: var(--text-mute); margin: 10px 0 6px; }
 .pd-card { border-left: 3px solid var(--era, #b6a577); background: var(--ink-850); border-radius: var(--r-sm);
@@ -1717,10 +1386,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .log-line.kind-market { color: var(--teal-300); }
 
 /* ---------------------------- Action bar ------------------------------- */
-.actionbar {
-  grid-area: log; align-self: end; justify-self: stretch; position: relative; z-index: 5;
-  display: none;
-}
 .prompt {
   position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
   width: max-content; max-width: min(620px, 92vw); background: var(--ink-750);
@@ -1782,7 +1447,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   width: 26px; flex: none; }
 
 /* travel control */
-.travel-ctl { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .dir-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
 .dir-btn { padding: .5em .9em; background: var(--ink-850); cursor: pointer; border: none; display:flex; align-items:center; gap:6px; }
 .dir-btn.active { background: var(--travel); color: #06222a; }
@@ -1790,21 +1454,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   border: 1px solid var(--travel); border-radius: var(--r-sm); color: var(--travel);
   font-family: var(--f-display); letter-spacing: .04em; }
 .dir-fixed svg { width: 15px; height: 15px; }
-.dist-ctl { display: flex; align-items: center; gap: 10px; }
-.dist-val { font-family: var(--f-mono); font-size: 1.4rem; color: var(--travel); width: 2ch; text-align: center; }
-/* Fixed height + nowrap so the dialog NEVER resizes as the cost text appears or
-   the danger note toggles while the player adjusts the distance. */
-.travel-cost { display: flex; align-items: center; gap: 12px; flex-basis: 100%; height: 2em;
-  overflow: hidden; flex-wrap: nowrap; white-space: nowrap; }
-.travel-cost .tc-cost { display: inline-flex; align-items: center; gap: 4px; font-family: var(--f-display);
-  font-weight: 700; font-size: .95rem; color: var(--amber-300); }
-.travel-cost .tc-cost .ico-sm { width: 15px; height: 15px; }
-.travel-cost .tc-free { font-family: var(--f-mono); font-size: .72rem; color: var(--teal-300); letter-spacing: .04em; }
-.travel-cost .tc-danger { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-mono);
-  font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #ff8a76; }
-.travel-cost .tc-danger svg { width: 13px; height: 13px; color: #e2452f; }
-.travel-cost .tc-danger .tc-bolt { display: inline-block; vertical-align: -0.12em; }
-.travel-cost .tc-danger .tc-bolt svg { width: .9em; height: .9em; color: #f7c168; }
 
 /* ----------------------- Overlays / banners ---------------------------- */
 .overlay-root { position: fixed; inset: 0; pointer-events: none; z-index: 500; }
@@ -1821,9 +1470,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   82% { opacity: 1; transform: translate(-50%,-50%) scale(1); letter-spacing: .3em; }
   100% { opacity: 0; }
 }
-.toast-rise { position: fixed; left: 50%; transform: translateX(-50%); font-family: var(--f-display);
-  font-weight: 700; pointer-events: none; animation: floatUp 1.4s ease forwards; }
-@keyframes floatUp { 0%{opacity:0; transform:translate(-50%,10px);} 20%{opacity:1;} 100%{opacity:0; transform:translate(-50%,-40px);} }
 
 /* Wanted poster, the showcase moment (§33) */
 .wanted-poster {
@@ -1899,25 +1545,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 .seg-btn.is-on { background: var(--amber-400); color: #1a1206; }
 
 /* ----------------------------- Tutorials ------------------------------- */
-.tutorial-pop {
-  position: fixed; right: 18px; bottom: 18px; z-index: 880; width: min(340px, 92vw);
-  background: linear-gradient(180deg, var(--ink-750), var(--ink-800));
-  border: 1px solid var(--teal-500); border-radius: var(--r-md);
-  box-shadow: var(--shadow-3), 0 0 0 1px rgba(47,163,163,.15);
-  padding: 14px 16px 12px; animation: rise .25s ease;
-}
-.tut-close { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; display: grid;
-  place-items: center; background: transparent; border: none; color: var(--text-mute); cursor: pointer; }
-.tut-close:hover { color: var(--amber-400); }
-.tut-close svg { width: 14px; height: 14px; }
-.tut-head { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 600;
-  font-size: 1rem; color: var(--teal-300); letter-spacing: .03em; margin-bottom: 7px; padding-right: 20px; }
-.tut-ico { width: 18px; height: 18px; color: var(--teal-300); flex: none; }
-.tut-ico svg { width: 100%; height: 100%; }
-.tut-body { font-size: .82rem; line-height: 1.5; color: var(--text-soft); }
-.tut-body b { color: var(--amber-300); }
-.tut-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
-.tut-hint { font-family: var(--f-mono); font-size: .56rem; color: var(--text-dim); }
 
 /* --------------------- Event FX: paradox / travel ---------------------- */
 /* Paradox, the classic red warning. A full-screen danger flash + symbol. */
@@ -1994,14 +1621,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
   border-radius: var(--r-md); overflow: hidden;
   background: radial-gradient(circle at 50% 50%, rgba(143,111,214,.18), transparent 70%); }
 .secret-reveal-fx.fade { opacity: 0; transition: opacity .5s ease; }
-.secret-reveal-fx .srf-glitch { position: absolute; inset: 0;
-  background:
-    repeating-linear-gradient(0deg, rgba(143,111,214,.5) 0 2px, transparent 2px 5px),
-    repeating-linear-gradient(90deg, rgba(96,224,200,.4) 0 2px, transparent 2px 7px);
-  mix-blend-mode: screen; animation: srfGlitch .42s steps(6) infinite; }
-.secret-reveal-fx.settle .srf-glitch { opacity: 0; transition: opacity .9s ease; }
-@keyframes srfGlitch { 0%{ transform: translate(0,0); opacity:.25;} 20%{transform:translate(-3px,2px);opacity:.95;}
-  40%{transform:translate(4px,-2px);opacity:.5;} 60%{transform:translate(-2px,3px);opacity:.85;} 80%{transform:translate(3px,-1px);opacity:.6;} 100%{opacity:.3;} }
 .secret-reveal-fx .srf-core { position: relative; display: grid; place-items: center;
   font-family: var(--f-display); font-weight: 800; letter-spacing: .22em;
   text-shadow: 0 0 14px rgba(143,111,214,.9); }
@@ -2195,7 +1814,6 @@ h1,h2,h3,h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: .
 /* self panel keeps its amber identity, just warmer against the world */
 .pcard.is-self { border-color: rgba(242,169,59,.5);
   box-shadow: inset 0 0 0 1px rgba(242,169,59,.18), inset 0 0 30px rgba(0,0,0,.3), 0 10px 26px rgba(0,0,0,.5); }
-.gaunt-art { filter: sepia(.12) saturate(1.05) brightness(1.01); }
 
 /* ── PHASE FOCUS, the active surface is the lit stage, the others recede a touch, so
    the eye always knows where the turn is happening (Battlegrounds "aliveness"). ── */
@@ -2220,22 +1838,21 @@ body[data-phase="market"] .market-zone { filter: brightness(1.05) saturate(1.05)
 
 @media (prefers-reduced-motion: reduce) {
   .world-bg, .world-motes { animation: none !important; }
-  .wl-spot, .wl-smoke, .wl-dust { animation: none !important; }
   .dread-high .world-haze { animation: none !important; }
   .world-dread { transition: none !important; }
 }
 
 
-/* ===== ARMLESS (estavel-full): a manopla svg foi removida; a Time Machine e os
-   Causality Generators voltam como painéis clássicos ao lado da Rucksack. ===== */
+/* ===== ARMLESS: without the gauntlet SVG, the Time Machine and the Causality
+   Generators are plain panels next to the Rucksack. ===== */
 .stage-toolbar { min-height: 225px; }
 .stage-toolbar .machine-zone { order: 2; flex: 0 0 auto; display: flex; flex-direction: column; min-width: 0; }
 .stage-toolbar .dice-zone { order: 3; flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
 .stage-toolbar .machine-zone .machine-body, .stage-toolbar .dice-zone .dice-body { flex: 1; min-height: 0; }
 
 /* ============================================================================
-   MANUAL FIXES (estavel-full), sem IA no fundo; painéis opacos; CANVAS DE
-   RESOLUÇÃO FIXA que escala como um bloco só (nunca deforma). Res no menu.
+   MANUAL FIXES: opaque panels, and a fixed-resolution canvas that scales as one
+   block (it never deforms).
    ========================================================================== */
 /* The background is a noir gradient. It is painted as the body's own (viewport-fixed)
    background, not as a fixed full-screen ::after at z-index -1: pixel-identical, but that
@@ -2243,12 +1860,12 @@ body[data-phase="market"] .market-zone { filter: brightness(1.05) saturate(1.05)
    (measured 2026-09-26), the second-biggest cost after the chart shadow. */
 body { background: radial-gradient(130% 100% at 50% -8%, #363248 0%, #232330 46%, #1a1a22 100%) fixed; }
 
-/* 2. Painéis OPACOS. */
+/* Opaque panels. */
 .panel, .zone:not(.market-zone) {
   background: linear-gradient(180deg, rgba(255,255,255,.09), transparent 46%), #2e3750 !important;
   border: 1px solid #5a6a88 !important;
   box-shadow: 0 6px 22px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05) !important; }
-/* mochila mantém o COURO original (não entra no override escuro). */
+/* the rucksack keeps its original leather (not part of the dark override) */
 .rucksack-zone {
   background:
     linear-gradient(180deg, rgba(255,235,200,.05), transparent 40%),
@@ -2258,19 +1875,19 @@ body { background: radial-gradient(130% 100% at 50% -8%, #363248 0%, #232330 46%
   background: linear-gradient(180deg, rgba(255,255,255,.10), transparent 42%), #3a4257 !important; }
 .machine-zone, .dice-zone { background-color: #3a4257 !important; }
 
-/* 3. CANVAS ESCALÁVEL: o tabuleiro vive numa resolução fixa e é escalado inteiro
-   pra caber na janela (letterbox). Nada reflui/deforma. */
+/* Scalable canvas: the board lives at a fixed resolution and is scaled whole to fit
+   the window (letterbox). Nothing reflows or deforms. */
 #screen-game.is-active { position: absolute; inset: 0; overflow: hidden; display: block; }
-/* mochila no tamanho natural (o canvas fixo já garante espaço, sem espremer). */
+/* the rucksack at its natural size (the fixed canvas already leaves room for it) */
 .stage-toolbar .rucksack-zone { flex: 0 1 272px; min-width: 248px; max-width: 300px; order: 1; align-self: stretch; }
 
-/* 4. Cockpit dos generators alinhado à ESQUERDA (perto da Time Machine), não centralizado. */
+/* The generators cockpit aligned LEFT (next to the Time Machine), not centred. */
 .stage-toolbar .dice-zone .dice-cols { justify-content: flex-start !important; gap: 22px; }
 .stage-toolbar .dice-zone { flex: 1 1 auto; }
 .stage-toolbar .machine-zone { flex: 0 0 auto; }
 
-/* 5. Área principal VISÍVEL: células da matriz (gem sockets escuros demais) clareadas
-   + geradores legíveis; e na fase 'main' a toolbar nunca é rebaixada. */
+/* Main area readable: lighter matrix cells (the gem sockets were too dark) and
+   readable generators; in the 'main' phase the toolbar is never dimmed. */
 .machine-zone .cell {
   background: radial-gradient(120% 120% at 50% 20%, #2c313c, #191d25 76%) !important;
   border: 1.5px solid #4d5361 !important; }
@@ -2280,8 +1897,8 @@ body { background: radial-gradient(130% 100% at 50% -8%, #363248 0%, #232330 46%
 .dice-zone .die, .machine-zone .die { filter: none !important; }
 body[data-phase="main"] .stage-toolbar { filter: none !important; opacity: 1 !important; }
 
-/* 6. (workflow) GERADORES/DADOS legíveis, eram navy ~1.5:1 sobre painel escuro,
-   dentro de um poço escurecido; rótulos dos módulos vazios muito apagados. */
+/* Readable generators (they were navy on a dark panel, about 1.5:1 contrast) and
+   brighter labels on empty modules. */
 .dice-zone .die, .machine-zone .die {
   background:
     repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px),
@@ -2294,9 +1911,9 @@ body[data-phase="main"] .stage-toolbar { filter: none !important; opacity: 1 !im
 .machine-zone .mod-num { color: #b6a87a !important; }
 .machine-zone .mod-cap { color: #cec3a0 !important; }
 .machine-zone .mod-ico { color: #e2c477 !important; opacity: .95 !important; }
-/* célula bloqueada (função indisponível): distinta mas não "invisível" */
+/* a locked cell (function unavailable): distinct, not invisible */
 .machine-zone .cell.locked { opacity: .78 !important; }
-/* o brilho CRT do painel, útil, um pouco mais presente */
+/* the panel's CRT glow, a little stronger */
 .dice-body::before, .machine-body::before {
   background: radial-gradient(120% 90% at 50% 0%, rgba(255,196,104,.11), transparent 62%) !important; }
 
@@ -2412,8 +2029,6 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
   text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto; }
 .cb-eyes { font-size: .5rem; letter-spacing: .1em; color: #d8b06a;
   border: 1px solid #d8b06a55; padding: 1px 6px; border-radius: 2px; }
-.cb-rack { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex;
-  flex-direction: column; gap: 7px; padding-right: 2px; }
 
 /* the closed file: a manila spine that holds the glance facts */
 .pcard.cfile { position: relative; display: flex; align-items: center; gap: 10px;
@@ -2424,31 +2039,11 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
   box-shadow: 0 2px 5px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,248,225,.5);
   transition: transform .16s ease, box-shadow .16s ease; }
 .pcard.cfile:hover { transform: translateX(7px); box-shadow: 0 4px 12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,248,225,.5); }
-.cf-pin { flex: none; width: 15px; height: 15px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--seat) 60%, #fff), var(--seat) 55%, color-mix(in srgb, var(--seat) 55%, #000));
-  border: 1px solid rgba(0,0,0,.55); box-shadow: 1px 2px 3px rgba(0,0,0,.4); }
-.cf-tab { display: flex; flex-direction: column; min-width: 0; flex: 1 1 120px; }
-.cf-subject { font-size: .46rem; letter-spacing: .16em; color: #7a6236; }
-.cf-name { font-weight: bold; font-size: .82rem; letter-spacing: .04em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cf-seen { flex: none; font-size: .6rem; letter-spacing: .08em; color: #5a4826;
-  border-left: 1px dashed #8a744a66; padding-left: 10px; }
-.cf-seen b { font-size: .86rem; color: #241708; }
-.cf-stats { flex: none; display: flex; gap: 8px; align-items: center; }
 .pcard.cfile .stat { display: flex; gap: 4px; align-items: center; }
 .pcard.cfile .stat-ico { width: 14px; height: 14px; opacity: .8; }
 .pcard.cfile .stat-ico svg { width: 14px; height: 14px; }
 .pcard.cfile .stat-val { font-size: .84rem; font-weight: bold; line-height: 1; color: #241708; }
 .pcard.cfile .stat-lbl { font-size: .44rem; letter-spacing: .12em; color: #7a6236; }
-.cf-fuse { flex: none; display: flex; align-items: center; gap: 2px; padding: 3px 6px;
-  background: rgba(36,23,8,.08); border: 1px solid #8a744a55; border-radius: 3px; }
-.cf-fuse-lbl { font-size: .44rem; letter-spacing: .14em; color: #7a6236; margin-right: 3px; }
-.cf-fuse i { width: 7px; height: 10px; border-radius: 1px; background: #c9bd98;
-  border: 1px solid #8a744a66; }
-.cf-fuse i.lit { background: linear-gradient(180deg, #e8a020, #c05a1a); border-color: #7a3a10; }
-.cf-fuse i.hot { border-color: #a03a1a88; }
-.cf-fuse i.lit.hot { background: linear-gradient(180deg, #e05030, #a01818); box-shadow: 0 0 5px rgba(210,60,30,.6); }
-.cf-flags { flex: none; display: flex; gap: 6px; align-items: center; }
 .cf-chip { width: 16px; height: 16px; opacity: .75; }
 .cf-chip svg { width: 16px; height: 16px; }
 .cf-stamp { font-size: .56rem; font-weight: bold; letter-spacing: .1em; padding: 2px 6px;
@@ -2464,9 +2059,6 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
     0 1px 3px rgba(0,0,0,.4);
   text-shadow: 0 1px 0 rgba(255,246,220,.6); }
 .cf-archived { color: #241708; background: rgba(36,23,8,.12); }
-.cf-burst { color: #7a3a10; }
-.cf-pull { flex: none; font-size: .5rem; letter-spacing: .12em; color: #7a6236; opacity: 0; transition: opacity .16s; }
-.pcard.cfile:hover .cf-pull { opacity: .8; }
 .pcard.cfile.terminated { filter: grayscale(.7) brightness(.8); }
 .pcard.cfile.active-turn { box-shadow: 0 0 0 2px var(--amber-400), 0 2px 5px rgba(0,0,0,.4); }
 .pcard.cfile.targetable { box-shadow: 0 0 0 2px var(--wanted), 0 2px 5px rgba(0,0,0,.4); }
@@ -2484,15 +2076,6 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
   border-left: 3px solid var(--era, #8a744a); color: #241708; }
 .panel-detail.case-sheet .pd-card.delivered { background: rgba(255,250,235,.4); }
 .panel-detail.case-sheet .pd-period { color: #241708; }
-.cs-formhead { border-bottom: 2px solid #241708; padding-bottom: 7px; margin-bottom: 8px; }
-.cs-row1 { display: flex; justify-content: space-between; font-size: .58rem;
-  letter-spacing: .14em; color: #7a6236; margin-bottom: 5px; }
-.cs-caseno { color: #a02818; font-weight: bold; }
-.cs-row2 { display: flex; align-items: center; gap: 8px; font-size: .8rem; margin-bottom: 5px; }
-.cs-subject b { letter-spacing: .05em; }
-.cs-seen { margin-left: auto; font-size: .68rem; color: #5a4826; }
-.cs-row3 { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: .6rem; }
-.cs-field { border: 1px solid #8a744a66; padding: 2px 7px; border-radius: 2px; background: rgba(36,23,8,.05); }
 .cs-stamp { font-size: .6rem; font-weight: bold; letter-spacing: .12em; padding: 2px 7px;
   border: 2px solid currentColor; border-radius: 3px; transform: rotate(-5deg); }
 .cs-archived { color: #241708; }
@@ -2542,10 +2125,6 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
 .do-coins i { width: 13px; height: 13px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #f2d98a, #c9a23c 60%, #8a6a1a); border: 1px solid #6a4a12;
   margin-left: calc(var(--k) * -3px); }
-.do-cpseals { flex: 1 1 auto; display: flex; gap: 4px; }
-.do-cpseals i { width: 15px; height: 15px; border-radius: 50%; border: 1.5px dashed #8a744a88; }
-.do-cpseals i.on { border-style: solid; border-color: #6a4a12;
-  background: radial-gradient(circle at 40% 35%, #e8c05a, #b8862a); box-shadow: 0 0 4px rgba(200,150,50,.4); }
 .do-remarks { font-size: .66rem; line-height: 1.55; color: #3a2c16; font-style: italic; }
 .panel-detail.dossier .pd-card { margin-bottom: 6px; }
 .panel-detail.dossier .pd-desc { font-size: .64rem; }
@@ -2574,26 +2153,6 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
 .da-tag { margin-top: 6px; padding-top: 4px; border-top: 1px solid #24170833;
   font-family: var(--f-mono); font-size: .46rem; letter-spacing: .16em; color: #a02818; text-align: center; }
 .do-attach:hover { box-shadow: 3px 6px 16px rgba(0,0,0,.55); filter: brightness(1.04); }
-.do-paper { position: fixed; z-index: 10001; width: 300px; padding: 12px 14px;
-  background: linear-gradient(178deg, #f4ecd8, #e8ddc0); color: #241708;
-  border: 1px solid #8a744a; box-shadow: 0 12px 30px rgba(0,0,0,.6);
-  font-family: Georgia, serif; transform: rotate(-1.2deg); }
-.dp-masthead { text-align: center; font-weight: bold; font-size: 1.15rem; letter-spacing: .12em;
-  border-bottom: 3px double #241708; padding-bottom: 3px; }
-.dp-dateline { text-align: center; font-size: .5rem; letter-spacing: .14em; color: #5a4826;
-  padding: 3px 0; border-bottom: 1px solid #24170866; }
-.dp-rule { height: 2px; background: #241708; margin: 5px 0 7px; }
-.dp-head { font-weight: bold; font-size: 1rem; line-height: 1.15; text-transform: uppercase; }
-.dp-sub { font-style: italic; font-size: .66rem; color: #3a2c16; margin: 5px 0 8px; }
-.dp-body { display: flex; gap: 10px; }
-.dp-photo { flex: none; width: 74px; height: 82px; border: 1px solid #241708; position: relative;
-  background: repeating-linear-gradient(0deg, #cfe6e2 0 2px, #c2dad6 2px 4px);
-  display: flex; align-items: center; justify-content: center; filter: grayscale(.35) contrast(1.1); }
-.dp-photo span { font-weight: bold; font-size: 1.4rem; color: color-mix(in srgb, var(--seat) 70%, #123); }
-.dp-cols { flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; padding-top: 2px; }
-.dp-cols i { height: 3px; background: #241708; opacity: .28; border-radius: 1px; }
-.dp-cols i:nth-child(3n) { width: 82%; } .dp-cols i:nth-child(4n) { width: 91%; }
-
 /* the full-edition reader (attachment click) */
 .bn-read { position: fixed; inset: 0; z-index: 10002; display: flex; align-items: center;
   justify-content: center; background: rgba(8,8,14,.5); opacity: 0; transition: opacity .25s ease; }
@@ -2664,12 +2223,7 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
 .bd-id { flex: 1 1 auto; min-width: 0; }
 .bd-name { font-weight: bold; font-size: .8rem; letter-spacing: .03em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bd-role { font-size: .5rem; letter-spacing: .1em; color: #55676e; margin: 2px 0 4px; }
-.bd-role b { font-size: .68rem; color: #1c2428; }
-.bd-barcode { height: 9px; width: 84%;
-  background: repeating-linear-gradient(90deg, #1c2428 0 2px, transparent 2px 4px, #1c2428 4px 5px, transparent 5px 9px); opacity: .8; }
 .bd-flags { flex: none; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
-.bd-stats { display: flex; gap: 10px; margin-bottom: 6px; }
 .pcard.cfolio .stat { display: flex; gap: 4px; align-items: center; }
 .pcard.cfolio .stat-ico { width: 13px; height: 13px; opacity: .8; }
 .pcard.cfolio .stat-ico svg { width: 13px; height: 13px; }
@@ -2680,10 +2234,6 @@ body.cam-on #rucksack-zone, body.cam-on #drawer-zone, body.cam-on #log-zone { po
 .bd-fuse i { flex: 1 1 0; height: 9px; border-radius: 1px; background: #b8c2c0; border: 1px solid #7a868e88; }
 .bd-fuse i.lit { background: linear-gradient(180deg, #e8a020, #c05a1a); border-color: #7a3a10; }
 .bd-fuse i.lit.hot { background: linear-gradient(180deg, #e05030, #a01818); box-shadow: 0 0 5px rgba(210,60,30,.6); }
-.bd-assets { display: flex; align-items: center; gap: 4px; }
-.bd-assets span { font-size: .44rem; letter-spacing: .14em; color: #55676e; margin-right: 2px; }
-.bd-assets i { width: 12px; height: 12px; border-radius: 50%; border: 1px dashed #7a868e; background: transparent; }
-.bd-assets i.on { border-style: solid; background: color-mix(in srgb, var(--era) 70%, #fff2); border-color: color-mix(in srgb, var(--era) 70%, #241708); }
 
 .csheet { position: relative; z-index: 1; margin: -4px 5px 0; padding: 12px 9px 9px;
   background: linear-gradient(178deg, #e9dcbc, #ddcda6);
@@ -2728,7 +2278,6 @@ body.cam-on #players-zone { padding-top: 50px; }
 body.cam-on #market-zone { padding-top: 50px; }
 
 body.cam-on .drawer-body { flex-direction: column; overflow-y: auto; }
-body.cam-on .drw-cabinet { flex: none; }
 body.cam-on #market-zone .market-body { overflow-y: auto; }
 body.cam-on #machine-zone, body.cam-on #dice-zone { font-size: .86em; }
 body.cam-on #machine-zone .machine-body, body.cam-on #dice-zone .dice-body { overflow-y: auto; }
@@ -2747,47 +2296,6 @@ body.cabin-on #machine-zone h3, body.cabin-on #dice-zone h3 { display: none; }
   flex: 1 1 auto; min-height: 0; display: flex; gap: 16px;
   padding: 10px 16px 14px; overflow: hidden;
 }
-/* --- the filing cabinet: 3 period drawers side by side --------------- */
-.drw-cabinet { flex: 2 1 0; display: flex; gap: 12px; min-width: 0; }
-.drw-period {
-  flex: 1 1 0; display: flex; flex-direction: column; min-width: 0;
-  border: 1px solid var(--line); border-top: 2px solid var(--era, #b6a577);
-  border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--era) 6%, var(--ink-850));
-  padding: 8px 10px;
-}
-.drw-period.done { background: color-mix(in srgb, var(--era) 15%, var(--ink-850)); }
-.drw-phead {
-  display: flex; align-items: baseline; gap: 7px; margin-bottom: 9px;
-  font-family: var(--f-mono); text-transform: uppercase; white-space: nowrap;
-}
-.drw-dot { color: var(--era); font-size: .8rem; line-height: 1; }
-.drw-pname { font-size: .72rem; letter-spacing: .1em; color: var(--text-soft); }
-.drw-period.done .drw-pname { color: var(--text); }
-.drw-peras { font-size: .5rem; letter-spacing: .05em; color: var(--text-mute);
-  overflow: hidden; text-overflow: ellipsis; }
-.drw-pcount {
-  margin-left: auto; font-size: .58rem; color: var(--era);
-  border: 1px solid color-mix(in srgb, var(--era) 50%, transparent);
-  border-radius: 999px; padding: 1px 8px; line-height: 1.4;
-}
-.drw-folders {
-  flex: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-  gap: 6px; align-content: start; padding-top: 2px;
-}
-/* the filing shelf below the index: delivered artifacts dock here */
-.drw-filed {
-  flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 10px; padding-top: 9px;
-  border-top: 1px dashed var(--line-soft); display: flex; flex-direction: column; gap: 6px;
-}
-.drw-empty-shelf { margin: auto; color: var(--text-dim); font-size: .58rem; font-style: italic; opacity: .5; }
-.drw-filed-card {
-  display: flex; align-items: center; gap: 9px; padding: 6px 9px;
-  border: 1px solid var(--line); border-left: 3px solid var(--era); border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--era) 12%, var(--ink-800));
-}
-.dfc-c { font-family: var(--f-mono); font-size: .56rem; color: var(--era); flex: none; min-width: 28px; }
-.dfc-n { font-size: .64rem; color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* --- a folder tab --------------------------------------------------- */
 .drw-folder {
   position: relative; display: flex; align-items: center; justify-content: center;
@@ -2812,31 +2320,11 @@ body.cabin-on #machine-zone h3, body.cabin-on #dice-zone h3 { display: none; }
 .drw-folder:hover, .drw-folder:focus-visible {
   transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0,0,0,.45); outline: none; z-index: 2;
 }
-.drw-flag {
-  position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; border-radius: 50%;
-  background: var(--era); box-shadow: 0 0 5px var(--era);
-}
 /* --- the 3 reward-contract folders ---------------------------------- */
-.drw-rewards {
-  flex: 1 1 0; display: flex; flex-direction: column; min-width: 210px;
-  border-left: 1px solid var(--line-soft); padding-left: 16px;
-}
-.drw-rewards-title {
-  font-family: var(--f-mono); font-size: .6rem; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--text-mute); margin-bottom: 9px;
-}
-.drw-contracts { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; }
 .drw-contract {
   border: 1px solid var(--line); border-left: 3px solid var(--era); border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--era) 7%, var(--ink-850)); padding: 7px 10px;
 }
-.drw-chead {
-  font-family: var(--f-display); font-size: .74rem; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--text-soft); margin-bottom: 4px;
-}
-.drw-outcomes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
-.drw-outcomes li { display: flex; gap: 8px; font-size: .58rem; color: var(--text-mute); line-height: 1.3; }
-.drw-outcomes li b { color: var(--era); flex: none; min-width: 18px; font-family: var(--f-mono); }
 
 /* ======================================================================
    JUICE KERNEL, hit-pause, impact flash, universal micro-feedback
@@ -3100,7 +2588,6 @@ body.cam-on .rucksack-zone .ruck-vouchers {
   box-shadow: 0 8px 24px rgba(0,0,0,.6), inset 0 1px 0 rgba(160,200,235,.08);
 }
 .mch-travel .dd-title { color: #9fd8cf; }
-.mch-travel .travel-ctl { display: flex; align-items: center; gap: 12px; flex: 1 1 auto; }
 .mch-travel .dd-confirm { border-color: #2fa3a3; color: #9fe8de;
   background: linear-gradient(180deg, #123b3b, #0a2626); }
 .mch-travel .dd-confirm:hover { box-shadow: 0 0 0 2px rgba(47,163,163,.4); }
@@ -3188,42 +2675,6 @@ body.cam-on .rucksack-zone .ruck-vouchers {
 
 
 /* ═══ BREAKING NEWS, the Temporal Herald (noir broadsheet) ═══ */
-/* HELA retrieves the news onto your VISOR (top-left, over the maleta), a cyan
-   hologram you can see through, not a paper thrown over the board. */
-.breaking-news { position: fixed; top: 58px; left: 20px; z-index: 60; pointer-events: none;
-  transform: translateX(-26px) scale(.97); opacity: 0;
-  transition: transform .55s cubic-bezier(.2,.9,.3,1), opacity .4s ease; }
-.breaking-news.on { transform: translateX(0) scale(1); opacity: 1; }
-.hb-frame { position: relative; width: 372px; padding: 8px 10px 9px;
-  background: linear-gradient(158deg, rgba(20,54,52,.34), rgba(8,18,20,.22));
-  border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .5); border-radius: 4px;
-  box-shadow: 0 12px 42px rgba(0,0,0,.5), inset 0 0 34px rgb(var(--vz-rgb, 102 240 200) / .07);
-  backdrop-filter: blur(1.4px); -webkit-backdrop-filter: blur(1.4px);
-  color: #cffdf1; font-family: var(--f-mono, monospace); }
-.hb-frame::before, .hb-frame::after { content:""; position:absolute; width:15px; height:15px;
-  border:2px solid var(--vz,#66f0c8); opacity:.85; }
-.hb-frame::before { left:-1px; top:-1px; border-right:0; border-bottom:0; }
-.hb-frame::after  { right:-1px; bottom:-1px; border-left:0; border-top:0; }
-.hb-tele { display:flex; align-items:center; gap:7px; font-size:.5rem; letter-spacing:.16em; text-transform:uppercase; }
-.hb-sigil { width:15px; height:15px; flex:0 0 15px; color:var(--vz,#66f0c8); }
-.hb-sigil svg { width:100%; height:100%; }
-.hb-src { color:var(--vz,#66f0c8); font-weight:700; }
-.hb-status { margin-left:auto; color:var(--vz-hot, #eafff8); border:1px solid rgb(var(--vz-rgb, 102 240 200) / .4);
-  padding:1px 6px; border-radius:2px; animation:hbBlink 1.5s steps(1) infinite; }
-@keyframes hbBlink { 50% { opacity:.35; } }
-.hb-say { font-size:.66rem; line-height:1.36; font-style:italic; color: var(--vz-text, #c6f2e6);
-  margin:6px 3px 8px; letter-spacing:.005em; text-shadow:0 0 8px rgb(var(--vz-rgb, 102 240 200) / .35); }
-.hb-clip { position:relative; }
-.hb-clip .bn-paper { width:100%; box-shadow:0 3px 12px rgba(0,0,0,.5);
-  /* translucent stock so the maleta shows through, the ink stays opaque + readable */
-  background:
-    repeating-linear-gradient(0deg, rgba(90,69,38,.05) 0 2px, transparent 2px 4px),
-    rgba(239,228,196,.86); }
-.hb-scan { position:absolute; inset:0; pointer-events:none; border-radius:2px;
-  background:repeating-linear-gradient(0deg, rgb(var(--vz-rgb, 102 240 200) / .06) 0 1px, transparent 1px 3px);
-  mix-blend-mode:screen; opacity:.5; }
-.hb-foot { font-size:.46rem; letter-spacing:.2em; color:var(--vz-dim,#2f8579);
-  margin-top:7px; text-align:center; }
 /* richer clipping details */
 .bn-rule { height:2px; border-top:1px solid #241c10; border-bottom:1px solid #241c10; margin:2px 0 0; }
 .bn-kick { font-size:7px; letter-spacing:2px; text-transform:uppercase; color:#7a5a2a;
@@ -3257,10 +2708,6 @@ body.cam-on .rucksack-zone .ruck-vouchers {
 .log-line.log-breaking { background: rgba(201,164,92,.14); border-left: 2px solid #c9a45c;
   padding-left: 4px; cursor: help; }
 .log-star { margin-right: 5px; vertical-align: -1px; }
-.bn-flyout { position: fixed; z-index: 80; opacity: 0; pointer-events: none;
-  transform: rotate(-1deg) scale(.9); transition: opacity .18s ease; }
-.bn-flyout.on { opacity: 1; }
-.bn-flyout .bn-paper { width: 320px; }
 
 /* ═══ DECISION BEACON, a beckoning arrow toward a waiting decision ═══ */
 .decision-beacon { position: fixed; z-index: 58; display: flex; align-items: center; gap: 9px;
@@ -3285,8 +2732,7 @@ body.cam-on .rucksack-zone .ruck-vouchers {
 .decision-beacon.dir-down .bc-arrow { transform: rotate(90deg); }
 @keyframes bcpulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
 
-@media (prefers-reduced-motion: reduce) { .breaking-news { transition: opacity .3s ease; }
-  .decision-beacon .bc-arrow { animation: none; } }
+@media (prefers-reduced-motion: reduce) {   .decision-beacon .bc-arrow { animation: none; } }
 
 /* self vitals pulse on change (matches rival stat ticks) */
 .vital-ekg.vital-up { animation: vitalUp .7s ease-out; }
@@ -3310,20 +2756,14 @@ body.cabin-on #hull { position: fixed; left: 50%; top: 50%;
   /* fit-scale: the hull is authored on the same 2133x1200 plane as .cam-world and
      scales with it, px inside are plane-px. fixed descendants resolve against
      this box (transform = containing block). */
-body.cabin-on #hull .hull-shadow { position: absolute; inset: 0; box-shadow: inset 0 0 80px rgba(0,0,0,.7); }
 #hull .hull-rail { position: absolute; top: 0; left: 0; right: 0; height: var(--hullT, 56px);
   display: flex; align-items: flex-start; gap: 16px; padding: 0 22px; pointer-events: auto;
   background: linear-gradient(180deg, #26292d, #191c1f 70%, #101215);
   border-bottom: 2px solid #4a3e28; box-shadow: 0 3px 14px rgba(0,0,0,.6), inset 0 -3px 6px rgba(0,0,0,.4); }
 #hull .hull-rail::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 4px;
   background: linear-gradient(180deg, #8a6f3c, #5a452a); opacity: .85; pointer-events: none; }
-#hull .hull-rail-spacer { flex: 1; }
-#hull .hull-seam { width: 1.5px; height: 40px; margin-top: 8px;
-  background: linear-gradient(180deg, transparent, #3a3226 25%, #3a3226 75%, transparent); opacity: .7; }
 #hull .hull-chrono { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 4px; }
 #hull .hull-glabel { font-size: .46rem; letter-spacing: .16em; color: #8a744a; }
-#hull .hull-telegraph { margin-top: 2px; pointer-events: none;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,.5)); }
 #hull .cb-lever { transition: transform .6s cubic-bezier(.5,-.2,.3,1.25); }
 #hull .cb-phlab { fill: #9a8354; } #hull .cb-phlab.on { fill: #ffd98a; }
 #hull .cb-jewel { fill: #3a2320; opacity: .5; }
@@ -3431,17 +2871,7 @@ body.vz-crit #hull .vz-cnr { border-color:var(--vz-warn); box-shadow:0 0 12px rg
   border-top:1.5px solid rgb(var(--vz-hot-rgb, 160 255 230) / .55); border-bottom:1.5px solid rgb(var(--vz-rgb, 102 240 200) / .3);
   -webkit-mask:linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent); }
 #hull .vz-holo-row { display:flex; align-items:center; gap:11px; }
-#hull .vz-tube { display:flex; flex-direction:column-reverse; gap:2px; width:27px; padding:4px;
-  border:1px solid var(--vz); border-radius:5px; background:rgba(6,26,22,.32);
-  box-shadow:inset 0 0 9px rgb(var(--vz-rgb, 102 240 200) / .12); }
-#hull .vz-rung { position:relative; height:8px; border-radius:2px; background:rgb(var(--vz-rgb, 102 240 200) / .1);
-  box-shadow:inset 0 0 0 1px rgb(var(--vz-rgb, 102 240 200) / .2); transition:background .25s ease, box-shadow .25s ease; }
 /* the CRITICAL LINE, at or below 6 energy you are in danger (fixed, any player count) */
-#hull .vz-rung:nth-child(6)::after { content:""; position:absolute; left:-5px; right:-5px; top:-2px; height:1px;
-  background:var(--vz-warn); opacity:.75; box-shadow:0 0 5px var(--vz-warn); }
-#hull .vz-rung.f { background:var(--vz); box-shadow:0 0 5px var(--vz); }
-#hull .vz-rung.head { background:var(--vz-hot); box-shadow:0 0 10px var(--vz); }
-#hull .vz-rung.low { background:var(--vz-warn); box-shadow:0 0 7px var(--vz-warn); }
 #hull .vz-holo-lab { font-size:.48rem; letter-spacing:.24em; color:var(--vz-dim); }
 #hull .vz-holo-num { display:flex; align-items:baseline; font-size:2.5rem; line-height:.84; font-weight:700;
   color:var(--vz-hot); text-shadow:0 0 16px var(--vz); }
@@ -3471,7 +2901,6 @@ body.cabin-on .phase-banner { font-family:var(--f-mono,monospace); font-weight:7
 body.cabin-on .phase-banner::before { content:"\25B8 "; color:var(--vz,#66f0c8); }
 body.cabin-on .phase-banner::after { content:" \25C2"; color:var(--vz,#66f0c8); }
 body.cabin-on .phase-banner .b-sub { color:var(--vz,#66f0c8); text-shadow:0 0 10px rgb(var(--vz-rgb, 102 240 200) / .5); }
-body.cabin-on .toast-rise { font-family:var(--f-mono,monospace); letter-spacing:.08em; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    HELA, the helmet assistant. Every notification with NO real-object source
@@ -3527,22 +2956,6 @@ body.cabin-on .prompt .prompt-title { font-family:var(--f-mono,monospace); color
 body.cabin-on .prompt .prompt-title .vz-sigil { width:23px; height:23px; flex:0 0 23px; }
 body.cabin-on .prompt .prompt-sub { color:var(--vz); opacity:.92; }
 
-/* ── TUTORIAL -> Hela teaches (the future guide) ── */
-body.cabin-on .tutorial-pop { background:linear-gradient(180deg, rgba(10,42,36,.93), rgba(6,22,19,.9));
-  border:1px solid rgb(var(--vz-rgb, 102 240 200) / .5); box-shadow:0 0 30px rgb(var(--vz-rgb, 102 240 200) / .2), 0 14px 40px rgba(0,0,0,.55);
-  color:var(--vz); font-family:var(--f-mono,monospace); }
-body.cabin-on .tutorial-pop .tut-head { color:var(--vz-hot); font-family:var(--f-mono,monospace); align-items:center; gap:9px; }
-body.cabin-on .tutorial-pop .tut-ico.vz-sigil { width:28px; height:28px; flex:0 0 28px; color:var(--vz); }
-.tut-who { font:700 .44rem var(--f-mono,monospace); letter-spacing:.3em; color:var(--vz-dim); }
-.tut-title { font-size:1rem; }
-body.cabin-on .tutorial-pop .tut-body { color:var(--vz); opacity:.92; }
-body.cabin-on .tutorial-pop .tut-body b { color:var(--vz-hot); }
-body.cabin-on .tutorial-pop .tut-hint { color:var(--vz-dim); }
-body.cabin-on .tutorial-pop .tut-close { color:var(--vz-dim); }
-body.cabin-on .tutorial-pop .tut-close:hover { color:var(--vz-hot); }
-
-/* ── MARKET HINT -> Hela's contextual coaching ── */
-body.cabin-on .ma-hint { color:var(--vz); font-family:var(--f-mono,monospace); text-shadow:0 0 6px rgb(var(--vz-rgb, 102 240 200) / .35); }
 
 /* ── NO ANONYMOUS LEGENDS. The drawer's old "Temporal Receptor 0/3" heading was
    text with no real-object source, so it is GONE, Hela reports it on arrival
@@ -3775,10 +3188,6 @@ body.vz-crit #hull .vz-ph.on::after { background:#ff8a72 !important; box-shadow:
   body.cabin-on #hull-console .paradox-warn.pw-crt .pw-sym { animation:none; } }
 
 
-
-
-
-
 /* ════════════════════════════════════════════════════════════════════════
    THE MANOPLA (cabin v3), the machine is the traveler's gauntleted forearm
    resting at the desk's bottom-left. Poses: REST on the desk scene; PARK to
@@ -3792,18 +3201,16 @@ body.vz-crit #hull .vz-ph.on::after { background:#ff8a72 !important; box-shadow:
    buttons on the chassis. Nothing floats, nothing trembles, no projection card.
    Rests on the desk scene; slides down (park) on the others. (MANOPLA-DESIGN.md)
    ════════════════════════════════════════════════════════════════════════ */
-/* O TAMANHO DO INSTRUMENTO, num numero so. O braco e o console sao dois
-   elementos irmaos, entao os dois crescem pela MESMA ancora: o canto inferior
-   esquerdo do plano 2133x1200. Na caixa do braco esse ponto e 830px 466px, na
-   do console e 30px 466px (mesma altura, porque as duas caixas terminam
-   coladas no fundo do plano). Escalar pelos dois cantos iguais e o que impede
-   o console de deslizar por cima da arte. */
+/* The instrument's size, in one number. The arm and the console are siblings, so
+   both grow from the SAME anchor: the bottom-left corner of the 2133x1200 plane. In the
+   arm's box that point is 830px 466px, in the console's 30px 466px. Scaling both from
+   the same corner keeps the console from sliding over the art. */
 :root { --mano-scale: 1.15; }
 #hull .hull-manopla { position: fixed; left: -830px; bottom: -434px; width: 1580px; height: 900px;
   pointer-events: auto; z-index: 6; transition: transform .5s cubic-bezier(.3,.9,.3,1);
   transform-origin: 830px 466px; transform: scale(var(--mano-scale)); }
-/* o recolher desliza em px do plano, entao ele tambem cresce, senao a sobra
-   que fica espiando muda de tamanho junto com a escala */
+/* the park slide is in plane px, so it scales too, or the part left peeking out
+   would change size with the scale */
 #hull .hull-manopla[data-pose="park"] { transform: translateY(calc(274px * var(--mano-scale))) scale(var(--mano-scale)); }
 #hull .mano-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 #hull .mano-svg * { pointer-events: visiblePainted; }
@@ -3815,14 +3222,10 @@ body.vz-crit #hull .vz-ph.on::after { background:#ff8a72 !important; box-shadow:
 #hull .mano-gem { transition: opacity .18s ease; }
 #hull .mano-gem.gem-lit { filter: drop-shadow(0 0 4px currentColor); }
 #hull #mano-screen { transition: filter .3s ease; }
-/* ══ O BRILHO DA TELA SAIU DO FILTRO ══════════════════════════════════════
-   `filter` numa peca do SVG obriga o navegador a rasterizar aquela peca e
-   depois processar a rasterizacao, e este brilho fica LIGADO durante a fase
-   inteira de alocacao, que e onde o jogador mais mexe.
-   Bisseccao: o casco e o braco continuam sendo o maior gasto unico da tela,
-   485ms num quadro em que o segundo colocado devolve 400.
-   O mesmo halo feito por sombra de caixa nao rasteriza nada: a placa de video
-   resolve na composicao. O olho ve a mesma tela acesa. */
+/* The screen glow is a box-shadow, not a filter. A `filter` on an SVG part makes
+   the browser raster that part and then process the raster, and this glow stays on
+   for the whole allocation phase, when the player moves the most. A box-shadow halo
+   is resolved by the GPU at composite time and looks the same. */
 body.cabin-on.allocating #hull #mano-screen,
 body.cabin-on.gen-live #hull #mano-screen {
   box-shadow: 0 0 10px 2px rgba(95,208,138,.42),
@@ -3858,11 +3261,6 @@ body.cabin-on #hull-console .dice-cols { display: block; }
 body.cabin-on #hull-console .dice-col { position: static; display: contents; }
 body.cabin-on #hull-console .dice-pool-label { display: none; }
 body.cabin-on #hull-console .vitals-wrap { display: none !important; }
-/* REVERTIDO. Eu fiz a coluna de vitais aparecer no leilao lendo um item
-   antigo da lista, e o resultado foi uma barra suja com ouro e ponto de
-   vitoria pendurada no canto. O item pedia VIDA E ESCUDO, e o que eu liguei
-   foi o bloco inteiro de vitais, que carrega tudo. Enquanto nao houver um
-   desenho proprio para vida e escudo aqui, e melhor nao ter nada. */
 /* THE MATRIX on the screen glass (green phosphor grid), always visible, the
    single source of truth; interactive only during allocation */
 body.cabin-on #hull-console .matrix-wrap { position: absolute; left: 262px; top: 188px;
@@ -3986,7 +3384,6 @@ body.cabin-on #players-zone { z-index: 2; }
 /* badge readability pass */
 body.cabin-on .cb-grid { display: block; position: relative; height: 100%; }
 body.cabin-on .bd-name { font-size: .95rem; letter-spacing: .02em; }
-body.cabin-on .bd-role { font-size: .58rem; color: #3c4440; }
 body.cabin-on .badge .stat b, body.cabin-on .bd-stats b { font-size: 1.05rem; }
 body.cabin-on .cs-head { font-size: .6rem; }
 body.cabin-on .cs-no { font-size: .62rem; }
@@ -4042,94 +3439,6 @@ body.cabin-on .hull-visor.visor-hit::after { animation: visorHit .9s ease-out; }
   clip-path: polygon(0 1.2%, 3% 0, 97% .8%, 100% 2.2%, 99.7% 99%, 96% 100%, 3% 100%, .3% 98.8%);
 }
 .badge.fd-dossier::before, .badge.fd-dossier::after { display: none !important; }
-.badge.fd-dossier .fd-spine {
-  position: absolute; left: 0; top: 0; bottom: 0; width: 14px; z-index: 3;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--seat) 80%, #201a10) 0 70%, color-mix(in srgb, var(--seat) 55%, #201a10) 100%);
-  box-shadow: 2px 0 4px rgba(0,0,0,.25);
-}
-.badge.fd-dossier .fd-spine::after { content: ""; position: absolute; top: 6px; bottom: 6px; left: 5px;
-  border-left: 2px dashed rgba(20,14,6,.55); }
-.badge.fd-dossier .fd-body { position: relative; z-index: 2; padding: 9px 13px 20px 22px; }
-.fd-hd { display: flex; justify-content: space-between; align-items: baseline;
-  font-size: .5rem; letter-spacing: .12em; font-weight: 700; color: #4a3826; }
-.fd-hd .fd-no { color: #5a2418; }
-.fd-idrow { display: flex; gap: 11px; margin-top: 8px; }
-.fd-photo { width: 54px; height: 62px; position: relative; flex: none;
-  background: linear-gradient(160deg, #453a2b, #2b2315); border: 2px solid #8d7850;
-  display: flex; align-items: center; justify-content: center; }
-.fd-photo b { font: 700 1.25rem/1 var(--f-mono, monospace); letter-spacing: 1px;
-  color: color-mix(in srgb, var(--seat) 78%, #f4e2ba); }
-.fd-photo em { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center;
-  font: 700 .36rem/1 var(--f-mono, monospace); font-style: normal; letter-spacing: .16em; color: #8d7850; }
-.fd-photo::before, .fd-photo::after { content: ""; position: absolute; width: 10px; height: 10px; background: #3a2c18; }
-.fd-photo::before { top: -5px; left: -5px; clip-path: polygon(0 0, 100% 0, 0 100%); }
-.fd-photo::after { bottom: -5px; right: -5px; clip-path: polygon(100% 100%, 100% 0, 0 100%); }
-.fd-fields { flex: 1; min-width: 0; }
-.fd-f { display: flex; gap: 6px; align-items: baseline; margin-top: 3px; }
-.fd-f label { font-size: .4rem; letter-spacing: .1em; color: #5d4a30; font-weight: 700; width: 52px; flex: none; }
-.fd-f b { font-size: .78rem; letter-spacing: .04em; border-bottom: 1px solid rgba(70,50,28,.4); flex: 1;
-  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fd-f b.roman { font-size: .9rem; }
-.fd-f small { font-size: .56rem; font-weight: 400; letter-spacing: .03em; color: #5a4630; }
-.fd-ledger { margin-top: 9px; border-top: 1px solid #5d4a30; border-bottom: 1px solid #5d4a30; display: flex; }
-.fd-lg { flex: 1; padding: 4px 8px 3px; border-right: 1px dotted rgba(93,74,48,.6); }
-.fd-lg:last-child { border-right: none; }
-.fd-lg .stat { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; }
-.fd-lg .stat .stat-ico { width: 11px; height: 11px; opacity: .5; flex: none; }
-.fd-lg .stat .stat-ico svg { width: 100%; height: 100%; }
-.fd-lg .stat > div { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 5px; flex: 1; justify-content: space-between; }
-.fd-lg .stat-lbl { font-size: .4rem; letter-spacing: .12em; font-weight: 700; color: #5d4a30; }
-.fd-lg .stat-val { font-size: 1.15rem; line-height: 1; font-weight: 700;
-  color: #1d5c33; text-shadow: 0 0 5px rgba(80,255,140,.5), 0 0 1px rgba(80,255,140,.9); }
-.fd-sec { font-size: .42rem; font-weight: 700; letter-spacing: .16em; color: #5d4a30; margin-top: 9px; }
-.fd-slips { display: flex; gap: 7px; margin-top: 4px; }
-.fd-slip { flex: 1; min-width: 0; position: relative; padding: 4px 7px 5px; cursor: default;
-  background: linear-gradient(170deg, #cbbb96, #bfa87c); border-left: 4px solid var(--era, #8a6a3c);
-  transform: rotate(-.6deg); box-shadow: 1px 1px 3px rgba(0,0,0,.35); }
-.fd-slip + .fd-slip { transform: rotate(.5deg); }
-.fd-slip .fd-slip-nm { font-weight: 700; letter-spacing: .03em; font-size: .58rem;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fd-slip .fd-slip-kd { color: #5d4a30; font-size: .42rem; letter-spacing: .08em; }
-.fd-slip .fd-slip-mt { font-size: .5rem; margin-top: 2px; color: #43331f; display: flex; align-items: center; gap: 2px; }
-.fd-slip .fd-slip-mt svg { width: 9px; height: 9px; }
-.fd-slip .fd-staple { position: absolute; top: -3px; left: 12px; width: 12px; height: 4px;
-  background: #6e6a5e; box-shadow: 0 1px 1px rgba(0,0,0,.5); }
-.fd-slip.empty { border-left-color: rgba(93,74,48,.4); color: #7d6742; font-style: italic;
-  display: flex; align-items: center; justify-content: center; font-size: .5rem; transform: none;
-  background: repeating-linear-gradient(45deg, rgba(93,74,48,.06) 0 6px, transparent 6px 12px),
-    linear-gradient(170deg, #c0ae84, #b49c70); }
-.fd-slip.mc.targetable { cursor: pointer; outline: 2px solid var(--era); outline-offset: 1px; animation: fdTgt 1s ease-in-out infinite; }
-@keyframes fdTgt { 50% { outline-color: #fff; } }
-.fd-remark { margin-top: 9px; font-size: .5rem; color: #55432a; letter-spacing: .02em; }
-.fd-seals { display: flex; gap: 14px; margin-top: 5px; align-items: center; }
-.fd-seal { display: flex; align-items: center; gap: 6px; font-size: .46rem; font-weight: 700; letter-spacing: .08em; }
-.fd-seal .fd-wax { width: 17px; height: 17px; border-radius: 47% 53% 50% 50% / 52% 48% 52% 48%;
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.18) 0 14%, transparent 32%),
-    radial-gradient(circle at 50% 50%, var(--era) 0 62%, color-mix(in srgb, var(--era) 55%, #1a0f06) 100%);
-  box-shadow: 0 1px 2px rgba(0,0,0,.5), inset 0 0 0 3px rgba(0,0,0,.18); }
-.fd-seal.todo .fd-wax { background: none; border: 2px dotted rgba(93,74,48,.7); box-shadow: none; width: 14px; height: 14px; border-radius: 50%; }
-.fd-seal.todo { color: #7d6742; }
-.fd-stamp { position: absolute; z-index: 5; top: 58%; right: 16px; mix-blend-mode: multiply; text-align: center;
-  font: 900 .82rem/1 "Liberation Sans Narrow", "Arial Narrow", sans-serif; letter-spacing: .16em;
-  color: rgba(158,32,20,.85); border: 3px double rgba(158,32,20,.72); padding: 3px 8px 2px; transform: rotate(-8deg); }
-.fd-stamp small { display: block; font-size: .36rem; letter-spacing: .12em; margin-top: 2px; }
-.fd-stamp.fd-arch { color: rgba(70,70,74,.8); border-color: rgba(70,70,74,.7); top: 40%; }
-.fd-fuse { position: absolute; left: 22px; right: 16px; bottom: 0; height: 16px; z-index: 4;
-  display: flex; align-items: flex-end; gap: 0; }
-.fd-flabel { font: 700 .4rem/1 var(--f-mono, monospace); letter-spacing: .08em; color: #52422a; margin-right: 6px; align-self: center; }
-.fd-cells { display: flex; gap: 3px; align-items: flex-end; height: 100%; flex: 1; }
-.fd-cells i { flex: 1; height: 10px; position: relative; border: 1px solid rgba(74,58,32,.55); border-bottom: none; }
-.fd-cells i span { position: absolute; top: 1px; left: 0; right: 0; text-align: center; font: 700 .34rem/1 var(--f-mono, monospace); color: #6b5a38; }
-.fd-cells i.hot { border-color: rgba(150,40,25,.75); }
-.fd-cells i.hot span { color: #962819; }
-.fd-cells i.lit { height: 13px; border: none; background: linear-gradient(180deg, #211409 20%, #191009 100%);
-  clip-path: polygon(0 34%, 12% 10%, 28% 36%, 50% 6%, 68% 32%, 86% 12%, 100% 36%, 100% 100%, 0 100%); }
-.fd-cells i.lit span { display: none; }
-.fd-cells i.lit.last::after { content: ""; position: absolute; right: -2px; top: -1px; width: 6px; height: 6px; border-radius: 50%;
-  background: radial-gradient(circle, #ffb24d 0 25%, #e0561f 55%, rgba(120,30,10,0) 75%); filter: blur(.4px); }
-.fd-fcount { font: 700 .68rem/1 var(--f-mono, monospace); margin-left: 7px; align-self: center;
-  color: #1d5c33; text-shadow: 0 0 4px rgba(80,255,140,.5); }
-.fd-fcount.hotn { color: #8c2114; text-shadow: 0 0 4px rgba(255,90,40,.5); }
 /* card states re-expressed on paper */
 .pcard.cfolio.active-turn .badge.fd-dossier { box-shadow: 0 0 0 2px var(--amber-400), 0 3px 10px rgba(0,0,0,.5); }
 .pcard.cfolio.low-energy .badge.fd-dossier { filter: saturate(.9); }
@@ -4281,23 +3590,11 @@ body.cabin-on #timeline-rail::before { content: ""; position: absolute; left: -1
 /* contact shadows anchoring the desk objects to the surface */
 
 body.cabin-on #players-zone .pcard.cfolio { filter: drop-shadow(0 8px 12px rgba(0,0,0,.45)); }
-/* ══ A PECA MAIS CARA DA TELA ══════════════════════════════════════════
-   Bisseccao: apagar o casco e o braco devolve 83ms de um quadro de 206, mais
-   que qualquer outra coisa, mais que o leilao inteiro. E ele fica na tela o
-   tempo todo, entao esse preco e pago em toda cena do jogo.
-   O motivo e a sombra: drop-shadow num SVG de 1580x900 re-rasteriza o
-   desenho inteiro sempre que qualquer coisa em volta convida uma repintura.
-   `will-change` promove a arte a camada propria, e a sombra passa a ser
-   calculada uma vez e reaproveitada, em vez de refeita. O desenho e o mesmo,
-   pixel por pixel. */
-/* ══ A SOMBRA SAIU DO FILTRO ══════════════════════════════════════════════
-   `drop-shadow` num SVG de 1580x900 obriga o navegador a rasterizar a arte
-   INTEIRA e depois desfocar essa rasterizacao, e ele refaz isso a cada
-   repintura que a vizinhanca provocar. Medido na bisseccao: o casco e o braco
-   devolviam 83ms de um quadro de 206, mais que o leilao inteiro.
-   A sombra agora e um elemento proprio, uma elipse escura desfocada debaixo
-   do aparelho: um retangulo pequeno com blur em vez do desenho todo. O olho
-   ve a mesma sombra e a conta muda de ordem de grandeza. */
+/* ══ THE GAUNTLET'S SHADOW, without a filter ══════════════════════════════
+   The hull and the arm were the most expensive thing on screen (83ms of a 206ms
+   frame): a drop-shadow on a 1580x900 SVG re-rasters and blurs the whole drawing
+   on every nearby repaint. The art gets its own layer (will-change), and the shadow
+   is its own element, a small blurred dark ellipse under the device. */
 body.cabin-on #hull .hull-manopla { will-change: transform; }
 body.cabin-on #hull .hull-manopla::before{
   content:""; position:absolute; left:8%; right:16%; bottom:26%; height:13%;
@@ -4310,10 +3607,8 @@ body.cabin-on #hull .hull-manopla::before{
 /* ── the pip-boy SCREEN is always ON: a CRT scanline sweep + idle standby readout ── */
 #hull .mano-scan { position: absolute; left: 254px; top: 180px; width: 236px; height: 148px;
   pointer-events: none; overflow: hidden; border-radius: 9px; z-index: 8; mix-blend-mode: screen; }
-/* A VARREDURA ANIMAVA `top`, que e a pior propriedade que existe para animar:
-   cada quadro refaz layout E pintura, para sempre, em cima do vidro do
-   instrumento que fica na tela a partida inteira. Em transform ela vira
-   composicao pura: o mesmo risco de luz descendo, sem custo de layout. */
+/* the sweep animates transform, not `top`: the same line of light going down, with
+   no layout or paint per frame */
 #hull .mano-scan::before { content: ""; position: absolute; left: 0; right: 0;
   top: 0; height: 40px; will-change: transform;
   background: linear-gradient(180deg, transparent, rgba(95,208,138,.10) 60%, rgba(120,240,180,.16), transparent);
@@ -4371,12 +3666,8 @@ body.cabin-on.allocating #hull-console .matrix-wrap .cell.dragover {
 .bd-seals b.v3 { box-shadow: 0 0 6px var(--c) !important; }
 
 /* living vitals: a gauge flashes when its value changes (self-updating ink) */
-.bd-vg.vg-up b { animation: vgUp .7s ease-out; }
-.bd-vg.vg-down b { animation: vgDown .7s ease-out; }
 @keyframes vgUp { 0% { color:#7ff0ad; text-shadow:0 0 8px rgba(95,208,138,.9); transform:translateY(-2px); } 100% {} }
 @keyframes vgDown { 0% { color:#ff7a5a; text-shadow:0 0 8px rgba(224,60,31,.9); transform:translateY(2px); } 100% {} }
-.bd-vg.vg-up .bd-meter i.on:last-of-type, .bd-vg-gold.vg-up .bd-coins i:last-child { animation: pipPop .5s cubic-bezier(.2,.8,.3,1.4); }
-@keyframes pipPop { 0% { transform: scale(1.9); filter: brightness(2); } 100% { transform: scale(1); } }
 
 /* the maleta overlaps the files: its transparent lower region must let clicks reach
    the badges beneath, pointer-events:none normally, but re-enabled while a market
@@ -4388,19 +3679,12 @@ body.cabin-on #rucksack-zone #mala-extra .mala-ct { pointer-events: auto; }
 
 /* ── didactic LIFE bar + the ALLOCATION strip on the (restored) laminated badge ── */
 .badge .bd-life { display: flex; align-items: center; gap: 6px; margin: 2px 0 6px; }
-.bd-life-ico { width: 13px; height: 13px; color: #2a7a48; flex: none; }
-.bd-life-ico svg { width: 100%; height: 100%; }
-.bd-lifebar { flex: 1; display: flex; gap: 1.5px; height: 11px; }
-.bd-lifebar i { flex: 1 1 0; border-radius: 1px; background: #b8c2c0; border: 1px solid rgba(122,134,142,.4); }
-.bd-lifebar i.on { background: linear-gradient(180deg, #6fe0a0, #3aa860); border-color: #2a7a48; box-shadow: 0 0 3px rgba(95,208,138,.5); }
 .bd-life-n { font-weight: bold; font-size: .82rem; color: #1c2428; min-width: 15px; text-align: right; line-height: 1; }
-.pcard.cfolio.low-energy .bd-lifebar i.on { background: linear-gradient(180deg, #ff7a5a, #c0331f); border-color: #8c2114; animation: lowPulse 1.3s ease-in-out infinite; }
 .pcard.cfolio.low-energy .bd-life-n { color: #a02818; }
 .bd-life.vg-up .bd-life-n { animation: vgUp .7s ease-out; }
 .bd-life.vg-down .bd-life-n { animation: vgDown .7s ease-out; }
 
 .badge .bd-alloc { display: flex; align-items: center; gap: 7px; margin: 0 0 6px; }
-.bd-alloc .ba-lbl { font-size: .44rem; letter-spacing: .14em; color: #55676e; flex: none; }
 .ba-slots { display: flex; gap: 7px; }
 .ba-fn { display: flex; gap: 2px; padding: 1.5px 3px; border-radius: 3px;
   border: 1px solid color-mix(in srgb, var(--c) 40%, #a6b0b6); background: rgba(255,255,255,.25); }
@@ -4409,7 +3693,6 @@ body.cabin-on #rucksack-zone #mala-extra .mala-ct { pointer-events: auto; }
 .ba-fn b.v2 { background: color-mix(in srgb, var(--c) 72%, #fff); border-color: var(--c); }
 .ba-fn b.v3 { background: var(--c); box-shadow: 0 0 4px var(--c); border-color: var(--c); }
 .badge .bd-alloc:not(.revealed) { opacity: .5; }
-.badge .bd-alloc:not(.revealed) .ba-lbl::after { content: ", hidden"; color: #8a969c; }
 
 
 /* ═══ MATRIX BUFF on the pip-boy: the screen wakes, buffable modules invite,
@@ -4517,24 +3800,13 @@ body.cabin-on #hull-console .matrix-wrap .matrix-fnlabel.fn-sealed .fn { color: 
   color: #7ff0b0; text-shadow: 0 0 6px rgba(95,208,138,.9); pointer-events: none; }
 
 /* ══ THE ARM-CURSOR (market W · paperwork A): the WHOLE limb is the pointer ══ */
-/* A MAQUINA FICA ACESA MESMO COM O BRACO APONTANDO. Eu tinha apagado a
-   matriz e os dados nessa pose, e a mesa desfez: a tela do instrumento faz
-   parte da leitura o tempo todo, e escurecer o painel para economizar quadro
-   e pagar com informacao uma conta que tem que ser paga com pintura.
-   O caminho certo e o outro: baixar o CUSTO do pip-boy, e nao a luz dele. */
-/* A PERGUNTA TRAZ A MAO DE VOLTA PARA O INSTRUMENTO. O console some inteiro
-   quando o braco vira ponteiro (`[data-pose="cursor"] ~ #hull-console` leva
-   ele a opacidade zero), que e a regra certa: ninguem esta operando a
-   maquina enquanto a mao esta apontando.
-   Mas alocar peca E operar a maquina. Entao enquanto a pergunta esta no ar,
-   o console volta inteiro. Tem que ser no PROPRIO console e nao so na
-   matriz: opacidade zero no pai apaga o filho por mais aceso que ele esteja,
-   e foi isso que me custou tres rodadas de sonda achando que a matriz nao
-   era desenhada quando na verdade o pai dela e que estava invisivel.
-   E precisa de `#hull #hull-console` e nao so `#hull-console`: a regra que
-   apaga (`body.mano-away #hull-console`) tambem e !important e tem a MESMA
-   especificidade, entao o desempate vira ordem no arquivo, e ela mora mais
-   embaixo. Um id a mais desempata sem depender de quem foi escrito antes. */
+/* The machine stays lit while the arm points: its screen is part of the reading
+   all the time. The console fades out when the arm becomes the pointer, since nobody
+   operates the machine while pointing; but placing a piece IS operating it, so while
+   an Auction question is open the whole console comes back. It has to be the console
+   itself, not only the matrix: zero opacity on a parent hides the child however lit
+   it is. `#hull #hull-console` (one more id) outranks `body.mano-away #hull-console`,
+   which is also !important and sits further down the file. */
 body.lf-rowpick #hull #hull-console,
 body.lf-hammer  #hull #hull-console{
   opacity:1 !important; pointer-events:auto !important;
@@ -4593,12 +3865,6 @@ body.mano-away #mano-screen { filter: brightness(.22) saturate(.4); }
 body.mano-away .mano-standby, body.mano-away .mano-scan { opacity: 0 !important; }
 
 /* ══ TAB HELP: discovery chip + the on-demand phosphor reference (rung-3) ══ */
-#hull .mano-hint { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%);
-  z-index: 12; opacity: 0; pointer-events: none; transition: opacity .3s ease;
-  font-family: var(--f-mono, monospace); font-size: 10px; letter-spacing: .12em;
-  color: #7fbf9a; text-transform: uppercase; }
-#hull .mano-hint b { display: inline-block; padding: 1px 6px; margin-right: 5px; border-radius: 3px;
-  border: 1px solid rgba(95,208,138,.5); color: #bff0d2; background: rgba(10,26,16,.7); font-weight: 700; }
 
 
 .mano-help { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center;
@@ -4647,13 +3913,9 @@ body.mano-away .mano-standby, body.mano-away .mano-scan { opacity: 0 !important;
   .mano-help, .mano-help .mh-card, #hull .mano-hint { transition: none; } }
 
 /* ══ THE TICKETS: consumable vouchers as theater admissions in the lid rack ══ */
-/* O TALAO E DE LADO, NAO DE CIMA. `.ruck-voucher` declara flex-direction
-   column, e esta regra nunca desfazia isso: o ingresso inteiro (talao de 24%
-   de largura, picote tracejado na direita dele, e a mascara que morde as duas
-   pontas do vinco) foi desenhado para uma LINHA e vinha empilhando em coluna,
-   com o talao ocupando a largura toda e o desenho espremido numa tira. Uma
-   propriedade que faltava, e o voucher classico volta a ser ingresso junto
-   com o bilhete de lote. */
+/* The stub sits beside the ticket, not on top: the whole admission (a 24% stub, the
+   dashed perforation on its right, the mask biting both ends of the fold) is drawn for
+   a ROW, while `.ruck-voucher` is a column. */
 body.cam-on .rucksack-zone .ruck-voucher.tkt:active { cursor: grabbing; }
 .ruck-voucher.tkt .tkt-stub { flex: 0 0 24%; display: flex; align-items: center; justify-content: center;
   border-right: 2px dashed #8a744a; background: var(--tk, #7a5330); border-radius: 3px 0 0 3px;
@@ -4696,16 +3958,9 @@ body.cabin-on .pcard.cfolio .badge::before { content: ""; position: absolute; to
 body.cabin-on .pcard.cfolio .bd-photo { width: 26px; height: 30px; }
 body.cabin-on .pcard.cfolio .bd-photo span { font-size: .68rem; }
 body.cabin-on .pcard.cfolio .bd-name { font-size: .66rem !important; }
-body.cabin-on .pcard.cfolio .bd-role { font-size: .42rem !important; }
-body.cabin-on .pcard.cfolio .bd-barcode { height: 6px; }
-body.cabin-on .pcard.cfolio .bd-stats { margin: 2px 0; }
-body.cabin-on .pcard.cfolio .bd-stats .stat-val { font-size: .68rem !important; }
-body.cabin-on .pcard.cfolio .bd-stats .stat-lbl { font-size: .36rem; }
 body.cabin-on .pcard.cfolio .bd-life { margin: 2px 0; }
-body.cabin-on .pcard.cfolio .bd-lifebar i { width: 7px; height: 8px; }
 body.cabin-on .pcard.cfolio .bd-life-n { font-size: .62rem; }
 body.cabin-on .pcard.cfolio .bd-fuse i { width: 6px; height: 7px; }
-body.cabin-on .pcard.cfolio .bd-assets i { width: 9px; height: 9px; }
 /* file header reads above the badge; sections read below it */
 body.cabin-on .pcard.cfolio .cs-head { font-size: .6rem; }
 body.cabin-on .pcard.cfolio .cs-clip { right: auto; left: 14px; }
@@ -4715,8 +3970,6 @@ body.cabin-on .pcard.cfolio .cs-clip { right: auto; left: 14px; }
    (the frame was good, just fat, and the travel column must never clip) */
 body.cabin-on .badge .bd-alloc { gap: 0; margin: 5px 0 3px; padding: 3px 4px;
   background: #222c31; border: 1px solid #3a4a52; border-radius: 5px; }
-body.cabin-on .bd-alloc .ba-lbl { display: none; }
-body.cabin-on .bd-alloc .bico { display: none; }
 body.cabin-on .ba-slots { gap: 6px; width: 100%; justify-content: space-between; }
 body.cabin-on .ba-fn { gap: 3px; padding: 2px 0 0 0; background: none; flex: none;
   border: 0; border-top: 2px solid color-mix(in srgb, var(--c) 70%, transparent);
@@ -4810,40 +4063,21 @@ body.voucher-drag #ticket-drop { pointer-events: auto; outline: 2px dashed rgba(
 #hull .hull-manopla[data-pose="rest"] { transition: transform .48s cubic-bezier(.3,.7,.3,1); }
 
 /* ══ BADGE, icon-first: legends die, the seat colour leads ══ */
-body.cabin-on .pcard.cfolio .badge .bd-barcode { display: none; }
 body.cabin-on .pcard.cfolio .bd-fuse > span,
 body.cabin-on .pcard.cfolio .bd-assets > span,
 body.cabin-on .pcard.cfolio .bd-alloc .ba-lbl { font-size: 0; line-height: 0; }
 body.cabin-on .pcard.cfolio .bd-fuse > span::before,
 body.cabin-on .pcard.cfolio .bd-assets > span::before,
 body.cabin-on .pcard.cfolio .bd-alloc .ba-lbl::before { font-size: .52rem; line-height: 1; }
-body.cabin-on .pcard.cfolio .bd-fuse .bico, body.cabin-on .pcard.cfolio .bd-assets .bico,
-body.cabin-on .pcard.cfolio .bd-alloc .bico { width: 12px; height: 12px; display: inline-flex; flex: none;
-  color: #55676e; }
-body.cabin-on .pcard.cfolio .bd-alloc .bico { color: #8fa3ab; }
-body.cabin-on .pcard.cfolio .bico svg { width: 12px; height: 12px; }
-body.cabin-on .pcard.cfolio .bd-stats .stat-lbl { display: none; }
-body.cabin-on .pcard.cfolio .bd-role { font-size: 0 !important; }
-body.cabin-on .pcard.cfolio .bd-seen { display: inline-flex; align-items: center; gap: 3px;
-  font-size: .5rem; color: #3c4440; font-family: var(--f-mono, monospace); }
-body.cabin-on .pcard.cfolio .bd-seen .bico { color: var(--seat, #55676e); }
 body.cabin-on .pcard.cfolio .bd-photo { border: 2px solid var(--seat, #7a868e); }
-body.cabin-on .badge .bd-alloc:not(.revealed) .ba-lbl::after { content: none; }
 
 /* tickets keep their NAME readable even racked three-high */
 .ruck-voucher.tkt .tkt-head { font-size: .3rem; }
 .ruck-voucher.tkt .tkt-name { font-size: .56rem; }
 .ruck-voucher.tkt .tkt-sub { display: none; }
-/* ══ O BILHETE ENCAIXA NO RECESSO, NAO FLUTUA SOBRE ELE ═══════════════════
-   O compartimento da tampa cabe DOIS bilhetes. Ate aqui eles eram uma coluna
-   com espaco entre um e outro, o que nao e encaixe nenhum: pareciam papeis
-   soltos pousados por cima do couro.
-   Agora eles sao um MACO assentado. Cada um tem posicao propria dentro do
-   recesso, o de baixo aparece por tras do de cima, e um labio de couro passa
-   na frente da beirada inferior, que e o que vende o 2.5D: a coisa esta
-   DENTRO de um bolso, e nao em cima dele.
-   O terceiro em diante espia por tras, menor e mais escuro, porque tres num
-   bolso de dois e o que acontece na vida real. */
+/* ══ THE TICKETS SIT IN THE LID'S RECESS, they don't float over it ═══════════
+   The pocket holds TWO tickets, each in its own place; the third on peeks from
+   behind, smaller and darker, the way three tickets sit in a pocket made for two. */
 body.cam-on .rucksack-zone .ruck-vouchers { top: 16.6%; height: 25.5%; }
 
 body.cam-on .rucksack-zone .ruck-voucher.tkt { position: relative; display: flex; align-items: stretch;
@@ -4857,20 +4091,11 @@ body.cam-on .rucksack-zone .ruck-voucher.tkt { position: relative; display: flex
 body.cam-on .rucksack-zone .ruck-voucher.tkt:hover { transform: translateY(-3px) scale(1.03); z-index: 5;
   box-shadow: 0 8px 16px rgba(0,0,0,.5), inset 0 0 0 1px #5a4426; }
 
-/* ══ AS TRES MUDANCAS DO BILHETE, NUM BLOCO SO ═══════════════════════════
-   Eu tinha espalhado cinco copias da regra do bilhete e quatro do hover pelo
-   arquivo, cada tentativa deixando a anterior para tras. Regras duplicadas
-   brigam entre si e o resultado e bug visual sem causa aparente: foi isso que
-   sujou o compartimento.
-   O compartimento voltou a ser o do git, sem uma linha minha. Aqui ficam
-   APENAS as tres coisas que mudam no papel:
-   1. a fila vira LINHA, para o talao ficar do lado e nao em cima (o CSS de
-      ingresso sempre foi desenhado assim e um flex-direction herdado o
-      empilhava);
-   2. a forma trava em aspect-ratio, senao o anuncio estica conforme o
-      tamanho da janela;
-   3. o corpo entra no bolso por RECORTE, nunca por cobertura: cortar mostra
-      o veludo da propria maleta no lugar, cobrir apaga a arte dela. */
+/* The three things that change on the ticket:
+   1. it is a ROW, so the stub sits beside it, not on top;
+   2. its shape is locked by aspect-ratio, or it stretches with the window;
+   3. it goes into the pocket by CLIPPING, never by covering: the clip shows the
+      case's own velvet, a cover would hide the art. */
 body.cam-on .rucksack-zone .ruck-voucher.tkt {
   flex-direction: row;
   aspect-ratio: 3.9; height: auto; min-height: 0; flex: 0 0 auto;
@@ -4878,36 +4103,31 @@ body.cam-on .rucksack-zone .ruck-voucher.tkt {
   transform-origin: 50% 100%;
   transition: transform .17s cubic-bezier(.3,1.6,.5,1),
     clip-path .17s ease, box-shadow .17s ease, filter .17s ease; }
-/* ══ O BOLSO TEM DOIS ENCAIXES, E CADA BILHETE VAI NO SEU ══════════════════
-   Medido na arte: o recesso vai de y=72 a y=212 e tem DUAS correias, em
-   y=111 e y=157. Elas dividem o bolso em dois encaixes, e e por isso que o
-   segundo bilhete tem lugar proprio: ele nao empilha em cima do primeiro, ele
-   entra no encaixe de baixo.
-   Convertendo para a caixa do rack (que ocupa y 83..210 da arte), as correias
-   caem em 22% e 58% da altura dele.
-   Do terceiro em diante nao ha mais encaixe, entao eles ficam ATRAS dos dois
-   primeiros, espiando alguns por cento acima, que e como papel guardado em
-   dobro aparece de verdade. Do quinto em diante para de empilhar e vira
-   numero, igual os contratos fazem. */
+/* ══ TWO SLOTS IN THE POCKET, one ticket in each ═══════════════════════════
+   Measured on the art: the recess runs from y=72 to y=212 with TWO straps, at y=111
+   and y=157, which split it into two slots. In the rack's box (y 83..210 of the art)
+   the straps fall at 22% and 58% of its height. The third and fourth tickets sit
+   BEHIND the first two, peeking a few percent above; from the fifth on the pocket
+   stops stacking and shows a number, like the contracts. */
 body.cam-on .rucksack-zone .ruck-voucher.tkt {
   position: absolute; left: 0; right: 0; }
 body.cam-on .rucksack-zone .ruck-voucher.tkt:nth-child(1) {
   top: 0;   z-index: 6; transform: rotate(-1deg); }
 body.cam-on .rucksack-zone .ruck-voucher.tkt:nth-child(2) {
   top: 38%; z-index: 5; transform: rotate(.7deg); }
-/* o terceiro mora atras do primeiro, espiando 6% acima */
+/* the third sits behind the first, peeking 6% above */
 body.cam-on .rucksack-zone .ruck-voucher.tkt:nth-child(3) {
   top: -6%;  z-index: 4; transform: rotate(-1.6deg) scale(.99);
   filter: brightness(.88) saturate(.94); }
-/* o quarto atras do segundo, pela mesma regra */
+/* the fourth behind the second, the same way */
 body.cam-on .rucksack-zone .ruck-voucher.tkt:nth-child(4) {
   top: 32%; z-index: 3; transform: rotate(1.2deg) scale(.99);
   filter: brightness(.88) saturate(.94); }
-/* do quinto em diante ninguem mais se desenha: quem conta e o numeral */
+/* from the fifth on nothing is drawn: the numeral counts them */
 body.cam-on .rucksack-zone .ruck-voucher.tkt:nth-child(n+5) { display: none; }
-/* o numeral de quantos ficaram guardados, no canto do ultimo bilhete visivel:
-   mesmo gesto dos contratos, para o bolso nunca virar uma pilha ilegivel */
-.ruck-voucher.tkt .rv-mais {
+/* how many more are tucked away, on the corner of the last visible ticket, like the
+   contracts, so the pocket never turns into an unreadable pile */
+.ruck-voucher.tkt .rv-more {
   position: absolute; right: 3%; top: -6%; z-index: 28;
   min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
@@ -4915,7 +4135,7 @@ body.cam-on .rucksack-zone .ruck-voucher.tkt:nth-child(n+5) { display: none; }
   border: 1px solid rgba(226,192,120,.55);
   font-family: var(--f-mono, monospace); font-size: .5rem; font-weight: 700;
   box-shadow: 0 2px 5px rgba(0,0,0,.5); pointer-events: none; }
-/* puxar o bilhete e SACAR ele do bolso: sobe e o recorte abre junto */
+/* hovering pulls the ticket out of the pocket: it rises and the clip opens with it */
 body.cam-on .rucksack-zone .ruck-voucher.tkt:hover {
   z-index: 26; clip-path: inset(0 0 0 0);
   transform: translateY(-26%) scale(1.06); }
@@ -4963,16 +4183,9 @@ body.cabin-on .pcard.cfolio .badge::before { content: ""; position: absolute; to
 body.cabin-on .pcard.cfolio .bd-photo { width: 26px; height: 30px; }
 body.cabin-on .pcard.cfolio .bd-photo span { font-size: .68rem; }
 body.cabin-on .pcard.cfolio .bd-name { font-size: .66rem !important; }
-body.cabin-on .pcard.cfolio .bd-role { font-size: .42rem !important; }
-body.cabin-on .pcard.cfolio .bd-barcode { height: 6px; }
-body.cabin-on .pcard.cfolio .bd-stats { margin: 2px 0; }
-body.cabin-on .pcard.cfolio .bd-stats .stat-val { font-size: .68rem !important; }
-body.cabin-on .pcard.cfolio .bd-stats .stat-lbl { font-size: .36rem; }
 body.cabin-on .pcard.cfolio .bd-life { margin: 2px 0; }
-body.cabin-on .pcard.cfolio .bd-lifebar i { width: 7px; height: 8px; }
 body.cabin-on .pcard.cfolio .bd-life-n { font-size: .62rem; }
 body.cabin-on .pcard.cfolio .bd-fuse i { width: 6px; height: 7px; }
-body.cabin-on .pcard.cfolio .bd-assets i { width: 9px; height: 9px; }
 /* file header reads above the badge; sections read below it */
 body.cabin-on .pcard.cfolio .cs-head { font-size: .6rem; }
 body.cabin-on .pcard.cfolio .cs-clip { right: auto; left: 14px; }
@@ -4982,8 +4195,6 @@ body.cabin-on .pcard.cfolio .cs-clip { right: auto; left: 14px; }
    (the frame was good, just fat, and the travel column must never clip) */
 body.cabin-on .badge .bd-alloc { gap: 0; margin: 5px 0 3px; padding: 3px 4px;
   background: #222c31; border: 1px solid #3a4a52; border-radius: 5px; }
-body.cabin-on .bd-alloc .ba-lbl { display: none; }
-body.cabin-on .bd-alloc .bico { display: none; }
 body.cabin-on .ba-slots { gap: 6px; width: 100%; justify-content: space-between; }
 body.cabin-on .ba-fn { gap: 3px; padding: 2px 0 0 0; background: none; flex: none;
   border: 0; border-top: 2px solid color-mix(in srgb, var(--c) 70%, transparent);
@@ -5077,63 +4288,24 @@ body.voucher-drag #ticket-drop { pointer-events: auto; outline: 2px dashed rgba(
 #hull .hull-manopla[data-pose="rest"] { transition: transform .48s cubic-bezier(.3,.7,.3,1); }
 
 /* ══ BADGE, icon-first: legends die, the seat colour leads ══ */
-body.cabin-on .pcard.cfolio .badge .bd-barcode { display: none; }
 body.cabin-on .pcard.cfolio .bd-fuse > span,
 body.cabin-on .pcard.cfolio .bd-assets > span,
 body.cabin-on .pcard.cfolio .bd-alloc .ba-lbl { font-size: 0; line-height: 0; }
 body.cabin-on .pcard.cfolio .bd-fuse > span::before,
 body.cabin-on .pcard.cfolio .bd-assets > span::before,
 body.cabin-on .pcard.cfolio .bd-alloc .ba-lbl::before { font-size: .52rem; line-height: 1; }
-body.cabin-on .pcard.cfolio .bd-fuse .bico, body.cabin-on .pcard.cfolio .bd-assets .bico,
-body.cabin-on .pcard.cfolio .bd-alloc .bico { width: 12px; height: 12px; display: inline-flex; flex: none;
-  color: #55676e; }
-body.cabin-on .pcard.cfolio .bd-alloc .bico { color: #8fa3ab; }
-body.cabin-on .pcard.cfolio .bico svg { width: 12px; height: 12px; }
-body.cabin-on .pcard.cfolio .bd-stats .stat-lbl { display: none; }
-body.cabin-on .pcard.cfolio .bd-role { font-size: 0 !important; }
-body.cabin-on .pcard.cfolio .bd-seen { display: inline-flex; align-items: center; gap: 3px;
-  font-size: .5rem; color: #3c4440; font-family: var(--f-mono, monospace); }
-body.cabin-on .pcard.cfolio .bd-seen .bico { color: var(--seat, #55676e); }
 body.cabin-on .pcard.cfolio .bd-photo { border: 2px solid var(--seat, #7a868e); }
-body.cabin-on .badge .bd-alloc:not(.revealed) .ba-lbl::after { content: none; }
 
 /* tickets keep their NAME readable even racked three-high */
 .ruck-voucher.tkt .tkt-head { font-size: .3rem; }
 .ruck-voucher.tkt .tkt-name { font-size: .56rem; }
 .ruck-voucher.tkt .tkt-sub { display: none; }
-/* ══ O BILHETE ENCAIXA NO RECESSO, NAO FLUTUA SOBRE ELE ═══════════════════
-   O compartimento da tampa cabe DOIS bilhetes. Ate aqui eles eram uma coluna
-   com espaco entre um e outro, o que nao e encaixe nenhum: pareciam papeis
-   soltos pousados por cima do couro.
-   Agora eles sao um MACO assentado. Cada um tem posicao propria dentro do
-   recesso, o de baixo aparece por tras do de cima, e um labio de couro passa
-   na frente da beirada inferior, que e o que vende o 2.5D: a coisa esta
-   DENTRO de um bolso, e nao em cima dele.
-   O terceiro em diante espia por tras, menor e mais escuro, porque tres num
-   bolso de dois e o que acontece na vida real. */
-
-/* ══ AS DUAS CORREIAS DO BOLSO ════════════════════════════════════════════
-   Medido na arte da maleta (briefcase.svg, espaco 800x500): o recesso
-   VOUCHERS e o trapezio 416,72 / 658,72 / 646,212 / 408,212, e ele tem DUAS
-   CORREIAS atravessando, em y=111 e y=157, desenhadas com traco escuro de 7px
-   e um brilho marrom de 2.4 por cima.
-   Sao elas que seguram o papel, e e por baixo delas que o bilhete entra. Era
-   isso que faltava para o 2.5D: nao bastava empilhar com sombra, tinha que
-   TER a peca que passa na frente. Antes eu inventei um labio generico no pe
-   do bolso; a maleta ja tinha a coisa certa desenhada e eu nao tinha olhado.
-   Convertendo para o espaco do rack (que ocupa y 83..210 da arte): as
-   correias caem em 22% e 58% da altura dele. */
-/* a sombra que a correia joga no papel logo abaixo dela: sem isso ela parece
-   pintada no bilhete em vez de passar por cima dele */
-@media (prefers-reduced-motion: reduce) {
-   }
 
 /* ticket text: tight leading so the NAME always fits the racked height */
 .ruck-voucher.tkt { overflow: hidden; }
 .ruck-voucher.tkt .tkt-body { padding: 2px 7px; }
 .ruck-voucher.tkt .tkt-head { line-height: 1.15; }
 .ruck-voucher.tkt .tkt-name { line-height: 1.15; }
-
 
 
 /* ══ THE CASE-FILE PILE: a worked desk, files overlap down the free strip
@@ -5235,9 +4407,6 @@ body.cam-on #market-zone .wagon-life, body.cam-on #market-zone .market-title-tex
 body.cam-on #market-zone .market-main { position: absolute; left: calc(50% - 392px); top: auto;
   bottom: 90px; width: 620px; height: 128px; z-index: 3; }
 body.cam-on #market-zone .market-merchant-label { display: none; }
-body.cam-on #market-zone .ma-hint { position: absolute; left: 0; top: auto; bottom: -26px; width: 100%;
-  text-align: center; font-size: .5rem; letter-spacing: .14em; color: #cdbd93;
-  text-shadow: 0 1px 2px rgba(0,0,0,.7); }
 body.cam-on #market-zone .market-row { display: flex; gap: 10px; align-items: flex-end;
   height: 100%; padding: 0; }
 body.cam-on #market-zone .market-row .card { flex: 1 1 0; min-height: 108px; max-width: 138px;
@@ -5344,7 +4513,7 @@ body.cam-on #market-zone .market-side-signs.left .side-sign:active { animation: 
 
 /* the SECRET stall lives inside the right window */
 body.cam-on #market-zone .market-side { position: absolute; left: auto; right: 59px; top: auto;
-  bottom: 76px; width: 160px; z-index: 3; display: block; }   /* meio centímetro à esquerda, por decreto */
+  bottom: 76px; width: 160px; z-index: 3; display: block; }
 body.cam-on #market-zone .market-secret { width: 100%; background: transparent; border: 0; }
 body.cam-on #market-zone .market-secret .card { min-height: 118px; max-width: 170px; margin: 0 auto;
   box-shadow: 0 0 18px rgba(180,154,232,.25), 0 6px 12px rgba(0,0,0,.6); }
@@ -5454,7 +4623,6 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being .cw-pupil, .cat-being .cw-earL, .cat-being .cw-earR, .cat-being .cw-leg,
 .cat-being .cw-body, .cat-being .cw-head, .cat-being .cw-tail, .cat-being .cw-tuft {
   transform-box: fill-box; transform-origin: 50% 50%; }
-.cat-being .cw-leg { transform-origin: 50% 6%; }
 .cat-being .cw-tail { transform-origin: 12% 88%; }
 .cat-being .cw-tufts { opacity: 0; transition: opacity .25s ease; }
 .cat-being.petted .cw-tufts, .cat-being.scared .cw-tufts { opacity: .85; }
@@ -5736,14 +4904,12 @@ body.cabin-on #drawer-zone .drawer-body.deliver-hot { outline: 3px dashed rgba(2
 @keyframes ccLift { from { transform: translate(-50%,-66%) rotate(0deg) scale(.88); opacity: .5; } }
 .ruck-card.card-lifted { opacity: .22; filter: grayscale(.4); }
 
-/* ═══ O BILHETE NA MAO ═══
-   Mesmo gesto da carta e, de proposito, a mesma linguagem visual: ele sai do
-   rack, gruda no cursor levemente torto e com sombra alta, e o lugar de onde
-   saiu fica apagado ate ele voltar ou ser consumido. A unica diferenca e a
-   escala: um bilhete e um objeto pequeno e continua pequeno na mao. */
-/* O bilhete na mao fica ACIMA DE TUDO menos do plano do cursor, que vive
-   em 60000. Ele mora no body justamente para poder disputar nessa altura:
-   dentro de #screen-game o numero nao valia nada contra o #hull. */
+/* ═══ A TICKET IN THE HAND ═══
+   The same gesture as a card and the same look: it leaves the rack, sticks to the
+   cursor slightly crooked with a high shadow, and its place stays dimmed until it
+   comes back or is used. A ticket is small, and stays small in the hand.
+   It sits above everything but the cursor plane (60000), which is why it lives on
+   the body: inside #screen-game its z-index was worth nothing against #hull. */
 .voucher-carry { position: fixed; z-index: 59000; pointer-events: none;
   transform: translate(-50%, -78%) rotate(-4deg) scale(1.08);
   filter: drop-shadow(0 14px 18px rgba(0,0,0,.6)); animation: vcLift .16s ease-out; }
@@ -5751,8 +4917,8 @@ body.cabin-on #drawer-zone .drawer-body.deliver-hot { outline: 3px dashed rgba(2
 @keyframes vcLift { from { transform: translate(-50%,-60%) rotate(0deg) scale(.9); opacity: .5; } }
 .ruck-voucher.voucher-lifted { opacity: .22; filter: grayscale(.4); }
 body.carrying-voucher, body.carrying-voucher * { cursor: grabbing !important; }
-/* a boca da maquina se abre enquanto voce carrega um bilhete, e acende quando
-   ele passa por cima: o alvo diz que e o alvo antes de voce chegar nele */
+/* the machine's mouth opens while you carry a ticket and lights up when it passes
+   over it: the target says it is the target before you get there */
 body.carrying-voucher #ticket-drop { outline: 2px dashed rgba(127,211,160,.55);
   outline-offset: 3px; }
 body.carrying-voucher #ticket-drop.hot { outline-color: rgba(127,211,160,.95);
@@ -5793,11 +4959,8 @@ body.game-intro #hull          { animation: introFade .7s ease .18s both; }
 
 
 /* ═══ COVE-ONLY: the PASS sign goes violet, so you still see where the phase ends ═══ */
-/* A PLACA E O PROPRIO BOTAO. A regra antiga falava com .sign-plank e .sign-label,
-   filhos de uma anatomia que morreu quando o letreiro virou seta auto-pintada
-   (fundo e recorte no proprio .side-sign). A classe chegava do game.js e nenhuma
-   regra casava: o PASS do cove ficava dourado como os outros, em silencio. Agora a
-   cor mora onde a placa mora, no elemento, com a mesma receita da placa dourada. */
+/* the sign IS the button (.side-sign paints its own arrow), so the colour goes on it,
+   with the same recipe as the gold sign */
 body.cam-on #market-zone .market-side-signs.left .side-sign.sign-cove-pass {
   color: #e6dbff;
   background:
@@ -5851,8 +5014,6 @@ body.cabin-on .secret-reveal-fx.meshing .srf-grid { opacity:.85; transform:scale
   animation:srfMesh .5s steps(3) infinite; }
 @keyframes srfMesh { 0%,100% { background-position:0 0, 0 0; } 50% { background-position:1px 0, 0 1px; } }
 body.cabin-on .secret-reveal-fx.settle .srf-grid { opacity:.16; animation:none; }
-/* kill the old purple glitch layer entirely */
-body.cabin-on .secret-reveal-fx .srf-glitch { display:none !important; }
 /* her voice on the seal, in her colour */
 body.cabin-on .secret-reveal-fx .srf-core { z-index:4; font-family:var(--f-mono,monospace) !important;
   text-shadow:0 0 14px rgb(var(--vz-rgb, 102 240 200) / .9) !important; }
@@ -5915,18 +5076,11 @@ body.cabin-on #cursor-plane .hela-radar svg { width: 100%; height: 100%; display
 @keyframes hrCore { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
 /* it TIGHTENS on a live target, and flares red when life is critical */
 
-/* ═══ THE ART COMES BACK. ═════════════════════════════════════════════════════
-   I stripped these `filter: drop-shadow()` calls to save raster, and the whole premise
-   was wrong. my lag was never the game: his Firefox was vsync-locked to 60Hz on
-   the Intel iGPU while a 165Hz panel and an RTX 5050 sat idle. One preference
-   (layout.frame_rate) and a PRIME offload later, F4 reads:
-
-       AS SHIPPED   164 fps          (it was 30)
-       chart still  164 fps          <- the 97 layers I hunted all day cost NOTHING
-
-   So nothing has to die for speed. The reticle gets its glow back, it is HELA's eye,
-   and an eye without light is a wireframe. The hand gets its cast shadow back, that
-   shadow IS the 2.5D plane, the thing that lifts the pointer off the board. ═════════ */
+/* ═══ THE ART COMES BACK ═══════════════════════════════════════════════════════
+   These drop-shadows were stripped to save raster, but the lag was never the game (a
+   browser vsync-locked to 60Hz on the integrated GPU). The reticle gets its glow back,
+   it is HELA's eye, and the hand gets its cast shadow back: that shadow IS the 2.5D
+   plane, the thing that lifts the pointer off the board. ═══════════════════════ */
 body.cabin-on #cursor-plane .hela-radar { filter: drop-shadow(0 0 7px rgb(var(--vz-rgb, 102 240 200) / .9)); }
 body.cabin-on.carrying-card #cursor-plane .hela-radar { color: #ffd68a;
   filter: drop-shadow(0 0 9px rgba(255,214,138,.9)); }
@@ -6119,9 +5273,6 @@ body.cabin-on #hull .mano-scan::before {
    one is a genuine improvement, not a cut: a current whose direction only flows while
    you are plotting a course is a current that MEANS something. It was ambient noise
    before; now it is information. */
-#timeline-rail .sea-current { animation-play-state: paused !important; }
-body.cmd-on #timeline-rail .sea-current {
-  animation-play-state: running !important; animation-timing-function: steps(26) !important; }
 
 @media (prefers-reduced-motion: reduce) {
   body.cabin-on #hull .mano-scan { animation: none !important; } }
@@ -6130,7 +5281,6 @@ body.cmd-on #timeline-rail .sea-current {
 /* (data-v 1 tri-colour retired, identity colour won) */
 /* (data-v 2 tri-colour retired, identity colour won) */
 /* (data-v 3 tri-colour retired, identity colour won) */
-
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -6185,26 +5335,19 @@ body.boot { animation: none !important; opacity: 1 !important; }
    edge to edge, the ambient world layers underneath cannot be seen at all, yet
    each was costing a full-screen (2.3 MPixel) compositor texture, and each one
    dragged more "Overlap" layers up with it. Take them out of the tree. */
-/* ═══ I DELETED THE GAME'S HORROR. ═══════════════════════════════════════════
-   My rationale was "in the cabin the desk and the wall cover the screen edge to edge,
-   the ambient world layers underneath cannot be seen at all." That is true of exactly
-   ONE of the four I killed. Read the z-indexes:
+/* ═══ THE DREAD PAINTS OVER THE BOARD ══════════════════════════════════════════
+   In the cabin the desk and the wall cover the screen, but only one of the four world
+   layers is really underneath:
 
-       .world-bg      z-index 0   <- genuinely underneath. Genuinely invisible.
+       .world-bg      z-index 0   <- underneath, invisible
        .world-haze    z-index 1   \
-       .world-motes   z-index 2    >  these paint OVER the whole board.
+       .world-motes   z-index 2    >  these paint OVER the whole board
        .world-dread   z-index 3   /
 
-   .world-dread IS THE DREAD. It is the sole renderer of the horror the game is about:
-   as booms and terminations pile up, --dread climbs and the world darkens, the shadows
-   close in from the edges, and a paradox-violet bleeds through. game.js:521 still
-   computes --dread on EVERY state sync. It has been painting nowhere. A pixel diff at
-   --dread = 1 was IDENTICAL to --dread = 0: the whole silent-horror arc of the game,
-   computed every tick, rendered onto nothing. The cat's comfort behaviour (which lifts
-   the dread, app.css:3050) had nothing left to lift.
-
-   Only .world-bg stays hidden, it is the one that is really behind the desk, and its
-   worldDrift transform was the compositor root I was actually chasing. */
+   .world-dread is the only renderer of the game's horror: as booms and terminations pile
+   up, --dread climbs (game.js sets it on every state sync), the world darkens, the
+   shadows close in and a paradox violet bleeds through. The cat's comfort lifts it.
+   Only .world-bg stays hidden, since it really is behind the desk. */
 body.cabin-on .world-bg { display: none !important; }
 
 /* the crossfade veil is a full-screen layer that is INVISIBLE except during the
@@ -6327,34 +5470,12 @@ body.cabin-on #hull-console .dice-actions .btn:hover { filter: none !important;
    the highlight onto the OPACITY of an overlay that is always there and always
    promoted, a property the compositor changes for free, with no repaint at all.
    ═══════════════════════════════════════════════════════════════════════════ */
-/* ═══ THE BORROWED BOARD, restored, and my diagnosis of it was wrong twice. ═══
-   The affordance (app.css:4085): aim a row of the allocation matrix and its REAL targets
-   light up. PARADOX lights the rival badges; TRAVEL lights the chart, because the chart
-   is where a travel lands. It shipped long ago and it worked.
-
-   Then I moved the class off <body> for perf (a real win: `body.aim-travel` was
-   invalidating the style of all 5251 elements), and left `body.aim-travel #timeline-rail`
-   behind, which can now never match. TRAVEL silently stopped lighting anything.
-
-   Then I "fixed" it with an ::after at z-index 9, which painted the glow ON TOP of the
-   map instead of under it, so it read as a hard cyan border slapped over the whole right
-   half of the screen. It looked like a bug, and it read wrong.
-
-   Then I deleted the whole thing, on the theory that it "had never rendered". Wrong: the
-   specificity bug I found was between two ::after pseudo-elements, i.e. it only ever
-   afflicted the overlay I had just written. The ORIGINAL rule was on the element itself
-   and rendered fine.
-
-   So: the glow goes back where it belongs, UNDERNEATH the chart, like the original inset
-   shadow, on the CLASS (not <body>), riding OPACITY so the compositor does it for free
-   and no hover repaints the 832x1000 chart. Same affordance, none of the costs. */
-   ...and I nearly wrecked a third thing doing it: my first attempt hung the glow on
-   `#timeline-rail::before`, which is ALREADY TAKEN (app.css:4366), it is the cast
-   shadow that softens the desk|map seam into one table. The verify caught it. So the
-   glow goes back exactly where it shipped: an inset shadow on the ELEMENT, which paints
-   above its background and beneath its content, which is what put it UNDER the chart in
-   the first place. The only thing that changes is the class: on the rail, never on
-   <body>, that was the real cost (invalidating all 5251 elements on every hover). */
+/* ═══ THE BORROWED BOARD ═══════════════════════════════════════════════════════
+   Aim a row of the allocation matrix and its REAL targets light up: PARADOX lights the
+   rival badges, TRAVEL lights the chart, because the chart is where a travel lands.
+   The glow is an inset shadow on the ELEMENT, which paints above its background and
+   beneath its content, so it sits UNDER the chart. The class goes on the rail, never
+   on <body>: on <body> every hover restyled all 5251 elements. */
 #timeline-rail.aim-travel-on {
   box-shadow: inset 0 0 0 3px rgba(111,180,200,.55), inset 0 0 40px rgba(111,180,200,.15);
   transition: box-shadow .2s ease; }
@@ -6420,53 +5541,27 @@ body.cabin-on #hull-console .die.rolling .pips-face {
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   THE CHART LIVES ONLY UNDER YOUR GAZE
+   THE CHART CAN HOLD STILL (F6)
    ---------------------------------------------------------------------------
-   my machine: 59fps idle, 30fps the moment the cursor moves, 15-9fps while
-   carrying a die. F9/F10 (hand off, reticle off) changed NOTHING, so the cursor
-   was never the cost. An ablation found it:
-
-       everything as shipped .................... 203 compositor layers
-       with the MAP's animations off ............ 106     <- the map alone is 97
-       with every animation on the page off .....  83
-
    The star chart is the most expensive object in the game. Thirty-four of its nodes
    animate opacity, and Chrome promotes each one to its own compositor layer, then
-   promotes everything painted OVER them too ("Overlap"), which inside an SVG means
-   most of the drawing. Ninety-seven layers of texture for stars that twinkle.
+   everything painted over them too:
 
-   Worse, several of its ambient loops animate PAINT properties inside the SVG,
-   sharks gliding on `offset-distance`, trade routes and the accretion disk and the
-   old roads flowing on `stroke-dashoffset`. Any one of those re-rasterises the WHOLE
-   832x1000 chart, sixty times a second, forever.
+       everything as shipped .................... 203 compositor layers
+       with the chart's animations off .......... 106
+       with every animation on the page off .....  83
 
-   And it charges all of that while you are looking at the DESK, where allocation
-   happens, and where the lag hurts most.
+   Several of its loops also animate PAINT properties inside the SVG (sharks on
+   `offset-distance`, routes and the accretion disk on `stroke-dashoffset`), and any
+   of those re-rasters the whole 832x1000 chart every frame. The chart is always in
+   view in the cabin (camera.js folds the timeline scene into "main"), so it cannot
+   simply rest while you look elsewhere.
 
-   My first instinct was to let the chart breathe only when the camera is on it, but
-   camera.js settles that: `if (name === "timeline" && cabin-on) name = "main"`. In the
-   cabin THERE IS NO TIMELINE SCENE. The chart lives ON THE DESK; it is always in view.
-   So there is no "while your back is turned", and gating on the scene would simply have
-   killed the chart's life forever, on every screen, permanently. Caught it in the verify.
-
-   And here is the part I must be honest about: I have NOT proven these 97 layers are
-   what costs frames. A software-rasterising browser is blind to
-   exactly the GPU cost I am accusing. So this does not ship as a silent amputation of
-   the chart's life. It ships as a SCALPEL you can hold:
-
-       F6 , the chart goes still (these 59 ambient loops stop; 203 layers -> 107)
-       F7 , the live FPS meter
-
-   He presses F7, reads the number, presses F6, reads it again. If it jumps, we have the
-   culprit and I go make the ambient life cheap on purpose (fewer twinklers, grouped into
-   a handful of layers) instead of guessing. If it does NOT jump, I have just saved the
-   chart from being butchered for nothing.
-
-   Only the AMBIENT loops (`infinite`) are listed, all 59 are decoration. The fx theatre
-   (draw-itself strokes, stamps, damage) is one-shot and untouched, so events still play
-   out on the chart. That distinction is the whole point: last time I reached for
-   `animation: none` with a `*` I blanked the main menu, and the time after that I killed
-   every impact shake in the game.
+   body.map-still stops the AMBIENT loops only (`infinite`, all decoration): F6 toggles
+   it, F7 shows the live FPS, and the Graphics setting turns it on for Medium and Low.
+   The one-shot effects (strokes drawing themselves, stamps, damage) are untouched, so
+   events still play out on the chart. Never reach for `animation: none` on `*`: it
+   blanks the main menu and kills every impact shake.
    ═══════════════════════════════════════════════════════════════════════════ */
 body.map-still :is(
 #timeline-rail .cc-beam,
@@ -6531,52 +5626,16 @@ body.map-still :is(
 ) { animation: none !important; }
 
 
-/* ── F4: THE LAB. Five configurations timed on my own machine, because mine
-      rasterises in software and is blind to his GPU. ── */
-#perf-lab { position: fixed; right: 16px; top: 16px; z-index: 99999; pointer-events: none;
-  display: flex; flex-direction: column; gap: 3px; min-width: 340px; padding: 13px 16px;
-  border-radius: 10px; background: rgba(5,13,12,.93); border: 1px solid rgba(102,240,200,.55);
-  font: 600 .64rem/1.5 var(--f-mono, monospace); letter-spacing: .05em; color: #9fe8d2;
-  box-shadow: 0 10px 34px rgba(0,0,0,.7); }
-#perf-lab > b { font-size: .78rem; letter-spacing: .2em; color: #eafff8; margin-bottom: 3px; }
-#perf-lab .gpu { font-size: .55rem; letter-spacing: .03em; padding-bottom: 5px;
-  border-bottom: 1px solid rgba(102,240,200,.22); margin-bottom: 5px; word-break: break-all; }
-#perf-lab .gpu.ok  { color: #6fbfa4; }
-#perf-lab .gpu.bad { color: #ff8a72; }
-#perf-lab .cue { font-size: .56rem; letter-spacing: .14em; color: #ffcf6a; margin-bottom: 6px; }
-#perf-lab .cue.done { color: #7ff0c0; margin: 6px 0 0; }
-#perf-lab .row { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; }
-#perf-lab .row i  { font-style: normal; color: #cfeee3; }
-#perf-lab .row b  { font-size: .82rem; letter-spacing: .04em; color: #eafff8; }
-#perf-lab .row b.ok  { color: #7ff0c0; }
-#perf-lab .row b.meh { color: #ffcf6a; }
-#perf-lab .row b.bad { color: #ff8a72; }
-#perf-lab .row em { grid-column: 1 / -1; font-style: normal; font-size: .52rem;
-  letter-spacing: .04em; color: #5d8f81; margin-bottom: 4px; }
-#perf-lab .row.run b { color: #ffcf6a; }
-
-
 /* ══════════════════════════════════════════════════════════════════════════════════
    THE CREDENTIAL, STRIPPED, and what remains, twice the size
    ----------------------------------------------------------------------------------
-   The game had too much text, and too much tiny text, and
-   that modern games do not survive that. He is right, but the fix is not "delete
-   words". It is knowing which of them were never words to begin with:
-
-       text you read ONCE is FICTION.
-       text you read a HUNDRED times is an INSTRUMENT, and an instrument is not read,
-       it is RECOGNISED.
-
-   The contracts and the case files are fiction: dense, typed, immersive. They stay
-   exactly as they are, that density is the world, and it is there on purpose.
-   The badge is an instrument. It is consulted every single turn, so anything on it that
-   still had to be READ was costing the player a glance they should have spent on the
-   game. Four things were squatting there that a credential does not carry (his own list)
-   and they have gone somewhere REAL: the equipment count deleted outright (the file
-   below already prints it), the gold onto the file as COINS, the booms onto a fuse rail
-   clamped to the badge's spine, the contract points onto the file as WAX SEALS.
-
-   What is left is what a credential is FOR, WHO, WHERE, and ARE THEY ALIVE.
+   Text you read ONCE is fiction; text you read a HUNDRED times is an instrument, and an
+   instrument is not read, it is recognised. The contracts and the case files are
+   fiction: dense, typed, immersive, on purpose. The badge is an instrument, consulted
+   every turn, so what does not belong on a credential went somewhere real: the
+   equipment count is gone (the file below prints it), the gold is COINS on the file, the
+   booms a fuse rail on the badge's spine, the contract points WAX SEALS on the file.
+   What is left is what a credential is FOR: WHO, WHERE, and ARE THEY ALIVE.
    ══════════════════════════════════════════════════════════════════════════════════ */
 
 /* room on the spine for the rail */
@@ -6587,29 +5646,14 @@ body.map-still :is(
 .pcard.cfolio .bd-photo span { font-size: 1.26rem; }
 .pcard.cfolio .bd-name { font-size: 1.02rem; letter-spacing: .015em; line-height: 1.15; }
 
-/* ── WHERE, the century is a NUMERAL, not a caption ── */
-.pcard.cfolio .bd-seen { display: flex; align-items: baseline; gap: 5px; margin-top: 3px; }
-.pcard.cfolio .bd-seen .bico { width: 13px; height: 13px; color: #6a7a80; align-self: center; }
-.pcard.cfolio .bd-seen b { font-size: 1.06rem; letter-spacing: .05em; color: #1c2428; line-height: 1; }
-.pcard.cfolio .bd-seen .bd-era { font-size: .53rem; letter-spacing: .12em; text-transform: uppercase; color: #6a7a80; }
 
 /* ── ALIVE. The player should read the opponents' life at a glance, the whole
       match. So the life is the biggest thing on the card, and it says its own
       state in colour: green, amber, red. You never read the word "critical". ── */
 .pcard.cfolio .badge .bd-life { gap: 8px; margin: 9px 0 8px; }
-.pcard.cfolio .bd-life-ico { width: 19px; height: 19px; }
-.pcard.cfolio .bd-lifebar { height: 19px; gap: 2px; }
-.pcard.cfolio .bd-lifebar i { border-radius: 2px; }
 .pcard.cfolio .bd-life-n { font-size: 1.42rem; min-width: 28px; }
-.pcard.cfolio .bd-life.warn .bd-lifebar i.on {
-  background: linear-gradient(180deg, #ffd27a, #e0982a); border-color: #a8701c;
-  box-shadow: 0 0 3px rgba(232,168,60,.55); }
 .pcard.cfolio .bd-life.warn .bd-life-n, .pcard.cfolio .bd-life.warn .bd-life-ico { color: #a8701c; }
-.pcard.cfolio .bd-life.crit .bd-lifebar i.on {
-  background: linear-gradient(180deg, #ff8a6a, #c0331f); border-color: #8c2114;
-  box-shadow: 0 0 4px rgba(210,60,30,.7); }
 .pcard.cfolio .bd-life.crit .bd-life-n, .pcard.cfolio .bd-life.crit .bd-life-ico { color: #b0301c; }
-.pcard.cfolio .bd-life.crit .bd-life-ico svg { animation: lowPulse 1.3s ease-in-out infinite; }
 
 /* ── THE ALLOCATION: it reads great on the badge. Bigger. ── */
 /* (cfolio registry overrides retired, the cabin STAR rules own the registry) */
@@ -6706,16 +5750,9 @@ body.cabin-on .pcard.cfolio .bd-photo span { font-size: 1.02rem; }
 body.cabin-on .pcard.cfolio .bd-name { font-size: .98rem !important; letter-spacing: .01em; }
 body.cabin-on .pcard.cfolio .bd-main { gap: 8px; margin-bottom: 2px; }
 
-/* WHERE, the century is the numeral, the era is its whisper */
-body.cabin-on .pcard.cfolio .bd-seen b { font-size: 1.0rem; }
-body.cabin-on .pcard.cfolio .bd-seen .bd-era { font-size: .5rem; }
-body.cabin-on .pcard.cfolio .bd-seen .bico { width: 12px; height: 12px; }
 
 /* ALIVE, the whole point. At a glance, the whole match. */
 body.cabin-on .pcard.cfolio .bd-life { margin: 7px 0 6px; gap: 7px; }
-body.cabin-on .pcard.cfolio .bd-life-ico { width: 18px; height: 18px; }
-body.cabin-on .pcard.cfolio .bd-lifebar { height: 17px; gap: 2px; }
-body.cabin-on .pcard.cfolio .bd-lifebar i { width: auto; height: auto; border-radius: 2px; }
 body.cabin-on .pcard.cfolio .bd-life-n { font-size: 1.24rem; min-width: 24px; }
 
 /* the allocation reads here, so it gets to be seen */
@@ -6868,13 +5905,10 @@ body.cabin-on .bracketed::after { display: none; }
    writing fast does not rule his letters.
    ══════════════════════════════════════════════════════════════════════════════════ */
 /* ══ IT IS A SCROLL, NOT A BEDSHEET ═══════════════════════════════════════════════
-   "ta meio ruim, quebrando a imersão essa folha de papel enorme comparada com os armarios
-   e o gato, transforma em uma especie de pergaminho, com formato de objeto."
-   He is right, and the failure is one of SCALE, which is the fastest way to break a
-   diorama: the log filled its whole quadrant, so it read as a background, a wall the desk
-   was painted on, instead of a THING lying on the wood next to a cat who is roughly a
-   cat's size. An object earns its place by being smaller than the room it is in.
-   So it becomes what a traveller's field record actually is: a parchment. Rolled at both
+   A sheet filling its whole quadrant reads as a background, a wall the desk was painted
+   on, instead of a THING lying on the wood next to the cat. An object earns its place by
+   being smaller than the room it is in. So the log is what a traveller's field record
+   actually is: a parchment. Rolled at both
    ends onto its rods, hanging open in the middle, torn along the free edges, curling at
    the corners, and casting a real shadow onto the desk. Two thirds the width. And the hand
    gets BIGGER, not smaller, because the sheet shrinking is what buys the letters room. ══ */
@@ -6929,15 +5963,10 @@ body.cam-on .log-line:nth-child(11n)  { letter-spacing: -.008em; }   /* and a hu
 /* ══ THE PAGE TURNS WITH THE ERA. The chart beside it re-skins three ways and the log only
       ever knew the nautical one. Same hand, same ink-well, different sheet, because the
       century he is standing in is the century that hands him the paper. ══ */
-/* ...BUT THE PAPER STAYS YELLOW. "eu gostava do papel amarelo pro operations log, volta."
-   I over-read the brief: he asked for the log to be PERSONALISED by era, and I heard
-   "re-skin the sheet", so I turned his warm foolscap into a cold grey slate in the
-   Singularity and a pale vellum in the Origins, and threw away the one thing about that
-   page he actually loved. The paper is the traveller's own; he carries it, it does not
-   change because the century did.
-   What changes is what the century puts IN it: his INK. Sepia at sea, cold graphite out
-   among the stars, iron-gall in the deep past, same warm sheet, same hand, a different
-   pen in it. The personalisation he asked for, on the layer that can afford it. */
+/* ...BUT THE PAPER STAYS YELLOW. The log is personalised by era through its INK, not
+   its paper: the sheet is the traveller's own and does not change with the century.
+   Sepia at sea, cold graphite among the stars, iron-gall in the deep past; same warm
+   sheet, same hand, a different pen. */
 body.cam-on.era-sing .log-line { color: #2c3446; }
 body.cam-on.era-sing .log-time { color: #5a6a80; }
 body.cam-on.era-sing .log-list { box-shadow: inset 0 0 44px rgba(92,60,26,.28),
@@ -6989,12 +6018,6 @@ body.hand-cursor-on #hull { z-index: 5000; }
 #cursor-plane #hela-gaze.on { opacity: .92; }
 #cursor-plane #hela-gaze svg { width: 100%; height: 100%; display: block; overflow: visible;
   transition: transform .5s cubic-bezier(.3,.8,.3,1); }
-#hela-gaze .hg-ring { transform-origin: center; animation: hgRing 26s linear infinite; }
-#hela-gaze .hg-pupil { transform-origin: center; animation: hgPupil 4.8s ease-in-out infinite; }
-#hela-gaze .hg-lid { transform-origin: center; animation: hgBlink 6.5s ease-in-out infinite; }
-@keyframes hgRing { to { transform: rotate(360deg); } }
-@keyframes hgPupil { 0%,100% { transform: scale(.85); opacity:.7; } 50% { transform: scale(1.12); opacity:1; } }
-@keyframes hgBlink { 0%,42%,52%,100% { transform: scaleY(1); } 47% { transform: scaleY(.08); } }
 /* moods, colour + size say what she is doing */
 #hela-gaze[data-mode="idle"]  svg { transform: scale(.8); }
 #hela-gaze[data-mode="guide"] svg { transform: scale(1.02); }
@@ -7004,19 +6027,10 @@ body.hand-cursor-on #hull { z-index: 5000; }
 #cursor-plane #hela-gaze[data-mode="note"]  { color: #b49ae8; filter: drop-shadow(0 0 7px rgba(154,127,206,.6)); }
 /* she alarms with the helmet on low life, goes bounty-amber WANTED, and dead-cold when terminated */
 body.vz-crit #hela-gaze { color: #ff6a4a !important; filter: drop-shadow(0 0 10px rgba(226,70,50,.8)) !important; }
-@media (prefers-reduced-motion: reduce) {
-  #hela-gaze .hg-ring, #hela-gaze .hg-pupil, #hela-gaze .hg-lid { animation: none; } }
 
 
 /* HELA's gaze, the LABEL is the point: she names what she is pointing at, so you
    always know what her eye is doing. Idle (reading with you) she is small + quiet. */
-#cursor-plane #hela-gaze .hg-label { position: absolute; left: 62px; top: 50%;
-  transform: translateY(-50%) translateX(-4px); white-space: nowrap; pointer-events: none;
-  font: 700 .52rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: currentColor;
-  padding: 4px 8px; border: 1px solid currentColor; border-radius: 2px;
-  background: rgba(8, 16, 18, .58); box-shadow: 0 2px 10px rgba(0,0,0,.5);
-  text-shadow: 0 0 8px rgba(0,0,0,.7); opacity: 0; transition: opacity .3s ease, transform .3s ease; }
-#cursor-plane #hela-gaze.has-label .hg-label { opacity: .95; transform: translateY(-50%) translateX(0); }
 #cursor-plane #hela-gaze[data-mode="idle"] { opacity: .6; }         /* quiet when just reading along */
 #cursor-plane #hela-gaze[data-mode="idle"] svg { transform: scale(.62); }
 
@@ -7029,60 +6043,20 @@ body.vz-crit #hela-gaze { color: #ff6a4a !important; filter: drop-shadow(0 0 10p
 #hela-hud { position: fixed; left: 16px; top: 50px; z-index: 59; pointer-events: none;
   color: var(--vz, #66f0c8); font-family: var(--f-mono, monospace); opacity: 0; transition: opacity .5s ease; }
 #hela-hud.live { opacity: 1; }
-.hh-eye { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: none;
-  color: inherit; cursor: pointer; pointer-events: auto; display: block;
-  filter: drop-shadow(0 0 6px rgb(var(--vz-rgb, 102 240 200) / .5)); transition: transform .2s ease, filter .5s ease; }
-.hh-eye:hover { transform: scale(1.08); }
-.hh-eye svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.hh-eye .hh-ring { transform-origin: center; animation: hhRing 30s linear infinite; }
-.hh-eye .hh-lid { transform-origin: center; animation: hhBlink 6.8s ease-in-out infinite; }
-.hh-eye .hh-pupil { transform-origin: center; animation: hhPupil 5s ease-in-out infinite; }
-@keyframes hhRing { to { transform: rotate(360deg); } }
 @keyframes hhBlink { 0%,44%,54%,100% { transform: scaleY(1); } 49% { transform: scaleY(.06); } }
-@keyframes hhPupil { 0%,100% { transform: scale(.85); opacity:.7; } 50% { transform: scale(1.12); opacity:1; } }
-.hh-badge { position: absolute; right: -1px; top: -1px; width: 9px; height: 9px; border-radius: 50%;
-  background: #ffcf6a; box-shadow: 0 0 8px rgba(232,170,60,.9); opacity: 0; transform: scale(.4); transition: .25s; }
-.hh-badge.on { opacity: 1; transform: scale(1); animation: hhBadge 1.4s ease-in-out infinite; }
-@keyframes hhBadge { 50% { box-shadow: 0 0 15px rgba(232,170,60,1); } }
-#hela-hud.hh-ping .hh-eye { animation: hhPing .55s ease; }
-@keyframes hhPing { 40% { filter: drop-shadow(0 0 17px rgb(var(--vz-rgb, 102 240 200) / 1)); transform: scale(1.12); } }
 
-.hh-archive { position: absolute; left: 3px; top: 50px; width: 384px; pointer-events: auto;
-  transform-origin: 14px -34px; transform: scale(.5); opacity: 0; visibility: hidden;
-  transition: transform .34s cubic-bezier(.2,.9,.3,1.05), opacity .28s ease, visibility .34s;
-  background: linear-gradient(158deg, rgba(20,54,52,.44), rgba(8,18,20,.34));
-  border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .5); border-radius: 5px; padding: 8px 10px 9px;
-  box-shadow: 0 14px 46px rgba(0,0,0,.55), inset 0 0 34px rgb(var(--vz-rgb, 102 240 200) / .07);
-  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
-#hela-hud.open .hh-archive { transform: scale(1); opacity: 1; visibility: visible; }
-.hh-head { display: flex; align-items: center; gap: 7px; font-size: .52rem; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--vz, #66f0c8); }
-.hh-sigil { width: 15px; height: 15px; flex: 0 0 15px; } .hh-sigil svg { width: 100%; height: 100%; }
-.hh-title { font-weight: 700; }
-.hh-x { margin-left: auto; background: none; border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .4); color: inherit;
-  width: 18px; height: 18px; border-radius: 3px; cursor: pointer; font: .6rem/1 var(--f-mono,monospace); pointer-events: auto; }
-.hh-x:hover { background: rgb(var(--vz-rgb, 102 240 200) / .16); }
 .hh-say { font-size: .64rem; line-height: 1.36; font-style: italic; color: var(--vz-text, #c6f2e6); margin: 6px 3px 8px;
   text-shadow: 0 0 8px rgb(var(--vz-rgb, 102 240 200) / .35); min-height: 1.1em; }
 .hh-clip { position: relative; overflow: hidden; border-radius: 2px; }
 .hh-clip .bn-paper { width: 100%; box-shadow: 0 3px 12px rgba(0,0,0,.5);
   background: repeating-linear-gradient(0deg, rgba(90,69,38,.05) 0 2px, transparent 2px 4px), rgba(239,228,196,.92); }
 .hh-empty { padding: 24px 12px; text-align: center; font-size: .68rem; color: #9fd8cc; line-height: 1.5; font-style: italic; }
-.hh-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
-.hh-nav button { background: rgb(var(--vz-rgb, 102 240 200) / .08); border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .4); color: var(--vz,#66f0c8);
-  width: 30px; height: 22px; border-radius: 3px; cursor: pointer; font-size: .8rem; line-height: 1; pointer-events: auto; }
-.hh-nav button:hover:not(:disabled) { background: rgb(var(--vz-rgb, 102 240 200) / .2); }
-.hh-nav button:disabled { opacity: .3; cursor: default; }
 .hh-stamp { font-size: .52rem; letter-spacing: .14em; color: #9fd8cc; }
 
 /* HER COLOUR IS YOUR CONDITION, the state UIs, unified on her presence */
 #hela-hud[data-state="crit"] { color: #ff6a4a; }
-#hela-hud[data-state="crit"] .hh-eye { filter: drop-shadow(0 0 9px rgba(226,70,50,.85)); }
 #hela-hud[data-state="wanted"] { color: #e8a53a; }
-#hela-hud[data-state="wanted"] .hh-eye { filter: drop-shadow(0 0 8px rgba(200,130,40,.8)); }
 #hela-hud[data-state="paradix"] { color: #c8d0d4; }
-#hela-hud[data-state="paradix"] .hh-eye { filter: drop-shadow(0 0 7px rgba(200,60,50,.5)) grayscale(.7); }
-@media (prefers-reduced-motion: reduce) { .hh-eye .hh-ring, .hh-eye .hh-lid, .hh-eye .hh-pupil { animation: none; } }
 
 
 /* ═══ THE HERALD, nameplate ears + a proper broadsheet feel ═══ */
@@ -7133,7 +6107,6 @@ body.vz-crit #hela-gaze { color: #ff6a4a !important; filter: drop-shadow(0 0 10p
 /* PRIMITIVE A, the pupil aims (ballistic saccade), the socket perks when guiding */
 #hela-hud .hh-look { /* aimed via SVG transform attribute (user units) */ }
 #hela-hud.hh-sac .hh-lid { animation: hhBlink .18s ease; }
-#hela-hud.looking .hh-eye { transform: scale(1.07); filter: drop-shadow(0 0 10px currentColor); }
 @media (prefers-reduced-motion: reduce) { #hela-hud .hh-look { transition: none; } }
 
 /* PRIMITIVE B, one state class, four tokens redefined, HER WHOLE SURFACE obeys.
@@ -7142,7 +6115,6 @@ body.cabin-on.vz-wanted  { --vz: #e8a53a; --vz-dim: #8a6215; --vz-hot: #ffe6bd; 
 body.cabin-on.vz-paradix { --vz: #c8d0d4; --vz-dim: #6a7074; --vz-hot: #eef2f4; --vz-warn: #d23b2c; }
 /* the wash that sweeps HELA on a state latch is her tint cross-fading (cheap, no full-screen filter) */
 #hela-hud, #hela-hud .hh-eye, #hela-hud .hh-archive, .hela-msg, .hela-loghead { transition: color .5s ease, border-color .5s ease; }
-body.cabin-on.vz-paradix #hela-hud .hh-eye { filter: drop-shadow(0 0 7px rgba(210,60,44,.5)) grayscale(.55); }
 
 
 /* (the sightline laser was excised, the eye itself travels) */
@@ -7162,22 +6134,11 @@ body.cabin-on.vz-paradix #hela-hud .hh-eye { filter: drop-shadow(0 0 7px rgba(21
    ═══════════════════════════════════════════════════════════════════════════ */
 /* bigger eye, clear of the HOUR label + corner bracket; archive follows it down */
 #hela-hud { left: 24px; top: 66px; }
-#hela-hud .hh-eye { width: 60px; height: 60px; }
-#hela-hud .hh-archive { top: 66px; }
 #hela-hud .hh-say-cap { left: 70px; top: 12px; }
-/* a state HALO that pulses behind the eye, the glance-readout of your condition */
-#hela-hud .hh-eye::after { content: ""; position: absolute; inset: -7px; border-radius: 50%;
-  border: 1.5px solid currentColor; opacity: 0; pointer-events: none; transition: opacity .5s ease; }
-#hela-hud[data-state="crit"] .hh-eye::after,
-#hela-hud[data-state="wanted"] .hh-eye::after,
-#hela-hud[data-state="paradix"] .hh-eye::after { opacity: .5; animation: hhHalo 1.9s ease-in-out infinite; }
-@keyframes hhHalo { 50% { opacity: .14; transform: scale(1.1); } }
-@media (prefers-reduced-motion: reduce) { #hela-hud .hh-eye::after { animation: none; } }
 
 /* ── WANTED: a frontier amber wash on the visor edges + the bounty stays on the eye ── */
 body.cabin-on.vz-wanted .hull-visor::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 55;
   background: radial-gradient(120% 100% at 50% 120%, rgba(210,150,50,.22), transparent 62%); }
-body.cabin-on.vz-wanted #hela-hud .hh-eye { filter: drop-shadow(0 0 9px rgba(210,140,45,.8)); }
 
 /* ── PARADIX (you are terminated): the WORLD stays readable, it is the HELMET that
       died. Her grid goes black-and-white (the tokens do that) and the glass CRACKS
@@ -7189,7 +6150,6 @@ body.vz-paradix::before { content: ""; position: fixed; inset: 0; z-index: 58; p
   background-size: cover; }
 body.vz-paradix .hull-visor::before { opacity: .34 !important; }
 @media (prefers-reduced-motion: reduce) { body.vz-paradix::before { opacity: .7; } }
-
 
 
 /* DOSSIER LIFE, the number is the hero; a vital-sign trace replaces the countable bar
@@ -7221,12 +6181,6 @@ body.cabin-on .pcard.cfolio .bd-life-n { font-size: 1.5rem; }
 #hela-hud .hh-clip.flip > .bn-paper { animation: hhFlip .32s cubic-bezier(.3,.7,.3,1) both; transform-origin: left center; }
 @keyframes hhFlip { 0% { transform: rotateY(-26deg) translateX(-8px); opacity: .4; } 100% { transform: rotateY(0) translateX(0); opacity: 1; } }
 /* the nav reads as brass file-tabs, not OS chevrons */
-#hela-hud .hh-nav button { width: 34px; height: 24px; border-radius: 4px;
-  background: linear-gradient(180deg, rgb(var(--vz-rgb, 102 240 200) / .16), rgb(var(--vz-rgb, 102 240 200) / .05));
-  border: 1px solid rgb(var(--vz-rgb, 102 240 200) / .5); box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 1px 3px rgba(0,0,0,.4);
-  transition: transform .12s ease, background .15s ease; }
-#hela-hud .hh-nav button:hover:not(:disabled) { transform: translateY(-1px); }
-#hela-hud .hh-nav button:active:not(:disabled) { transform: translateY(1px); }
 @media (prefers-reduced-motion: reduce) { #hela-hud .hh-clip.flip > .bn-paper { animation: none; } }
 
 
@@ -7347,7 +6301,6 @@ body.hg-bless #rucksack-zone .ruck-pocket .card.act-ready {
   animation: none; }   /* the strong static glow reads; animating box-shadow repaints every frame */
 body.hg-bless #drawer-zone .ct-paper.ct-choose { box-shadow: 0 0 0 2px #e2c078, 0 0 16px rgba(226,192,120,.7); }
 body.hg-bless #machine-zone .cell.cell-choose { box-shadow: 0 0 0 2px #e2c078, 0 0 14px rgba(226,192,120,.8) !important; }
-@keyframes hgBreath { 50% { box-shadow: 0 0 0 2px #efd9a2, 0 0 26px rgba(226,192,120,.95), inset 0 0 10px rgba(226,192,120,.4); } }
 
 /* the HUNT, every valid target burns red, whole-card */
 body.hg-hunt .pcard.pcard-choose, body.hg-hunt .mc.targetable,
@@ -7355,7 +6308,6 @@ body.hg-hunt .market-row .card.can-destroy, body.hg-hunt .market-row .card.can-s
 body.hg-hunt .prompt .card.is-actionable {
   box-shadow: 0 0 0 2px #ff5a44, 0 0 22px rgba(255,90,68,.65), inset 0 0 10px rgba(255,90,68,.22) !important;
   animation: none; }
-@keyframes hgHuntPulse { 50% { box-shadow: 0 0 0 3px #ff7a5a, 0 0 32px rgba(255,90,68,.9), inset 0 0 14px rgba(255,90,68,.35); } }
 @media (prefers-reduced-motion: reduce) {
   body.hg-bless #rucksack-zone .ruck-pocket .card.act-ready, body.hg-hunt .pcard.pcard-choose { animation: none; } }
 
@@ -7522,7 +6474,6 @@ body.cabin-on #log-zone .log-list, body.cabin-on #log-zone .hela-loghead { displ
 .hb-page { overflow: visible; }                 /* the tab must show above the paper */
 
 
-
 /* ── WANTED, done as the FRONTIER: dust on the glass, a sheriff's star for a halo,
       and every word of hers set in woodtype. The tokens already ride amber. ── */
 body.cabin-on.vz-wanted .hull-visor {
@@ -7635,7 +6586,6 @@ body.vz-wanted #hela-eye .he-svg { transform: scale(1.12); }
 #hela-brain-full .ledger .ledger-row, #hela-brain-full .ledger .ledger-empty {
   color: var(--vz-text, #bfe8db) !important; text-shadow: 0 0 6px rgba(0,0,0,.9); background: none !important;
   border-color: color-mix(in srgb, var(--vz, #6fe8c8) 18%, transparent) !important; }
-
 
 
 /* ═══ THE NEWS BLOOMS FROM THE EYE, same object, two moments ═══ */
@@ -7797,14 +6747,6 @@ body.rt-stage #players-zone .pcard.rt-lift { opacity: 1; transform: translateY(-
 .bd-fuserail.rt-src { position: absolute; }
 @keyframes rtSrcBreathe { 50% { transform: scale(1.12); } }
 /* the causality chip */
-.rt-chip { position: fixed; z-index: 59940; width: 26px; height: 26px; margin: 0; pointer-events: none;
-  display: grid; place-items: center; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, rgba(20,40,34,.95), rgba(6,18,14,.9));
-  border: 1px solid var(--vz, #6fe8c8); color: var(--vz, #6fe8c8);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--vz, #6fe8c8) 55%, transparent); }
-.rt-chip svg { width: 15px; height: 15px; }
-.rt-chip.rt-paradox { border-color: #b48ce8; color: #cdb2f2; box-shadow: 0 0 10px rgba(180,140,232,.55); }
-.rt-chip.rt-heat { border-color: #ff8a5a; color: #ffb08a; box-shadow: 0 0 10px rgba(255,138,90,.55); }
 @media (prefers-reduced-motion: reduce) {
   .rt-src::after { animation: none; }
   body.rt-stage #players-zone .pcard.rt-lift { transform: none; } }
@@ -7880,8 +6822,6 @@ body.rt-stage #players-zone .pcard.rt-lift { opacity: 1; transform: translateY(-
 .badge .bd-line2 .bd-life-n { font-size: 1.12rem; line-height: 1; flex: none; min-width: 22px; text-align: right; }
 /* THE GENERATOR REGISTRY, big, spacious, legible (it finally registers) */
 .badge .bd-alloc { display: flex; align-items: center; gap: 10px; margin: 7px 0 3px; }
-.badge .bd-alloc .bico { flex: none; }
-.badge .bd-alloc .bico svg { width: 18px; height: 18px; }
 .ba-slots { display: flex; gap: 10px; flex: 1 1 auto; }
 .ba-fn { display: flex; gap: 6px; padding: 7px 8px; border-radius: 6px; flex: 1 1 0;
   justify-content: center; align-items: center;
@@ -7961,18 +6901,6 @@ body.cabin-on .cam-world[data-scene="drawer"] #timeline-rail * {
 
 /* ═══ THE COINS LIVE ON THE FILE, physical objects on the aesthetic CASE row ═══ */
 body.cabin-on .pcard.cfolio .cs-head { position: relative; }
-body.cabin-on .pcard.cfolio .cs-coins { position: absolute; left: 0; right: 0; top: 50%;
-  transform: translateY(-50%); height: 20px; pointer-events: none; z-index: 2;
-  display: flex; align-items: center; }
-body.cabin-on .pcard.cfolio .cs-coins i { width: 17px; height: 17px; border-radius: 50%; flex: none;
-  margin-left: -6px; transform: rotate(calc(var(--k) * 17deg)) translateY(calc((var(--k) - 2) * .6px));
-  background: radial-gradient(circle at 34% 28%, #f6df9a, #cfa050 55%, #93702c);
-  border: 1px solid #6e5422;
-  box-shadow: 0 2px 3px rgba(0,0,0,.45), inset 0 1.5px 0 rgba(255,242,205,.8), inset 0 -1.5px 2px rgba(90,64,20,.55); }
-body.cabin-on .pcard.cfolio .cs-coins i:first-child { margin-left: 0; }
-body.cabin-on .pcard.cfolio .cs-coins b { margin-left: 6px;
-  font: 800 .68rem/1 var(--f-mono, monospace); color: #7c5a14;
-  text-shadow: 0 1px 0 rgba(255,240,200,.6); }
 
 
 /* ═══ A CARD MATERIALISES / DISSOLVES ON THE FILE ═══ */
@@ -8025,7 +6953,6 @@ body.cabin-on #players-zone .pcard.cfolio.dk-held { cursor: grabbing; z-index: 4
   filter: drop-shadow(0 8px 12px rgba(0,0,0,.45)) drop-shadow(0 16px 26px rgba(0,0,0,.35)); }
 
 
-
 /* ══ A REFUSED GENERATOR ══
    A module that will not take a die used to do nothing at all: no flash, no sound, no
    word. Three first-time players each lost over a minute to that silence, convinced the
@@ -8051,10 +6978,10 @@ body.cabin-on #players-zone .pcard.cfolio.dk-held { cursor: grabbing; z-index: 4
 .seat-kind.bot-cycle { cursor: pointer; }
 .seat-kind.bot-cycle:hover { color: #ffd989; border-color: #c9964a; }
 
-/* ═══ THE SERVICE RECORD: o perfil no menu principal ═══════════════════════
-   Nome fixo, cor do operativo e a folha de servico (partidas, vitorias,
-   sequencia). Fica no menu porque e ali que a galera se configura antes de
-   sentar na mesa. Nada disso sai desta maquina. */
+/* ═══ THE SERVICE RECORD: the profile on the main menu ═══════════════════════
+   Fixed name, the operative's colour and the service record (matches, wins, streak).
+   It is on the menu because that is where everyone sets up before sitting down.
+   None of it leaves this machine. */
 .profile-card { margin-top: 14px; }
 .prof-top { display: flex; gap: 14px; align-items: flex-start; }
 .prof-swatches { display: grid; grid-template-columns: repeat(3, 26px); gap: 6px; }
@@ -8120,10 +7047,6 @@ body.gfx-medium .hh-veil, body.gfx-low .hh-veil { background: rgba(8,6,4,.22); }
 /* THE NAP (main.js): a table where nothing has happened for a while holds every CSS
    animation still, so it costs no frames at all. The table only naps once no one-shot
    effect is playing, and wakes on the first input or game message. */
-/* (the two :not(#id) only lift the specificity over the few loops that set their own
-   `animation: ... !important`) */
-html:not(#pdx-a):not(#pdx-b) body.pdx-nap *, html:not(#pdx-a):not(#pdx-b) body.pdx-nap *::before,
-html:not(#pdx-a):not(#pdx-b) body.pdx-nap *::after { animation-play-state: paused !important; }
 
 /* a resize (fullscreen, window drag) re-rasters the promoted layers at the new scale.
    Without this, Chrome keeps the old raster scale of a will-change layer and simply
@@ -8279,7 +7202,6 @@ body.sheet-ext-r #timeline-rail > .cplot svg.pc-world { -webkit-mask-image: line
 body.sheet-ext-b.sheet-ext-r #timeline-rail > .cplot svg.pc-world {
   -webkit-mask-image: linear-gradient(#000 calc(100% - 48px), transparent), linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(#000 calc(100% - 48px), transparent), linear-gradient(90deg, #000 calc(100% - 48px), transparent);
   -webkit-mask-composite: source-in, source-over; mask-composite: intersect, add; }
-
 
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -8454,25 +7376,8 @@ body.cx-your-move[data-cx-move="allocate"] #confirm-alloc:not(:disabled) {
   .cx-cap { transition: opacity .14s ease; transform: none; }
   body.cx-your-move[data-cx-move="allocate"] #confirm-alloc:not(:disabled) { animation: none; } }
 
-/* THE STRIP (L): the story so far as a page of comic panels, newest first.
-   Opened by the player, closed by L, Esc or a click; it does not exist while shut. */
-.cx-strip { position: fixed; inset: 0; z-index: 59850; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 12px; padding: 40px; background: rgba(12,9,6,.62); cursor: pointer; }
-.cx-strip-head { font: 700 .8rem/1 var(--f-mono, monospace); letter-spacing: .22em; color: var(--cx-paper);
-  padding: 6px 12px; background: var(--cx-ink); border: 2px solid var(--cx-paper); }
-.cx-strip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 330px)); gap: 12px; max-width: 1040px; }
-.cx-panel { display: flex; flex-direction: column; min-height: 76px; background:
-    radial-gradient(circle, rgba(120,84,20,.14) 1px, transparent 1.4px) 0 0 / 5px 5px, var(--cx-paper);
-  border: 2.5px solid var(--cx-ink); box-shadow: 4px 4px 0 var(--cx-ink);
-  font: 500 .86rem/1.3 var(--f-display, "Oswald", sans-serif); color: #1d1409; }
-.cx-panel .cx-tag { align-self: flex-start; }
-.cx-panel.cx-danger { background: #f7d9c8; }
-.cx-panel.cx-danger .cx-tag { background: #9e1e14; }
-.cx-panel.cx-good { background: #f8e7a0; }
-.cx-panel b { font-weight: 700; }
 /* skipping: the lettering stays quiet so the replay can race */
 body.cx-skipping #cx-root .cx-hit { display: none; }
-
 
 /* ═══ HELA SPEAKS FROM HER EYE: the eye's chip (cabin.js .he-chip) as a comic speech
    balloon in her colour, which is my colour. Her eye is the speaker mark, the tail
@@ -8581,3 +7486,176 @@ body.gfx-low .cx-em .cx-new { animation: none; }
   background: #fffbe8; border-left: 2.5px solid var(--cx-ink); border-bottom: 2.5px solid var(--cx-ink); transform: rotate(45deg); }
 @keyframes cxRivalIn { from { opacity: 0; transform: translate(0, -50%) scale(.85); } to { opacity: 1; transform: translate(0, -50%); } }
 @media (prefers-reduced-motion: reduce) { .cx-rival, .cx-mmark { animation: none; } }
+
+/* ── TOP RIGHT: settings only ───────────────────────────────────────────────
+   The seat tokens up here repeated what the case files and the pieces on the
+   map already show, so the corner keeps one thing: a settings button big
+   enough to hit without aiming. */
+.priority-strip { display: none !important; }
+#btn-settings, #hull .vz-rail #btn-settings.icon-btn.hull-knob {
+  width: 44px; height: 44px; min-width: 44px; border-width: 2px; }
+#btn-settings svg, #hull .vz-rail #btn-settings.icon-btn.hull-knob svg { width: 26px; height: 26px; }
+
+/* ══ FIGURE AND GROUND ON THE CHARTS ═══════════════════════════════════════════
+   The pieces stand on plates (board_draft.js window.__pdxPlate): knockout halo, ground
+   shadow, ink disc, light rim, seat ring, a YOU tag on mine and initials on a rival's;
+   the Merchant on a gold cartouche with a MERCHANT tag. All static SVG. What CSS adds:
+   the one-shot arrival pulse, the Merchant's WHEN / HOW / WHY readout (open on hover, in
+   the Market phase and while he sails), and stronger plates in the accessible interface. */
+#timeline-rail .pc-piece-g .pc-tag rect, #timeline-rail .pc-merch-live .pc-tag rect { vector-effect: non-scaling-stroke; }
+/* the arrival pulse: once, the render my piece lands (never a loop) */
+#timeline-rail .pc-pulse { transform-box: fill-box; transform-origin: center;
+  animation: pcPulse 1.8s ease-out 1 both !important; }
+@keyframes pcPulse { from { transform: scale(.9); opacity: .95; } to { transform: scale(2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #timeline-rail .pc-pulse { display: none; } }
+html.pdx-a11y #timeline-rail .pc-pulse { display: none; }
+/* the Merchant's readout: the one-line summary always, the full rule at the key moments */
+#timeline-rail .pc-mhud-full, #timeline-rail .pc-mhud-key { display: none; }
+#timeline-rail .pc-mhud-pill { pointer-events: auto; cursor: help; }
+#timeline-rail .pc-mhud:hover .pc-mhud-full,
+#timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-full,
+#timeline-rail .pc-merch-live:hover ~ .pc-mhud .pc-mhud-key,
+body[data-phase="market"] #timeline-rail .pc-mhud-full,
+body[data-phase="market"] #timeline-rail .pc-mhud-key,
+body.pc-mtrip #timeline-rail .pc-mhud-full,
+body.pc-mtrip #timeline-rail .pc-mhud-key { display: inline; }
+/* while he sails, his clone travels; the live piece waits out of sight */
+body.pc-mtrip #timeline-rail .pc-merch-live { visibility: hidden; }
+/* the ACCESSIBLE INTERFACE: thicker rings and rims, larger pieces and tags */
+html.pdx-a11y #timeline-rail .pc-ring { stroke-width: 4.6px; }
+html.pdx-a11y #timeline-rail .pc-disc { stroke-width: 2.6px; fill-opacity: 1; }
+html.pdx-a11y #timeline-rail .pc-crown { stroke-width: 6.5px; }
+html.pdx-a11y #timeline-rail .pc-crown-c { stroke-width: 3.6px; }
+html.pdx-a11y #timeline-rail .pc-knock { opacity: 1; }
+html.pdx-a11y #timeline-rail .pc-piece { transform: scale(1.14); }
+html.pdx-a11y #timeline-rail .pc-tag rect { stroke-width: 2.2px; }
+html.pdx-a11y #timeline-rail .pc-mhud-full text { font-weight: bold; }
+/* the Merchant's rule by his stall (game.js renderMarket, the same words as the map) */
+.market-zone .market-meta .mm-rule { width: 290px; max-width: 290px; margin-top: 2px; padding: 7px 10px 6px;
+  background: #f8efd6; color: #2a1c08; border: 2px solid #2a1c08; border-radius: 4px;
+  box-shadow: inset 0 0 0 3px #f8efd6, inset 0 0 0 4px #b8862a, 3px 4px 0 rgba(0,0,0,.45);
+  font: 500 .66rem/1.35 Georgia, serif; text-align: left; transform: rotate(-.6deg); }
+.market-zone .market-meta .mm-rule p { margin: 0 0 3px; }
+.market-zone .market-meta .mm-rule b { display: inline-block; min-width: 3.4em; color: #8a5a12; letter-spacing: .08em; font-size: .92em; }
+html.pdx-a11y .market-zone .market-meta .mm-rule { font-size: .78rem; font-weight: 600; width: 330px; max-width: 330px; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ONE VOICE, SLOWLY. HELA and her eye are one being: every box that speaks wears her
+   eye and her colour (the narrator boxes, YOUR MOVE, the phase line, the footnotes,
+   the MEANWHILE title), and nothing snaps in or out: every fade takes its time.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.cx-cap { transition: opacity .5s ease, transform .55s cubic-bezier(.2,.8,.25,1);
+  box-shadow: 0 0 0 3px var(--vz, #c9a45c), 4px 4px 0 3px var(--cx-ink); align-items: center; }
+.cx-cap::before { content: ""; flex: 0 0 24px; height: 24px; margin: 0 2px 0 7px; border-radius: 50%;
+  border: 2px solid var(--cx-ink); background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M-9 0 Q0 -7 9 0 Q0 7 -9 0 Z' fill='%23fff8e8' stroke='%23140d06' stroke-width='1.8'/%3E%3Ccircle r='2.8' fill='%23140d06'/%3E%3C/svg%3E") center / 18px no-repeat, var(--vz, #c9a45c); }
+.cx-cap .cx-tag { align-self: stretch; }
+.cx-cap.cx-you { box-shadow: 0 0 0 3px var(--vz, #c9a45c), 4px 4px 0 3px var(--cx-ink); }
+.cx-slot-note::before { flex-basis: 20px; height: 20px; }
+.cx-sig { background: var(--vz, #c9a45c); }
+body.cx-on #hela-eye .he-chip { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.8,.25,1); }
+.cx-say { animation-duration: .5s; }
+.cx-grid { animation-duration: .6s; }
+.cx-grid.out { animation: cxGridOut .8s ease-in both; }
+.cx-gp { animation: cxPanelIn .5s cubic-bezier(.3,1.3,.5,1) both; animation-delay: calc(var(--i, 0) * 450ms); }
+.cx-grid-tag { display: inline-flex; align-items: center; gap: 7px; }
+.cx-grid-tag::before { content: ""; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--cx-paper);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M-9 0 Q0 -7 9 0 Q0 7 -9 0 Z' fill='%23fff8e8' stroke='%23140d06' stroke-width='1.8'/%3E%3Ccircle r='2.8' fill='%23140d06'/%3E%3C/svg%3E") center / 14px no-repeat, var(--vz, #c9a45c); }
+.cx-grid-key { margin: 6px 0 0 2px; font: 500 .7rem/1.2 var(--f-display, "Oswald", sans-serif); color: var(--cx-paper);
+  text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+.cx-rival.out { animation: cxRivalOut .7s ease-in both; }
+@keyframes cxRivalOut { to { opacity: 0; transform: translate(0, -60%); } }
+@media (prefers-reduced-motion: reduce) { .cx-cap, body.cx-on #hela-eye .he-chip { transition: opacity .5s ease; } .cx-rival.out { animation: none; opacity: 0; } }
+
+/* ═══ THE PHASE LINE: under the phase track, what this phase is for and who may act ═══ */
+#cx-phaseline { position: absolute; left: 50%; top: 44px; transform: translate(-50%, -4px); opacity: 0;
+  display: flex; align-items: center; gap: 0; max-width: min(860px, 60vw); padding: 4px 12px 5px 6px;
+  font: 500 .8rem/1.3 var(--f-display, "Oswald", sans-serif); letter-spacing: .02em; color: #1d1409; text-shadow: none;
+  background: var(--cx-paper); border: 2px solid var(--cx-ink);
+  box-shadow: 0 0 0 2px var(--vz, #c9a45c), 3px 3px 0 2px var(--cx-ink);
+  transition: opacity .6s ease, transform .6s ease; pointer-events: none; white-space: normal; }
+#cx-phaseline.on { opacity: 1; transform: translate(-50%, 0); }
+#cx-phaseline::before { content: ""; flex: 0 0 20px; height: 20px; margin-right: 7px; border-radius: 50%;
+  border: 1.5px solid var(--cx-ink); background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M-9 0 Q0 -7 9 0 Q0 7 -9 0 Z' fill='%23fff8e8' stroke='%23140d06' stroke-width='1.8'/%3E%3Ccircle r='2.8' fill='%23140d06'/%3E%3C/svg%3E") center / 14px no-repeat, var(--vz, #c9a45c); }
+#cx-phaseline b { font-weight: 700; letter-spacing: .06em; margin-right: 4px; }
+#cx-phaseline .cx-name { margin: 0 2px; font-size: .74rem; }
+@media (prefers-reduced-motion: reduce) { #cx-phaseline { transition: opacity .6s ease; } }
+
+/* ═══ HELA'S MEMORY: her memory as a comic book on the paperwork desk (cabin.js) ═══
+   Closed it is one cover strip (her eye, the Hour, new entries, the L key); open it
+   fills the free desk below the drawers: one page per Hour, entries as panels, the
+   Herald's notices as clippings, the ledger of loose rolls in the margin. */
+#hela-brain-full.hbk { inset: auto; left: 18%; top: 5%; right: auto; bottom: auto; width: auto; height: auto;
+  z-index: 40; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; cursor: default;
+  font-family: var(--f-display, "Oswald", sans-serif); }
+#hela-brain-full.hbk.open { left: 18%; top: 3%; right: 2%; bottom: 3%; }
+/* (the gauntlet parks on the desk's left edge, so the book starts clear of it; open,
+   the book lies on top of whatever wanders the desk, the cat included) */
+body.cabin-on #log-zone:has(#hela-brain-full.open) { z-index: 30; }
+/* HELA pointing the way (her direction chip) and speaking at once: the words sit above */
+#hela-eye.he-directs .he-chip { top: auto; bottom: 30px; }
+.hbk-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hbk-toggle { display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px 10px 10px; cursor: pointer;
+  font: 500 1rem/1 var(--f-display, "Oswald", sans-serif); color: #1d1409; letter-spacing: .03em;
+  background: radial-gradient(circle, rgba(120,84,20,.14) 1px, transparent 1.4px) 0 0 / 5px 5px, var(--cx-paper);
+  border: 3px solid var(--cx-ink); box-shadow: 0 0 0 3px var(--vz, #c9a45c), 5px 5px 0 3px var(--cx-ink);
+  transition: transform .25s ease, box-shadow .25s ease; }
+.hbk-toggle:hover { transform: translate(-1px, -2px); box-shadow: 0 0 0 3px var(--vz, #c9a45c), 7px 7px 0 3px var(--cx-ink); }
+.hbk-eye { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--cx-ink); flex: 0 0 34px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M-9 0 Q0 -7 9 0 Q0 7 -9 0 Z' fill='%23fff8e8' stroke='%23140d06' stroke-width='1.8'/%3E%3Ccircle r='2.8' fill='%23140d06'/%3E%3C/svg%3E") center / 26px no-repeat, var(--vz, #c9a45c); }
+.hbk-name { font-size: 1.25rem; letter-spacing: .06em; }
+.hbk-state { font-size: .9rem; color: #5a4526; }
+.hbk-state::before { content: "\00b7  "; }
+.hbk-new:not(:empty) { padding: 3px 9px; background: #b3261a; color: #fff4dc; border: 2px solid var(--cx-ink);
+  font: 700 .78rem/1 var(--f-mono, monospace); letter-spacing: .08em; }
+.hbk-toggle kbd { font: 700 .8rem/1 var(--f-mono, monospace); padding: 4px 7px; border: 2px solid var(--cx-ink);
+  background: #fffbe8; box-shadow: 2px 2px 0 var(--cx-ink); color: var(--cx-ink); }
+.hbk-nav { display: none; align-items: center; gap: 8px; }
+.hbk.open .hbk-nav { display: flex; }
+.hbk-prev, .hbk-next { width: 44px; height: 40px; font: 700 1rem/1 var(--f-mono, monospace); cursor: pointer; color: var(--cx-paper);
+  background: var(--cx-ink); border: 2.5px solid var(--cx-paper); box-shadow: 3px 3px 0 rgba(0,0,0,.6); }
+.hbk-prev:disabled, .hbk-next:disabled { opacity: .35; cursor: default; }
+.hbk-hours { display: flex; gap: 5px; flex-wrap: wrap; max-width: 560px; }
+.hbk-hours button { padding: 5px 9px; cursor: pointer; font: 700 .82rem/1 var(--f-mono, monospace); color: var(--cx-ink);
+  background: #fffbe8; border: 2px solid var(--cx-ink); box-shadow: 2px 2px 0 var(--cx-ink); }
+.hbk-hours button.on { background: var(--vz, #c9a45c); transform: translateY(-2px); box-shadow: 2px 4px 0 var(--cx-ink); }
+.hbk-body { display: none; flex: 1; min-height: 0; gap: 14px; }
+.hbk.open .hbk-body { display: flex; animation: hbkOpen .55s ease-out both; }
+@keyframes hbkOpen { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.hbk-page { flex: 1; min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 18px;
+  background: radial-gradient(circle, rgba(120,84,20,.12) 1px, transparent 1.4px) 0 0 / 6px 6px, #f7eed2;
+  border: 3px solid var(--cx-ink); box-shadow: 6px 6px 0 var(--cx-ink); }
+.hbk-page::-webkit-scrollbar { width: 10px; } .hbk-page::-webkit-scrollbar-thumb { background: var(--cx-ink); }
+.hbk-title { display: inline-block; margin: 0 0 12px; padding: 5px 14px; font: 700 1.3rem/1 var(--f-display, "Oswald", sans-serif);
+  letter-spacing: .12em; color: var(--cx-paper); background: var(--cx-ink); box-shadow: 4px 4px 0 var(--vz, #c9a45c); }
+.hbk-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; align-items: start; }
+.hbk-panel { display: flex; flex-direction: column; gap: 4px; padding: 7px 10px 9px; color: #1d1409;
+  font: 500 .95rem/1.3 var(--f-display, "Oswald", sans-serif); background: #fffdf3;
+  border: 2.5px solid var(--cx-ink); box-shadow: 3px 3px 0 var(--cx-ink); }
+.hbk-panel .hbk-tag { align-self: flex-start; padding: 2px 7px; font: 700 .64rem/1.2 var(--f-mono, monospace); letter-spacing: .14em;
+  color: #fff8e4; background: #5a4526; }
+.hbk-panel.k-danger .hbk-tag { background: #9e1e14; } .hbk-panel.k-paradox .hbk-tag { background: #5b3f99; }
+.hbk-panel.k-market .hbk-tag { background: #8a5a12; } .hbk-panel.k-cp .hbk-tag { background: #2f6b3a; }
+.hbk-panel.k-travel .hbk-tag { background: #245a86; }
+.hbk-panel .hbk-text svg { vertical-align: -3px; }
+.hbk-quiet { font-style: italic; color: #6a5638; }
+.hbk-chapter { grid-column: 1 / -1; padding: 4px 12px; font: 700 .8rem/1.2 var(--f-mono, monospace); letter-spacing: .3em;
+  color: var(--cx-paper); background: var(--cx-ink); }
+.hbk-clip { grid-column: span 2; display: flex; flex-direction: column; gap: 4px; padding: 10px 14px 12px; text-align: left; cursor: pointer;
+  font: 400 .92rem/1.3 Georgia, "Times New Roman", serif; color: #1e160b; background: #efe4c6;
+  border: 1.5px solid #6a5638; box-shadow: 3px 4px 0 rgba(0,0,0,.35); transform: rotate(-.8deg);
+  clip-path: polygon(0 3%, 4% 0, 12% 2%, 22% 0, 35% 3%, 48% 0, 60% 2%, 74% 0, 86% 3%, 100% 1%, 99% 96%, 90% 100%, 76% 97%, 60% 100%, 45% 97%, 30% 100%, 15% 97%, 3% 100%, 1% 60%);
+  transition: transform .3s ease; }
+.hbk-clip:nth-child(even) { transform: rotate(.7deg); }
+.hbk-clip:hover { transform: rotate(0) translateY(-2px); }
+.hbk-clip-kick { font: 700 .64rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: #7a2a1a; }
+.hbk-clip b { font-size: 1.15rem; line-height: 1.15; }
+.hbk-clip-sub { font-style: italic; }
+.hbk-clip-read { align-self: flex-end; font: 700 .72rem/1 var(--f-mono, monospace); letter-spacing: .1em; text-decoration: underline; }
+.hbk-side { display: flex; flex-direction: column; gap: 6px; width: 200px; flex: 0 0 200px; }
+.hbk-side-tag { padding: 4px 8px; font: 700 .62rem/1.3 var(--f-mono, monospace); letter-spacing: .12em; color: var(--cx-paper); background: var(--cx-ink); }
+.hbk-side:not(:has(.ledger)) { display: none; }
+@media (prefers-reduced-motion: reduce) { .hbk.open .hbk-body { animation: none; } .hbk-toggle, .hbk-clip { transition: none; } }
+/* the waiting line lives in HELA's YOUR MOVE box now; the old chip would say it twice */
+body.cx-on #waiting-chip { display: none !important; }
+.cx-cap.cx-wait .cx-tag { background: #5a4526; }

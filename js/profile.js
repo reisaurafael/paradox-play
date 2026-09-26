@@ -1,19 +1,19 @@
 /* =========================================================================
-   profile.js, o perfil do operativo, guardado NESTA maquina
+   profile.js, the operative's profile, kept on THIS machine
 
-   Nome fixo, cor preferida, e o historico das partidas com a taxa de vitoria.
-   Tudo vive no localStorage do proprio app: nada sai daqui, nao existe conta,
-   nao existe servidor de perfil, ninguem coleta nada de ninguem.
+   Fixed name, preferred colour, and the match history with the win rate.
+   It all lives in the app's own localStorage: nothing leaves, there is no
+   account, no profile server, nobody collects anything from anyone.
    ========================================================================= */
-// Na mesa dividida cada painel e um jogador. O painel 1 e o dono da maquina
-// e usa o perfil de sempre; os outros guardam o seu em chave propria, senao
-// os quatro escreveriam a mesma folha de servico.
-const PAINEL = (() => {
-  try { return parseInt(new URLSearchParams(location.search).get("painel")) || 0; } catch (e) { return 0; }
+// On the split-screen table each panel is a player. Panel 1 is the machine's
+// owner and uses the usual profile; the others keep theirs under their own key,
+// or all four would write to the same service record.
+const PANEL = (() => {
+  try { return parseInt(new URLSearchParams(location.search).get("panel")) || 0; } catch (e) { return 0; }
 })();
-const KEY = "paradoxo.profile.v1" + (PAINEL > 1 ? ".painel" + PAINEL : "");
+const KEY = "paradoxo.profile.v1" + (PANEL > 1 ? ".panel" + PANEL : "");
 const MAX_HISTORY = 40;
-import { seatColor, setHelaColour } from "./util.js?202609261550";
+import { seatColor, setHelaColour } from "./util.js?202609261656";
 // HELA wears the chosen colour from the menu on; in a match game.js hands her the
 // seat colour the server settled (the same one the piece wears on the map).
 function tintHela(i) { try { setHelaColour(seatColor(i)); } catch (e) {} }
@@ -56,8 +56,8 @@ export const profile = {
     return write(p);
   },
 
-  /** Uma partida terminada entra no historico. Guardo o que da para conferir
-      depois numa conversa de bar: quando, quem ganhou, quantas Horas, o meu CP. */
+  /** A finished match goes into the history. I keep what is worth checking
+      later over a drink: when, who won, how many Hours, my CP. */
   record(entry) {
     const p = read();
     p.history.push({

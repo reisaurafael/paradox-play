@@ -6,11 +6,11 @@
    decisions pan it between 4 scenes (main / market / drawer / timeline). Panning
    between flat 2D scenes is what creates the 2.5D feel, no real 3D. Presentation
    only: never touches engine state or the applyState/playEvent ingest path. Only
-   real user gestures _engage() the camera, so the passive headless client
-   (shot_game.py) stays at the identity "main" scene.
+   real user gestures _engage() the camera, so a passive headless client
+   (tools/dev/harness.py shot) stays at the identity "main" scene.
    ========================================================================= */
 
-import { audio } from "./audio.js?202609261550";
+import { audio } from "./audio.js?202609261656";
 
 const SCENES = new Set(["main", "market", "drawer", "timeline"]);
 const ZONE_SCENE = { market: "market", secret: "market", receptor: "drawer" };
@@ -68,14 +68,6 @@ export class Camera {
     }, 180);
   }
 
-  // Bounded, timed settle for cross-scene FX, NEVER transitionend (would hang the paced queue).
-  camWait(ms) {
-    if (!this._engaged || this._reduced()) return 0;
-    if (this.game && (this.game.pendingDecision || (this.game.queue && this.game.queue.length > 6))) return 0;
-    if (typeof document !== "undefined" && document.hidden) return 0;
-    return ms;
-  }
-
   // Phase is a SOFT suggestion (scene != phase). Passive/headless never auto-moves.
   suggestScene() {
     // Disabled by design: nothing auto-moves the camera. A pending decision beckons
@@ -126,5 +118,4 @@ export class Camera {
     if (to === "timeline" && document.body.classList.contains("cabin-on")) to = "main";
     return to || null;
   }
-  focusForDecision() { /* no forced camera, see sceneForDecision + game.showBeacon */ }
 }

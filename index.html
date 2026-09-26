@@ -1,15 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="play-shim.js?202609261550"></script>
+  <script src="play-shim.js?202609261656"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PARADOXO · C.R.O.N.O.S. Temporal Operations</title>
   <!-- Identity type: Oswald (institutional display), JetBrains Mono (terminal data),
        Inter (humanist body). Self-host these for the offline Tauri build later. -->
-  <link href="fonts/fonts.css?202609261550" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/app.css?202609261550" />
-  <link rel="stylesheet" href="styles/tutorial.css?202609261550" />
+  <link href="fonts/fonts.css?202609261656" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css?202609261656" />
+  <link rel="stylesheet" href="styles/tutorial.css?202609261656" />
+  <link rel="stylesheet" href="styles/menu.css?202609261656" />
+  <link rel="stylesheet" href="styles/access.css?202609261656" />
+  <!-- TEXT SIZE and the ACCESSIBLE INTERFACE apply before the first paint, so the
+       menu never flashes at the wrong size (main.js wires the controls). -->
+  <script>
+  (function(){
+    var ts = 1, ax = false;
+    try { ts = parseInt(localStorage.getItem("pdx-text-size"), 10) || 1; ax = localStorage.getItem("pdx-a11y") === "on"; } catch (e) {}
+    var d = document.documentElement;
+    d.setAttribute("data-ts", String(Math.max(1, Math.min(3, ts))));
+    if (ax) d.classList.add("pdx-a11y");
+    // Calm motion: while the accessible interface is on, the game's own
+    // "reduce motion" code paths answer yes (js/access.js flips the CSS side).
+    window.__pdxCalm = ax;
+    var realMM = window.matchMedia && window.matchMedia.bind(window);
+    if (realMM) window.matchMedia = function (q) {
+      var s = String(q);
+      if (window.__pdxCalm && /prefers-reduced-motion/.test(s)) {
+        var nop = function () {};
+        return { matches: !/no-preference/.test(s), media: s, onchange: null,
+          addEventListener: nop, removeEventListener: nop, addListener: nop,
+          removeListener: nop, dispatchEvent: function () { return false; } };
+      }
+      return realMM(q);
+    };
+  })();
+  </script>
 </head>
 <body class="boot">
   <!-- The WORLD: AI-painted temporal environments sit behind the whole board so the
@@ -25,6 +52,10 @@
   <div class="vignette" aria-hidden="true"></div>
 
   <!-- ============================ LANDING ============================ -->
+  <!-- THE MAIN MENU. One primary action (Play vs AI), Learn to Play right under
+       it, and on the desktop build the friends block (host or join a room). The
+       browser demo hides every .desktop-only control (tools/play/play-shim.js),
+       so no text here promises friends or a room code the demo does not have. -->
   <section id="screen-landing" class="screen is-active">
     <div class="landing-frame panel bracketed">
       <header class="landing-head">
@@ -33,71 +64,104 @@
           <h1 class="wordmark">PARADOXO</h1>
           <p class="overline">Corporação C.R.O.N.O.S. · Temporal Operations Division</p>
         </div>
+        <div class="landing-tools">
+          <div class="ts-pick" role="group" aria-label="Text size">
+            <span class="lbl">Text size</span>
+            <div class="seg ts-seg" data-ts-seg>
+              <button class="seg-btn" data-ts="1" type="button">Normal</button>
+              <button class="seg-btn" data-ts="2" type="button">Large</button>
+              <button class="seg-btn" data-ts="3" type="button">Extra large</button>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-menu-settings" type="button">
+            <span class="btn-ico" data-icon="gear"></span> Settings
+          </button>
+        </div>
       </header>
 
       <div class="landing-body">
-        <div class="field">
-          <label class="lbl" for="inp-name">Operative designation</label>
-          <input id="inp-name" class="inp" maxlength="24" placeholder="Your name" autocomplete="off" />
-        </div>
+        <div class="landing-main">
+          <section class="menu-block play-block">
+            <h2 class="form-title">Play</h2>
+            <p class="menu-lede" id="play-lede">A match against AI opponents, on this computer.</p>
+            <div class="players-pick">
+              <span class="lbl" id="lbl-players">Players at the table</span>
+              <div class="stepper" id="players-stepper" role="group" aria-labelledby="lbl-players">
+                <button class="step-btn" data-step="-1" type="button" aria-label="One player fewer">-</button>
+                <output id="out-players" class="step-val" aria-live="polite">3</output>
+                <button class="step-btn" data-step="1" type="button" aria-label="One player more">+</button>
+              </div>
+              <span class="players-note" id="players-note">You and 2 AI opponents</span>
+            </div>
+            <button id="btn-solo" class="btn btn-primary btn-lg block" type="button">
+              <span class="btn-ico" data-icon="play"></span> Play vs AI
+            </button>
+            <div class="learn-row">
+              <button id="btn-tutorial" class="btn btn-ghost block" type="button">
+                <span class="btn-ico" data-icon="machine"></span> Learn to Play
+              </button>
+              <p class="menu-note">New here? Start with this: a guided match against two AI opponents, where HELA shows you each rule as it comes up.</p>
+            </div>
+          </section>
 
-        <button id="btn-tutorial" class="btn btn-primary block" type="button">
-          <span class="btn-ico" data-icon="machine"></span> Learn to Play
-        </button>
-
-        <div class="landing-cols">
-          <div class="card-form bracketed">
-            <h2 class="form-title">Open a dossier</h2>
-            <p class="muted small">Create a new temporal contract and invite operatives.</p>
-            <div class="field">
-              <label class="lbl" for="sel-players">Operatives (2-6)</label>
-              <div class="stepper" id="players-stepper">
-                <button class="step-btn" data-step="-1" type="button">-</button>
-                <output id="out-players" class="step-val">3</output>
-                <button class="step-btn" data-step="1" type="button">+</button>
+          <section class="menu-block friends-block desktop-only">
+            <h2 class="form-title">Play with friends</h2>
+            <div class="friends-grid">
+              <div class="friends-cell">
+                <button id="btn-create" class="btn btn-ghost block" type="button">
+                  <span class="btn-ico" data-icon="seal"></span> Host a room
+                </button>
+                <p class="menu-note">You get a room code to share. Seats nobody takes are played by AI opponents.</p>
+              </div>
+              <div class="friends-cell">
+                <label class="lbl" for="inp-code">Room code from a friend</label>
+                <div class="join-row">
+                  <input id="inp-code" class="inp mono code-inp" maxlength="4" placeholder="ABCD" autocomplete="off" />
+                  <button id="btn-join" class="btn btn-ghost" type="button">
+                    <span class="btn-ico" data-icon="enter"></span> Join
+                  </button>
+                </div>
               </div>
             </div>
-            <button id="btn-create" class="btn btn-primary block" type="button">
-              <span class="btn-ico" data-icon="seal"></span> Establish Room
-            </button>
-            <!-- The Test Room: the auction mode under construction. Same lobby,
-                 different dimension. Never touches a classic match. -->
-            <button id="btn-testroom" class="btn btn-ghost block" type="button">
-              <span class="btn-ico" data-icon="machine"></span> Test Room
-            </button>
-            <!-- A mesa dividida: um monitor, ate quatro controles. -->
-            <button id="btn-mesa" class="btn btn-ghost block" type="button">
-              <span class="btn-ico" data-icon="play"></span> Split-screen Table
-            </button>
-          </div>
-
-          <div class="card-form bracketed">
-            <h2 class="form-title">Report for duty</h2>
-            <p class="muted small">Enter an existing room code to take a seat.</p>
-            <div class="field">
-              <label class="lbl" for="inp-code">Room code</label>
-              <input id="inp-code" class="inp mono code-inp" maxlength="4" placeholder="••••" autocomplete="off" />
+            <div class="extras-row">
+              <!-- The Test Room: the auction mode under construction. Same lobby,
+                   different dimension. Never touches a classic match. -->
+              <button id="btn-testroom" class="btn btn-ghost btn-sm" type="button">
+                <span class="btn-ico" data-icon="machine"></span> Test Room
+              </button>
+              <!-- The split-screen table: one monitor, up to four controllers. -->
+              <button id="btn-table" class="btn btn-ghost btn-sm" type="button">
+                <span class="btn-ico" data-icon="play"></span> Split-screen Table
+              </button>
             </div>
-            <button id="btn-join" class="btn btn-ghost block" type="button">
-              <span class="btn-ico" data-icon="enter"></span> Join Room
-            </button>
-          </div>
+          </section>
+          <p id="landing-error" class="error-line" role="alert"></p>
         </div>
-        <p id="landing-error" class="error-line" role="alert"></p>
 
-        <!-- O PERFIL: nome fixo, cor do operativo e a folha de servico. Tudo
-             guardado nesta maquina, sem conta e sem servidor. -->
-        <div class="card-form bracketed profile-card" id="profile-card">
-          <h2 class="form-title">Service record</h2>
-          <div class="prof-top">
-            <div class="prof-swatches" id="prof-swatches"></div>
+        <aside class="landing-side">
+          <!-- The profile: fixed name, the operative's colour and the service record,
+               all kept on this machine, no account and no server. -->
+          <section class="menu-block you-block">
+            <h2 class="form-title">You</h2>
+            <div class="field">
+              <label class="lbl" for="inp-name">Your name</label>
+              <input id="inp-name" class="inp" maxlength="24" placeholder="Your name" autocomplete="off" />
+            </div>
+            <div class="field colour-field">
+              <span class="lbl" id="lbl-colour">Your colour: <b id="colour-name">Amber</b></span>
+              <div class="prof-swatches" id="prof-swatches" role="radiogroup" aria-labelledby="lbl-colour"></div>
+              <p class="menu-note colour-note">Your piece on the map, your case file and HELA, your guide, all wear it.<span class="desktop-only"> If two players pick the same colour, a draw decides.</span></p>
+            </div>
+          </section>
+          <section class="menu-block record-block profile-card" id="profile-card">
+            <h2 class="form-title">Service record</h2>
             <div class="prof-stats" id="prof-stats"></div>
-          </div>
-          <ul class="prof-log" id="prof-log"></ul>
-          <button class="btn btn-ghost btn-sm" id="btn-clear-history" type="button">
-            Clear record
-          </button>
-        </div>
+            <ul class="prof-log" id="prof-log"></ul>
+            <button class="btn btn-ghost btn-sm" id="btn-clear-history" type="button">
+              Clear record
+            </button>
+          </section>
+        </aside>
       </div>
 
       <footer class="landing-foot mono small muted">
@@ -107,25 +171,40 @@
   </section>
 
   <!-- ============================ LOBBY ============================ -->
+  <!-- The match setup. It says who sits where, that every empty seat gets an AI
+       opponent, and what the Start button does. Back returns to the menu. -->
   <section id="screen-lobby" class="screen">
     <div class="lobby-frame panel bracketed">
       <header class="lobby-head">
-        <div>
-          <p class="overline">Room</p>
-          <h2 class="room-code mono" id="lobby-code">----</h2>
+        <div class="lobby-titles">
+          <p class="overline" id="lobby-kicker">Your match</p>
+          <h2 class="lobby-title" id="lobby-title">You against AI opponents</h2>
         </div>
-        <div class="lobby-status">
-          <span class="status-dot"></span>
-          <span id="lobby-status-text" class="mono small">AWAITING OPERATIVES</span>
+        <div class="lobby-status" role="status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="lobby-status-text" class="mono small">Ready to start</span>
         </div>
       </header>
 
+      <div class="lobby-share" id="lobby-share" hidden>
+        <div>
+          <p class="overline">Room code</p>
+          <div class="room-code mono" id="lobby-code">----</div>
+        </div>
+        <p class="menu-note" id="lobby-share-note">Share this code. Friends type it under Play with friends, Join, on their own copy of the game.</p>
+      </div>
+
       <ul id="seat-list" class="seat-list"></ul>
 
+      <p class="lobby-next" id="lobby-hint">Every empty seat gets an AI opponent when the match starts.</p>
+      <p id="lobby-error" class="error-line" role="alert"></p>
+
       <div class="lobby-actions">
-        <p class="muted small" id="lobby-hint">Empty seats become bots when the game begins.</p>
-        <button id="btn-start" class="btn btn-primary" type="button">
-          <span class="btn-ico" data-icon="play"></span> Begin Operation
+        <button id="btn-lobby-back" class="btn btn-ghost" type="button">
+          <span class="btn-ico" data-icon="past"></span> Back to menu
+        </button>
+        <button id="btn-start" class="btn btn-primary btn-lg" type="button">
+          <span class="btn-ico" data-icon="play"></span> Start match
         </button>
       </div>
     </div>
@@ -222,6 +301,39 @@
         <button class="icon-btn" id="settings-close" type="button" title="Close"><span data-icon="close"></span></button>
       </div>
 
+      <!-- ACCESSIBILITY first, where a player who struggles to read looks first. -->
+      <div class="settings-group" id="set-access">
+        <p class="overline">Accessibility</p>
+        <div class="set-stack">
+          <span class="set-label">Text size</span>
+          <div class="seg ts-seg" data-ts-seg>
+            <button class="seg-btn" data-ts="1" type="button">Normal</button>
+            <button class="seg-btn" data-ts="2" type="button">Large</button>
+            <button class="seg-btn" data-ts="3" type="button">Extra large</button>
+          </div>
+        </div>
+        <label class="set-check">
+          <input type="checkbox" id="chk-a11y" /> <span>Accessible interface</span>
+        </label>
+        <p class="muted small set-note">Larger text, stronger contrast on labels and small print, thick focus outlines, calm motion (no shaking or flashing, shorter animations), and states shown with a mark or a word, never by colour alone.</p>
+      </div>
+
+      <!-- LEAVE THE MATCH, only while a match is on (main.js). Two clicks: the
+           confirm is a line in place, never a pop-up. -->
+      <div class="settings-group" id="set-leave" hidden>
+        <p class="overline">Match</p>
+        <div class="leave-inline" data-leave>
+          <button class="btn btn-ghost btn-sm leave-ask" type="button">
+            <span class="btn-ico" data-icon="past"></span> Leave match
+          </button>
+          <span class="leave-confirm">
+            <span class="leave-q">Leave this match and go to the main menu?</span>
+            <button class="btn btn-danger btn-sm leave-yes" type="button">Leave</button>
+            <button class="btn btn-ghost btn-sm leave-no" type="button">Stay</button>
+          </span>
+        </div>
+      </div>
+
       <div class="settings-group">
         <p class="overline">Audio</p>
         <label class="set-row">
@@ -261,12 +373,13 @@
           <div class="hk"><b>SPACE</b><span>lift the hand &mdash; free cursor on the desk</span></div>
           <div class="hk"><b>T</b><span>the Time Machine reference card</span></div>
           <div class="hk"><b>ESC</b><span>close the reference / dialogs</span></div>
+          <div class="hk"><b>1 2 3</b><span>pick up a die of that value (again to put it back)</span></div>
           <div class="hk"><b>ENTER</b><span>confirm your move (dice, prompts)</span></div>
           <div class="hk"><b>P</b><span>pass (Market, Activation, deals)</span></div>
           <div class="hk"><b>RIGHT-CLICK</b><span>a die: it sockets itself in the next open slot</span></div>
           <div class="hk"><b>Z</b><span>undo your last die before Confirm</span></div>
           <div class="hk"><b>F</b><span>skip the replay to the present</span></div>
-          <div class="hk"><b>L</b><span>the story so far, as a comic strip</span></div>
+          <div class="hk"><b>L</b><span>HELA's memory: every Hour as a comic page (arrows turn the pages)</span></div>
         </div>
       </div>
 
@@ -319,19 +432,11 @@
   <div id="overlay-root" class="overlay-root" aria-live="polite"></div>
 
   <!-- ══ THE MOUSEMOVE PROFILER ═══════════════════════════════════════════════════════
-       my frame is 6.1ms at rest (163 fps) and 12 / 20 / 29ms the MOMENT he moves the
-       cursor, 82 / 55 / 41 / 34 fps, deeper the faster his hand goes. Those are 165/2,
-       165/3, 165/4, 165/5: the vsync harmonics. A frame cost that scales with HAND SPEED
-       is work done PER MOUSE EVENT, and there are THIRTEEN mousemove listeners in this
-       game, exactly ONE of which is coalesced to a frame. His 165Hz panel fires 165 of
-       them a second where a 60Hz panel fired 60.
-       My synthetic mouse cannot reproduce the drop (it reads 164 fps while moving), and
-       I have been burned enough times this week by trusting an instrument that cannot see
-       what he sees. So this times EVERY mousemove handler, by file and line, on HIS
-       machine, and F7 names the worst one in milliseconds. It must load before anything
-       else registers a listener, which is why it is here and inline.
-       Cost of the profiler itself: two performance.now() per event. ~43 microseconds a
-       second. It cannot be the thing it is measuring. ══════════════════════════════════ -->
+       A frame cost that grows with HAND SPEED is work done per mouse event, and a 165Hz
+       panel fires 165 of them a second where a 60Hz one fires 60. This times every
+       mousemove handler by file and line, and F7 names the worst one in milliseconds.
+       It must load before anything else registers a listener, so it is here and inline.
+       Its own cost: two performance.now() per event. ══════════════════════════════ -->
   <script>
   (function(){
     var MM = { per: Object.create(null), t0: performance.now() };
@@ -374,7 +479,7 @@
     };
   })();
   </script>
-  <script type="module" src="js/main.js?202609261550"></script>
+  <script type="module" src="js/main.js?202609261656"></script>
 <div id="build-stamp" style="position:fixed;left:8px;top:calc(100vh - 16px);z-index:9999;font:10px/1.2 monospace;color:#8a8578;opacity:.45;pointer-events:none">BUILD v197</div>
 <div id="stale-banner" style="display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;background:#7a1c10;color:#ffe9b0;font:bold 12px/1 monospace;padding:9px 16px;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.5)">NEW BUILD ON THE SERVER: PRESS F5 (Ctrl+Shift+R)</div>
 <script>
@@ -392,10 +497,10 @@
   check(); setInterval(check, 45000);
 })();
 </script>
-<script src="js/board_draft.js?202609261550"></script>
-<script src="js/leilao_fase.js?202609261550"></script>
-<script src="js/board_singularity.js?202609261550"></script>
-<script src="js/board_origins.js?202609261550"></script>
-    <script src="js/cabin.js?202609261550"></script>
+<script src="js/board_draft.js?202609261656"></script>
+<script src="js/leilao_fase.js?202609261656"></script>
+<script src="js/board_singularity.js?202609261656"></script>
+<script src="js/board_origins.js?202609261656"></script>
+    <script src="js/cabin.js?202609261656"></script>
 </body>
 </html>

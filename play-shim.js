@@ -3,7 +3,13 @@
    client's fetch("/api/...") and WebSocket(".../ws/...") calls to that worker,
    so the game client itself runs unchanged. */
 (function () {
-  const worker = new Worker("play-worker.js?202609261550", { type: "module" });
+  // THE DEMO MARKER. The client reads this to tell the truth about the build: the
+  // browser demo is you against AI opponents, with no friends to invite and no
+  // room code to share. The class lets the stylesheets hide desktop-only controls
+  // before the first paint.
+  window.PARADOX_DEMO = true;
+  document.documentElement.classList.add("pdx-demo");
+  const worker = new Worker("play-worker.js?202609261656", { type: "module" });
   let nextId = 1;
   const httpWaiters = new Map();
   const sockets = new Map();
@@ -22,10 +28,9 @@
     "#play-veil .pv-bar{margin-top:14px;height:2px;width:260px;background:#34291F;overflow:hidden}" +
     "#play-veil .pv-bar i{display:block;height:100%;width:40%;background:#4FD6C0;animation:pv 1.2s ease-in-out infinite}" +
     "@keyframes pv{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}" +
-    // Browser version: solo against bots. Joining by code, the split-screen
-    // table and the Test Room need the desktop app or a server.
-    "#btn-testroom,#btn-mesa{display:none!important}" +
-    ".landing-cols>.card-form:nth-child(2){display:none!important}";
+    // Browser version: solo against AI opponents. Hosting, joining by code, the
+    // split-screen table and the Test Room need the desktop app or a server.
+    "#btn-testroom,#btn-table,.desktop-only{display:none!important}";
   document.head.appendChild(css);
   const mountVeil = () => document.body && !veil.isConnected && document.body.appendChild(veil);
   if (document.body) mountVeil(); else document.addEventListener("DOMContentLoaded", mountVeil);
@@ -36,6 +41,49 @@
     if (s) { s.textContent = "DEMO"; s.style.opacity = ".6"; }
   };
   if (document.readyState !== "loading") stampDemo(); else document.addEventListener("DOMContentLoaded", stampDemo);
+
+  // ---- updates for testers -------------------------------------------------
+  // A tab left open learns about a new build from the page's own ETag check
+  // (index.html); here the notice says it in the demo's words and reloads on a
+  // click. A tester who comes back after an update gets a short "what's new"
+  // note in the corner, once, that never blocks the table.
+  const BUILD = "202609261656", WHATS_NEW = ["A clearer main menu: Play vs AI, Learn to Play, and a way back to the menu from anywhere, even mid-match.", "Text size and an accessible interface option in the menu and in Settings.", "Messages stay until you have read them; tutorial lines wait for you.", "Slow pace is really slow now, and the tutorial starts on it.", "The cursor stays on top of everything.", "The tutorial starts over: HELA wakes you up. More of the story is on its way.", "HELA's memory is a comic book on your desk: press L to open it.", "A line under the phases says what the current phase is for and who can act.", "Every traveller has their own colour."];
+  const noticeUpdate = () => {
+    const b = document.getElementById("stale-banner");
+    if (!b) return;
+    b.textContent = "A new version of the demo is out. Click here or press F5 to reload.";
+    b.style.cursor = "pointer";
+    b.style.pointerEvents = "auto";
+    b.addEventListener("click", () => location.reload());
+  };
+  const showWhatsNew = () => {
+    let seen = null;
+    try { seen = localStorage.getItem("pdx-demo-build"); localStorage.setItem("pdx-demo-build", BUILD); } catch (e) {}
+    if (!seen || seen === BUILD || !WHATS_NEW.length) return;
+    const note = document.createElement("div");
+    note.id = "whats-new";
+    note.setAttribute("role", "status");
+    const head = document.createElement("b");
+    head.textContent = "Updated since your last visit";
+    const list = document.createElement("ul");
+    for (const line of WHATS_NEW) { const li = document.createElement("li"); li.textContent = line; list.appendChild(li); }
+    const hint = document.createElement("i");
+    hint.textContent = "Click to close";
+    note.append(head, list, hint);
+    note.addEventListener("click", () => note.remove());
+    document.body.appendChild(note);
+    setTimeout(() => note.remove(), 30000);
+  };
+  const whatsNewCss = document.createElement("style");
+  whatsNewCss.textContent =
+    "#whats-new{position:fixed;left:16px;bottom:40px;z-index:9998;max-width:380px;padding:12px 14px;" +
+    "background:#1c1711;color:#efe6d0;border:2px solid #c9a227;box-shadow:4px 4px 0 #000;" +
+    "font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;cursor:pointer}" +
+    "#whats-new b{display:block;color:#c9a227;margin-bottom:6px;letter-spacing:.04em}" +
+    "#whats-new ul{margin:0;padding-left:18px}#whats-new i{display:block;margin-top:6px;opacity:.6;font-size:12px}";
+  document.head.appendChild(whatsNewCss);
+  const onReady = () => { noticeUpdate(); showWhatsNew(); };
+  if (document.readyState !== "loading") onReady(); else document.addEventListener("DOMContentLoaded", onReady);
 
   worker.onmessage = (e) => {
     const m = JSON.parse(e.data);
