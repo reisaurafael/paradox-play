@@ -6974,7 +6974,7 @@ body.vz-crit .hela-loghead .hlh-line { color: #ff6a4a; }
   width: var(--ref-w, 2133px); height: var(--ref-h, 1200px);
   transform: translate(-50%, -50%) scale(var(--fit, 1));
   transform-origin: center center;
-  pointer-events: none; z-index: 60000; display: none; }
+  pointer-events: none; z-index: 2147483647; display: none; }   /* the cursor is on top of absolutely everything */
 body.cabin-on #cursor-plane { display: block; }
 /* best-effort for the LIMB cursor (left hand = the whole manopla arm, which must
    stay in the hull): lift the hull over in-scene content while it steers. */
