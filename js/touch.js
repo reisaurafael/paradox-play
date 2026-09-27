@@ -19,11 +19,11 @@
      pdx-in-match               the table is on screen
 
    THE F11 OF THE PHONE.
-     Android and every browser with the Fullscreen API: the first tap is a
-       full-screen title card, "Play full screen"; it asks for full screen with
-       the browser's navigation hidden and then turns the table to landscape.
-       Leaving full screen (the back gesture) brings a small "Full screen" key
-       in the corner, and the card again when a match starts.
+     Android and every browser with the Fullscreen API: the tap that starts a
+       match (Learn to Play, Play vs AI, Start) asks for full screen with the
+       browser's navigation hidden and turns the table to landscape. Out of
+       full screen a small "Full screen" key brings it back (in the menu, under
+       every panel; in a match, in HELA's column). Never a cover over the menu.
      iPhone (no Fullscreen API for pages): a one-time guide, "Add to Home
        Screen", with the Share icon; launched from there the game has no bars
        (manifest.webmanifest + the apple meta tags in index.html).
@@ -61,10 +61,6 @@
     get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
   };
-  var ss = {
-    get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
-    set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} },
-  };
 
   d.classList.add("pdx-touch", PHONE ? "pdx-phone" : "pdx-tablet");
   if (!FS_API) d.classList.add("pdx-no-fs");
@@ -81,7 +77,7 @@
 
   // ADD TO HOME SCREEN on Android: Chrome offers the install once the page qualifies
   // (manifest + icons). Its own mini bar is held back; the game offers it in its own words
-  // (the full-screen card and a key in the menu). No event (another browser, or Chrome
+  // (a key in the menu). No event (another browser, or Chrome
   // not ready yet): the same buttons show the browser-menu steps instead.
   var installEv = null;
   window.addEventListener("beforeinstallprompt", function (e) {
@@ -95,7 +91,9 @@
 
   // main.js reads this for the graphics preset when the player has saved none:
   // phones are weak, so they start on Low, tablets on Medium (Settings still offers all three)
-  window.__pdxTouch = { phone: PHONE, gfxDefault: PHONE ? "low" : "medium" };
+  window.__pdxTouch = { phone: PHONE, gfxDefault: PHONE ? "low" : "medium",
+    fullscreen: function () { return goFullscreen().then(syncFs); }, isFs: function () { return isFs(); },
+    canFs: FS_API, guide: function () { showGuide(true); }, standalone: function () { return standalone(); } };
 
   var ready = function (fn) {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn); else fn();
@@ -123,8 +121,7 @@
   var veilUp = function () { return !!document.getElementById("play-veil"); };
 
   /* ══ THE F11 OF THE PHONE ══════════════════════════════════════════════ */
-  var offer = null, pill = null, guide = null;
-  var DECLINED = "pdx-fs-declined";          // this visit only: "stay in the browser"
+  var pill = null, guide = null;
   var GUIDE_SEEN = "pdx-home-guide-seen";    // this device: the iPhone guide was read
 
   function goFullscreen() {
@@ -141,43 +138,6 @@
     }).then(function () { return true; }, function () { return false; });
   }
 
-  function buildOffer() {
-    offer = make("div", "pdx-fs-offer", "tx-cover", ''
-      + '<div class="tx-card" role="dialog" aria-modal="true" aria-labelledby="tx-fs-title">'
-      + '<span class="tx-eye">' + EYE + '</span>'
-      + '<h2 class="tx-title" id="tx-fs-title">Play full screen</h2>'
-      + '<p class="tx-line">The browser\'s bars go away and the table fills your screen, turned sideways.</p>'
-      + '<button class="tx-go" type="button" data-fs-go>' + ICON_FS + '<span>Play full screen</span></button>'
-      + '<button class="tx-later" type="button" data-fs-later>Stay in the browser window</button>'
-      + '<button class="tx-install" type="button" data-install>' + ICON_HOME + '<span>Add to Home Screen</span></button>'
-      + '</div>');
-    offer.querySelector("[data-install]").addEventListener("click", function () {
-      hideOffer();
-      addToHome();
-    });
-    offer.querySelector("[data-fs-go]").addEventListener("click", function () {
-      hideOffer();
-      goFullscreen().then(syncFs);
-    });
-    offer.querySelector("[data-fs-later]").addEventListener("click", function () {
-      ss.set(DECLINED, "1");
-      hideOffer();
-      syncFs();
-    });
-    document.body.appendChild(offer);
-  }
-  function showOffer() {
-    if (!FS_API || isFs() || standalone()) return;
-    if (!offer) buildOffer();
-    offer.hidden = false;
-    requestAnimationFrame(function () { if (offer) offer.classList.add("on"); });
-  }
-  function hideOffer() {
-    if (!offer) return;
-    offer.classList.remove("on");
-    offer.hidden = true;
-  }
-
   // THE CORNER KEY: back to full screen after leaving it (or the guide on an iPhone)
   function buildPill() {
     pill = make("button", "pdx-fs-pill", "", ICON_FS + '<span>Full screen</span>');
@@ -185,6 +145,7 @@
     pill.setAttribute("aria-label", "Play full screen");
     pill.addEventListener("click", function (e) {
       e.stopPropagation();
+      pill.classList.remove("tx-nudge");
       if (FS_API) goFullscreen().then(syncFs); else showGuide(true);
     });
     document.body.appendChild(pill);
@@ -201,12 +162,11 @@
     if (!pill) buildPill();
     if (!homeKey) buildHomeKey();
     // in the menu only, never over the table; on an iPhone the full-screen key already is the guide
-    homeKey.hidden = standalone() || veilUp() || inMatch() || (APPLE && !FS_API)
-      || !!(offer && !offer.hidden) || !!(guide && !guide.hidden);
-    if (offer) offer.querySelector("[data-install]").hidden = standalone();
-    // no key once the game has the whole screen, or while a card or the guide is up
-    pill.hidden = isFs() || standalone() || veilUp()
-      || !!(offer && !offer.hidden) || !!(guide && !guide.hidden);
+    homeKey.hidden = standalone() || veilUp() || inMatch() || (APPLE && !FS_API) || !!(guide && !guide.hidden);
+    // no key once the game has the whole screen, or while the guide is up; in a match on a
+    // phone the key lives in HELA's column (mobile-table.js), never over the table
+    pill.hidden = isFs() || standalone() || veilUp() || !!(guide && !guide.hidden)
+      || (inMatch() && d.classList.contains("pdx-m-on"));
   }
 
   // kind "ios": Safari's Share steps (no full screen for pages there); "menu": the
@@ -263,11 +223,20 @@
     syncFs();
   }
 
+  // NEVER A COVER OVER THE MENU (the menu's panels must stay reachable): the tap that
+  // starts a match is the gesture that asks for full screen (Learn to Play, Play vs AI,
+  // Start); in the menu the two small keys sit under every panel. On an iPhone, whose
+  // browser cannot full-screen a page, the key wiggles once to be noticed.
+  function wireMatchEntry() {
+    document.addEventListener("click", function (e) {
+      if (!FS_API || isFs() || standalone()) return;
+      if (e.target && e.target.closest && e.target.closest("#btn-tutorial, #btn-solo, #btn-start")) goFullscreen().then(syncFs);
+    }, true);
+  }
   function firstOffer() {
     if (standalone()) return;
-    if (FS_API) { if (!ss.get(DECLINED)) showOffer(); }
-    else showGuide(false);
     syncFs();
+    if (!FS_API && !ls.get(GUIDE_SEEN) && pill) pill.classList.add("tx-nudge");
   }
 
   /* ══ TURN YOUR PHONE SIDEWAYS ══════════════════════════════════════════ */
@@ -331,7 +300,7 @@
   var HOLD_MS = 280, keyHoldT = 0, keyHeld = false, keyEat = false;
   function wireHelpKey() {
     document.addEventListener("pointerdown", function (e) {
-      var k = e.target && e.target.closest && e.target.closest("#pdx-tabkey");
+      var k = e.target && e.target.closest && e.target.closest("#pdx-tabkey, .pdx-helpkey");
       if (!k || !window.__pdxHelp) return;
       clearTimeout(keyHoldT);
       keyHeld = false;
@@ -348,12 +317,12 @@
     document.addEventListener("pointercancel", release, true);
     document.addEventListener("click", function (e) {
       if (!keyEat) return;
-      if (e.target && e.target.closest && e.target.closest("#pdx-tabkey")) { e.preventDefault(); e.stopImmediatePropagation(); }
+      if (e.target && e.target.closest && e.target.closest("#pdx-tabkey, .pdx-helpkey")) { e.preventDefault(); e.stopImmediatePropagation(); }
       keyEat = false;
     }, true);
     // iOS: a held button would otherwise open the text-selection loupe
     document.addEventListener("contextmenu", function (e) {
-      if (e.target && e.target.closest && e.target.closest("#pdx-tabkey, #pdx-scenes, #pdx-fs-pill")) e.preventDefault();
+      if (e.target && e.target.closest && e.target.closest("#pdx-tabkey, .pdx-helpkey, #pdx-scenes, #pdx-fs-pill, #pdx-mrail, #pdx-mcol button")) e.preventDefault();
     }, true);
   }
 
@@ -424,7 +393,7 @@
   function wireLongPress() {
     document.addEventListener("pointerdown", function (e) {
       if (e.pointerType !== "touch") return;
-      if (e.target && e.target.closest && e.target.closest("#pdx-tabkey, #pdx-scenes, #pdx-fs-pill, .tx-cover, input, select, textarea")) { lp = null; return; }
+      if (e.target && e.target.closest && e.target.closest("#pdx-tabkey, .pdx-helpkey, #pdx-scenes, #pdx-fs-pill, #pdx-mrail, #pdx-mcol, .tx-cover, input, select, textarea")) { lp = null; return; }
       // any new touch ends the last long look (a tap elsewhere closes the details)
       if (hoverChain.length || (tip && !tip.hidden)) unhover();
       var tgt = e.target, x = e.clientX, y = e.clientY;
@@ -528,6 +497,7 @@
     wireDiceDrag();
     syncFs();
 
+    wireMatchEntry();
     // the first offer waits for the loading veil to lift (the demo boots Python first)
     var offered = false;
     var tryFirst = function () {
@@ -542,8 +512,6 @@
       tryFirst();
       var m = inMatch();
       d.classList.toggle("pdx-in-match", m);
-      // a match starting outside full screen gets the card again (unless he said no)
-      if (m && !wasMatch && FS_API && !isFs() && !standalone() && !ss.get(DECLINED)) showOffer();
       wasMatch = m;
       paintTabs();
       syncFs();
@@ -556,7 +524,6 @@
     if (cam) new MutationObserver(paintTabs).observe(cam, { attributes: true, attributeFilter: ["data-scene"] });
     var fsChange = function () {
       syncShape();
-      if (!isFs() && inMatch() && FS_API && !standalone()) { /* the corner key offers it back */ }
       syncFs();
       if (window.pdxApplyFit) window.pdxApplyFit();
     };

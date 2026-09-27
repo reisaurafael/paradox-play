@@ -10,7 +10,7 @@
    (tools/dev/harness.py shot) stays at the identity "main" scene.
    ========================================================================= */
 
-import { audio } from "./audio.js?202609271103";
+import { audio } from "./audio.js?202609271439";
 
 const SCENES = new Set(["main", "market", "drawer", "timeline"]);
 const ZONE_SCENE = { market: "market", secret: "market", receptor: "drawer" };
@@ -48,11 +48,106 @@ export class Camera {
     // a locked AudioContext must never kill the pan mid-function (the scene
     // flag had already turned, the world had not, the camera looked haunted)
     try { if (this._engaged) audio.play("pan"); } catch (e) {}
-    if (this._reduced()) return this._crossfadeTo(name);
+    const from = this.cam.dataset.scene || "main";
+    if (this._turnHead(from, name)) return;
+    if (this._reduced()) return this._crossfadeTo(name);   // no Web Animations: the old cover
     this.cam.classList.add("is-panning");
     this.cam.dataset.scene = name;                 // CSS eases the transform
     clearTimeout(this._settle);
     this._settle = setTimeout(() => this.cam.classList.remove("is-panning"), 900);
+  }
+
+  /* ── TURNING YOUR HEAD AT ONE WORKSTATION (the owner, 27/09) ─────────────────────
+     The scenes are one table and one wall; a scene change is the player turning his
+     head, never a cut or a fade. One Web Animation on #cam's transform, transform only
+     (Firefox: no filters, no blur):
+       - the pan itself, eased in and out, 450 to 650 ms by the pace setting;
+       - the head's own motion on top of it, about the SCREEN's centre (it comes before
+         the pan in the transform list): a small turn toward where he looks (rotateX /
+         rotateY in #screen-game's perspective), a hair of roll on sideways looks, and a
+         small pull back at mid-turn, all zero at both ends;
+       - depth: the wall (the wallpaper layers) moves a little less than the table while
+         the head turns and is back in register when it stops, so the table's grain and
+         everything on it stay one continuous surface in front of a farther wall.
+     The hull (hands, arm, console) and HELA's eye are not in #cam: they stay with him
+     like his body. data-scene still flips at the start (every observer, the tutorial's
+     atScene / whenScene, the beacon and the nap read it as before); the CSS transition
+     is held at 0s while the animation plays, so the resting transform is the CSS one.
+     Reduced motion: a short, gentle move of the pan alone. Falls back to the plain CSS
+     pan when Web Animations are missing or someone else is driving the camera (the
+     tutorial's wake sets --cam-dur inline). */
+  _turnHead(from, to) {
+    const cam = this.cam;
+    if (!cam.animate || typeof getComputedStyle === "undefined") return false;
+    const own = cam.style.getPropertyValue("--cam-dur");
+    if (own && !this._turn) return false;          // another hand holds the camera (tutorial wake, refit)
+    const RM = this._reduced();
+    const cs0 = getComputedStyle(cam);
+    const v = (cs, k, d) => { const x = (cs.getPropertyValue(k) || "").trim(); return x === "" ? d : (x === "0" ? "0px" : x); };
+    const num = (cs, k, d) => { const x = parseFloat(cs.getPropertyValue(k)); return isFinite(x) ? x : d; };
+    // where we are NOW: mid-turn, the live matrix; at rest, the scene's own values
+    const live = this._turn ? cs0.transform : null;
+    const A = { tx: v(cs0, "--cam-tx", "0px"), ty: v(cs0, "--cam-ty", "0px") };
+    if (this._turn) { try { this._turn.cancel(); } catch (e) {} this._turn = null; }
+    (this._walls || []).forEach((w) => { try { w.cancel(); } catch (e) {} }); this._walls = [];
+    cam.style.setProperty("--cam-dur", "0s");      // the CSS transition must not fight the animation
+    cam.classList.add("is-panning");
+    cam.dataset.scene = to;
+    const cs = getComputedStyle(cam);
+    const B = { tx: v(cs, "--cam-tx", "0px"), ty: v(cs, "--cam-ty", "0px") };
+    const fit = num(cs, "--fit", 1), s = num(cs, "--cam-s", 1);
+    const rx = v(cs, "--cam-rx", "0deg"), rz = v(cs, "--cam-rz", "0deg");
+    const tail = `scale(${s}) rotateX(${rx === "0px" ? "0deg" : rx}) rotateZ(${rz === "0px" ? "0deg" : rz})`;
+    const T = (tx, ty, lx, ly, lz, ls) =>
+      `translate(-50%, -50%) scale(${fit}) rotateX(${lx}deg) rotateY(${ly}deg) rotateZ(${lz}deg) scale(${ls}) translate3d(${tx}, ${ty}, 0px) ${tail}`;
+    const mid = (a, b) => `calc(0.5 * (${a}) + 0.5 * (${b}))`;
+    // which way he looks, in scene steps (desk centre, Market above, records to the left)
+    const P = { main: [0, 0], timeline: [1, 0], market: [0, -1], drawer: [-1, 0] };
+    const pa = P[from] || [0, 0], pb = P[to] || [0, 0];
+    const dx = pb[0] - pa[0], dy = pb[1] - pa[1];
+    const sp = (this.game && this.game.speed) || "normal";
+    const ms = RM ? 240 : ({ slow: 650, normal: 560, brisk: 500, fast: 450 })[sp] || 560;
+    let frames;
+    if (RM) {
+      frames = [{ transform: live || T(A.tx, A.ty, 0, 0, 0, 1) }, { transform: T(B.tx, B.ty, 0, 0, 0, 1) }];
+    } else {
+      const lx = (-dy * 1.3).toFixed(2), ly = (dx * 1.6).toFixed(2), lz = (dx * 0.25).toFixed(2);
+      frames = [
+        { transform: live || T(A.tx, A.ty, 0, 0, 0, 1), offset: 0 },
+        { transform: T(mid(A.tx, B.tx), mid(A.ty, B.ty), lx, ly, lz, 0.976), offset: 0.5 },
+        { transform: T(B.tx, B.ty, 0, 0, 0, 1), offset: 1 },
+      ];
+    }
+    let anim;
+    try {
+      anim = cam.animate(frames, { duration: ms, easing: RM ? "cubic-bezier(.25,.1,.25,1)" : "cubic-bezier(.42,0,.2,1)" });
+    } catch (e) {
+      cam.style.removeProperty("--cam-dur");        // the plain CSS pan takes it from here
+      clearTimeout(this._settle);
+      this._settle = setTimeout(() => cam.classList.remove("is-panning"), 900);
+      return true;
+    }
+    this._turn = anim;
+    // the wall lags the table (only when the look has a vertical part: sideways, the
+    // wall is out of view on a 16:9 screen and costs nothing to leave alone)
+    if (!RM && dy) {
+      const k = 0.075, ox = (dx * 1066 * k).toFixed(1), oy = (dy * 600 * k).toFixed(1);
+      const wf = [{ transform: "translate(0px, 0px)" }, { transform: `translate(${ox}px, ${oy}px)`, offset: 0.5 }, { transform: "translate(0px, 0px)" }];
+      const opt = (pe) => ({ duration: ms, easing: "cubic-bezier(.42,0,.2,1)", pseudoElement: pe });
+      const grid = cam.querySelector(".game-grid");
+      try { this._walls.push(cam.animate(wf, opt("::after"))); } catch (e) {}
+      try { if (grid) this._walls.push(grid.animate(wf, opt("::after"))); } catch (e) {}
+    }
+    clearTimeout(this._settle);
+    const done = () => {
+      if (this._turn !== anim) return;             // a newer turn took over
+      this._turn = null; this._walls = [];
+      cam.style.removeProperty("--cam-dur");
+      cam.classList.remove("is-panning");
+    };
+    anim.onfinish = done;
+    this._settle = setTimeout(done, ms + 400);     // a paused tab never strands the flag
+    return true;
   }
 
   _crossfadeTo(name) {

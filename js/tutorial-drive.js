@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609271103";
-import { Game } from "./game.js?202609271103";
-import { icon } from "./icons.js?202609271103";
-import { roman } from "./util.js?202609271103";
-import { profile } from "./profile.js?202609271103";
+import { api, Connection } from "./net.js?202609271439";
+import { Game } from "./game.js?202609271439";
+import { icon } from "./icons.js?202609271439";
+import { roman } from "./util.js?202609271439";
+import { profile } from "./profile.js?202609271439";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];

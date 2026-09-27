@@ -19,27 +19,45 @@
 .chr-result .chr-inkstamp, .chr-head .chr-inkstamp, .chr-cos-item .chr-inkstamp { background: rgba(244,230,176,.92); }
 
 /* ═════════════════════════ THE MENU BLOCK ═════════════════════════ */
-.chronicle-block { position: relative; }
-.chb-top { display: grid; grid-template-columns: 3.6rem minmax(0, 1fr); gap: 12px; align-items: center; margin-bottom: 10px; }
-.chb-badge { width: 3.6rem; height: 3.6rem; display: block; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.55)); }
-.chb-who .form-title { margin: 0; }
-.chb-rank { margin: 2px 0 6px; font-family: var(--f-display); letter-spacing: .05em; color: var(--amber-300); font-size: 1rem; }
-.chb-rank span { color: var(--text-mute); font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; margin-left: 6px; }
-.chb-bar { height: 7px; border: 1.5px solid var(--ink); background: var(--ink-700); border-radius: 2px; overflow: hidden; }
-.chb-bar i { display: block; height: 100%; background: var(--hela-seat, var(--amber-400)); }
-.chb-lede { display: flex; justify-content: space-between; align-items: baseline; margin: 2px 0 6px;
-  font: 600 .74rem/1.2 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-soft); }
+.chronicle-block { position: relative; padding-top: 12px; padding-bottom: 12px; }
+/* one line: badge, title, rank, the door; the rank bar under it */
+.chb-top { display: grid; grid-template-columns: 2.3rem auto minmax(0, 1fr) auto; column-gap: 10px; row-gap: 5px; align-items: center; margin-bottom: 8px; }
+.chb-badge { grid-row: 1 / span 2; width: 2.3rem; height: 2.3rem; display: block; filter: drop-shadow(2px 2px 0 rgba(0,0,0,.55)); }
+.chb-top .form-title { margin: 0; white-space: nowrap; }
+.chb-rank { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--f-display); letter-spacing: .05em; color: var(--amber-300); font-size: .92rem; }
+.chb-rank span { color: var(--text-mute); font-family: var(--f-mono); font-size: .68rem; letter-spacing: .08em; margin-left: 4px; }
+/* the door, inked like the menu's other paper buttons (Rewards, News, Community) */
+.chronicle-block .chr-open { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; cursor: pointer;
+  font: 600 .74rem/1 var(--f-display); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--cx-ink, #15100a); background: var(--cx-paper, #f4e6b0);
+  border: 2px solid var(--cx-ink, #15100a); border-radius: 4px; box-shadow: 2px 2px 0 #000; transition: transform .12s ease, box-shadow .12s ease; }
+.chronicle-block .chr-open:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #000; }
+.chronicle-block .chr-open:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
+.chronicle-block .chr-open:focus-visible { outline: 3px solid #fff4c6; outline-offset: 2px; }
+.chronicle-block .chr-open svg { width: 10px; height: 10px; }
+/* the rank gauge: an inked track, filled in your colour, the next rank named at its end */
+.chb-gauge { grid-column: 2 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.chb-bar { height: 9px; border: 2px solid var(--cx-ink, #15100a); background: #2a2f38; border-radius: 3px; overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+.chb-bar i { display: block; height: 100%; min-width: 3px; background: var(--hela-seat, var(--amber-400));
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,.25); }
+.chb-next { font: 500 .64rem/1 var(--f-mono); letter-spacing: .06em; color: var(--text-mute); white-space: nowrap; }
+.chb-lede { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 5px;
+  font: 600 .7rem/1.2 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-soft); }
 .chb-lede span { color: var(--text-mute); letter-spacing: .06em; }
-.chb-missions { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.chb-missions li { display: grid; grid-template-columns: 1.15rem minmax(0, 1fr); gap: 8px; align-items: start;
-  font-size: .8rem; line-height: 1.35; color: var(--text-mute); }
+/* each order on one line; the whole sentence in its tooltip and on the Chronicle page */
+.chb-missions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.chb-missions li { display: grid; grid-template-columns: 1.05rem minmax(0, 1fr); gap: 7px; align-items: center;
+  font-size: .78rem; line-height: 1.3; color: var(--text-mute); }
+.chb-line { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chb-missions li b { color: var(--text); font-weight: 600; margin-right: 3px; }
-.chb-box { width: 1.05rem; height: 1.05rem; margin-top: 1px; border: 2px solid var(--brass); border-radius: 2px;
-  display: grid; place-items: center; font-size: .78rem; font-weight: 700; color: var(--ink); line-height: 1; }
+.chb-box { width: 1rem; height: 1rem; border: 2px solid var(--brass); border-radius: 2px;
+  display: grid; place-items: center; font-size: .72rem; font-weight: 700; color: var(--ink); line-height: 1; }
 .chb-missions li.is-done .chb-box { background: var(--amber-300); border-color: var(--amber-300); }
 .chb-missions li.is-done b { text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: var(--amber-400); }
-.chronicle-block .chr-open { display: inline-flex; align-items: center; gap: 6px; }
-.chronicle-block .chr-open .btn-ico svg { width: 1.05rem; height: 1.05rem; display: block; }
+/* Large and Extra large text: the orders may wrap again, readability first */
+html[data-ts="2"] .chb-line, html[data-ts="3"] .chb-line { white-space: normal; }
 
 /* ═════════════════════════ THE STAMP IN A MATCH ═════════════════════════
    Pressed at the top of the screen, clear of the machine, the dice and the

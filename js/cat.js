@@ -394,8 +394,10 @@ function bedSVG() {
 /* ── the camera plane: she lives in the FIXED fit-scaled plane (2133x1200), so a
       unit is 1% of the plane, not of the window ── */
 const UX = 2133 / 100, UY = 1200 / 100;
-const W_UNITS = 26;                        // her box is 26 plane units wide
-const BOX_W = W_UNITS * UX, BOX_H = BOX_W * VB_H / VB_W;
+// Her size: her drawing box is this many plane units wide (the sitting cat is about a
+// third of it). At 18 she sits a little shorter than the briefcase is deep, a real
+// cat's scale against the desk's objects. setSize() changes it (the phone table).
+const SIZE = 18;
 
 /* Her places (plane units, feet point). The paperwork desk is left of the plane's
    origin: HELA's core owns its left half and the cabinet its top, so she keeps to the
@@ -406,9 +408,8 @@ const PLACES = {
   bed:   { x: -7.5, y: 95.5, lie: true, sit: true },    // her cushion, the desk's bottom right corner
   core:  { x: -11, y: 80, lie: false, sit: true },      // beside HELA's core, where her light is warm
   ledge: { x: -6, y: 57, lie: true, sit: false },       // the floor under the cabinet, where she hides
-  case:  { x: 2.5, y: 64, lie: true, sit: false },      // under the briefcase, on the seam of the two desks
+  case:  { x: 6, y: 64, lie: true, sit: false },        // under the briefcase, on the seam of the two desks
 };
-const BED = { x: -7.5, y: 96.6 };
 const ROAM = { x0: -14, x1: 6 };           // how far a leap may carry her (never into her core)
 
 const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat",
@@ -416,7 +417,7 @@ const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat"
 // her face in each state: relaxed at rest, curious when she watches, focused on the hunt
 const EXPR = { sit: "relaxed", watch: "open", walk: "open", flee: "scared", pet: "happy", groom: "happy",
   bat: "focused", bite: "focused", crouch: "focused", pounce: "focused", scared: "scared", sleep: "sleepy", curl: "sleepy" };
-const WALK_SPEED = 5.2;                   // plane units per second, an unhurried stroll
+const WALK_SPEED = 4.2;                   // plane units per second, an unhurried stroll
 
 export class CatEngine {
   constructor() {
@@ -424,7 +425,9 @@ export class CatEngine {
     this.mood = "calm";
     this.state = "sleep";
     this.place = "bed";
+    this.places = PLACES;
     this.pos = { x: PLACES.bed.x, y: PLACES.bed.y };
+    this._size(SIZE);
     this.face = -1;                         // -1 faces left (as drawn), 1 faces right
     this.root = null;
     this._timers = new Set();
@@ -440,6 +443,7 @@ export class CatEngine {
   start() {
     if (this._running) return;
     this._running = true;
+    try { window.__pdxCat = this; } catch (err) {}
     if (!this.root && !this._mount()) { this._later(() => { this._running = false; this.start(); }, 500); return; }
     window.addEventListener("mousemove", this._onMove, { passive: true });
     this._watchScene();
@@ -461,22 +465,51 @@ export class CatEngine {
     const bed = document.createElement("div");
     bed.id = "cat-bed"; bed.setAttribute("aria-hidden", "true");
     bed.innerHTML = bedSVG();
-    const bw = 12.5 * UX;
-    bed.style.width = bw + "px";
-    bed.style.transform = `translate(${(BED.x * UX - bw / 2).toFixed(1)}px, ${(BED.y * UY - bw * 150 / 420).toFixed(1)}px)`;
     grid.appendChild(bed);
+    this.bed = bed;
     const root = document.createElement("div");
     root.id = "cat"; root.setAttribute("aria-label", "The cat"); root.setAttribute("role", "img");
     root.innerHTML = catSVG();
-    root.style.width = BOX_W.toFixed(1) + "px";
-    root.style.height = BOX_H.toFixed(1) + "px";
     grid.appendChild(root);
     this.root = root;
     this.svg = root.querySelector(".catw-svg");
     this._poseEls = [...root.querySelectorAll(".cw-pose")];
     this._applyPose("sleep");
-    this._place(0);
+    this._size(this.sizeUnits);
     return true;
+  }
+
+  /* ── her size and her places, for tables other than the desk (the phone layout):
+        window.__pdxCat.setSize(units) and window.__pdxCat.setPlaces({ name: { x, y,
+        lie, sit } }, home). Units are plane units (1% of the 2133x1200 plane); a
+        place named "bed" carries her cushion, without one the cushion hides. ── */
+  setSize(units) { if (units > 4 && units < 60) this._size(units); }
+  setPlaces(places, home) {
+    if (!places || !Object.keys(places).length) return;
+    this._cancelMove();
+    this.places = places;
+    this.place = places[home] ? home : Object.keys(places)[0];
+    const p = this.places[this.place];
+    this.pos = { x: p.x, y: p.y };
+    this._size(this.sizeUnits);
+    this._settle();
+  }
+  _size(units) {
+    this.sizeUnits = units;
+    this.boxW = units * UX; this.boxH = this.boxW * VB_H / VB_W;
+    if (!this.root) return;
+    this.root.style.width = this.boxW.toFixed(1) + "px";
+    this.root.style.height = this.boxH.toFixed(1) + "px";
+    const b = this.places.bed;
+    if (this.bed) {
+      this.bed.style.display = b ? "" : "none";
+      if (b) {
+        const bw = units * 0.48 * UX;
+        this.bed.style.width = bw.toFixed(1) + "px";
+        this.bed.style.transform = `translate(${(b.x * UX - bw / 2).toFixed(1)}px, ${(b.y * UY + units * 0.04 * UY - bw * 150 / 420).toFixed(1)}px)`;
+      }
+    }
+    this._place(0);
   }
 
   /* ── public API ── */
@@ -499,13 +532,13 @@ export class CatEngine {
     this.root.classList.add("jolt");
     this._later(() => this.root && this.root.classList.remove("jolt"), 420);
     if (this.onMeow && Math.random() < 0.5) this.onMeow();
-    this._later(() => this._goTo("ledge", 1.8), 700);
+    this._later(() => this._goTo(this.places.ledge ? "ledge" : this.place, 1.8), 700);
   }
   setMood(m) {
     if (m === this.mood) return;
     this.mood = m;
     if (this.root) this.root.classList.toggle("mood-afraid", m === "afraid");
-    if (m === "afraid" && this.place !== "ledge") this._later(() => this._goTo("ledge", 1.5), 400);
+    if (m === "afraid" && this.places.ledge && this.place !== "ledge") this._later(() => this._goTo("ledge", 1.5), 400);
   }
 
   /* ── states ── */
@@ -538,7 +571,7 @@ export class CatEngine {
   // after anything, she goes back to being a cat in her place
   _settle() {
     if (this.mood === "afraid") { this._enter("scared", 0); return; }
-    const p = PLACES[this.place];
+    const p = this.places[this.place];
     if (p && p.lie) this._enter(Math.random() < 0.55 ? "curl" : "sleep", 0);
     else this._enter("sit", 0);
     this._think(10 + Math.random() * 14);
@@ -567,7 +600,7 @@ export class CatEngine {
     if (lying) {
       // mostly she sleeps on; now and then she gets up and sits a while
       if (r < 0.7) { this._think(24 + Math.random() * 24); return; }
-      if (!PLACES[this.place].sit) { this._goTo(this._otherPlace()); return; }
+      if (!this.places[this.place].sit) { this._goTo(this._otherPlace()); return; }
       this._enter("sit", 0); this._flick();
       this._think(8 + Math.random() * 8);
       return;
@@ -577,7 +610,7 @@ export class CatEngine {
       this._goTo(this._otherPlace());
     } else if (r < 0.55) {
       this._enter("groom", 3.2 + Math.random() * 2.5);
-    } else if (r < 0.8 && PLACES[this.place] && PLACES[this.place].lie) {
+    } else if (r < 0.8 && this.places[this.place] && this.places[this.place].lie) {
       this._settle();
     } else {
       this._flick();
@@ -586,7 +619,7 @@ export class CatEngine {
     }
   }
   _otherPlace() {
-    const others = Object.keys(PLACES).filter((k) => k !== this.place);
+    const others = Object.keys(this.places).filter((k) => k !== this.place);
     return others[Math.floor(Math.random() * others.length)];
   }
   _flick() {
@@ -598,7 +631,7 @@ export class CatEngine {
 
   /* ── moving: a CSS transition carries her, the timer tells her she arrived ── */
   _goTo(name, speedMul = 1) {
-    const p = PLACES[name]; if (!p || !this.root) return;
+    const p = this.places[name]; if (!p || !this.root) return;
     this._cancelMove();
     const dx = p.x - this.pos.x, dy = p.y - this.pos.y, dist = Math.hypot(dx, dy * UY / UX);
     this.place = name;
@@ -621,13 +654,13 @@ export class CatEngine {
     if (this.root && this.root.style.transitionDuration !== "0s") {
       // freeze where she is now: read the live position once and pin it
       const m = new DOMMatrixReadOnly(getComputedStyle(this.root).transform);
-      this.pos = { x: (m.m41 + BOX_W / 2) / UX, y: (m.m42 + BOX_H) / UY };
+      this.pos = { x: (m.m41 + this.boxW / 2) / UX, y: (m.m42 + this.boxH) / UY };
       this._place(0);
     }
   }
   _place(secs) {
     if (!this.root) return;
-    const tx = this.pos.x * UX - BOX_W / 2, ty = this.pos.y * UY - BOX_H;
+    const tx = this.pos.x * UX - this.boxW / 2, ty = this.pos.y * UY - this.boxH;
     this.root.style.transitionDuration = secs > 0 ? secs.toFixed(2) + "s" : "0s";
     this.root.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`;
     this.root.classList.toggle("face-right", this.face > 0);
@@ -736,11 +769,11 @@ export class CatEngine {
     this._later(() => {
       if (this.state !== "crouch" || !this._seen) return;
       const r2 = this._poseRect(); if (!r2) return;
-      const scale = BOX_W / (this.root.getBoundingClientRect().width || BOX_W);   // viewport px -> plane px
+      const scale = this.boxW / (this.root.getBoundingClientRect().width || this.boxW);   // viewport px -> plane px
       const hop = Math.max(-7, Math.min(7, (this._mouse.x - (r2.left + r2.width / 2)) * scale / UX * 0.6));
       const from = { ...this.pos }, to = { x: Math.max(ROAM.x0, Math.min(ROAM.x1, from.x + hop)), y: from.y };
       this._enter("pounce", 0);
-      const a = (p, lift) => `translate(${(p.x * UX - BOX_W / 2).toFixed(1)}px, ${(p.y * UY - BOX_H - lift).toFixed(1)}px)`;
+      const a = (p, lift) => `translate(${(p.x * UX - this.boxW / 2).toFixed(1)}px, ${(p.y * UY - this.boxH - lift * this.sizeUnits / 26).toFixed(1)}px)`;
       const anim = this.root.animate([{ transform: a(from, 0) }, { transform: a({ x: (from.x + to.x) / 2, y: from.y }, 70) }, { transform: a(to, 0) }],
         { duration: 460, easing: "cubic-bezier(.3,.6,.4,1)" });
       this.pos = to; this._place(0);
@@ -787,7 +820,9 @@ export class CatEngine {
     this._enter("watch", 0); this._faceCore();
     this._later(() => {
       if (this.state !== "watch") return;
-      if (this.place !== "core") { this._goTo("core", 1.4); this._later(() => this._batAtCore(), 600 + 1000 * Math.hypot(this.pos.x - PLACES.core.x, this.pos.y - PLACES.core.y) / (WALK_SPEED * 1.4)); }
+      const core = this.places.core;
+      if (!core) { this._batAtCore(); return; }
+      if (this.place !== "core") { this._goTo("core", 1.4); this._later(() => this._batAtCore(), 600 + 1000 * Math.hypot(this.pos.x - core.x, this.pos.y - core.y) / (WALK_SPEED * 1.4)); }
       else this._batAtCore();
     }, 900);
   }

@@ -114,7 +114,7 @@ html.pdx-touch .world-bg { animation: none; }
 }
 
 /* the menu's "Add to Home Screen" key, under the full-screen key */
-#pdx-home-key { position: fixed; z-index: 2147483000; right: max(8px, var(--tx-sa-r)); bottom: max(10px, var(--tx-sa-b));
+#pdx-home-key { position: fixed; z-index: 800; right: max(8px, var(--tx-sa-r)); bottom: max(10px, var(--tx-sa-b));
   min-height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px;
   border: 2px solid var(--tx-ink); border-radius: 6px; background: var(--tx-paper); color: var(--tx-ink);
   font: 700 .82rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; text-transform: uppercase;
@@ -123,13 +123,16 @@ html.pdx-touch .world-bg { animation: none; }
 #pdx-home-key svg { width: 20px; height: 20px; }
 
 /* the corner key that brings full screen back */
-#pdx-fs-pill { position: fixed; z-index: 2147483000; top: max(8px, var(--tx-sa-t)); right: max(8px, var(--tx-sa-r));
+#pdx-fs-pill { position: fixed; z-index: 800; top: max(8px, var(--tx-sa-t)); right: max(8px, var(--tx-sa-r));
   min-height: 44px; min-width: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px;
   border: 2px solid var(--tx-ink); border-radius: 6px; background: var(--tx-paper); color: var(--tx-ink);
   font: 700 .82rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; text-transform: uppercase;
   box-shadow: 3px 3px 0 var(--tx-ink); cursor: pointer; }
 #pdx-fs-pill[hidden] { display: none; }
 #pdx-fs-pill svg { width: 20px; height: 20px; }
+/* under every menu panel (Settings 900, News / Community 950, the Chronicle's pages) */
+#pdx-fs-pill.tx-nudge { animation: txNudge 1.4s ease-in-out 1.2s 3; }
+@keyframes txNudge { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-6deg); } 40% { transform: rotate(5deg); } 60% { transform: rotate(-3deg); } }
 /* in a match only the icon: the table is already short of room */
 html.pdx-phone.pdx-in-match #pdx-fs-pill span { display: none; }
 html.pdx-in-match #pdx-fs-pill { top: auto; bottom: max(8px, var(--tx-sa-b)); right: max(8px, var(--tx-sa-r)); opacity: .85; }

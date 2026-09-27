@@ -3557,7 +3557,8 @@ body.cabin-on :is(#hull, #cursor-plane) .hull-manopla::before{
 
 
 /* ── the pip-boy SCREEN is always ON: a CRT scanline sweep + idle standby readout ── */
-:is(#hull, #cursor-plane) .mano-scan { position: absolute; left: 254px; top: 180px; width: 236px; height: 148px;
+/* the arm's box starts 800px left of the drawing's x 0, so the screen (x 254) is at 1054px */
+:is(#hull, #cursor-plane) .mano-scan { position: absolute; left: 1054px; top: 180px; width: 236px; height: 148px;
   pointer-events: none; overflow: hidden; border-radius: 9px; z-index: 8; mix-blend-mode: screen; }
 /* the sweep animates transform, not `top`: the same line of light going down, with
    no layout or paint per frame */
@@ -3567,7 +3568,7 @@ body.cabin-on :is(#hull, #cursor-plane) .hull-manopla::before{
   animation: manoScan 4.2s linear infinite; }
 @keyframes manoScan {
   0% { transform: translateY(-40px); } 100% { transform: translateY(148px); } }
-:is(#hull, #cursor-plane) .mano-standby { position: absolute; left: 254px; top: 180px; width: 236px; height: 148px;
+:is(#hull, #cursor-plane) .mano-standby { position: absolute; left: 1054px; top: 180px; width: 236px; height: 148px;
   z-index: 8; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; font-family: var(--f-mono, monospace); color: #5fd08a; text-shadow: 0 0 6px rgba(95,208,138,.6);
   transition: opacity .3s ease; }
@@ -8046,3 +8047,10 @@ body.cabin-on #hull-console .mano-cmd .mc-l:is(.cc, .cm, .ccost) { color: #ffcf7
 body.cabin-on #hull-console .mano-cmd .mc-l.cn { color: #ffb4a0; }
 body.cabin-on #hull-console .mano-cmd .mc-l.sea-anchor { font-size: inherit; margin-top: 0; }
 body.cabin-on #hull-console .mano-cmd .mc-l.sea-anchor svg { width: 13px; height: 14px; }
+/* ═══ ONE WORKSTATION, THE HEAD TURNS (camera.js _turnHead) ═══════════════════════════
+   The wall is farther than the table: while the head turns it moves a little less and
+   slides BEHIND the desk's back edge, so both wallpaper layers sit under both desk
+   layers and run 120px down behind the edge (never a gap at the seam). At rest nothing
+   moves: the same pixels as before. */
+body.cam-on .cam-world::after { z-index: -2; height: 1614px; }
+body.cam-on .game-grid::after { z-index: -2; height: 1274px; }

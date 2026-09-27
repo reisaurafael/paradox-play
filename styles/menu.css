@@ -60,7 +60,6 @@
 /* the hero measures its column: with Large or Extra large text in a narrow
    column the go disc steps aside and the lettering keeps to one line */
 .landing-main { container-type: inline-size; }
-@container (max-width: 30rem) { .hl-go { display: none; } }
 .hl-eye svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .hl-burst { fill: var(--you); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
 .hl-lid { fill: #fffbe8; stroke: var(--ink); stroke-width: 4.5; stroke-linejoin: round; }
@@ -81,6 +80,7 @@
   background: var(--ink); box-shadow: 3px 3px 0 rgba(21,16,10,.35); transition: transform .16s ease; }
 .hl-go svg { width: 1.7rem; height: 1.7rem; margin-left: .2rem; fill: var(--you); }
 .hero-learn:hover .hl-go, .hero-learn:focus-visible .hl-go { transform: translateX(4px) scale(1.06); }
+@container (max-width: 30em) { .hl-go { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .hero-learn, .hl-go, .hl-look { transition: none; }
   .hl-blink { animation: none; }

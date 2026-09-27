@@ -49,10 +49,10 @@
      window.__pdxChronicle.snapshot()   the stable shape above
      window.__pdxChronicle.tutorialDone()     Learn to Play finished
    ========================================================================= */
-import { profile } from "./profile.js?202609271103";
-import { audio } from "./audio.js?202609271103";
-import { roman, esc, seatColor } from "./util.js?202609271103";
-import { THEMES, THEME_BY_ID, TIER_NAME, applyTheme } from "./theme.js?202609271103";
+import { profile } from "./profile.js?202609271439";
+import { audio } from "./audio.js?202609271439";
+import { roman, esc, seatColor } from "./util.js?202609271439";
+import { THEMES, THEME_BY_ID, TIER_NAME, applyTheme } from "./theme.js?202609271439";
 
 const PANEL = (() => {
   try { return parseInt(new URLSearchParams(location.search).get("panel")) || 0; } catch (e) { return 0; }
@@ -173,7 +173,7 @@ const erasOf = (c) => ERA_SPANS.filter(([, a, b]) => c >= a && c <= b).map(([n])
    does not apply to it (a fastest win needs a win). */
 const RECORDS = [
   { id: "cp", name: "The Fattest Contract", what: "Most Contract Points in one match", unit: "CP", better: "high",
-    value: (m) => m.cp },
+    value: (m) => m.cp || null },
   { id: "hour_damage", name: "The Heaviest Hour", what: "Most paradox damage you dealt in a single Hour", unit: "damage", better: "high",
     value: (m) => m.bestHourDmg || null },
   { id: "match_damage", name: "The Paradox Ledger", what: "Most paradox damage you dealt in one match", unit: "damage", better: "high",
@@ -757,7 +757,10 @@ function onEvent(kind, payload, game) {
   // one stamp per kind and event: the end of a match can file several at once
   if (done.length === 1) stamp("MISSION COMPLETE", done[0].title, `Daily orders · ${Object.keys(D.days[m.day].done).length} of 3`, "mission");
   else if (done.length) stamp("MISSIONS COMPLETE", `${done.length} orders done`, done.map((d) => d.title).join(" · "), "mission");
-  if (quests.length === 1) stamp("QUEST", quests[0].name, TIERS[quests[0].tier - 1].name, "quest");
+  if (quests.length === 1) {
+    const gets = COSMETICS.filter((c) => c.quest === quests[0].id).map((c) => c.name);
+    stamp("QUEST", quests[0].name, TIERS[quests[0].tier - 1].name + (gets.length ? ` · unlocks ${gets.join(", ")}` : ""), "quest");
+  }
   else if (quests.length) stamp("QUESTS", `${quests.length} quests filed`, quests.map((q) => q.name).join(" · "), "quest");
   if (done.length || quests.length || final) changed();
   if (final) watchResults(m);
@@ -767,7 +770,7 @@ function tutorialDone() {
   if (!D) load();
   if (grantQuest("wake_call", null)) {
     save();
-    stamp("QUEST", QUEST_BY_ID.wake_call.name, "First Steps", "quest");
+    stamp("QUEST", QUEST_BY_ID.wake_call.name, "First Steps · unlocks HELA's Eye", "quest");
     changed();
   }
 }
@@ -865,16 +868,17 @@ function resultBlock(m) {
   box.className = "chr-result";
   const st = equipped("stamp"), rk = rank();
   const lines = [];
+  // the orders and quests first (they are the news), then the records
+  for (const id of m.missionsDone) lines.push(`<li class="cr-mis"><b>Mission</b> ${esc(MISSION_BY_ID[id].title)}</li>`);
+  for (const id of m.questsDone) lines.push(`<li class="cr-qst"><b>Quest</b> ${esc(QUEST_BY_ID[id].name)}</li>`);
   for (const r of m.newRecords) {
     const def = RECORD_BY_ID[r.id]; if (!def) continue;
     lines.push(`<li class="cr-rec"><b>New record</b> ${esc(def.name)}: ${esc(fmtRecord(def, r.value))}${def.id === "deepest" ? "" : " " + esc(unitOf(def, r.value))}</li>`);
   }
-  for (const id of m.missionsDone) lines.push(`<li class="cr-mis"><b>Mission</b> ${esc(MISSION_BY_ID[id].title)}</li>`);
-  for (const id of m.questsDone) lines.push(`<li class="cr-qst"><b>Quest</b> ${esc(QUEST_BY_ID[id].name)}</li>`);
   if (!lines.length) lines.push(`<li class="cr-none">No new records this time. Today's orders still stand.</li>`);
   box.innerHTML = `
     <div class="cr-head"><span class="cr-kick">The Chronicle</span><span class="cr-rank">${esc(rk.title)}</span></div>
-    <ul class="cr-list">${lines.slice(0, 7).join("")}</ul>
+    <ul class="cr-list">${lines.slice(0, 8).join("")}${lines.length > 8 ? `<li class="cr-more">and ${lines.length - 8} more in the Chronicle</li>` : ""}</ul>
     <div class="cr-foot">
       <span class="chr-inkstamp chr-ink-${st.tone}" aria-label="${esc(st.name)}">${esc(st.name)}</span>
       <button class="btn btn-ghost btn-sm cr-open" type="button">Open the Chronicle</button>
@@ -909,54 +913,78 @@ function whyLine(c) {
   const q = QUEST_BY_ID[c.quest];
   return `${t.name} (${tier.toLowerCase()}) is locked. Quest: ${q.name}. ${q.text}`;
 }
+// The picker folds: one row of the colours you can wear, then a Rewards button
+// that opens, in place (never a pop-up), the locked tiers with the quest of each.
+let drawerOpen = false;
+function swatch(t, cur, say, onWear) {
+  const c = COSMETIC_BY_ID[t.id], ok = unlocked(c), on = cur.id === t.id;
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = `chp-sw chp-${t.kind} chp-tier-${t.tier}` + (on ? " is-on" : "") + (ok ? "" : " is-locked");
+  b.dataset.colour = t.id;
+  b.style.setProperty("--a", t.a);
+  if (t.b) b.style.setProperty("--b", t.b);
+  b.setAttribute("role", "radio");
+  b.setAttribute("aria-checked", on ? "true" : "false");
+  if (!ok) b.setAttribute("aria-disabled", "true");
+  b.setAttribute("aria-label", `${t.name}, ${TIER_NAME[t.tier].toLowerCase()}${ok ? "" : `, locked: quest ${QUEST_BY_ID[c.quest].name}, ${QUEST_BY_ID[c.quest].text}`}`);
+  b.title = ok ? t.name : `${t.name}: quest ${QUEST_BY_ID[c.quest].name}`;
+  b.innerHTML = (t.kind === "wanted" ? STAR_SVG : "") + (ok ? "" : LOCK_SVG);
+  if (say) { b.addEventListener("mouseenter", () => say(c)); b.addEventListener("focus", () => say(c)); }
+  b.addEventListener("click", () => {
+    if (!unlocked(c)) { if (say) say(c); try { audio.play("click"); } catch (e) {} return; }
+    onWear(t.id);
+  });
+  return b;
+}
 export function colourPicker(box, nameEl, onPick) {
   if (!box) return;
   if (!D) load();
   const cur = equipped("colour");
+  const wear = (id) => { wearColour(id); if (onPick) onPick(); else colourPicker(box, nameEl, onPick); };
+  const redraw = () => colourPicker(box, nameEl, onPick);
   box.classList.add("chr-picker");
   box.innerHTML = "";
-  let why = document.getElementById("prof-colour-why");
-  if (!why) {
-    why = document.createElement("p");
-    why.id = "prof-colour-why"; why.className = "chp-why"; why.setAttribute("aria-live", "polite");
-    box.insertAdjacentElement("afterend", why);
+  const old = document.getElementById("prof-colour-why"); if (old) old.remove();
+  // the row: every colour you can wear, then the door to the rewards
+  const row = document.createElement("div");
+  row.className = "chp-row chp-mine";
+  for (const t of THEMES.filter((x) => unlocked(COSMETIC_BY_ID[x.id]))) row.appendChild(swatch(t, cur, null, wear));
+  const locked = THEMES.filter((x) => !unlocked(COSMETIC_BY_ID[x.id]));
+  if (locked.length) {
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "chp-more" + (drawerOpen ? " is-open" : "");
+    more.setAttribute("aria-expanded", drawerOpen ? "true" : "false");
+    more.setAttribute("aria-controls", "chp-drawer");
+    more.innerHTML = `${LOCK_SVG}<span>Rewards</span><b>${locked.length}</b>`;
+    more.title = "Colours you earn with Chronicle quests";
+    more.addEventListener("click", () => { drawerOpen = !drawerOpen; try { audio.play("click"); } catch (e) {} redraw();
+      const m = box.querySelector(".chp-more"); if (m) m.focus({ preventScroll: true }); });
+    row.appendChild(more);
   }
-  const say = (c) => { why.textContent = whyLine(c); why.classList.toggle("is-locked", !unlocked(c)); };
-  const rows = [["Colours", (t) => t.kind === "single"], ["Pairs", (t) => t.kind === "pair"],
-    ["Epic and legendary", (t) => t.tier === "epic" || t.tier === "legendary"]];
-  for (const [label, keep] of rows) {
-    const row = document.createElement("div");
-    row.className = "chp-row";
-    row.innerHTML = `<span class="chp-lbl" aria-hidden="true">${esc(label)}</span>`;
-    for (const t of THEMES.filter(keep)) {
-      const c = COSMETIC_BY_ID[t.id], ok = unlocked(c), on = cur.id === t.id;
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = `chp-sw chp-${t.kind} chp-tier-${t.tier}` + (on ? " is-on" : "") + (ok ? "" : " is-locked");
-      b.dataset.colour = t.id;
-      b.style.setProperty("--a", t.a);
-      if (t.b) b.style.setProperty("--b", t.b);
-      b.setAttribute("role", "radio");
-      b.setAttribute("aria-checked", on ? "true" : "false");
-      if (!ok) b.setAttribute("aria-disabled", "true");
-      b.setAttribute("aria-label", `${t.name}, ${TIER_NAME[t.tier].toLowerCase()}${ok ? "" : `, locked: quest ${QUEST_BY_ID[c.quest].name}`}`);
-      b.setAttribute("aria-describedby", "prof-colour-why");
-      b.innerHTML = (t.kind === "wanted" ? STAR_SVG : "") + (ok ? "" : LOCK_SVG);
-      b.addEventListener("mouseenter", () => say(c));
-      b.addEventListener("focus", () => say(c));
-      b.addEventListener("mouseleave", () => say(equipped("colour")));
-      b.addEventListener("blur", () => say(equipped("colour")));
-      b.addEventListener("click", () => {
-        if (!unlocked(c)) { say(c); try { audio.play("click"); } catch (e) {} return; }
-        wearColour(t.id);
-        if (onPick) onPick(); else colourPicker(box, nameEl, onPick);
-      });
-      row.appendChild(b);
+  box.appendChild(row);
+  // the drawer: the locked colours by tier, and what each one asks
+  if (locked.length && drawerOpen) {
+    const dr = document.createElement("div");
+    dr.id = "chp-drawer"; dr.className = "chp-drawer";
+    const why = document.createElement("p");
+    why.id = "prof-colour-why"; why.className = "chp-why"; why.setAttribute("aria-live", "polite");
+    const say = (c) => { why.textContent = whyLine(c); why.classList.toggle("is-locked", !unlocked(c)); };
+    for (const tier of ["common", "rare", "epic", "legendary"]) {
+      const ts = locked.filter((t) => t.tier === tier);
+      if (!ts.length) continue;
+      const r = document.createElement("div");
+      r.className = "chp-row";
+      r.innerHTML = `<span class="chp-lbl chp-lbl-${tier}">${esc(TIER_NAME[tier])}</span>`;
+      for (const t of ts) r.appendChild(swatch(t, cur, say, wear));
+      dr.appendChild(r);
     }
-    box.appendChild(row);
+    why.textContent = "Point at a colour to see the quest that earns it.";
+    dr.appendChild(why);
+    box.appendChild(dr);
   }
   if (nameEl) nameEl.textContent = cur.theme.name;
-  say(cur);
 }
 
 /* ───────────────────────────── THE MENU ENTRY ─────────────────────────────
@@ -986,18 +1014,19 @@ function menuBlock() {
   box.innerHTML = `
     <div class="chb-top">
       ${badgeSvg(equipped("badge").id, myColour(), "chb-badge")}
-      <div class="chb-who">
-        <h2 class="form-title" id="chr-block-title">The Chronicle</h2>
-        <p class="chb-rank"><b>${esc(rk.title)}</b> <span>${rk.points} pts</span></p>
+      <h2 class="form-title" id="chr-block-title">The Chronicle</h2>
+      <p class="chb-rank"><b>${esc(rk.title)}</b> <span>${rk.points} pts</span></p>
+      <button class="chr-open" type="button" title="Records, quests, your look and your record card">Open <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l6 4-6 4z" fill="currentColor"/></svg></button>
+      <div class="chb-gauge">
         <div class="chb-bar" role="img" aria-label="${rk.next ? `${rk.points} of ${rk.next.at} points to ${esc(rk.next.title)}` : "Highest rank"}"><i style="width:${pct}%"></i></div>
+        <span class="chb-next" aria-hidden="true">${rk.next ? `${esc(rk.next.title)} at ${rk.next.at}` : "Highest rank"}</span>
       </div>
     </div>
     <p class="chb-lede">Today's orders <span>${done} of 3 done</span></p>
     <ul class="chb-missions">${ids.map((id) => {
       const d = MISSION_BY_ID[id], ok = !!rec[id];
-      return `<li class="${ok ? "is-done" : ""}"><span class="chb-box" aria-hidden="true">${ok ? "&#10003;" : ""}</span><span><b>${esc(d.title)}</b> ${esc(d.text)}</span>${ok ? `<span class="sr-only"> (done)</span>` : ""}</li>`;
-    }).join("")}</ul>
-    <button class="btn btn-ghost btn-sm chr-open" type="button"><span class="btn-ico" aria-hidden="true">${badgeSvg("cronos", "#c79a5a")}</span> Records, quests and your card</button>`;
+      return `<li class="${ok ? "is-done" : ""}" title="${esc(d.title)}: ${esc(d.text)}"><span class="chb-box" aria-hidden="true">${ok ? "&#10003;" : ""}</span><span class="chb-line"><b>${esc(d.title)}</b> ${esc(d.text)}</span>${ok ? `<span class="sr-only"> (done)</span>` : ""}</li>`;
+    }).join("")}</ul>`;
 }
 
 /* ───────────────────────────── THE PAGE ───────────────────────────── */
