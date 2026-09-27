@@ -26,11 +26,11 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609262101";
-import { mend } from "./mend.js?202609262101";
+import { roman } from "./util.js?202609270047";
+import { mend } from "./mend.js?202609270047";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
-const SLOW = { slow: 2, normal: 1, fast: 1 };     // Fast never shortens a reading time
+const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
 // the reading time of any message: at least 4 s, and 75 ms per character
 const readMs = (n) => Math.max(4000, 75 * n);
 
@@ -329,7 +329,12 @@ class Comic {
      big ones. It arrives with HELA's line, holds still like a printed panel and
      fades slowly. One on screen at a time. Low graphics: lettering and a flat star. */
   impact(kind, at, opts = {}) {
-    if (this._quiet() || !this.root) return;
+    // FX: the tutorial may let the effects in (window.__fx.tutorial); its words stay its own
+    const fxTut = this._muted() && !this._hidden() && !(this.game && this.game._skip) && !!(window.__fx && window.__fx.tutorial);
+    if ((this._quiet() && !fxTut) || !this.root) return;
+    // FX (js/fx.js): the Comic effects setting, the pace and one big panel at a time.
+    // It may queue this panel, turn it into a stamp (Light) or drop it (Off).
+    try { if (window.__fx && window.__fx.route(kind, at, opts)) return; } catch (e) {}
     const K = {
       paradox: { word: "ZZAP!", c: "#b98cff", ink: "#1a0f2e" },
       boom: { word: "BOOM!", c: "#ff7a2a", ink: "#2a0d02" },
@@ -339,6 +344,8 @@ class Comic {
       steal: { word: "SWIPE!", c: "#ff5a44", ink: "#2a0804" },
       contract: { word: "KA-CHING!", c: "#f7c65a", ink: "#2a1a02" },
       yearzero: { word: "YEAR ZERO!", c: "#fff1c2", ink: "#1a1204" },
+      vault: { word: "KLANK!", c: "#b98cff", ink: "#1a0f2e" },          // FX: the Secret Market opens
+      settle: { word: "THE END", c: "#fff1c2", ink: "#1a1204" },       // FX: the match ends
     }[kind] || { word: "POW!", c: "#fff1c2", ink: "#15100a" };
     const gfx = this._gfx(), reduced = this._reduced();
     let x = innerWidth / 2, y = innerHeight * 0.42;
@@ -365,7 +372,7 @@ class Comic {
     this.root.appendChild(h);
     this.hitEl = h;
     // a printed panel: in over about 0.4 s, held still, out over about 0.9 s
-    const dur = Math.round((big ? 3400 : 2800) * this._slow());
+    const dur = opts._dur || Math.round((big ? 3400 : 2800) * this._slow());   // FX: the pace sets _dur
     const rot = (Math.random() * 8 - 4).toFixed(1);
     const fin = { duration: dur, easing: "linear", fill: "both" };
     const pop = Math.min(0.12, 150 / dur);         // it hits on the beat (with its sound), then holds

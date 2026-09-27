@@ -26,12 +26,15 @@
    every animation is transform or opacity on a few small nodes, removed when done.
    All text enters the page through textContent.
    ========================================================================= */
-import { roman } from "./util.js?202609262101";
+import { roman } from "./util.js?202609270047";
 
 const N = 30;
 // the drawer a century's relic is filed in (Origins I to X, Ascension XI to XIX,
 // Singularity XX to XXX), for the glow as it is filed
 const periodOf = (c) => (c <= 10 ? "Origins" : c <= 19 ? "Ascension" : "Singularity");
+// the Pace setting (js/fx.js): the mend's CSS animations stretch with --pdx-pace, and
+// the timers that clear them stretch the same way
+const pace = (ms) => { try { return window.__pdxPace ? window.__pdxPace(ms) : ms; } catch (e) { return ms; } };
 
 class Mend {
   constructor() {
@@ -182,14 +185,14 @@ class Mend {
     // the notch: fills in the mender's colour and pulses
     const notch = this.gaugeEl && this.gaugeEl.querySelector(`.tlg-track i[data-c="${century}"]`);
     if (notch) { notch.classList.remove("pulse"); void notch.offsetWidth; notch.classList.add("pulse");
-      setTimeout(() => notch.classList.remove("pulse"), 1800); }
+      setTimeout(() => notch.classList.remove("pulse"), pace(1800)); }
     if (this.gaugeEl) { this.gaugeEl.classList.remove("mending"); void this.gaugeEl.offsetWidth; this.gaugeEl.classList.add("mending");
-      setTimeout(() => this.gaugeEl && this.gaugeEl.classList.remove("mending"), 1800); }
+      setTimeout(() => this.gaugeEl && this.gaugeEl.classList.remove("mending"), pace(1800)); }
     // the drawer the relic is filed in glows (the drawers are mine)
     if (seat === this._me()) {
       const cell = document.querySelector(`#drawer-zone .cab2-cell[data-drawer="${periodOf(century)}"]`);
       if (cell) { cell.classList.remove("tl-filed"); void cell.offsetWidth; cell.classList.add("tl-filed");
-        setTimeout(() => cell.classList.remove("tl-filed"), 2200); }
+        setTimeout(() => cell.classList.remove("tl-filed"), pace(2200)); }
     }
     if (again) return;
     // on the chart: the broken ring closes, light returns
@@ -202,7 +205,7 @@ class Mend {
       b.style.setProperty("--seat", this._col(seat));
       b.innerHTML = '<i class="tlb-a"></i><i class="tlb-b"></i><i class="tlb-rays"></i>';
       this.marksEl.appendChild(b);
-      setTimeout(() => b.remove(), 2400);
+      setTimeout(() => b.remove(), pace(2400));
     }
     // the comic panel, on the beat of the delivery's sound
     if (opts.sound) { try { window.__audio && window.__audio.play("deliver"); } catch (e) {} }
@@ -237,7 +240,7 @@ class Mend {
       }
     }
     this.marksEl.appendChild(svg);
-    setTimeout(() => svg.remove(), 2600);
+    setTimeout(() => svg.remove(), pace(2600));
   }
 
   /* ---- TIME SETTLES: the restored timeline for the end screen ---- */

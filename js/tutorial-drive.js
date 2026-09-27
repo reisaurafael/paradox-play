@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609262101";
-import { Game } from "./game.js?202609262101";
-import { icon } from "./icons.js?202609262101";
-import { roman } from "./util.js?202609262101";
-import { profile } from "./profile.js?202609262101";
+import { api, Connection } from "./net.js?202609270047";
+import { Game } from "./game.js?202609270047";
+import { icon } from "./icons.js?202609270047";
+import { roman } from "./util.js?202609270047";
+import { profile } from "./profile.js?202609270047";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -79,7 +79,8 @@ const L = {
   // FIXED: the century is wherever the real wagon rolls in
   merchantArrives: "Something new on your chart, traveller. A wagon has rolled into {c}, at the far end of the only era you can see.",
   merchantWho: "The MERCHANT. He carries relics and he trades with one man only: whoever is standing in his own year. That wagon crawls the centuries on its own business, never on yours, so do not sit there waiting on it. If you want what he has, you cross the years and you stand in front of him.",
-  merchantSign: "That sign over his booth answers one question and only one: whether HE will trade with YOU today. It reads CLOSED from everywhere except his century.",
+  // FIXED (minimally): "wooden", so it is not taken for his marker on the chart
+  merchantSign: "That wooden sign over his booth answers one question and only one: whether HE will trade with YOU today. It reads CLOSED from everywhere except his century.",
   marketScene: "This is his wagon, up close. The shelf is what he is willing to sell this hour.",
   // FIXED: the real shelf always shows four cards
   marketCard: "One relic on it you can afford. {g} gold, which you have. Look at the century stamped on its face.",
@@ -224,37 +225,36 @@ class Stage {
       if (!c.classList.contains("on") || !E) return;
       let q; try { q = E.pos(); } catch (e) { return; }
       const cw = c.offsetWidth || 360, ch = c.offsetHeight || 110, W = innerWidth, H = innerHeight, M = 12;
-      const cands = {
-        right: [q.x + 36, q.y - 26, "left"], left: [q.x - 36 - cw, q.y - 26, "right"],
-        below: [q.x - cw / 2, q.y + 40, "above"], above: [q.x - cw / 2, q.y - 40 - ch, "below"],
-      };
+      // around the eye: close first, then a little farther, so the words never sit on
+      // the machine, the dice, the chart, the files or the shelf (the tail keeps pointing at her)
+      const cands = {};
+      [0, 80, 160].forEach((d, i) => {
+        cands["right" + i] = [q.x + 36 + d, q.y - 26, "left", d];
+        cands["left" + i] = [q.x - 36 - cw - d, q.y - 26, "right", d];
+        cands["below" + i] = [q.x - cw / 2, q.y + 40 + d, "", d];
+        cands["above" + i] = [q.x - cw / 2, q.y - 40 - ch - d, "", d];
+      });
       const now = performance.now();
-      if (!this._rideSide || now - (this._rideT || 0) > 350) {
+      if (!this._rideSide || !cands[this._rideSide] || now - (this._rideT || 0) > 300) {
         this._rideT = now;
         const soft = [];
-        KEY_AREAS.forEach((sel) => { try { document.querySelectorAll(sel).forEach((n) => { const b = n.getBoundingClientRect(); if (b.width && onScreen(b)) soft.push(b); }); } catch (e) {} });
+        KEY_AREAS.forEach((sel) => { try { document.querySelectorAll(sel).forEach((n) => { const b = n.getBoundingClientRect(); if (b.width && onScreen(b) && visible(n)) soft.push(b); }); } catch (e) {} });
+        // what the line is about weighs three times as much: the words never sit on it
+        this.rings.forEach((a) => { const n = this.resolve(a); const b = n && n.getBoundingClientRect(); if (b && b.width) soft.push(b, b, b); });
         let best = null;
-        for (const k of ["right", "left", "below", "above"]) {
-          let [px, py] = cands[k];
-          const cx = Math.max(M, Math.min(W - cw - M, px)), cy = Math.max(M + 40, Math.min(H - ch - M, py));
+        for (const k of Object.keys(cands)) {
+          const [px, py, , d] = cands[k];
+          const cx = Math.max(M, Math.min(W - cw - M, px)), cy = Math.max(M + 50, Math.min(H - ch - M, py));
           let cover = 0;
           soft.forEach((b) => { cover += Math.max(0, Math.min(cx + cw, b.right) - Math.max(cx, b.left)) * Math.max(0, Math.min(cy + ch, b.bottom) - Math.max(cy, b.top)); });
-          const score = cover + (Math.abs(cx - px) + Math.abs(cy - py)) * 400 + (k === this._rideSide ? -3000 : 0);
+          const score = cover * 3 + d * 120 + (Math.abs(cx - px) + Math.abs(cy - py)) * 200 + (k === this._rideSide ? -4000 : 0);
           if (!best || score < best.s) best = { k, s: score };
         }
         this._rideSide = best.k;
       }
-      if (this.anchor) {
-        // never over what the line is about: if the chosen side covers it, take another
-        const t = this.resolve(this.anchor), tr = t && t.getBoundingClientRect();
-        const hit = (k) => { if (!tr || !tr.width) return false; const [x0, y0] = cands[k];
-          const x1 = Math.max(M, Math.min(W - cw - M, x0)), y1 = Math.max(M + 40, Math.min(H - ch - M, y0));
-          return x1 < tr.right && x1 + cw > tr.left && y1 < tr.bottom && y1 + ch > tr.top; };
-        if (hit(this._rideSide)) { const alt = ["right", "left", "below", "above"].find((k) => !hit(k)); if (alt) this._rideSide = alt; }
-      }
       const [px, py, tail] = cands[this._rideSide];
       c.style.left = Math.round(Math.max(M, Math.min(W - cw - M, px))) + "px";
-      c.style.top = Math.round(Math.max(M + 40, Math.min(H - ch - M, py))) + "px";
+      c.style.top = Math.round(Math.max(M + 50, Math.min(H - ch - M, py))) + "px";
       c.dataset.eye = tail === "left" ? "left" : tail === "right" ? "right" : "";
     };
     this._rideRaf = requestAnimationFrame(step);
@@ -262,6 +262,7 @@ class Stage {
   stopRide() { if (this._rideRaf) cancelAnimationFrame(this._rideRaf); this._rideRaf = 0; }
 
   hide() {
+    document.querySelectorAll(".tut-hl").forEach((n) => n.classList.remove("tut-hl"));
     this.stopRide();
     this.releaseEye();
     this.pointing = false;
@@ -278,6 +279,7 @@ class Stage {
 
   setRings(list) {
     this.rings = list || [];
+    document.querySelectorAll(".tut-hl").forEach((n) => n.classList.remove("tut-hl"));
     this.ringNodes.forEach((n) => n.remove());
     this.ringNodes = this.rings.map(() => {
       const n = document.createElement("div");
@@ -309,6 +311,16 @@ class Stage {
       const el = this.resolve(at);
       const r = el && el.getBoundingClientRect();
       if (!r || !r.width || !onScreen(r)) { n.style.display = "none"; return; }
+      // inside the wrist machine (scaled, tilted, moving) the element wears the highlight
+      // itself, so it keeps its exact shape; the loose box is for everything else
+      if (el.closest && el.closest("#hull")) {
+        if (!el.classList.contains("tut-hl")) {
+          document.querySelectorAll(".tut-hl").forEach((x) => { if (!this.rings.some((a) => this.resolve(a) === x)) x.classList.remove("tut-hl"); });
+          el.classList.add("tut-hl");
+        }
+        n.style.display = "none";
+        return;
+      }
       const pad = 8;                          // a frame around the control, never across its label
       n.style.display = "";
       n.style.left = (r.left - pad) + "px"; n.style.top = (r.top - pad) + "px";
@@ -590,6 +602,8 @@ class Coach {
     window.__helaMute = true;               // her ambient remarks wait; the lessons speak
     document.body.classList.add("tut", "tut-story");
     this.wakeStart();
+    // the comic effects play in the story too, paced with the lines (fx.js)
+    try { window.__fx = window.__fx || {}; window.__fx.tutorial = true; } catch (e) {}
     // the Merchant is not on the chart before his beat (the map's own gate)
     try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(false); } catch (e) {}
     this.stage = new Stage(this);
@@ -1208,7 +1222,7 @@ class Coach {
           rings: ["#dice-body .escape-drop", die(s.v)], avoid: MACHINE });
       return;
     }
-    this.guide("#confirm-alloc", "All four dice placed. Click <b>Confirm</b>.",
+    this.guide("#confirm-alloc", "All your dice are placed. Click <b>Confirm</b>.",
       { sub: first ? "Everyone chose in secret. Now the machines resolve." : "", avoid: MACHINE });
   }
 

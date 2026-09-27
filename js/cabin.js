@@ -1883,7 +1883,7 @@
 (function helaEyeLife(){
   if (window.__helaEye) return;
   const RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const GAP_X = 180, GAP_Y = 140;     // the falconry distance: far enough that eye, hand and words never pile up
+  const GAP_X = 133, GAP_Y = 104;     // the falconry distance (the owner's: close to the hand; calm comes from the follow, not the gap)
   const HYST = 42;                    // midline dead-band so she never flickers
   let eye = null, mx = -1, my = -1, sx = 1, sy = 1;   // s* = which diagonal she keeps
   let blinkT = 0, nextIdleBlink = 0, nextSacc = 0, raf = 0;
@@ -1915,6 +1915,107 @@
     document.body.appendChild(eye);
     window.addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
     document.addEventListener("mouseleave", () => { mx = -1; my = -1; });
+  }
+
+  /* ══ HER MOTION: a physical follower, never a teleport ══════════════════════════════
+     The eye is a damped spring (a little lag, a little overshoot) pulled toward a TARGET
+     point near the hand; her words (balloon, boxes) hang on the eye by their own soft
+     spring, so they trail her and SLIDE around her when they change side. Nothing is
+     ever set to a position after the first frame, and speeds are capped so her words
+     never move more than about 12 px a frame at 60 fps.
+       - The TARGET, not the eye, is what gets redirected: small precise movements of
+         the hand (under DEAD px) do not move it; it changes diagonal only past a wide
+         dead-band around the screen's middle and at most once every 1.5 s; if its
+         diagonal lands on a critical zone another diagonal is taken.
+       - By the TIME MACHINE she parks: when the hand enters the machine and dice region
+         the target becomes a checkpoint just outside it (above it, or beside it, away
+         from the dice) and stays there while the hand works; it comes back to the hand
+         only when the hand leaves a wider exit boundary (hysteresis).
+       - Her words change side only when a CRITICAL zone (dice, machine cells, Confirm,
+         the yellow box, the tutorial's card, the hand) has covered them for 0.7 s, and
+         at most once every 2.5 s; a case file or a piece partly under them is tolerated.
+     placement() reports the counts, for the checks. ══ */
+  const DEAD = 70, FLIP_GAP = 1500;
+  const OMEGA = 10, ZETA = .7, VMAX_EYE = 470;       // the eye's spring (rad/s), damping, top speed (px/s)
+  const OMEGA_W = 9, VMAX_WORDS = 250;               // her words' spring around her, their top speed
+  let ex2 = -1, ey2 = -1, evx = 0, evy = 0, lastF = 0, ancX = -1, ancY = -1, flipAt = 0, changes = 0, switches = 0;
+  let parked = null, regionR = null, parkedPlaced = false, needXT = 0, needYT = 0;
+  function machineRegion(){
+    const el2 = document.getElementById("hull-console");
+    const r = el2 && el2.getBoundingClientRect();
+    return r && r.width > 20 && r.bottom > 0 && r.top < innerHeight ? r : null;
+  }
+  function inRect(r, pad){ return r && mx >= r.left - pad && mx <= r.right + pad && my >= r.top - pad && my <= r.bottom + pad; }
+  function checkpoint(r){
+    const up = 44 + 64 + 40;   // her eye, and her words under it, clear of the machine
+    const c = [[r.left + r.width * .5, r.top - up], [r.left + r.width * .2, r.top - up], [r.left + r.width * .8, r.top - up],
+      [r.right + 70, r.top + r.height * .25], [r.left - 70, r.top + r.height * .25]];
+    let best = null, bd = 1e9;
+    for (const [x, y] of c){
+      if (x < 40 || x > innerWidth - 40 || y < 160 || y > innerHeight - 40) continue;
+      const bx = [x - 30, y - 30, x + 30, y + 30];
+      if (zones.some((z) => z[4] && overl(bx, z))) continue;
+      const d = Math.hypot(x - (ex2 < 0 ? mx : ex2), y - (ey2 < 0 ? my : ey2));
+      if (d < bd){ bd = d; best = { x, y }; }
+    }
+    return best || { x: r.left + r.width * .5, y: Math.max(160, r.top - up) };
+  }
+  function post3(cx, cy, sx2, sy2){
+    const f = Math.max(.6, Math.min(1.25, fit()));
+    // under the hand she stays high enough for her words to fit under her
+    return { x: Math.max(30, Math.min(innerWidth - 30, cx + sx2 * GAP_X * f)), y: Math.max(150, Math.min(innerHeight - (sy2 === 1 ? 118 : 34), cy + sy2 * GAP_Y * f)) };
+  }
+  function spring(x, v, target, dt, omega, zeta, vmax){
+    const a = omega * omega * (target - x) - 2 * zeta * omega * v;
+    v += a * dt;
+    if (v > vmax) v = vmax; else if (v < -vmax) v = -vmax;
+    return [x + v * dt, v];
+  }
+  function follow(t){
+    // a frame after a pause (the table's nap, a busy moment) counts as one ordinary frame: no leap
+    let dt = lastF ? (t - lastF) / 1000 : .016; lastF = t;
+    if (dt > .05 || dt <= 0) dt = .016; else if (dt > .034) dt = .034;
+    refreshZones(t);
+    if (parked){
+      const r = machineRegion(); if (r) regionR = r;
+      if (!inRect(regionR, 70)){ parked = null; changes++; ancX = -1; }
+    } else {
+      const r = machineRegion();
+      if (r && inRect(r, 12)){ regionR = r; parked = checkpoint(r); parkedPlaced = false; changes++; }
+    }
+    let tx, ty;
+    if (parked){ tx = parked.x; ty = parked.y; }
+    else {
+      if (ancX < 0 || Math.hypot(mx - ancX, my - ancY) > DEAD){ ancX = mx; ancY = my; }
+      // she changes side only at an edge, where she or her words would leave the screen;
+      // anywhere else she keeps the side she has (her words sit under her, so they need no flip)
+      const f0 = Math.max(.6, Math.min(1.25, fit())), gx = GAP_X * f0;
+      const onZone = (a, b2) => { const q = post3(ancX, ancY, a, b2); const bx = [q.x - 30, q.y - 30, q.x + 30, q.y + 30];
+        for (const z of zones) if (z[4] && overl(bx, z)) return true; return false; };
+      // and only once the need has lasted a moment: a hand passing by the edge changes nothing
+      let nx = sx, ny = sy;
+      const needX = sx === 1 ? ancX + gx + 40 > innerWidth : ancX - gx - 40 < 0;
+      const needY = sy === 1 ? my > innerHeight - 150 : my < 200;
+      needXT = needX ? (needXT || t) : 0; needYT = needY ? (needYT || t) : 0;
+      if (needXT && t - needXT > 700) nx = -sx;
+      if (needYT && t - needYT > 700) ny = -sy;
+      if (onZone(nx, ny)){
+        for (const [a, b2] of [[nx, -ny], [-nx, ny], [-nx, -ny]]) if (!onZone(a, b2)){ nx = a; ny = b2; break; }
+      }
+      if ((nx !== sx || ny !== sy) && t - flipAt > FLIP_GAP){ sx = nx; sy = ny; flipAt = t; changes++; }
+      const q = post3(ancX, ancY, sx, sy); tx = q.x; ty = q.y;
+    }
+    const px0 = ex2, py0 = ey2;
+    if (ex2 < 0){ ex2 = tx; ey2 = ty; }            // the first frame only
+    else {
+      // two half steps keep the spring steady on a slow frame
+      for (let n = 0; n < 2; n++){
+        [ex2, evx] = spring(ex2, evx, tx, dt / 2, OMEGA, ZETA, VMAX_EYE);
+        [ey2, evy] = spring(ey2, evy, ty, dt / 2, OMEGA, ZETA, VMAX_EYE);
+      }
+    }
+    place(ex2, ey2);
+    words(dt, px0 < 0 ? 0 : ex2 - px0, px0 < 0 ? 0 : ey2 - py0);
   }
 
   // where she would stand on a given diagonal (sx2, sy2) for the current cursor
@@ -1951,97 +2052,149 @@
     return { x: Math.max(30, Math.min(innerWidth - 30, ccx + dx * k)),
              y: Math.max(56, Math.min(innerHeight - 34, ccy + dy * k)) };
   }
-  /* ── WHERE HER WORDS GO. Her balloon (.he-chip) and her boxes (.he-caps: YOUR MOVE,
-     the chapter, a footnote) ride the eye, but they must never land ON something the
-     player needs: the dice, the machine's cells, Confirm, the case files, the pieces
-     on the chart, the yellow box she is pointing at, the tutorial's own card, and the
-     hand itself. Those are FORBIDDEN ZONES (measured at most every 300 ms, only while
-     she has words up). Each side of the eye is tried, away from the cursor first; a
-     side that stays free is kept while it stays free (no flicker). If no side is free
-     she keeps her distance and the words go to the nearest free spot around her. ── */
+  /* ── WHERE HER WORDS GO: forbidden zones (measured at most every 450 ms, and only
+     when the hand moved or 0.7 s passed). A zone is CRITICAL (the dice, the machine's
+     cells, Confirm, the yellow box, the tutorial's card) or not (case files, pieces,
+     the gauge, the lifethread, the preview): only a critical one makes her words move
+     away, and only after it has covered them for a moment. Her words then SLIDE to the
+     new side on their own spring (words(), CSS translate, compositor only). ── */
   let chipSide = "", chipEl = null, capsEl = null, avoidR = null;
   let zones = [], zonesT = 0, chipBox = null, capsBox = null, chipMode = "", capsMode = "";
-  const ZONE_SEL = "#hull-console .dice-pool, #hull-console .matrix-wrap, #confirm-alloc, #hull-console .dice-actions,"
-    + " .dice-pool, .pcard.cfolio, .he-ring, .tut-ring, #tut-callout.on, .cx-preview, #vz-holo,"
-    + " #timeline-rail [data-seat], #tl-gauge";
+  const ZONE_CRIT = "#hull-console .dice-pool, #hull-console .matrix-wrap, #confirm-alloc, #hull-console .dice-actions,"
+    + " .dice-pool, .he-ring, .tut-ring, #tut-callout.on";
+  const ZONE_SOFT = ".pcard.cfolio, .cx-preview, #vz-holo, #timeline-rail [data-seat], #tl-gauge";
   let zMx = -9, zMy = -9;
   function refreshZones(t){
-    if (t - zonesT < 300) return;
-    // a still hand over a still table needs no new measure (reading rects can force a
-    // layout); re-measure when the hand moved, or every 0.7 s at most
+    if (t - zonesT < 450) return;
     if (mx === zMx && my === zMy && zonesT && t - zonesT < 700) return;
     zMx = mx; zMy = my;
     zonesT = t; zones = [];
-    for (const el2 of document.querySelectorAll(ZONE_SEL)){
-      if (el2.closest && el2.closest("#hela-eye")) continue;
-      const r = el2.getBoundingClientRect();
-      if (r.width < 4 || r.height < 4 || r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) continue;
-      if (r.width > innerWidth * .7 && r.height > innerHeight * .7) continue;   // a whole-scene layer is not a zone
-      zones.push([r.left - 6, r.top - 6, r.right + 6, r.bottom + 6]);
-      if (zones.length > 40) break;
+    for (const [sel, crit] of [[ZONE_CRIT, true], [ZONE_SOFT, false]]){
+      for (const el2 of document.querySelectorAll(sel)){
+        if (el2.closest && el2.closest("#hela-eye")) continue;
+        const r = el2.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4 || r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) continue;
+        if (r.width > innerWidth * .7 && r.height > innerHeight * .7) continue;
+        zones.push([r.left - 6, r.top - 6, r.right + 6, r.bottom + 6, crit]);
+        if (zones.length > 40) break;
+      }
     }
-    if (avoidR) zones.push([avoidR.left, avoidR.top, avoidR.right, avoidR.bottom]);
+    if (avoidR) zones.push([avoidR.left, avoidR.top, avoidR.right, avoidR.bottom, true]);
     if (!chipEl && eye) chipEl = eye.querySelector(".he-chip");
     if (!capsEl && eye) capsEl = eye.querySelector(".he-caps");
     chipBox = chipEl ? [chipEl.offsetWidth || 300, chipEl.offsetHeight || 60] : [300, 60];
     capsBox = capsEl && capsEl.offsetHeight ? [capsEl.offsetWidth, capsEl.offsetHeight] : null;
   }
   function overl(b, z){ return b[0] < z[2] && b[2] > z[0] && b[1] < z[3] && b[3] > z[1]; }
-  function freeBox(b, extra){
+  // free of critical zones (and, when strict, of every zone), and on screen
+  function freeBox(b, extra, strict){
     if (b[0] < 6 || b[1] < 6 || b[2] > innerWidth - 6 || b[3] > innerHeight - 6) return false;
-    const hand = mx >= 0 ? [mx - 40, my - 40, mx + 60, my + 70] : null;   // the cursor and the drawn hand
+    // the pointer's own spot; while she is parked by the machine the hand works there and she keeps still
+    const hand = mx >= 0 && !parked ? [mx - 22, my - 22, mx + 34, my + 44] : null;
     if (hand && overl(b, hand)) return false;
-    for (const z of zones) if (overl(b, z)) return false;
+    for (const z of zones) if ((strict || z[4]) && overl(b, z)) return false;
     for (const z of extra || []) if (overl(b, z)) return false;
     return true;
   }
-  // candidate boxes for a W x H block around the eye centre (x, y)
-  function cands(x, y, W, H, away, caps){
-    const o = away === "r" ? "l" : "r", L = {};
+  // centred on her, slid sideways to stay on screen
+  function midX(x, W){ return Math.max(8, Math.min(innerWidth - 8 - W, x - W / 2)); }
+  function cands(x, y, W, H, away, caps, chipB){
+    const o = away === "r" ? "l" : "r", L = {}, cx = midX(x, W);
     if (!caps){
       L.rd = [x + 34, y - 33, x + 34 + W, y - 33 + H]; L.ru = [x + 34, y + 33 - H, x + 34 + W, y + 33];
       L.ld = [x - 34 - W, y - 33, x - 34, y - 33 + H]; L.lu = [x - 34 - W, y + 33 - H, x - 34, y + 33];
-      L.b = [x - W / 2, y + 44, x + W / 2, y + 44 + H]; L.a = [x - W / 2, y - 44 - H, x + W / 2, y - 44];
-      return [[away + "d", L[away + "d"]], [away + "u", L[away + "u"]], [o + "d", L[o + "d"]], [o + "u", L[o + "u"]], ["b", L.b], ["a", L.a]];
+      L.b = [cx, y + 44, cx + W, y + 44 + H]; L.a = [cx, y - 44 - H, cx + W, y - 44];
+      const v = sy === 1 ? ["b", "a"] : ["a", "b"];
+      return [[v[0], L[v[0]]], [away + "d", L[away + "d"]], [away + "u", L[away + "u"]], [o + "d", L[o + "d"]], [o + "u", L[o + "u"]], [v[1], L[v[1]]]];
     }
+    // her boxes: over her, and over her words when those are over her too
+    const top = chipB && chipB[3] <= y ? Math.min(y - 38, chipB[1] - 8) : y - 38;
+    L.ca = [cx, top - H, cx + W, top];
     L.ra = [x + 10, y - 38 - H, x + 10 + W, y - 38]; L.la = [x - 10 - W, y - 38 - H, x - 10, y - 38];
     L.rb = [x + 10, y + 40, x + 10 + W, y + 40 + H]; L.lb = [x - 10 - W, y + 40, x - 10, y + 40 + H];
-    return [[away + "a", L[away + "a"]], [o + "a", L[o + "a"]], [away + "b", L[away + "b"]], [o + "b", L[o + "b"]]];
+    return [["ca", L.ca], [away + "a", L[away + "a"]], [o + "a", L[o + "a"]], [away + "b", L[away + "b"]], [o + "b", L[o + "b"]]];
   }
-  // the nearest free spot around the eye, keeping her distance
   function nearestFree(x, y, W, H, extra){
-    for (const rad of [110, 160, 220, 300, 390, 500, 640]){
-      for (let k = 0; k < 16; k++){
-        const a = k * Math.PI / 8, cx = x + Math.cos(a) * (rad + W / 2), cy = y + Math.sin(a) * (rad * .6 + H / 2);
+    for (const rad of [110, 160, 220, 300, 390, 500]){
+      for (let k2 = 0; k2 < 16; k2++){
+        const a = k2 * Math.PI / 8, cx = x + Math.cos(a) * (rad + W / 2), cy = y + Math.sin(a) * (rad * .6 + H / 2);
         const b = [cx - W / 2, cy - H / 2, cx + W / 2, cy + H / 2];
-        if (freeBox(b, extra)) return b;
+        if (freeBox(b, extra, false)) return b;
       }
     }
     return null;
   }
-  function pick(x, y, W, H, cur, curBox, away, caps, extra){
-    const list = cands(x, y, W, H, away, caps);
-    if (cur && cur !== "free"){ const c = list.find((q) => q[0] === cur); if (c && freeBox(c[1], extra)) return c; }
-    if (cur === "free" && curBox){
-      const b = [x + curBox[0], y + curBox[1], x + curBox[0] + W, y + curBox[1] + H];
-      if (freeBox(b, extra)) return ["free", b];
-    }
-    for (const c of list) if (freeBox(c[1], extra)) return c;
-    const f = nearestFree(x, y, W, H, extra);
-    return f ? ["free", f] : list[0];
+  const blockedSince = { chip: 0, caps: 0 }, changedAt = { chip: 0, caps: 0 };
+  let whyMoved = "";
+  // what pushed her words off their spot (for the checks)
+  function why(b, extra){
+    if (b[0] < 6 || b[1] < 6 || b[2] > innerWidth - 6 || b[3] > innerHeight - 6) return "edge";
+    if (mx >= 0 && !parked && overl(b, [mx - 22, my - 22, mx + 34, my + 44])) return "hand";
+    for (const z of zones) if (z[4] && overl(b, z)) return "zone " + z.slice(0, 4).map(Math.round).join(",");
+    return extra && extra.some((z) => overl(b, z)) ? "chip" : "?";
   }
+  function pick(x, y, W, H, cur, curRel, away, caps, extra){
+    const list = cands(x, y, W, H, away, caps, extra && extra[0]), who = caps ? "caps" : "chip", now = performance.now();
+    let curC = null;
+    if (cur && cur !== "free") curC = list.find((q) => q[0] === cur) || null;
+    else if (cur === "free" && curRel) curC = ["free", [x + curRel[0], y + curRel[1], x + curRel[0] + W, y + curRel[1] + H]];
+    if (curC){
+      if (freeBox(curC[1], extra, false)){ blockedSince[who] = 0; return curC; }
+      if (!blockedSince[who]) blockedSince[who] = now;
+      if (now - blockedSince[who] < 700 || now - changedAt[who] < 2500) return curC;
+    }
+    blockedSince[who] = 0; changedAt[who] = now;
+    if (curC) whyMoved = why(curC[1], extra);
+    // a clear spot is sought only on first placement; after that a file partly under
+    // her words is no reason to move them
+    if (!curC) for (const c of list) if (freeBox(c[1], extra, true)) return c;
+    for (const c of list) if (freeBox(c[1], extra, false)) return c;
+    const f = nearestFree(x, y, W, H, extra);
+    return f ? ["free", f] : (curC || list[0]);
+  }
+  // a block's TARGET offset from the eye's centre; words() slides it there
   function setBlock(el2, mode, b, x, y, isCaps){
-    // placed relative to the eye's own box (it moves by transform), so while the mode
-    // holds, nothing is written per frame
-    const l = Math.round(b[0] - (x - 30)), t = Math.round(b[1] - (y - 30));
-    const key = mode + (mode === "free" ? ":" + (l >> 3) + ":" + (t >> 3) : "");
-    if (el2._pk === key) return;
-    el2._pk = key;
-    el2.style.left = l + "px"; el2.style.top = t + "px"; el2.style.right = "auto"; el2.style.bottom = "auto";
-    const leftOfEye = b[2] <= x;
-    el2.classList.toggle("flip-x", leftOfEye);                       // the tail points back toward her
-    el2.classList.toggle("flip-y", !isCaps && (mode === "ru" || mode === "lu" || (mode !== "rd" && mode !== "ld" && b[3] < y)));
-    el2.classList.toggle("far", mode === "free" || mode === "a" || mode === "b");
+    el2._tox = b[0] - x; el2._toy = b[1] - y;
+    if (el2._ox == null){ el2._ox = el2._tox; el2._oy = el2._toy; el2._ovx = 0; el2._ovy = 0;   // it appears: no slide
+      el2.style.left = "30px"; el2.style.top = "30px"; el2.style.right = "auto"; el2.style.bottom = "auto";
+      el2.style.translate = `${el2._ox.toFixed(1)}px ${el2._oy.toFixed(1)}px`; tail(el2); }
+    if (el2._mode !== mode){
+      el2._mode = mode;
+      const vert = !isCaps && (mode === "a" || mode === "b");
+      el2.classList.toggle("flip-x", !vert && b[2] <= x);                    // the tail points back toward her
+      el2.classList.toggle("flip-y", !isCaps && (mode === "ru" || mode === "lu" || (mode === "free" && b[3] < y)));
+      el2.classList.toggle("far", mode === "free");
+      el2.classList.toggle("he-under", mode === "b"); el2.classList.toggle("he-over", mode === "a");
+    }
+  }
+  // on screen a balloon moves with the eye AND its own slide; together they stay under
+  // LIM px/s (11 px a frame at 60 fps), so a slide made while the eye travels just takes longer
+  const LIM = 660;
+  function words(dt, dex, dey){
+    for (const el2 of [chipEl, capsEl]){
+      if (!el2 || el2._tox == null) continue;
+      if (el2._ox === el2._tox && el2._oy === el2._toy) continue;
+      const ox0 = el2._ox, oy0 = el2._oy;
+      for (let n = 0; n < 2; n++){
+        [el2._ox, el2._ovx] = spring(el2._ox, el2._ovx, el2._tox, dt / 2, OMEGA_W, 1, VMAX_WORDS);
+        [el2._oy, el2._ovy] = spring(el2._oy, el2._ovy, el2._toy, dt / 2, OMEGA_W, 1, VMAX_WORDS);
+      }
+      const dx = el2._ox - ox0, dy = el2._oy - oy0, L = LIM * dt;
+      if (Math.hypot(dex + dx, dey + dy) > L){
+        const dd = dx * dx + dy * dy, ed = dex * dx + dey * dy, disc = ed * ed - dd * (dex * dex + dey * dey - L * L);
+        const k = dd > 0 && disc >= 0 ? Math.max(0, Math.min(1, (-ed + Math.sqrt(disc)) / dd)) : 0;
+        el2._ox = ox0 + dx * k; el2._oy = oy0 + dy * k; el2._ovx *= k; el2._ovy *= k;
+      }
+      if (Math.abs(el2._ox - el2._tox) < .3 && Math.abs(el2._ovx) < 2){ el2._ox = el2._tox; el2._ovx = 0; }
+      if (Math.abs(el2._oy - el2._toy) < .3 && Math.abs(el2._ovy) < 2){ el2._oy = el2._toy; el2._ovy = 0; }
+      el2.style.translate = `${el2._ox.toFixed(1)}px ${el2._oy.toFixed(1)}px`;
+      tail(el2);
+    }
+  }
+  function tail(el2){
+    if (el2 !== chipEl) return;
+    const w = chipBox ? chipBox[0] : 300, tx = Math.round(Math.max(24, Math.min(w - 24, -el2._ox)));
+    if (el2._tx !== tx){ el2._tx = tx; el2.style.setProperty("--he-tx", tx + "px"); }
   }
   function applySide(x, y){
     if (!eye) return;
@@ -2049,29 +2202,40 @@
     if (!capsEl) capsEl = eye.querySelector(".he-caps");
     const saying = eye.classList.contains("he-says");
     const capsOn = !!(capsEl && capsEl.querySelector(".cx-cap.on"));
+    // words that were gone a while (faded out) come back where they belong, no slide from the old spot
+    const now0 = performance.now();
+    for (const [el2, on] of [[chipEl, saying], [capsEl, capsOn]]){
+      if (!el2) continue;
+      if (!on){ if (!el2._goneAt) el2._goneAt = now0; }
+      else if (el2._goneAt){ if (now0 - el2._goneAt > 700) el2._ox = null; el2._goneAt = 0; }
+    }
     if (!saying && !capsOn){ chipSide = ""; return; }
+    if (parked && parkedPlaced && chipSide === "x") return;   // parked: her words stay put
     const t = performance.now();
-    if (chipSide === "") zonesT = 0;                                // a new line or box: measure now
+    if (chipSide === "") zonesT = 0;
     chipSide = "x";
     refreshZones(t);
     const away = mx < 0 ? (x < innerWidth / 2 ? "r" : "l") : (sx === 1 ? "r" : "l");
     let cb = null;
     if (chipEl && saying){
       const [W, H] = chipBox;
-      const c = pick(x, y, W, H, chipMode, chipEl._rel, away, false, null);
+      const rel = chipEl._tox != null ? [chipEl._tox, chipEl._toy] : null;
+      const c = pick(x, y, W, H, chipMode, rel, away, false, null);
+      if (c[0] !== chipMode){ if (chipMode) switches++; changes++; }
       chipMode = c[0]; cb = c[1];
-      chipEl._rel = [cb[0] - x, cb[1] - y];
       setBlock(chipEl, chipMode, cb, x, y, false);
     }
     if (capsEl && capsOn && capsBox){
       const [W, H] = capsBox;
-      const c = pick(x, y, W, H, capsMode, capsEl._rel, away, true, cb ? [cb] : null);
+      const rel = capsEl._tox != null ? [capsEl._tox, capsEl._toy] : null;
+      const c = pick(x, y, W, H, capsMode, rel, away, true, cb ? [cb] : null);
+      if (c[0] !== capsMode){ if (capsMode) switches++; changes++; }
       capsMode = c[0];
-      capsEl._rel = [c[1][0] - x, c[1][1] - y];
       setBlock(capsEl, capsMode, c[1], x, y, true);
     }
     const dc = eye.querySelector(".he-dchip");
     if (dc) dc.classList.toggle("flip-x", away === "l");
+    if (parked) parkedPlaced = true;
   }
   function place(x, y){
     const tr = `translate(${x - 30}px, ${y - 30}px)`;
@@ -2118,27 +2282,7 @@
     }
     else if (mx < 0){ // no cursor yet: perch by her core, top-left
       place(64, 96);
-    } else {
-      // quadrant with hysteresis: flip only past the dead-band, then BLINK-teleport
-      let wantX = mx < innerWidth / 2 ? 1 : -1, wantY = my < innerHeight / 2 ? 1 : -1;
-      let overX = Math.abs(mx - innerWidth / 2) > HYST, overY = Math.abs(my - innerHeight / 2) > HYST;
-      // she keeps her distance from the cursor, and she does not perch ON the dice, the
-      // machine or a case file either: if her diagonal lands on a forbidden zone and
-      // another diagonal is free, she takes that one (on a blink, as always)
-      refreshZones(t);
-      const onZone = (ex, ey) => { const q = post2(ex, ey); const bx = [q.x - 30, q.y - 30, q.x + 30, q.y + 30];
-        for (const z of zones) if (overl(bx, z)) return true; return false; };
-      if (onZone(wantX, wantY)){
-        for (const [ax, ay] of [[wantX, -wantY], [-wantX, wantY], [-wantX, -wantY]]){
-          if (!onZone(ax, ay)){ wantX = ax; wantY = ay; overX = overY = true; break; }
-        }
-      }
-      const flip = (overX && wantX !== sx) || (overY && wantY !== sy);
-      if (flip && t - blinkT > 320){
-        blink(() => { if (overX) sx = wantX; if (overY) sy = wantY; });
-      }
-      const p = post(mx, my); place(p.x, p.y);
-    }
+    } else follow(t);
     // the MOMENT: every so often, if they are near, the cat stares and the eye
     // blinks back, two housemates acknowledging each other and moving on
     if (!frame._catMoment) frame._catMoment = t + 16000;
@@ -2342,7 +2486,7 @@
     caps(){ if (!capsEl && eye) capsEl = eye.querySelector(".he-caps"); return capsEl; },
     live(){ return !!(eye && eye._live); }, posted(){ return !!(standAt || glide); }, backlog,
     relayout(){ chipSide = ""; },
-    placement(){ return { chip: chipMode, caps: capsMode, zones: zones.length, chipBox, capsBox }; },   // for checks
+    placement(){ return { chip: chipMode, caps: capsMode, zones: zones.length, chipBox, capsBox, changes, switches, parked: !!parked, why: whyMoved }; },   // for checks
     pos(){ if (!eye) return { x: 64, y: 96 }; const r = eye.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 30 }; } };
   window.__helaSay = (html, opt) => say(html, opt);   // she owns her voice now
 

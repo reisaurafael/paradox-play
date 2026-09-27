@@ -296,7 +296,7 @@
     const calm = document.documentElement.classList.contains("pdx-a11y")
       || document.body.classList.contains("gfx-low")
       || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    let k = ({ slow: 1.5, normal: 1, fast: .6 })[(game && game.speed) || "normal"] || 1;
+    let k = ({ slow: 1.5, normal: 1, brisk: .8, fast: .6 })[(game && game.speed) || "normal"] || 1;
     if (document.body.dataset.roomMode === "tutorial" || document.body.classList.contains("tut-on")) k *= 1.35;
     const ink = o.dark ? "#070a16" : "#1c150c";
     const root = document.createElementNS(NS, "g");
@@ -1692,7 +1692,7 @@
     tmp.setAttribute("stroke-linecap", "round"); tmp.classList.add("sea-temp");
     (fxG || liveG).appendChild(tmp);
     const L = tmp.getTotalLength();
-    const dur = Math.min(2600, 850 + L * 3.4);   // a voyage is an EVENT, let it take its time
+    const dur = Math.min(2600, 850 + L * 3.4) * (window.__pdxPace ? window.__pdxPace(1) : 1);   // a voyage is an EVENT; the Pace setting stretches it
     snd("quill", { dur }); snd("sea_sail", { dur });
     tmp.style.strokeDasharray = L;
     tmp.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }],
@@ -1860,7 +1860,7 @@
           let dur = 1100;
           if (el) {
             const L = el.getTotalLength();
-            dur = Math.min(2600, 850 + L * 3.4);   // a voyage is an EVENT, let it take its time
+            dur = Math.min(2600, 850 + L * 3.4) * (window.__pdxPace ? window.__pdxPace(1) : 1);   // a voyage is an EVENT; the Pace setting stretches it
             snd("quill", { dur }); snd("sea_sail", { dur });
             el.style.strokeDasharray = L;
             el.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }],
@@ -1872,6 +1872,7 @@
             (R.pend || (R.pend = {}))[f.seat] = { c: f.to, t: performance.now() };
             renderNow();
             if (POS[f.to]) { ripple(POS[f.to][0], POS[f.to][1], seatColor(f.seat)); popIsle(f.to); snd("chart_splash"); }
+            try { window.__fxLanded && window.__fxLanded(f.seat, f.to); } catch (e) {}   // landfall (fx.js: the immunity spent)
             const fixg = [...liveG.querySelectorAll(`.sea-fixg[data-seat="${f.seat}"] .sea-fix-boat`)].pop();
             if (fixg) fixg.animate([
               { transform: "scale(1.9) rotate(-10deg)", opacity: .2 }, { transform: "scale(1) rotate(0)", opacity: 1 }

@@ -1,17 +1,18 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609262101";
-import { hydrateIcons, icon } from "./icons.js?202609262101";
-import { seatColor, initials, el } from "./util.js?202609262101";
-import { Game } from "./game.js?202609262101";
-import { audio } from "./audio.js?202609262101";
-import { tutorials } from "./tutorial.js?202609262101";
-import { profile } from "./profile.js?202609262101";
-import { access } from "./access.js?202609262101";
+import { api, Connection } from "./net.js?202609270047";
+import { hydrateIcons, icon } from "./icons.js?202609270047";
+import { seatColor, initials, el } from "./util.js?202609270047";
+import { Game } from "./game.js?202609270047";
+import { audio } from "./audio.js?202609270047";
+import { tutorials } from "./tutorial.js?202609270047";
+import { profile } from "./profile.js?202609270047";
+import { access } from "./access.js?202609270047";
 import "./menu-cursor.js";
-import { launchTutorial } from "./tutorial-drive.js?202609262101";
-import { PadCursor } from "./controle.js?202609262101";
+import { launchTutorial } from "./tutorial-drive.js?202609270047";
+import { PadCursor } from "./controle.js?202609270047";
+import { fx, PACES, LEVELS } from "./fx.js?202609270047";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -34,6 +35,19 @@ let _audioUnlocked = false;
 function unlockAudio() { if (!_audioUnlocked) { _audioUnlocked = true; audio.unlock(); } }
 window.addEventListener("pointerdown", unlockAudio, { once: false });
 
+// the pace and comic-effects choices on show, each with its one-line description
+function syncPaceUI(sp) {
+  const g = state.game || window.__game;
+  let s = sp || (g && g.speed);
+  if (!s) { try { s = localStorage.getItem("paradoxo.speed"); } catch (e) {} }
+  if (!PACES[s]) s = "normal";
+  document.querySelectorAll("#speed-seg .seg-btn").forEach((x) => x.classList.toggle("is-on", x.dataset.speed === s));
+  const sd = document.getElementById("speed-desc"); if (sd) sd.textContent = PACES[s].desc;
+  const lv = fx.storedLevel();
+  document.querySelectorAll("#fx-seg .seg-btn").forEach((x) => x.classList.toggle("is-on", x.dataset.fx === lv));
+  const fd = document.getElementById("fx-desc");
+  if (fd) fd.textContent = LEVELS[lv].desc + (lv === "full" && document.body.classList.contains("gfx-low") ? " (Low graphics plays them as Light.)" : "");
+}
 (function wireSettings() {
   const backdrop = document.getElementById("settings-backdrop");
   const open = () => { syncSettingsUI(); backdrop.hidden = false; audio.play("click"); };
@@ -57,11 +71,24 @@ window.addEventListener("pointerdown", unlockAudio, { once: false });
   vs.addEventListener("input", () => { unlockAudio(); audio.setVolume("sfx", vs.value / 100); audio.play("place"); });
   mute.addEventListener("change", () => audio.setMuted(mute.checked));
 
+  // PACE and COMIC EFFECTS (js/fx.js): each choice shows one line saying what it does.
+  // The pace goes to the live table (the match, or the tutorial's own table) and is kept
+  // for the next match; the tutorial still starts at its own Slow.
   document.getElementById("speed-seg").addEventListener("click", (e) => {
-    const b = e.target.closest(".seg-btn"); if (!b) return;
-    document.querySelectorAll("#speed-seg .seg-btn").forEach((x) => x.classList.toggle("is-on", x === b));
-    if (state.game) state.game.setSpeed(b.dataset.speed);
-    localStorage.setItem("paradoxo.speed", b.dataset.speed);
+    const b = e.target.closest(".seg-btn"); if (!b || !PACES[b.dataset.speed]) return;
+    const g = state.game || window.__game;
+    if (g) g.setSpeed(b.dataset.speed);
+    try { localStorage.setItem("paradoxo.speed", b.dataset.speed); } catch (err) {}
+    fx.applyPace();
+    syncPaceUI(b.dataset.speed);
+    audio.play("click");
+  });
+  const fxSeg = document.getElementById("fx-seg");
+  if (fxSeg) fxSeg.addEventListener("click", (e) => {
+    const b = e.target.closest(".seg-btn"); if (!b || !LEVELS[b.dataset.fx]) return;
+    fx.setLevel(b.dataset.fx);
+    syncPaceUI();
+    audio.play("click");
   });
 
   // FULLSCREEN. In the app (native window) pywebview handles it; in the browser
@@ -156,6 +183,7 @@ window.addEventListener("pointerdown", unlockAudio, { once: false });
     mute.checked = audio.muted;
     tut.checked = tutorials.enabled;
     access.sync();
+    syncPaceUI();
     // Leave match shows only while a match is on the table
     const lv = document.getElementById("set-leave");
     if (lv) lv.hidden = !(document.getElementById("screen-game").classList.contains("is-active") && !PANEL);
@@ -368,11 +396,8 @@ function ensureGame() {
   window.__game = g;
   let savedSpeed = null;
   try { savedSpeed = localStorage.getItem("paradoxo.speed"); } catch (e) {}
-  if (savedSpeed) {
-    g.setSpeed(savedSpeed);
-    document.querySelectorAll("#speed-seg .seg-btn").forEach((x) =>
-      x.classList.toggle("is-on", x.dataset.speed === savedSpeed));
-  }
+  if (savedSpeed) g.setSpeed(savedSpeed);
+  syncPaceUI(g.speed);
   return g;
 }
 

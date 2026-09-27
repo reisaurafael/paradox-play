@@ -7867,3 +7867,14 @@ html[data-ts="3"] #hela-brain-full .hb-node .hb-lbl, html.pdx-a11y #hela-brain-f
    the side tail; her boxes keep their own column order */
 #hela-eye .he-chip.far::after { display: none; }
 #hela-eye .he-chip.far { box-shadow: 0 0 0 3px var(--vz), 4px 4px 0 3px var(--cx-ink), 0 0 20px rgb(var(--vz-rgb) / .45); }
+/* when her words change side around the eye, they glide there (never a jump) */
+body.cx-on #hela-eye .he-chip { transition: opacity .5s ease, transform .6s cubic-bezier(.2,.8,.25,1); }
+@media (prefers-reduced-motion: reduce) { body.cx-on #hela-eye .he-chip, #hela-eye .he-caps { transition: opacity .5s ease; } }
+/* her words under her eye (or over it, when she stands above the hand): the tail
+   points up (or down) at the eye, following it along the edge (--he-tx, cabin.js) */
+body.cx-on #hela-eye .he-chip.he-under::after, body.cx-on #hela-eye .he-chip.he-over::after {
+  left: calc(var(--he-tx, 40px) - 8px); right: auto; border: 0; }
+body.cx-on #hela-eye .he-chip.he-under::after { top: -9px; bottom: auto;
+  border-left: 2.5px solid var(--cx-ink); border-top: 2.5px solid var(--cx-ink); }
+body.cx-on #hela-eye .he-chip.he-over::after { top: auto; bottom: -9px;
+  border-right: 2.5px solid var(--cx-ink); border-bottom: 2.5px solid var(--cx-ink); }

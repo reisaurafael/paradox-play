@@ -173,3 +173,9 @@ body.tut-phases #vz-phases { animation: tutBorn 1.2s ease-out; }
 /* a rival's die blinks on their case file while it pays them, in their colour */
 #players-zone .bd-alloc b.tut-cause { animation: tutRivalCause .5s ease-in-out infinite alternate; position: relative; z-index: 2; }
 @keyframes tutRivalCause { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.35); filter: brightness(1.8); } }
+
+/* a highlight worn by the element itself, for the parts of the wrist machine: it keeps
+   the element's exact shape, scale and tilt, and never crosses its label */
+.tut-hl { outline: 2px solid #ffd98a !important; outline-offset: 3px !important; border-radius: 6px;
+  box-shadow: 0 0 14px 4px rgba(255,200,110,.6) !important; animation: tutHl 1.3s ease-in-out infinite; }
+@keyframes tutHl { 0%, 100% { outline-color: #ffd98a; } 50% { outline-color: rgba(255,217,138,.45); } }

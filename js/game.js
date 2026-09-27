@@ -11,19 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609262101";
-import { audio } from "./audio.js?202609262101";
+import { icon } from "./icons.js?202609270047";
+import { audio } from "./audio.js?202609270047";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609262101";
-import { comic } from "./comic.js?202609262101";
-import { CatEngine } from "./cat.js?202609262101";
-import { tutorials } from "./tutorial.js?202609262101";
-import { profile } from "./profile.js?202609262101";
-import { Camera } from "./camera.js?202609262101";
+import { juice } from "./juice.js?202609270047";
+import { comic } from "./comic.js?202609270047";
+import { fx } from "./fx.js?202609270047";
+import { CatEngine } from "./cat.js?202609270047";
+import { tutorials } from "./tutorial.js?202609270047";
+import { profile } from "./profile.js?202609270047";
+import { Camera } from "./camera.js?202609270047";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609262101";
+} from "./util.js?202609270047";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -104,7 +105,7 @@ const PACE = {
 // each step; Slow stretches further, Fast is for veterans who know the flow.
 // Deliberately unhurried so events are easy to follow; Slow is a big stretch for
 // first-timers, Fast stays snappy for veterans.
-const SPEED_FACTOR = { slow: 3.2, normal: 1.9, fast: 0.7 };
+const SPEED_FACTOR = { slow: 3.2, normal: 1.9, brisk: 1.2, fast: 0.7 };   // Brisk: the theater a third quicker (fx.js PACES)
 
 export class Game {
   constructor(conn, seat) {
@@ -160,6 +161,7 @@ export class Game {
     this.camera = new Camera(document.getElementById("cam"), this);
     juice.init();
     comic.init(this);   // the comic layer: captions, impact moments, your-move marks
+    fx.init(this, comic);   // the comic effects for every rules action, and the pace (fx.js)
     this._initCat();
     (function () {
       var grid = document.querySelector(".game-grid");
@@ -239,7 +241,7 @@ export class Game {
   }
 
 
-  setSpeed(s) { if (SPEED_FACTOR[s]) this.speed = s; }
+  setSpeed(s) { if (SPEED_FACTOR[s]) { this.speed = s; try { fx.applyPace(); } catch (e) {} } }
   // Pacing is purely cosmetic: it must NEVER delay a decision or stall a player.
   // It collapses to zero when a decision is waiting, the tab is backgrounded
   // (browsers throttle setTimeout there, this stranded non-host players), or the
@@ -260,7 +262,10 @@ export class Game {
   _scale() { return SPEED_FACTOR[this.speed] || 1; }
   // Motion multiplier for the card-flight engine, honours Slow/Normal/Fast but
   // stays snappier than event lingers (a flying card should feel light, not slow).
-  _motion() { return ({ slow: 1.5, normal: 1.0, fast: 0.7 })[this.speed] || 1; }
+  _motion() { return ({ slow: 1.5, normal: 1.0, brisk: 0.85, fast: 0.7 })[this.speed] || 1; }
+  // one step of the resolution theater at this pace (Normal's length in; Slow about
+  // twice it, Brisk about a third quicker; Fast skips the theater itself)
+  _beat(ms) { return Math.round(ms * (({ slow: 2, normal: 1, brisk: 0.7, fast: 0.6 })[this.speed] || 1)); }
 
   /* ---- message intake: route everything through the paced queue ---- */
   onMessage(kind, msg) {
@@ -4050,7 +4055,7 @@ export class Game {
     }
     // THE TABLE'S MOMENT: every hand confirmed, now each is DEALT, one at a time.
     this._paintBadgeAllocs();                     // darkness first: no hand shows before its deal
-    const beat = this.speed === "slow" ? 850 : 460;
+    const beat = this._beat(460);
     this.helaSay("The hour is dealt, engines on the table.", 4200, "note");
     this._railShow("open", 0);
     document.body.classList.add("rt-stage");
@@ -4116,7 +4121,7 @@ export class Game {
         const el2 = pcard.querySelector(`.mc[data-card="${CSS.escape(nm)}"]`);
         if (!el2 || this.speed === "fast") continue;
         el2.classList.add("mc-born");             // it MATERIALISES
-        setTimeout(() => el2.classList.remove("mc-born"), 2600);
+        setTimeout(() => el2.classList.remove("mc-born"), fx.ms(2600));
         try { audio.play("place"); } catch (e) {}
       }
     });
@@ -4162,7 +4167,7 @@ export class Game {
   /* ── PER-UNIT LIFE TICKER, every life change reads 1 by 1, always ── */
   _tickLife(seat, delta, tone, opt) {
     // returns the total duration; drives the DISPLAYED numeral old -> new stepwise.
-    const step = this.speed === "slow" ? 760 : 380;   // the RESOLUTION must breathe (+120%)
+    const step = this._beat(380);   // the RESOLUTION must breathe (+120%)
     const n = Math.abs(delta || 0);
     if (!n) return 0;
     const self = seat === this.seat;
@@ -4201,7 +4206,7 @@ export class Game {
   }
   /* ── THE COIN MATERIALISES on the file, that is where gold lives ── */
   _tickGold(seat, delta) {
-    const step = this.speed === "slow" ? 760 : 380;
+    const step = this._beat(380);
     const n = Math.abs(delta || 0);
     if (!n || delta < 0) return 0;
     const self = seat === this.seat;
@@ -4267,6 +4272,7 @@ export class Game {
     const { kind, payload } = msg;
     this.logEvent(kind, payload);
     try { comic.onEvent(kind, payload); } catch (e) {}
+    try { fx.event(kind, payload); } catch (e) {}   // the comic effect of this rules action
     // the auction phase watches its own events so the hall can play out the
     // resolution (who took what) before the window tunes back
     if (kind.startsWith("leilao_") || kind.startsWith("piece_")) {
@@ -4317,6 +4323,7 @@ export class Game {
             if (e.energy) this.resourceFloat(e.seat, `${e.energy > 0 ? "+" : ""}${e.energy}`, "energy");
             if (e.gold) this.resourceFloat(e.seat, `${e.gold > 0 ? "+" : ""}${e.gold}`, "gold");
             this.flashPanel(e.seat, "fx-pulse");
+            fx.beat("recharge", e);   // WHIRR / CLINK beside the number (fx.js staggers them)
           });
           if (effs.length) audio.play(effs.some((e) => e.gold) ? "coin" : "energy");
           await this._sleep(this._ms("recharged"));
@@ -4326,12 +4333,13 @@ export class Game {
         document.body.classList.add("rt-stage");
         try {
           // ACT I, present each traveler's dice for this module (who fed it)
-          const present = this.speed === "slow" ? 640 : 340;
+          const present = this._beat(340);
           for (const e of effs) {
             const src = this._seatAnchor(e.seat, "src", "recharge");
             const pc = e.seat !== this.seat ? document.querySelector(`.pcard[data-seat="${CSS.escape(e.seat)}"]`) : null;
             if (pc) pc.classList.add("rt-lift");
             if (src) src.classList.add("rt-src");
+            fx.beat("recharge", e);   // WHIRR / CLINK as this traveler's dice are shown
             await this._sleep(present);
             if (pc) pc.classList.remove("rt-lift");
             if (src) src.classList.remove("rt-src");
@@ -4363,6 +4371,7 @@ export class Game {
         }
         if (hits.length) audio.play("paradox");
         const causers = this._paradoxCausers(payload.module);
+        if (hits.some((h) => h.damage)) fx.beat("paradox_cast", { causers });   // ZAP at whoever fed the pool
         const cab3 = document.body.classList.contains("cabin-on");
         if (!cab3 || this.speed === "fast" || !hits.length) {
           hits.forEach((h) => {
@@ -4393,12 +4402,12 @@ export class Game {
                 sg.innerHTML = icon("paradox");
                 sg.style.color = col;
                 photo.appendChild(sg);
-                setTimeout(() => { sg.classList.add("out"); setTimeout(() => sg.remove(), 300); }, 2200);
+                setTimeout(() => { sg.classList.add("out"); setTimeout(() => sg.remove(), 300); }, this._beat(2200));
               }
             }
             if (h.damage) this.resourceFloat(h.seat, `−${h.damage}`, "danger");
             const t = this._tickLife(h.seat, -(h.damage || 0), "danger");
-            await this._sleep(Math.max(t, this.speed === "slow" ? 2000 : 1000));
+            await this._sleep(Math.max(t, this._beat(1000)));
             const pc2 = h.seat !== this.seat ? document.querySelector(`.pcard[data-seat="${CSS.escape(h.seat)}"]`) : null;
             if (pc2) pc2.classList.remove("rt-lift");
           }
@@ -4417,17 +4426,18 @@ export class Game {
           const bn = fuse && fuse.querySelector(".bf-n");
           if (pc) pc.classList.add("rt-lift");
           if (fuse) fuse.classList.add("rt-src");
-          await this._sleep(this.speed === "slow" ? 450 : 250);
+          await this._sleep(this._beat(250));
           if (bn && payload.booms != null) {                 // ONE beat, booms weigh less than life
             bn.textContent = String(payload.booms);
+            fx.beat("heat", payload);   // HSSS beside the boiler, on the count
             if (fuse){ fuse.classList.add("bf-hot"); setTimeout(() => fuse.classList.remove("bf-hot"), 900); }
             try { if (window.__pdxTone) window.__pdxTone(170 + payload.booms * 12, .18, .055); } catch (e) {}
-            await this._sleep(this.speed === "slow" ? 800 : 450);
+            await this._sleep(this._beat(450));
           }
           if (pc) pc.classList.remove("rt-lift");
           if (fuse) fuse.classList.remove("rt-src");
           this._railHide();
-        }
+        } else fx.beat("heat", payload);
         this.resourceFloat(payload.seat, "heat", "danger"); this.flashPanel(payload.seat, "fx-pulse");
         audio.play("heat"); break;
       }
@@ -4445,19 +4455,20 @@ export class Game {
           const tsrc = tp && tp.querySelector(".ba-fn.ba-t");
           if (tp) tp.classList.add("rt-lift");
           if (tsrc) tsrc.classList.add("rt-src");
-          await this._sleep(this.speed === "slow" ? 700 : 380);      // the dice read
-          await this._sleep(this.speed === "slow" ? 900 : 500);      // the sea carries him
+          await this._sleep(this._beat(380));      // the dice read
+          fx.beat("depart", payload);                // WHOOSH (or DOUBLE JUMP) as he sets sail
+          await this._sleep(this._beat(500));      // the sea carries him
           if (tp) {
             const cw = tp.querySelector(".cs-where b");
             if (cw) { cw.textContent = `CENTVRY ${roman(payload.to)}`;
               cw.classList.remove("cw-pop"); void cw.offsetWidth; cw.classList.add("cw-pop");
               try { audio.play("place"); } catch (e) {} }
           }
-          await this._sleep(this.speed === "slow" ? 500 : 260);
+          await this._sleep(this._beat(260));
           if (tp) tp.classList.remove("rt-lift");
           if (tsrc) tsrc.classList.remove("rt-src");
           this._railHide();
-        }
+        } else fx.beat("depart", payload);
         // an ARMED rival making port in YOUR century narrows her eye, no words
         try {
           const meT = this._self();
@@ -4510,9 +4521,11 @@ export class Game {
               onLand: () => {
                 if (mine) this._rucksackReceive(tone);
                 this.flashPanel(payload.seat, payload.stolen ? "fx-hit" : "fx-pulse");
+                fx.bought(payload);   // SOLD! beside the buyer as it lands
               } });
         } else {
           this.flashPanel(payload.seat, payload.stolen ? "fx-hit" : "fx-pulse");
+          fx.bought(payload);
         }
         if (payload.stolen) { this.marketOverlay("steal", payload.card); audio.play("wanted"); }
         else { this.marketOverlay("buy", payload.card); audio.play("coin"); }
@@ -4554,7 +4567,7 @@ export class Game {
             cardEl3 = document.querySelector(`#rucksack-zone .card[data-name="${CSS.escape(payload.card)}"]`);
           if (!cardEl3 && payload.seat) cardEl3 = document.querySelector(`.pcard[data-seat="${CSS.escape(payload.seat)}"]`);
           if (cardEl3) cardEl3.classList.add("rt-resolving");
-          const holdMs = this.speed === "slow" ? 2100 : 1100;
+          const holdMs = this._beat(1100);
           setTimeout(() => { document.body.classList.remove("rt-stage");
             if (cardEl3) cardEl3.classList.remove("rt-resolving"); }, holdMs);
           await this._sleep(Math.round(holdMs * .7));
@@ -4587,7 +4600,7 @@ export class Game {
           this._moteStream(rr, rr, "recycle");
         }
         this.flashPanel(payload.seat, "fx-pulse"); audio.play("energy");
-        if (cab4) await this._sleep(this.speed === "slow" ? 1500 : 800);   // the loss takes its time
+        if (cab4) await this._sleep(this._beat(800));   // the loss takes its time
         break;
       }
       case "card_stolen":
@@ -4624,7 +4637,7 @@ export class Game {
       case "reward_resolved":
         if (document.body.classList.contains("cabin-on") && this.speed !== "fast") {
           document.body.classList.add("rt-stage");
-          setTimeout(() => document.body.classList.remove("rt-stage"), this.speed === "slow" ? 2300 : 1200);
+          setTimeout(() => document.body.classList.remove("rt-stage"), this._beat(1200));
         }
         this._signContract(payload);
         this.flashPanel(payload.seat, "fx-pulse");
@@ -4706,7 +4719,7 @@ export class Game {
     f.style.left = (r.left + r.width / 2 - 16) + "px";
     f.style.top = (r.top + 18) + "px";
     document.body.appendChild(f);
-    setTimeout(() => f.remove(), 1300);
+    setTimeout(() => f.remove(), fx.ms(1300));   // its CSS animation stretches with the pace too
   }
   // Temporal Briefcase acquisition, a brief case materialises over the owner's
   // panel and snaps shut (a permanent +1 equipment slot, §24).
@@ -4718,7 +4731,7 @@ export class Game {
     fx.style.left = (r.left + r.width / 2 - 22) + "px";
     fx.style.top = (r.top + 8) + "px";
     document.body.appendChild(fx);
-    setTimeout(() => fx.remove(), 1400);
+    setTimeout(() => fx.remove(), 1400 * (({ slow: 1.6, brisk: .8, fast: .6 })[this.speed] || 1));
   }
   // Record a causality roll for the Ledger panel and re-render it.
   pushRoll(payload) {

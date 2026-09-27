@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COMIC EFFECTS (js/fx.js). The STAMP and the POP, the two small tiers beside the
+   comic layer's big halftone panels (app.css COMIC LAYER). Silver Age ink (a hard
+   stroke and a hard offset shadow), a clear-line box, halftone dots, in the colours
+   of HELA's interface. pointer-events: none; transform and opacity only; each node
+   is removed by fx.js when its animation ends.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+#fx-root { position: fixed; inset: 0; pointer-events: none; z-index: 690; overflow: hidden; contain: layout style; }
+.fx-pop, .fx-stamp { position: absolute; left: 0; top: 0; white-space: nowrap; opacity: 0; will-change: transform, opacity; }
+
+/* POP: a few inked letters, two action ticks before them */
+.fx-pop b { position: relative; display: block; padding-left: 13px;
+  font: italic 700 1.12rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .03em;
+  color: var(--fx-c, #fff1c2); -webkit-text-stroke: 1.6px var(--cx-ink, #15100a); paint-order: stroke fill;
+  text-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
+.fx-pop b::before, .fx-pop b::after { content: ""; position: absolute; left: 0; width: 9px; height: 2.5px;
+  background: var(--cx-ink, #15100a); border-radius: 2px; }
+.fx-pop b::before { top: 3px; transform: rotate(-24deg); }
+.fx-pop b::after { bottom: 3px; transform: rotate(24deg); }
+
+/* STAMP: one word in a clear-line box on halftone paper, a band in the rule's colour */
+.fx-stamp { display: flex; flex-direction: column; align-items: stretch;
+  border: 2.5px solid var(--cx-ink, #15100a); box-shadow: 3px 3px 0 var(--cx-ink, #15100a);
+  background:
+    radial-gradient(circle, rgba(21,16,10,.16) 1px, transparent 1.5px) 0 0 / 5px 5px,
+    var(--cx-paper, #f4e6b0);
+  border-left: 7px solid var(--fx-c, #f7c65a); }
+.fx-stamp b { padding: 4px 10px 3px 8px;
+  font: italic 700 1.02rem/1.05 var(--f-display, "Oswald", sans-serif); letter-spacing: .05em;
+  color: var(--cx-ink, #15100a); }
+.fx-stamp span { padding: 2px 8px 3px; background: var(--cx-ink, #15100a); color: var(--cx-paper, #f4e6b0);
+  font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .16em; }
+.fx-stamp.fx-danger { background: radial-gradient(circle, rgba(140,20,10,.16) 1px, transparent 1.5px) 0 0 / 5px 5px, #f7d9c8; }
+.fx-stamp.fx-paradox { background: radial-gradient(circle, rgba(70,30,140,.16) 1px, transparent 1.5px) 0 0 / 5px 5px, #e7dcfb; }
+.fx-stamp.fx-valve, .fx-stamp.fx-shield, .fx-stamp.fx-travel {
+  background: radial-gradient(circle, rgba(10,70,90,.15) 1px, transparent 1.5px) 0 0 / 5px 5px, #dcf1f4; }
+
+/* Low graphics: flat paper, no halftone */
+body.gfx-low .fx-stamp { background: var(--cx-paper, #f4e6b0); }
+body.gfx-low .fx-pop b { text-shadow: none; }
+/* the Accessible interface: a word, not colour alone, carries the state already;
+   the stamp's text grows with the text size (rem) */
+body.cx-skipping #fx-root { display: none; }
+
+/* ═══ THE PACE: the theater's own animations stretch with the Pace setting
+   (fx.js sets --pdx-pace on the root: Slow 1.6, Normal 1, Brisk .8, Fast .6).
+   Same selectors as app.css, loaded after it, so only the length changes; the
+   calm-motion rules that switch an animation off still win (no name, no play). ═══ */
+.pcard.fx-pulse { animation-duration: calc(.6s * var(--pdx-pace, 1)); }
+.pcard.fx-hit { animation-duration: calc(.55s * var(--pdx-pace, 1)); }
+.mc.mc-born { animation-duration: calc(2.1s * var(--pdx-pace, 1)); }
+.mc.mc-dissolve { animation-duration: calc(1.35s * var(--pdx-pace, 1)); }
+.cs-where b.cw-pop { animation-duration: calc(.5s * var(--pdx-pace, 1)); }
+.rt-coinwrap .rt-coin-drop { animation-duration: calc(.38s * var(--pdx-pace, 1)); }
+.cx-gp { animation-duration: calc(.5s * var(--pdx-pace, 1)); animation-delay: calc(var(--i, 0) * 450ms * var(--pdx-pace, 1)); }
+.cx-grid.out { animation-duration: calc(.8s * var(--pdx-pace, 1)); }
+.delta-float { animation-duration: calc(1.3s * var(--pdx-pace, 1)); }
+.briefcase-fx { animation-duration: calc(1.4s * var(--pdx-pace, 1)); }
+/* the mend (mend.js) */
+#tl-gauge .tlg-track i.pulse { animation-duration: calc(1.6s * var(--pdx-pace, 1)); }
+#tl-gauge.mending { animation-duration: calc(1.6s * var(--pdx-pace, 1)); }
+.tl-burst .tlb-a, .tl-burst .tlb-b { animation-duration: calc(.8s * var(--pdx-pace, 1)); }
+.tl-burst .tlb-rays { animation-duration: calc(2.2s * var(--pdx-pace, 1)); }
+.tl-tear { animation-duration: calc(2.5s * var(--pdx-pace, 1)); }
+.tl-tear polyline { animation-duration: calc(.45s * var(--pdx-pace, 1)); }
+#drawer-zone .cab2-cell.tl-filed .cab2-front { animation-duration: calc(2.1s * var(--pdx-pace, 1)); }
