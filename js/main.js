@@ -1,18 +1,18 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609270154";
-import { hydrateIcons, icon } from "./icons.js?202609270154";
-import { seatColor, initials, el } from "./util.js?202609270154";
-import { Game } from "./game.js?202609270154";
-import { audio } from "./audio.js?202609270154";
-import { tutorials } from "./tutorial.js?202609270154";
-import { profile } from "./profile.js?202609270154";
-import { access } from "./access.js?202609270154";
+import { api, Connection } from "./net.js?202609270205";
+import { hydrateIcons, icon } from "./icons.js?202609270205";
+import { seatColor, initials, el } from "./util.js?202609270205";
+import { Game } from "./game.js?202609270205";
+import { audio } from "./audio.js?202609270205";
+import { tutorials } from "./tutorial.js?202609270205";
+import { profile } from "./profile.js?202609270205";
+import { access } from "./access.js?202609270205";
 import "./menu-cursor.js";
-import { launchTutorial } from "./tutorial-drive.js?202609270154";
-import { PadCursor } from "./controle.js?202609270154";
-import { fx, PACES, LEVELS } from "./fx.js?202609270154";
+import { launchTutorial } from "./tutorial-drive.js?202609270205";
+import { PadCursor } from "./controle.js?202609270205";
+import { fx, PACES, LEVELS } from "./fx.js?202609270205";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -132,8 +132,16 @@ function syncPaceUI(sp) {
   const gfxSeg = document.getElementById("gfx-seg");
   const amb = document.getElementById("chk-ambient");
   const uiSel = document.getElementById("sel-ui-scale");
+  // FIREFOX TAKES THE LIGHTER PATH. Gecko paints SVG-internal animations on its main
+  // thread and draws blurs, full-screen overlays and filtered layers in its renderer on
+  // every frame, where Chromium composites or caches them: the same table that runs at
+  // 170 fps in Chromium crawled in Firefox. Detected by a Gecko-only CSS feature, not by
+  // the user agent; html.pdx-gecko (app.css) drops what Gecko pays for and nobody sees,
+  // and a Firefox with no saved choice starts on Medium instead of High.
+  const GECKO = !!(window.CSS && CSS.supports && CSS.supports("-moz-appearance", "none"));
+  document.documentElement.classList.toggle("pdx-gecko", GECKO);
   function applyGfx() {
-    const q = ["high", "medium", "low"].includes(lsGet(GFX_KEY)) ? lsGet(GFX_KEY) : "high";
+    const q = ["high", "medium", "low"].includes(lsGet(GFX_KEY)) ? lsGet(GFX_KEY) : (GECKO ? "medium" : "high");
     // Medium stills the chart's ambient loops too: measured on an awake table they cost about
     // a quarter of the frame rate (their layers and overlaps), the biggest single item left
     // the accessible interface rests the ambient loops too (calm motion, js/access.js)

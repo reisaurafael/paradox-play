@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609270154";
-import { Game } from "./game.js?202609270154";
-import { icon } from "./icons.js?202609270154";
-import { roman } from "./util.js?202609270154";
-import { profile } from "./profile.js?202609270154";
+import { api, Connection } from "./net.js?202609270205";
+import { Game } from "./game.js?202609270205";
+import { icon } from "./icons.js?202609270205";
+import { roman } from "./util.js?202609270205";
+import { profile } from "./profile.js?202609270205";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -165,31 +165,6 @@ class Stage {
     const c = this.track.querySelector(".tt-count");
     if (c) c.textContent = `${LESSONS.filter(([k]) => done.has(k)).length}/${LESSONS.length}`;
   }
-  // The bar goes where the desk is free: top or bottom, centre or a side, whichever
-  // spot covers the least of the files, the machine, the dice, the gauge and the chart.
-  placeTrack() {
-    const t = this.track, now = performance.now();
-    if (t.classList.contains("gone") || t.classList.contains("away") || now - (this._trackT || 0) < 700) return;
-    this._trackT = now;
-    const w = t.offsetWidth, h = t.offsetHeight, W = innerWidth, H = innerHeight;
-    if (!w) return;
-    const soft = [];
-    KEY_AREAS.concat(["#tl-gauge", "#hull-console", "#hela-eye .he-svg"]).forEach((sel) => {
-      try { document.querySelectorAll(sel).forEach((n) => { const b = n.getBoundingClientRect(); if (b.width && onScreen(b) && visible(n) && b.width < W * .9) soft.push(b); }); } catch (e) {}
-    });
-    let best = null;
-    for (const [fx, top] of [[.5, 10], [.5, H - h - 10], [.25, 10], [.75, 10], [.25, H - h - 10], [.75, H - h - 10]]) {
-      const x = Math.max(8 + w / 2, Math.min(W - 8 - w / 2, W * fx)), l = x - w / 2;
-      let cover = 0;
-      soft.forEach((b) => { cover += Math.max(0, Math.min(l + w, b.right) - Math.max(l, b.left)) * Math.max(0, Math.min(top + h, b.bottom) - Math.max(top, b.top)); });
-      const same = this._trackAt && this._trackAt[0] === fx && this._trackAt[1] === top;
-      const score = cover - (same ? 400 : 0) + (fx === .5 && top === 10 ? -1 : 0);
-      if (!best || score < best.s) best = { s: score, fx, top, x };
-    }
-    this._trackAt = [best.fx, best.top];
-    t.style.left = Math.round(best.x) + "px";
-    t.style.top = Math.round(best.top) + "px";
-  }
   trackOff() { this.track.classList.add("gone"); }
 
   // The classic Hour has four phases; the Auction label belongs to the Test Room.
@@ -255,7 +230,7 @@ class Stage {
       // around the eye: close first, then a little farther, so the words never sit on
       // the machine, the dice, the chart, the files or the shelf (the tail keeps pointing at her)
       const cands = {};
-      [0, 80, 160, 260, 380].forEach((d, i) => {
+      [0, 80, 160, 260].forEach((d, i) => {
         cands["right" + i] = [q.x + 36 + d, q.y - 26, "left", d];
         cands["left" + i] = [q.x - 36 - cw - d, q.y - 26, "right", d];
         cands["below" + i] = [q.x - cw / 2, q.y + 40 + d, "", d];
@@ -331,10 +306,7 @@ class Stage {
 
   layout(force) {
     if (!this._phasesFixed) this._fixPhases();
-    // the bar belongs to the desk: at the wagon or the cabinet it steps out of the way
-    try { const sc = this.coach && this.coach.game && this.coach.game.camera && this.coach.game.camera.scene;
-      this.track.classList.toggle("away", !!sc && sc !== "main"); } catch (e) {}
-    this.placeTrack();
+    // the bar stays at the top centre, in every scene: it never moves
     if (!force && !this.callout.classList.contains("on") && !this.rings.length) return;
     // rings
     this.rings.forEach((at, i) => {
@@ -1283,7 +1255,7 @@ class Coach {
       const what = sealed.length ? FN[sealed[0]] : "A function";
       this.guide("#dice-body .escape-drop",
         `${what} is shut this Hour, so this ${R(s.v)} fits nowhere. Drop it in the <b>escape valve</b>.`,
-        { sub: `A die in the valve while a function is shut costs its value in energy (${s.v}).`,
+        { sub: `While a function is shut, the valve drains life: this die costs you ${s.v} energy.`,
           rings: ["#dice-body .escape-drop", die(s.v)], avoid: MACHINE });
       return;
     }
@@ -1436,11 +1408,41 @@ class Coach {
   }
 
   /* ── Activation ── */
+  // Each item is taught for what it can reach NOW (the server's target_kind, targets
+  // and no_target): the rule, then who is in reach, or plainly why nobody is.
   activation(req) {
-    if (!this.once("act")) return;
-    const names = ((req.options || {}).actives || []).map(cardName).join(", ");
-    this.guide("#rucksack-zone .card.act-ready", `<b>Activation.</b> Click ${names || "your item"} to use it now, or click the lock to pass.`,
-      { rings: ["#rucksack-zone .card.act-ready", "#mala-lock"] });
+    const actives = (req.options || {}).actives || [];
+    if (!actives.length) return;
+    const key = "act-" + actives.map((a) => a.name + ":" + (a.no_target ? 0 : 1)).join("|");
+    if (!this.once(key)) return;
+    const me = this.me() || {};
+    const RULE = {
+      traveler_synchronic: "hits a traveller in your own century", traveler_same_era: "hits a traveller in your own era",
+      century_same_era: "works on a century in your era", receptor_active: "fires an active relic in your receptor",
+      market_revealed: "works on a card on the Merchant's shelf", recycled_card: "takes a recycled card",
+      equipped_other: "takes a rival's equipped item", fishing_rod: "steals a shelf card that costs no more than its roll",
+    };
+    const lines = [], rings = [];
+    actives.forEach((a) => {
+      const nm = `<b>${cardName(a)}</b>`, rule = RULE[a.target_kind];
+      const el = `#rucksack-zone .card.act-ready[data-name="${cssq(a.name)}"]`;
+      if (a.no_target) {
+        const why = a.target_kind === "traveler_synchronic" ? `No one is in ${R(me.century)} with you, so it has no target this Hour. Travel to a rival's century first.`
+          : a.target_kind === "traveler_same_era" ? "No one is in your era, so it has no target this Hour. Travel closer to a rival first."
+          : "There is nothing for it to work on this Hour.";
+        lines.push(`Your ${nm} ${rule || "needs a target"}. ${why}`);
+      } else if (a.targets && a.targets.length) {
+        const where = a.target_kind === "traveler_synchronic" ? "your century" : "your era";
+        lines.push(`${a.targets.join(" and ")} ${a.targets.length > 1 ? "are" : "is"} in ${where}: click ${nm}, then ${a.targets[0]}.`);
+        rings.push(el);
+      } else {
+        lines.push(`Click ${nm} to use it now${rule ? `: it ${rule}` : ""}.`);
+        rings.push(el);
+      }
+    });
+    const none = !rings.length;
+    this.guide(none ? "#mala-lock" : rings[0], `<b>Activation.</b> ${lines.join(" ")}`,
+      { sub: none ? "Pass with the <b>lock</b> on your case." : "Or click the lock to pass.", rings: none ? ["#mala-lock"] : rings.concat(["#mala-lock"]) });
   }
 
   /* ── scene waits ── */
@@ -1472,6 +1474,7 @@ class Coach {
     const cam0 = this.game.camera;
     if (cam0 && cam0.scene !== "main") { cam0._engage(); cam0.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
     this.unrollMap();
+    try { window.__fx && window.__fx.chartReveal && window.__fx.chartReveal(); } catch (e) {}
     await new Promise((r) => setTimeout(r, 1100));
     await this.say("#timeline-rail", L.chartOpen, { ring: false });
     await this.say(null, L.ending, { sub: "At 0 energy you are terminated and come back at XXX. At 12 heat your motor explodes." });

@@ -3437,6 +3437,14 @@
   let zTop=18; Object.keys(pos).forEach((k)=>{ if(pos[k].z>zTop) zTop=pos[k].z; });
   const matchCode=()=>{ const g=window.__game; return (g&&g.conn&&g.conn.code)||null; };
   const card=(seat)=>document.querySelector(`.cb-grid .pcard.cfolio[data-seat="${CSS.escape(seat)}"]`);
+  // the whole table is theirs, the chart included: a file may go as far right as the
+  // table's right edge, in the file's own (unscaled) coordinates
+  function rightEdge(el){
+    const host=el.offsetParent, stage=host&&host.closest(".game-grid");
+    if(!stage) return 792;
+    const f=window.__pdxFit||1;
+    return Math.max(792,(stage.getBoundingClientRect().right-host.getBoundingClientRect().left)/f-el.offsetWidth+30);
+  }
   function apply(){
     const mc=matchCode();
     if(mc&&mc!==code){ code=mc; pos={}; zTop=18; }
@@ -3444,7 +3452,7 @@
       const el=card(seat);
       if(!el) continue;
       // only a file that is truly off the wood comes back (the drag limits below)
-      p.x=Math.max(-30,Math.min(792,+p.x||0)); p.y=Math.max(6,Math.min(880,+p.y||0));
+      p.x=Math.max(-30,Math.min(rightEdge(el),+p.x||0)); p.y=Math.max(6,Math.min(880,+p.y||0));
       el.style.left=p.x+"px"; el.style.top=p.y+"px";
       el.style.setProperty("--dk-rot",(p.r||0)+"deg"); el.style.zIndex=p.z||18;
     }
@@ -3457,7 +3465,7 @@
     raf=requestAnimationFrame(()=>{ raf=0; apply(); });
   }).observe(zone,{childList:true,subtree:true});
 
-  let held=null,pid=0,sx=0,sy=0,ox=0,oy=0,cx=0,cy=0,rot=0,zz=0,moved=false;
+  let held=null,pid=0,sx=0,sy=0,ox=0,oy=0,cx=0,cy=0,rot=0,zz=0,maxX=792,moved=false;
   document.addEventListener("pointerdown",(e)=>{
     if(e.button!==0||held) return;
     if(!document.body.classList.contains("cabin-on")) return;
@@ -3465,7 +3473,7 @@
     if(!el) return;
     if(e.target.closest("button, input, a, select")) return;   // controls stay controls
     held=el; pid=e.pointerId; sx=e.clientX; sy=e.clientY;
-    ox=el.offsetLeft; oy=el.offsetTop; moved=false;
+    ox=el.offsetLeft; oy=el.offsetTop; maxX=rightEdge(el); moved=false;
     rot=parseFloat(getComputedStyle(el).getPropertyValue("--dk-rot"))||0;
   },true);
   document.addEventListener("pointermove",(e)=>{
@@ -3483,9 +3491,9 @@
     // a state update can rebuild the file mid-drag: keep carrying the live one
     if(!held.isConnected){ const live=held.dataset.seat&&card(held.dataset.seat);
       if(live){ live.classList.add("dk-held"); live.style.zIndex=held.style.zIndex; held=live; } }
-    cx=Math.max(-30,Math.min(792,ox+dx)); cy=Math.max(6,Math.min(880,oy+dy));
-    held.style.left=cx+"px";     // the wood ends where the chart begins
-    held.style.top =cy+"px";       // and above the arm's harbour
+    cx=Math.max(-30,Math.min(maxX,ox+dx)); cy=Math.max(6,Math.min(880,oy+dy));
+    held.style.left=cx+"px";     // anywhere on the table, over the chart too
+    held.style.top =cy+"px";     // but above the arm's harbour
   },true);
   const drop=(e)=>{
     if(!held||e.pointerId!==pid) return;

@@ -3382,7 +3382,7 @@ body.cabin-on #rucksack-zone { z-index: 4; transform: rotate(-3.4deg); pointer-e
 body.cabin-on #players-zone { z-index: 2; }
 
 /* badge readability pass */
-body.cabin-on .cb-grid { display: block; position: relative; height: 100%; }
+body.cabin-on .cb-grid { display: block; position: relative; height: 100%; overflow: visible; }   /* files may lie over the chart */
 body.cabin-on .bd-name { font-size: .95rem; letter-spacing: .02em; }
 body.cabin-on .badge .stat b, body.cabin-on .bd-stats b { font-size: 1.05rem; }
 body.cabin-on .cs-head { font-size: .6rem; }
@@ -7043,6 +7043,22 @@ body.gfx-medium .hh-veil, body.gfx-low .hh-veil { background: rgba(8,6,4,.22); }
    the browser only wakes the page when the picture actually changes. */
 .bd-ekg .ekg-line, #players-zone .ekg-line { animation-timing-function: steps(16) !important; }
 .cat-being .cw-tail, .cat-being .cw-body, .cat-being .cw-head { animation-timing-function: steps(18) !important; }
+
+/* FIREFOX'S LIGHTER PATH (main.js sets html.pdx-gecko by a Gecko-only CSS feature).
+   Gecko cannot hand these to the compositor the way Chromium does, so each one costs it
+   paint or render work on every frame, for almost nothing on screen:
+     backdrop-filter  : the soft blur behind the log and the files, a full re-blur a frame
+     grain, scanlines : 5% noise and 4.5% lines over the whole screen, two extra full-screen
+                        layers composited each frame
+     SVG ambient loops: the helmet's rings, vent, core light, the cursor's rings and the
+                        case-file heartbeat run inside SVGs, which Gecko repaints on its main
+                        thread; stepped, they update a few times a second instead of 60. */
+html.pdx-gecko *, html.pdx-gecko *::before, html.pdx-gecko *::after {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.pdx-gecko .grain, html.pdx-gecko #hull .vz-scan { display: none !important; }
+html.pdx-gecko :is(.vzs-ring, .vzs-core, #hull #hexcore, #hull .vent-wheel, #hela-eye .he-spin,
+  #cursor-plane .hela-radar .hr-a, #cursor-plane .hela-radar .hr-b, #cursor-plane .hela-radar .hr-core,
+  .ekg-line, .world-motes) { animation-timing-function: steps(6) !important; }
 
 /* THE NAP (main.js): a table where nothing has happened for a while holds every CSS
    animation still, so it costs no frames at all. The table only naps once no one-shot
