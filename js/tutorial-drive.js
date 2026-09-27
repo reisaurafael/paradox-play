@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609262048";
-import { Game } from "./game.js?202609262048";
-import { icon } from "./icons.js?202609262048";
-import { roman } from "./util.js?202609262048";
-import { profile } from "./profile.js?202609262048";
+import { api, Connection } from "./net.js?202609262101";
+import { Game } from "./game.js?202609262101";
+import { icon } from "./icons.js?202609262101";
+import { roman } from "./util.js?202609262101";
+import { profile } from "./profile.js?202609262101";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -1221,6 +1221,8 @@ class Coach {
     // the move comes from a die: it glows on the machine while he plots
     const col = o.module === 9 ? 2 : 1;
     this._travelCol = col;
+    // never plot into centuries he cannot see: if his reach goes past the roll, it comes off
+    if (!this._mapOpen && from - max < this.cut) this.unrollMap();
     const fromDie = `This move comes from your ${col === 1 ? "second" : "third"} Travel die.`;
     if (this.hour() <= 5 || this.scripted) { const cell = this.causeCell(2, col); if (cell) cell.classList.add("tut-cause"); }
     if (!this.scripted || goal == null) {
@@ -1443,7 +1445,11 @@ class Coach {
     const B = window.__helaBrain;
     const root = () => document.getElementById("hela-brain-full") || document.getElementById("hela-brain-dock");
     if (!B || !root()) return;
-    const q = (sel) => () => { const r = root(); return r ? [...r.querySelectorAll(sel)].filter(visible).pop() || null : null; };
+    // a part he can actually click: visible, and nothing (the cat, a paper) sitting on it
+    const clickable = (n) => { const b = n.getBoundingClientRect(); const h = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return !!h && (h === n || n.contains(h) || h.closest("#tut-callout, .tut-ring, #tut-point, #cursor-plane") != null); };
+    const q = (sel) => () => { const r = root(); if (!r) return null; const all = [...r.querySelectorAll(sel)].filter(visible);
+      return all.filter(clickable).pop() || all.pop() || null; };
     const clickOn = (sel, ms = 60000) => new Promise((resolve) => {
       const h = (e) => { if (e.target.closest && e.target.closest(sel)) { done(); } };
       const done = () => { window.removeEventListener("click", h, true); clearTimeout(t); setTimeout(resolve, 500); };
