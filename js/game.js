@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609271538";
-import { audio } from "./audio.js?202609271538";
+import { icon } from "./icons.js?202609271554";
+import { audio } from "./audio.js?202609271554";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609271538";
-import { comic } from "./comic.js?202609271538";
-import { fx } from "./fx.js?202609271538";
-import { CatEngine } from "./cat.js?202609271538";
-import { tutorials } from "./tutorial.js?202609271538";
-import { profile } from "./profile.js?202609271538";
-import { Camera } from "./camera.js?202609271538";
+import { juice } from "./juice.js?202609271554";
+import { comic } from "./comic.js?202609271554";
+import { fx } from "./fx.js?202609271554";
+import { CatEngine } from "./cat.js?202609271554";
+import { tutorials } from "./tutorial.js?202609271554";
+import { profile } from "./profile.js?202609271554";
+import { Camera } from "./camera.js?202609271554";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609271538";
+} from "./util.js?202609271554";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -302,6 +302,8 @@ export class Game {
             await this.playEvent(msg);
           } else {                   // state
             this.applyState(msg.view);
+            // a reconnect lands mid-Hour: its first table names the phase under way
+            if (msg.phase && msg.phase !== this.currentPhase) this.setPhase(msg.phase);
             try { fx.heatSync(); } catch (e) {}   // the motor's heat marks follow the state (fx.js)
             await this._sleep(this._ms("state"));
           }

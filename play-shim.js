@@ -9,7 +9,7 @@
   // before the first paint.
   window.PARADOX_DEMO = true;
   document.documentElement.classList.add("pdx-demo");
-  const worker = new Worker("play-worker.js?202609271538", { type: "module" });
+  const worker = new Worker("play-worker.js?202609271554", { type: "module" });
   let nextId = 1;
   const httpWaiters = new Map();
   const sockets = new Map();
@@ -57,9 +57,36 @@
   };
   if (document.readyState !== "loading") noticeUpdate(); else document.addEventListener("DOMContentLoaded", noticeUpdate);
 
+  // ---- RECONNECT: the match record, kept on this device only ------------------
+  // The game in the worker sends a record at every save point of the match (the
+  // room, the seed, the human's answers: server/replay.py). It lives in this
+  // browser's storage and nowhere else; after a reload the menu offers it back
+  // (js/resume.js). A purposeful leave sets __pdxResumeBlocked so the last few
+  // messages of a match being left cannot write it again.
+  const RESUME_KEY = "pdx.resume.v1";
+  function resumeSave(room, record) {
+    if (window.__pdxResumeBlocked) return;
+    try {
+      localStorage.setItem(RESUME_KEY, JSON.stringify({ saved_at: Date.now(), room, record }));
+    } catch (err) { /* storage full or off: the match simply cannot be reconnected */ }
+  }
+  function resumeClear(room) {
+    try {
+      const raw = localStorage.getItem(RESUME_KEY);
+      const cur = raw ? JSON.parse(raw) : null;
+      if (!cur || !room || cur.room === room) localStorage.removeItem(RESUME_KEY);
+    } catch (err) {
+      try { localStorage.removeItem(RESUME_KEY); } catch (e2) {}
+    }
+  }
+
   worker.onmessage = (e) => {
     const m = JSON.parse(e.data);
-    if (m.op === "ready") {
+    if (m.op === "resume_save") {
+      resumeSave(m.room, m.record);
+    } else if (m.op === "resume_clear") {
+      resumeClear(m.room);
+    } else if (m.op === "ready") {
       veil.style.opacity = "0";
       setTimeout(() => veil.remove(), 600);
     } else if (m.op === "boot_error") {

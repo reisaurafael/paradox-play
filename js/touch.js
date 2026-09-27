@@ -507,6 +507,8 @@
       if (v === undefined) return m;
       return v ? '<b class="pw-key">' + v + "</b>" : "";
     });
+    // on touch the Merchant's card opens its sheet first, and the sheet's big key buys
+    out = out.replace(/drag it into your case, or click it/g, "tap it, then its <b class=\"pw-key\">BUY</b> key");
     // the verbs of a mouse and a keyboard
     out = out.replace(/\bPress\b(?=\s*<b class="pw-key">)/g, "Tap").replace(/\bpress\b(?=\s*<b class="pw-key">)/g, "tap")
       .replace(/\bClick(ing|ed|s)?\b/g, function (m, e) { return "Tap" + (e === "ing" ? "ping" : e === "ed" ? "ped" : e || ""); })

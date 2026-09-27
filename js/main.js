@@ -1,20 +1,21 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609271538";
-import { hydrateIcons, icon } from "./icons.js?202609271538";
-import { seatColor, initials, el } from "./util.js?202609271538";
-import { Game } from "./game.js?202609271538";
-import { audio } from "./audio.js?202609271538";
-import { tutorials } from "./tutorial.js?202609271538";
-import { profile } from "./profile.js?202609271538";
-import { access } from "./access.js?202609271538";
+import { api, Connection } from "./net.js?202609271554";
+import { hydrateIcons, icon } from "./icons.js?202609271554";
+import { seatColor, initials, el } from "./util.js?202609271554";
+import { Game } from "./game.js?202609271554";
+import { audio } from "./audio.js?202609271554";
+import { tutorials } from "./tutorial.js?202609271554";
+import { profile } from "./profile.js?202609271554";
+import { access } from "./access.js?202609271554";
 import "./menu-cursor.js";
 import "./help.js";
-import { colourPicker, colourWish } from "./chronicle.js?202609271538";
-import { launchTutorial } from "./tutorial-drive.js?202609271538";
-import { PadCursor } from "./controle.js?202609271538";
-import { fx, PACES, LEVELS } from "./fx.js?202609271538";
+import { colourPicker, colourWish } from "./chronicle.js?202609271554";
+import { launchTutorial } from "./tutorial-drive.js?202609271554";
+import { PadCursor } from "./controle.js?202609271554";
+import { fx, PACES, LEVELS } from "./fx.js?202609271554";
+import { initResume, leaveWords } from "./resume.js?202609271554";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -196,9 +197,11 @@ function syncPaceUI(sp) {
     tut.checked = tutorials.enabled;
     access.sync();
     syncPaceUI();
-    // Leave match shows only while a match is on the table
+    // Leave match shows only while a match is on the table, in its words (a match,
+    // or Learn to Play)
     const lv = document.getElementById("set-leave");
     if (lv) lv.hidden = !(document.getElementById("screen-game").classList.contains("is-active") && !PANEL);
+    if (lv && !lv.hidden) setLeaveWords(lv);
   }
 })();
 document.getElementById("cronos-mark").innerHTML = icon("cronos");
@@ -409,7 +412,8 @@ function enterRoom(name, code, seat, room, opts) {
   lobbyErr.textContent = "";
   btnStart.disabled = false;
   renderLobby(room);
-  show("lobby");
+  // a Reconnect goes straight back to the table: no setup screen on the way
+  if (!(opts && opts.resumed)) show("lobby");
 
   const conn = new Connection(code, seat);
   state.conn = conn;
@@ -576,6 +580,8 @@ function backToMenu(msg) {
 document.getElementById("btn-lobby-back").addEventListener("click", () => { audio.play("click"); backToMenu(); });
 
 function leaveMatch() {
+  // leaving on purpose: the saved match goes too (Reconnect is for a reload)
+  try { window.__pdxResume && window.__pdxResume.discard(true); } catch (e) {}
   try { state.conn && state.conn.close(); } catch (e) {}
   location.href = location.pathname;
 }
@@ -583,19 +589,40 @@ window.__pdxLeaveMatch = leaveMatch;
 
 // The confirm is a line in place of the button, never a pop-up: it covers
 // nothing, and it stays until the player answers (Leave, Stay or Escape).
+// The words follow the table on screen: a match ends for good, Learn to Play can
+// simply be started again (js/resume.js leaveWords).
+function setLeaveWords(box) {
+  const w = leaveWords();
+  const knob = box.classList.contains("leave-knob");
+  const lbl = box.querySelector(".leave-ask-lbl");
+  if (lbl) lbl.textContent = w.ask;
+  const q = box.querySelector(".leave-q");
+  if (q) q.textContent = knob ? w.knob : w.q;
+  const yes = box.querySelector(".leave-yes");
+  if (yes && !knob) yes.textContent = w.yes;
+}
 function wireLeave(box) {
-  const fold = () => { box.classList.remove("is-asking"); };
-  box.querySelector(".leave-ask").addEventListener("click", (e) => {
+  const ask = box.querySelector(".leave-ask");
+  const fold = (e) => {
+    const was = box.classList.contains("is-asking");
+    box.classList.remove("is-asking");
+    if (was && e && ask) ask.focus({ preventScroll: true });
+  };
+  ask.addEventListener("click", (e) => {
     e.stopPropagation();
+    setLeaveWords(box);
     box.classList.add("is-asking");
     audio.play("click");
     const no = box.querySelector(".leave-no"); if (no) no.focus({ preventScroll: true });
   });
-  box.querySelector(".leave-no").addEventListener("click", (e) => { e.stopPropagation(); fold(); });
+  box.querySelector(".leave-no").addEventListener("click", (e) => { e.stopPropagation(); fold(e); });
   box.querySelector(".leave-yes").addEventListener("click", (e) => { e.stopPropagation(); leaveMatch(); });
-  box.addEventListener("keydown", (e) => { if (e.key === "Escape" && box.classList.contains("is-asking")) { e.stopPropagation(); fold(); } });
+  box.addEventListener("keydown", (e) => { if (e.key === "Escape" && box.classList.contains("is-asking")) { e.stopPropagation(); fold(e); } });
 }
 document.querySelectorAll("[data-leave]").forEach(wireLeave);
+
+// RECONNECT: the saved match on the menu (js/resume.js)
+initResume({ enterRoom, fail, audio });
 
 // The table's own Leave control sits beside the settings gear, wherever the cabin
 // docks the gear (cabin.js moves it into the visor's station).
