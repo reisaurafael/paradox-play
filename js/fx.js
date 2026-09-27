@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609271439";
-import { roman } from "./util.js?202609271439";
+import { audio } from "./audio.js?202609271538";
+import { roman } from "./util.js?202609271538";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -137,12 +137,17 @@ class Fx {
   }
 
   /* ---- THE LEVEL ---- */
-  storedLevel() { const v = lsGet(LEVEL_KEY); return LEVELS[v] ? v : "full"; }
+  storedLevel() {
+    const v = lsGet(LEVEL_KEY);
+    if (LEVELS[v]) return v;
+    return document.documentElement.classList.contains("pdx-phone") ? "light" : "full";   // phones are weak: Light unless chosen
+  }
   setLevel(v) { if (LEVELS[v]) lsSet(LEVEL_KEY, v); this._markLevel(); this.heatSync(); }
   _markLevel() { try { document.documentElement.dataset.fx = this.storedLevel(); } catch (e) {} }
   // what plays now: Low graphics caps it at Light
   level() {
     const v = this.storedLevel();
+    if (document.documentElement.classList.contains("pdx-phone")) return v;   // a phone keeps its own choice (Light by default)
     if (v === "full" && document.body.classList.contains("gfx-low")) return "light";
     return v;
   }
@@ -168,14 +173,122 @@ class Fx {
   _rect(el) {
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    if (r.width < 2 || r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) return null;
+    if (r.width < 2) return null;
+    if (this._phone()) {
+      // on a phone only what lies on the STAGE counts (not under HELA's column or the thumb
+      // rail); a subject in another view is remembered, so the effect can point toward it
+      const s = this._stage(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      if (cx < s.left || cx > s.right || cy < s.top || cy > s.bottom) { this._off = { r, t: performance.now() }; return null; }
+      return r;
+    }
+    if (r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) return null;
     return r;
+  }
+
+  /* ---- THE PHONE (html.pdx-m-on, js/mobile-table.js): one view of the workstation at a time
+     on a stage between HELA's column (left) and the thumb rail (right). Effects land on the
+     stage only, beside what the view shows (the police files on the desk, the big pip-boy,
+     the case), never on the CRT's cells, the dice or the keys; a subject in another view
+     gets a small inked edge marker pointing toward it; my own hits go to the life thread
+     at the screen's edge. Sizes come down (fx.css html.pdx-m-on). The desktop never
+     enters any of this. ---- */
+  _phone() { return document.documentElement.classList.contains("pdx-m-on"); }
+  _stage() {
+    if (!this._phone()) return { left: 0, top: 0, right: innerWidth, bottom: innerHeight };
+    const cs = getComputedStyle(document.documentElement);
+    const l = parseFloat(cs.getPropertyValue("--pdx-colw")) || 0, r = parseFloat(cs.getPropertyValue("--pdx-railw")) || 0;
+    return { left: l, top: 0, right: innerWidth - r, bottom: innerHeight };
+  }
+  // where MY life shows on a phone: the life thread's own point when it offers one
+  // (window.__pdxLifeAnchor, the MOBILE agent's), else the stage's top band, above the machine
+  _life() {
+    let pt = null;
+    try { pt = window.__pdxLifeAnchor && window.__pdxLifeAnchor(); } catch (e) {}
+    const s = this._stage();
+    if (!pt) pt = { x: s.left + Math.min(200, (s.right - s.left) * .3), y: 34 };
+    return { r: { left: pt.x, right: pt.x, top: pt.y, bottom: pt.y, width: 0, height: 0 }, box: null, at: true };
+  }
+  // beside the life thread's tick (its -N lands on _life itself)
+  _lifeBeside() { const L = this._life(); const x = L.r.left + 104; return { r: { left: x, right: x, top: L.r.top + 4, bottom: L.r.top + 4, width: 0, height: 0 }, box: null, at: true }; }
+  // what nothing may cover on a phone: the CRT with its cells, the dice tray and its keys
+  _keepOut() {
+    const out = [];
+    for (const sel of ["#mano-screen", "#hull-console .dice-pool", "#hull-console .dice-actions"]) {
+      const e = document.querySelector(sel); if (!e) continue;
+      const r = e.getBoundingClientRect(); if (r.width > 2) out.push(r);
+    }
+    return out;
+  }
+  // move a box (left, top, w, h) inside the stage and off the keep-outs: returns its shift
+  _fit(x, y, w, h) {
+    const s = this._stage(), pad = 6;
+    let dx = 0, dy = 0;
+    if (x < s.left + pad) dx = s.left + pad - x; else if (x + w > s.right - pad) dx = s.right - pad - (x + w);
+    if (y < s.top + pad) dy = s.top + pad - y; else if (y + h > s.bottom - pad) dy = s.bottom - pad - (y + h);
+    x += dx; y += dy;
+    for (const k of this._keepOut()) {
+      if (x + w <= k.left || x >= k.right || y + h <= k.top || y >= k.bottom) continue;
+      const up = k.top - 4 - (y + h), down = k.bottom + 4 - y;
+      if (y + up >= s.top + pad) { y += up; dy += up; } else if (y + down + h <= s.bottom - pad) { y += down; dy += down; }
+    }
+    return { dx, dy };
+  }
+  // a small inked tab at the stage's edge, pointing toward a subject in another view
+  _edge(word, tone, r, opts = {}) {
+    if (!this.root || !r) return;
+    const s = this._stage(), cx = (s.left + s.right) / 2, cy = (s.top + s.bottom) / 2;
+    const tx = r.left + r.width / 2, ty = r.top + r.height / 2, dx = tx - cx, dy = ty - cy;
+    const hw = (s.right - s.left) / 2 - 64, hh = (s.bottom - s.top) / 2 - 22;
+    const k = Math.min(Math.abs(dx) > 1 ? hw / Math.abs(dx) : 1e9, Math.abs(dy) > 1 ? hh / Math.abs(dy) : 1e9);
+    const x = cx + dx * k, y = cy + dy * k;
+    const side = Math.abs(dx) * hh >= Math.abs(dy) * hw ? (dx > 0 ? "r" : "l") : (dy > 0 ? "d" : "u");
+    const n = document.createElement("div");
+    n.className = "fx-edgemark fx-edge-" + side;
+    n.style.left = Math.round(x) + "px"; n.style.top = Math.round(y) + "px";
+    n.style.setProperty("--fx-c", opts.color || TONE[tone] || TONE.plain);
+    n.textContent = (side === "l" ? "\u25C0 " : side === "u" ? "\u25B2 " : "") + word + (side === "r" ? " \u25B6" : side === "d" ? " \u25BC" : "");
+    this.root.appendChild(n);
+    const dur = Math.max(1900, this.ms(2400));
+    const nudge = side === "l" ? "-4px,0" : side === "r" ? "4px,0" : side === "u" ? "0,-4px" : "0,4px";
+    try { n.animate([
+      { opacity: 0, transform: `translate(-50%,-50%) translate(${nudge})` },
+      { opacity: 1, transform: "translate(-50%,-50%)", offset: .14 },
+      { opacity: 1, transform: "translate(-50%,-50%)", offset: .8 },
+      { opacity: 0, transform: "translate(-50%,-50%)" }], { duration: dur, easing: "linear", fill: "both" }); } catch (e) {}
+    setTimeout(() => n.remove(), dur + 60);
+  }
+  // the phone's life thread takes its comic tick: -N red with a crackle, +N quietly green
+  lifeTick(seat, delta) {
+    if (!delta || seat !== this._me() || !this._phone() || this._quiet() || this.level() === "off") return;
+    try { if (window.__pdxLifeHit) { window.__pdxLifeHit(delta); return; } } catch (e) {}   // the life thread draws its own
+    const a = this._life(), x = a.r.left, y = a.r.top, dur = Math.max(1500, this.ms(1900));
+    const n = document.createElement("div");
+    n.className = "fx-lifetick " + (delta < 0 ? "fx-lt-loss" : "fx-lt-gain");
+    n.style.left = Math.round(x) + "px"; n.style.top = Math.round(y) + "px";
+    const b = document.createElement("b"); b.textContent = (delta > 0 ? "+" : "\u2212") + Math.abs(delta); n.appendChild(b);
+    if (delta < 0) {                                  // the crackle along the border above it
+      n.insertAdjacentHTML("afterbegin", '<svg class="fx-crackle" viewBox="0 0 120 12" width="120" height="12" aria-hidden="true">'
+        + '<polyline class="ck-ink" points="0,6 12,2 22,9 34,3 46,10 58,2 70,9 82,3 94,10 106,4 120,7"/>'
+        + '<polyline class="ck-col" points="0,6 12,2 22,9 34,3 46,10 58,2 70,9 82,3 94,10 106,4 120,7"/></svg>');
+    }
+    this.root.appendChild(n);
+    try { n.animate(this._calm()
+      ? [{ opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: 1, offset: .7 }, { opacity: 0 }]
+      : [{ opacity: 0, transform: "translate(-50%,-50%) scale(1.4)" }, { opacity: 1, transform: "translate(-50%,-50%) scale(1)", offset: .12 },
+         { opacity: 1, transform: "translate(-50%,-50%) scale(1)", offset: .7 }, { opacity: 0, transform: "translate(-50%,-62%) scale(1)" }],
+      { duration: dur, easing: "linear", fill: "both" }); } catch (e) {}
+    setTimeout(() => n.remove(), dur + 60);
   }
   _pcard(seat) { return document.querySelector(`.pcard[data-seat="${CSS.escape(String(seat))}"]`); }
   // part: life, gold, heat, travel, paradox, recharge, file, or { card }
   // returns { r, box, above }: r the subject, box the case file to stand beside
   _seat(seat, part) {
     if (seat == null) return null;
+    if (seat === this._me() && this._phone()) {
+      const row = { recharge: 0, paradox: 1, heat: 2, travel: 2 }[part];
+      const scr = row != null && this._rect(document.getElementById("mano-screen"));
+      return scr ? { r: scr, box: null, above: true } : this._life();
+    }
     if (seat === this._me()) {
       const q = (s) => this._rect(document.querySelector(s));
       const row = { recharge: 0, paradox: 1, heat: 2, travel: 2 }[part];
@@ -193,10 +306,17 @@ class Fx {
       : { life: ".bd-life-n", gold: ".cs-gold", heat: ".bd-fuserail", travel: ".ba-fn.ba-t",
           paradox: ".ba-fn.ba-p", recharge: ".ba-fn.ba-r" }[part];
     const r = (sel && this._rect(pc.querySelector(sel))) || box;
-    return { r, box, above: false };
+    return { r, box, above: false, below: this._phone() };
   }
   _isle(c) {
-    try { const r = this.comic && this.comic._islandAt(c); return r ? { r, box: r, above: false } : null; } catch (e) { return null; }
+    try {
+      if (this._phone()) {                           // the island itself, so another view is remembered
+        const ch = this.comic && this.comic._chart();
+        const r = ch && this._rect(ch.host.querySelector(`.${ch.mark}[data-c="${c}"]`));
+        return r ? { r, box: r, above: false } : null;
+      }
+      const r = this.comic && this.comic._islandAt(c); return r ? { r, box: r, above: false } : null;
+    } catch (e) { return null; }
   }
   _card(name) {
     try { const r = this.game.marketCardRect(name); const v = r && this._rect({ getBoundingClientRect: () => r }); return v ? { r: v, box: v, above: false } : null; }
@@ -210,6 +330,8 @@ class Fx {
   // beside the subject: out of the case file toward the middle of the screen, or above
   _place(a) {
     const r = a.r, box = a.box || r;
+    if (a.at) return { x: r.left, y: r.top, tx: "-50%", ty: "-50%" };
+    if (a.below) return { x: box.left + box.width / 2, y: box.bottom + 6, tx: "-50%", ty: "0%" };   // a phone's police file: under it
     if (a.above) return { x: r.left + r.width / 2, y: r.top - 10, tx: "-50%", ty: "-100%" };
     const toRight = box.left + box.width / 2 < innerWidth / 2;
     const y = Math.max(24, Math.min(innerHeight - 24, r.top + r.height / 2));
@@ -243,8 +365,9 @@ class Fx {
     const run = () => {
       if (this._quiet() || this._on.pop >= 3) return;
       if (this._hold(run, held++, "pop", this.ms(260))) return;
+      this._off = null;
       const a = typeof anchor === "function" ? anchor() : anchor;
-      if (!a) return;
+      if (!a) { if (this._phone() && this._off) this._edge(word, tone, this._off.r, opts); return; }
       this._draw("pop", word, tone, a, Math.max(1700, this.ms(2200)), opts);
     };
     wait > 16 ? setTimeout(run, wait) : run();
@@ -265,8 +388,9 @@ class Fx {
     const run = () => {
       if (this._quiet() || this._on.stamp >= 2) return;
       if (this._hold(run, held++, "stamp", this.ms(520))) return;
+      this._off = null;
       const a = typeof anchor === "function" ? anchor() : anchor;
-      if (!a) return;
+      if (!a) { if (this._phone() && this._off) this._edge(word, tone, this._off.r, opts); return; }
       this._draw("stamp", word, tone, a, Math.max(2300, this.ms(3000)), opts);
       if (opts.sound !== false) { try { audio.play("chart_stamp"); } catch (e) {} }   // pressed on its own beat
     };
@@ -287,6 +411,12 @@ class Fx {
     const b = document.createElement("b"); b.textContent = word; n.appendChild(b);
     if (opts.sub) { const s = document.createElement("span"); s.textContent = opts.sub; n.appendChild(s); }
     this.root.appendChild(n);
+    if (this._phone()) {                              // inside the stage, off the CRT, the dice and the keys
+      const w = n.offsetWidth, h = n.offsetHeight;
+      const f = this._fit(p.x + (parseFloat(p.tx) / 100) * w, p.y + (parseFloat(p.ty) / 100) * h, w, h);
+      p.x += f.dx; p.y += f.dy;
+      n.style.left = Math.round(p.x) + "px"; n.style.top = Math.round(p.y) + "px";
+    }
     this._on[kind]++;
     const rot = kind === "stamp" ? (Math.random() * 6 - 5).toFixed(1) : (Math.random() * 8 - 4).toFixed(1);
     const T = (s, dy = 0) => `translate(${p.tx}, calc(${p.ty} + ${dy}px)) rotate(${rot}deg) scale(${s})`;
@@ -321,6 +451,15 @@ class Fx {
       const f = REWARD[this._reward.category];
       if (f) { opts.word = f[0]; opts.sub = f[1][(this._reward.roll || 1) - 1] || opts.sub; }
     }
+    if (kind === "yearzero" && !at && this._phone()) {   // the well lies on the chart: point there, or the stage's top
+      try {
+        const ch = this.comic && this.comic._chart();
+        const e = ch && ch.host.querySelector(`.sea-well, .${ch.mark}[data-c="0"]`);
+        at = e ? e.getBoundingClientRect() : null;
+      } catch (e) {}
+      if (!at) { const st = this._stage(); at = { x: (st.left + st.right) / 2, y: 60 }; }
+    }
+    if (this._phone() && this._phoneBig(kind, at, opts, lv)) return true;
     if (lv === "light") {
       const face = BIG_FACE[kind] || ["POW!", "plain"];
       const a = at && at.width != null ? { r: at, box: at, above: false }
@@ -347,6 +486,27 @@ class Fx {
     }
     opts._dur = dur;
     this._bigUntil = now + dur + 80;                // the next begins once this one has faded
+    return false;
+  }
+  // a big panel on a phone: its subject if on the stage (smaller, fitted off the CRT and the
+  // dice), the life thread for my own hits (comic's panels on me carry no subject there),
+  // an edge marker when the subject is in another view. True: handled here.
+  _phoneBig(kind, at, opts, lv) {
+    const face = BIG_FACE[kind] || ["POW!", "plain"], word = opts.word || face[0];
+    let r = at && at.width != null ? at : at && at.x != null ? { left: at.x, top: at.y, right: at.x, bottom: at.y, width: 0, height: 0 } : null;
+    let cx, cy;
+    if (!r) { const L = this._life(); cx = L.r.left; cy = L.r.top; }
+    else {
+      const st = this._stage(); cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+      if (cx < st.left || cx > st.right || cy < st.top || cy > st.bottom) { this._edge(word, face[1], r, { color: opts.c }); return true; }
+    }
+    if (lv === "light") {
+      this.stamp(word, face[1], { r: { left: cx, right: cx, top: cy, bottom: cy, width: 0, height: 0 }, box: null, at: true }, { sound: false, color: opts.c });
+      return true;
+    }
+    const hw = opts.big ? 66 : 50, hh = opts.big ? 62 : 46;   // the panel at the phone's scale (fx.css)
+    const f = this._fit(cx - hw, cy - hh, 2 * hw, 2 * hh);
+    opts._at = { x: cx + f.dx, y: cy + f.dy }; opts._mx = 1; opts._my = 1;
     return false;
   }
   _pumpSoon() {
@@ -511,6 +671,7 @@ class Fx {
   }
   _scene() { const c = document.getElementById("cam"); return (c && c.dataset.scene) || (this.game && this.game.camera && this.game.camera.scene) || "main"; }
   _whenDesk(fn, maxMs) {
+    if (this._phone()) { fn(); return; }            // a phone points toward another view instead of waiting
     if (!document.body.classList.contains("cabin-on") || this._scene() === "main") { fn(); return; }
     const cam = document.getElementById("cam");
     if (!cam) { fn(); return; }
@@ -531,12 +692,12 @@ class Fx {
     const gap = Math.round(beatMs * .8);             // the next distance lands as this one fades
     const total = gap * (beats.length - 1) + beatMs;
     const start = Math.max(0, this._bigUntil - performance.now());   // one big moment at a time
-    this._bigUntil = performance.now() + start + total + 80;
+    if (this.level() === "full") this._bigUntil = performance.now() + start + total + 80;   // Light's stamps hold nothing up
     beats.forEach((beat, i) => setTimeout(() => {
       if (this._quiet()) return;
       if (i) { try { audio.play("paradox", { power: .6 }); } catch (e) {} }   // each later distance on its own beat
       if (this.level() === "light") {                // Light: a stamp per zap, in the causer's colour
-        beat.forEach((q) => this.stamp("ZZAP!", "paradox", () => this._seat(q.victim, "life"), { sound: false, color: q.causer ? this._col(q.causer) : null }));
+        beat.forEach((q) => this.stamp("ZZAP!", "paradox", () => (this._phone() && q.victim === me ? this._lifeBeside() : this._seat(q.victim, "life")), { sound: false, color: q.causer ? this._col(q.causer) : null }));
         return;
       }
       this._zaps(beat, beatMs, me);
@@ -545,8 +706,17 @@ class Fx {
   // one beat: every zap together, spread apart, smaller when more than one
   _zaps(beat, dur, me) {
     const k = beat.length > 1 ? .78 : 1;
+    const phone = this._phone();
     const pts = beat.map((q) => {
-      let r = null; try { r = this.comic && this.comic._seatRect(q.victim); } catch (e) {}
+      let r = null;
+      if (phone) {
+        if (q.victim === me) { const L = this._lifeBeside(); return { q, x: L.r.left, y: L.r.top }; }   // beside my life thread's tick
+        this._off = null;
+        r = this._rect(this._pcard(q.victim));
+        if (!r) { if (this._off) this._edge("ZZAP!", "paradox", this._off.r, { color: q.causer ? this._col(q.causer) : null }); return null; }
+        return { q, x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }
+      try { r = this.comic && this.comic._seatRect(q.victim); } catch (e) {}
       if (!r) return null;
       const x = r.width != null ? r.left + r.width / 2 : r.x, y = r.width != null ? r.top + r.height / 2 : r.y;
       // mine rides a little higher, so the lifethread's number stays in sight while it counts down
@@ -554,7 +724,7 @@ class Fx {
     }).filter(Boolean);
     if (!pts.length) return;
     // never at the exact same place: zaps closer than a burst apart are fanned out side by side
-    const min = (beat.some((q) => q.victim === me) ? 235 : 185) * k;   // a big panel's word is wider
+    const min = (beat.some((q) => q.victim === me) ? 235 : 185) * k * (phone ? .52 : 1);   // a big panel's word is wider
     for (let pass = 0; pass < 6; pass++) {
       let moved = false;
       for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) {
@@ -566,6 +736,10 @@ class Fx {
       }
       if (!moved) break;
     }
+    if (phone) for (const pt of pts) {                // on the stage, off the CRT, the dice and the keys
+      const hw = (pt.q.victim === me ? 66 : 50) * k, hh = (pt.q.victim === me ? 62 : 46) * k;
+      const f = this._fit(pt.x - hw, pt.y - hh, 2 * hw, 2 * hh); pt.x += f.dx; pt.y += f.dy;
+    }
     for (const pt of pts) this._zap(pt, k, dur, pt.q.victim === me);
   }
   // one ZZAP panel, the comic layer's own look (app.css .cx-hit), drawn here so several can
@@ -573,7 +747,8 @@ class Fx {
   _zap(pt, k, dur, big) {
     const q = pt.q, gfx = document.body.classList.contains("gfx-low") ? "low" : document.body.classList.contains("gfx-medium") ? "medium" : "high";
     const mx = (big ? 240 : 150) * k, my = (big ? 140 : 110) * k;   // the whole word stays on screen
-    const x = Math.max(mx, Math.min(innerWidth - mx, pt.x)), y = Math.max(my, Math.min(innerHeight - my, pt.y));
+    const ph = this._phone();                         // a phone's point is already fitted to its stage
+    const x = ph ? pt.x : Math.max(mx, Math.min(innerWidth - mx, pt.x)), y = ph ? pt.y : Math.max(my, Math.min(innerHeight - my, pt.y));
     const h = document.createElement("div");
     const col = q.causer ? this._col(q.causer) : null;
     h.className = "cx-hit fx-zap" + (big ? " cx-hit-big" : "") + " cx-g-" + gfx + (col ? " cx-seat" : "");
@@ -673,8 +848,9 @@ class Fx {
   overload(p) {
     const rows = (p && p.functions) || [];
     if (!rows.length || this._quiet() || this.level() === "off") return Promise.resolve();
+    this._off = null;
     const rects = rows.map((r) => this._rowRect(r)).filter(Boolean);
-    if (!rects.length) return Promise.resolve();
+    if (!rects.length) { if (this._phone() && this._off) this._edge("OVERLOAD!", "danger", this._off.r); return Promise.resolve(); }
     if (this.level() === "light") {
       const r = rects[0];
       this.stamp("OVERLOAD!", "danger", { r, box: r, above: true });
@@ -704,7 +880,11 @@ class Fx {
     // the burst stands above the machine's screen, over the shut row: the SHUT stamp across
     // the row never covers its word, and it stays clear of the lifethread readout
     const scr = this._rect(document.getElementById("mano-screen"));
-    const cx = r.left + r.width / 2, cy = (scr ? scr.top : r.top) - 40;
+    let cx = r.left + r.width / 2, cy = (scr ? scr.top : r.top) - 40;
+    if (this._phone()) {                              // the phone's burst is half size: just above the CRT, on the stage
+      cy = (scr ? scr.top : r.top) - 26;
+      const f = this._fit(cx - 60, cy - 22, 120, 44); cx += f.dx; cy += f.dy;
+    }
     // the burst at the row's end
     const h = document.createElement("div");
     h.className = "cx-hit fx-zap fx-ovl cx-g-" + (document.body.classList.contains("gfx-low") ? "low" : "high");
@@ -769,7 +949,7 @@ class Fx {
     try { audio.play("heat", { power: .5 }); } catch (e) {}   // the hiss
     if (vent && this.level() === "full" && !this._calm()) this._steam(vent);
     if (vent) this.stamp("VALVE!", "danger", { r: vent, box: vent, above: true }, { sound: false });
-    this.pop("-" + n, "danger", () => this._seat(seat, "life"), { big: true });
+    if (!this._phone()) this.pop("-" + n, "danger", () => this._seat(seat, "life"), { big: true });
   }
   _steam(r) {
     const x = r.left + r.width / 2, y = r.top + r.height * .3, dur = Math.max(1100, this.ms(1500));
@@ -791,8 +971,15 @@ class Fx {
      it takes the stage like a panel, and the small effects wait for it. ---- */
   page(title, sub, opts = {}) {
     if ((this._quiet() && !opts.force) || this.level() === "off" || !this.root) return;
-    // the chart's frame (the rail), whose top edge is the torn border the page lands on
-    const host = this._rect(document.getElementById("timeline-rail"));
+    // the chart's frame (the rail), whose top edge is the torn border the page lands on;
+    // on a phone the page turns in at the top of whatever view is on the stage
+    let host;
+    if (this._phone()) {                              // over the pip-boy when it is in view, clear of the police files
+      const st = this._stage(), sc = this._rect(document.getElementById("mano-screen"));
+      const cx = sc ? sc.left + sc.width / 2 : (st.left + st.right) / 2;
+      host = { left: cx - 1, top: -12, width: 2, height: st.bottom };
+    }
+    else host = this._rect(document.getElementById("timeline-rail"));
     if (!host) return;
     if (this.level() === "light") {                // Light: a stamp at the chart's top edge
       const a = { r: { left: host.left + host.width / 2, right: host.left + host.width / 2, top: host.top + 30, bottom: host.top + 30, width: 0, height: 0 }, box: null, above: false };
@@ -810,7 +997,7 @@ class Fx {
     n.style.setProperty("--fx-c", TONE[opts.tone] || TONE.plain);
     // on the chart's top edge, where the torn border is: over sea, not over the pieces
     n.style.left = Math.round(host.left + host.width / 2) + "px";
-    n.style.top = Math.round(Math.max(56, host.top + 18)) + "px";
+    n.style.top = Math.round(this._phone() ? 8 : Math.max(56, host.top + 18)) + "px";
     const w = document.createElement("i"); w.className = "fx-wipe"; n.appendChild(w);
     const b = document.createElement("b"); b.textContent = title; n.appendChild(b);
     if (sub) { const sp = document.createElement("span"); sp.textContent = sub; n.appendChild(sp); }
@@ -845,7 +1032,7 @@ class Fx {
     if (p.seat === this._me()) {
       const per = this._period(p.century);
       return this.stamp("FILED: " + per.toUpperCase(), "good",
-        () => this._el(`#drawer-zone .cab2-cell[data-drawer="${per}"]`) || this._seat(p.seat, "file"));
+        () => this._el(`#drawer-zone .cab2-cell[data-drawer="${per}"]`) || (this._phone() ? null : this._seat(p.seat, "file")));   // a phone points to the case
     }
     return this.stamp("RETURNED!", "good", () => this._seat(p.seat, "file"));
   }

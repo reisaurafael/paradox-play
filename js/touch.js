@@ -488,6 +488,32 @@
     }, true);
   }
 
+  /* ══ HER WORDS FOR A FINGER ════════════════════════════════════════════
+     tutorial-drive.js passes every line through window.__pdxWords on touch: a key
+     becomes the thing a finger taps (on a phone the rail's views and HELA's column,
+     on a tablet the scene keycaps), and "click" becomes "tap". */
+  var KEYS_PHONE = { W: "MERCHANT", A: "RECORDS", S: "MACHINE", D: "MACHINE", TAB: "?", L: "HELA's eye", ENTER: "CONFIRM", SPACE: "" };
+  var KEYS_TABLET = { W: "W", A: "A", S: "S", D: "S", TAB: "?", L: "HELA's memory", ENTER: "CONFIRM", SPACE: "" };
+  window.__pdxWords = function (html) {
+    var phone = d.classList.contains("pdx-m-on");
+    var K = phone ? KEYS_PHONE : KEYS_TABLET;
+    var out = String(html);
+    // "Close it with <kbd>Esc</kbd>" and the like: a tap outside closes
+    out = out.replace(/with <kbd>Esc<\/kbd>/gi, "with a tap outside").replace(/<kbd>Esc<\/kbd>/gi, "a tap outside");
+    // "then Confirm <kbd>Enter</kbd>": the key hint goes, the word stays
+    out = out.replace(/\s*<kbd>Enter<\/kbd>/gi, function (m, i) { return /confirm\s*$/i.test(out.slice(Math.max(0, i - 12), i)) ? "" : " <b class=\"pw-key\">CONFIRM</b>"; });
+    out = out.replace(/<kbd>([^<]{1,6})<\/kbd>/gi, function (m, k) {
+      var v = K[k.toUpperCase()];
+      if (v === undefined) return m;
+      return v ? '<b class="pw-key">' + v + "</b>" : "";
+    });
+    // the verbs of a mouse and a keyboard
+    out = out.replace(/\bPress\b(?=\s*<b class="pw-key">)/g, "Tap").replace(/\bpress\b(?=\s*<b class="pw-key">)/g, "tap")
+      .replace(/\bClick(ing|ed|s)?\b/g, function (m, e) { return "Tap" + (e === "ing" ? "ping" : e === "ed" ? "ped" : e || ""); })
+      .replace(/\bclick(ing|ed|s)?\b/g, function (m, e) { return "tap" + (e === "ing" ? "ping" : e === "ed" ? "ped" : e || ""); });
+    return out;
+  };
+
   /* ══ WIRING ════════════════════════════════════════════════════════════ */
   ready(function () {
     buildRotate();

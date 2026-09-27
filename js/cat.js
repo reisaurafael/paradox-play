@@ -224,39 +224,44 @@ const glow = (d) => `<path class="cw-glow" d="${d}" fill="url(#cwGlow)"/>`;
 /* ── the poses. Every pose stands on the same ground (y 690) and faces left;
       the engine mirrors the whole drawing when she faces right. ── */
 function sitParts(raised) {
+  // front-facing sit: a bell of a body, the haunches bulging at its feet, straight
+  // front legs under the chest, a ruff where the head meets the shoulders
   const parts = [
-    { seed: 31, pts: [[600, 646], [628, 668], [626, 694, .5], [596, 704, .6], [520, 706, .6], [440, 704, .6], [372, 702, .5], [336, 698], [324, 686], [340, 678], [372, 686], [430, 690], [500, 690], [566, 688], [590, 676]],
-      cls: "cw-tail", detail: marks([[548, 688, 90, 15, 9], [488, 689, 90, 15, 9], [428, 689, 90, 14, 9], [340, 684, 30, 18, 10]]) },
-    { seed: 32, pts: [[452, 456], [496, 436], [548, 436, .6], [594, 462, .8], [620, 508, .9], [630, 564, .8], [626, 620, .6], [608, 664], [576, 688], [530, 694], [440, 694]],
-      detail: marks([[556, 442, 118, 44, 12], [598, 474, 152, 46, 12], [620, 526, 172, 44, 12], [624, 584, 188, 40, 11]])
-        + line("M 474 460 C 520 442 564 450 592 474", LIGHT, 3.4, .7) },
-    { seed: 33, fill: WHT, pts: [[512, 692], [512, 676], [532, 664], [568, 662], [600, 668], [612, 682], [602, 696], [520, 697]], detail: toes("M 572 696 v -10 M 588 694 v -9") },
-    { seed: 34, pts: [[396, 372], [374, 398], [358, 446, .7], [350, 500, .8], [344, 560, .6], [338, 620], [338, 668], [350, 690], [386, 695], [470, 695], [540, 695], [562, 684], [568, 650], [566, 600], [554, 540, -.5], [536, 478, -.5], [512, 420], [474, 372]],
-      detail: `<ellipse cx="440" cy="386" rx="46" ry="18" fill="#7a300c" opacity=".35"/>`
-        + marks([[352, 470, 8, 30, 10], [346, 536, 4, 30, 10], [540, 490, 176, 30, 10], [556, 556, 178, 30, 10]])
-        + line("M 372 420 C 356 470 350 530 354 590", LIGHT, 3.4, .7) + line("M 538 490 C 556 550 562 620 556 676", "#ffcf8a", 2.6, .45)
-        + glow("M 396 372 C 372 400 350 470 344 560 C 338 620 338 668 350 690 L 372 690 C 362 600 370 480 404 380 Z") },
-    { seed: 37, fill: WHT, ink: false, pts: [[394, 380], [430, 396], [468, 382], [486, 440], [482, 500], [470, 548, .7], [456, 576, .7], [432, 582, .7], [410, 572, .7], [394, 542, .6], [384, 480]],
-    detail: `<path d="M 452 396 Q 474 392 480 404 Q 490 460 480 522 Q 472 556 460 574 Q 474 500 452 396 Z" fill="${WHITE_S}" opacity=".8"/>` },
-    { seed: 35, fill: FUR_S, sock: 632, soft: true, pts: [[430, 520], [482, 520], [481, 600], [480, 668], [472, 690], [456, 695], [440, 690], [432, 668], [431, 600]],
-      detail: toes("M 449 694 v -9 M 463 694 v -9") },
+    { seed: 31, pts: [[450, 352], [500, 358], [540, 380], [562, 420], [572, 480, -.5], [578, 540, -.5], [574, 600], [540, 650], [470, 672], [400, 668], [352, 640], [336, 590], [340, 530, .6], [346, 470, .6], [360, 416], [396, 374]],
+      detail: marks([[346, 500, 8, 26, 9], [342, 560, 4, 26, 9], [570, 470, 176, 26, 9], [576, 530, 178, 26, 9]])
+        + line("M 366 420 C 350 470 344 530 346 590", LIGHT, 3.2, .65) + line("M 560 440 C 572 500 574 560 566 610", "#ffcf8a", 2.4, .4)
+        + glow("M 396 374 C 360 416 344 480 340 540 C 336 600 344 640 360 650 C 356 560 364 470 404 380 Z") },
+    { seed: 32, soft: true, pts: [[520, 560], [552, 554], [586, 578, .7], [606, 620, .8], [610, 660, .6], [596, 686], [560, 694], [510, 694], [498, 650], [504, 600]],
+      detail: marks([[592, 594, 160, 34, 10], [606, 642, 180, 30, 10]]) },
+    { seed: 33, soft: true, pts: [[394, 560], [362, 570], [336, 600, .7], [326, 644, .6], [336, 676], [362, 692], [410, 694], [428, 660], [420, 600]],
+      detail: marks([[336, 620, 8, 26, 9]]) },
+    { seed: 34, fill: WHT, pts: [[338, 684], [346, 671], [368, 669], [388, 677], [390, 692], [370, 698], [344, 696]], detail: toes("M 356 697 v -8 M 370 697 v -8") },
+    { seed: 35, fill: WHT, pts: [[534, 684], [542, 671], [566, 669], [590, 677], [592, 692], [570, 698], [540, 696]], detail: toes("M 556 697 v -8 M 572 697 v -8") },
+    { seed: 36, pts: [[372, 378], [400, 360], [450, 352], [500, 358], [530, 376], [542, 404, .9], [528, 432, .9], [500, 448, .9], [450, 454, .9], [402, 448, .9], [374, 432, .9], [360, 404, .8]],
+      detail: marks([[372, 404, 20, 18, 7], [530, 404, 160, 18, 7]]) + `<ellipse cx="450" cy="362" rx="60" ry="12" fill="#7a300c" opacity=".3"/>` },
+    { seed: 38, fill: FUR_S, sock: 632, soft: true, pts: [[454, 480], [504, 480], [503, 560], [502, 640], [502, 672], [496, 690], [480, 697], [462, 695], [454, 684], [452, 640], [452, 560]],
+      detail: toes("M 472 695 v -9 M 486 694 v -9") },
   ];
-  if (!raised) parts.push({ seed: 36, sock: 626, soft: true, pts: [[372, 520], [430, 520], [429, 600], [428, 668], [420, 690], [400, 696], [380, 690], [372, 668], [372, 600]],
-    detail: line("M 382 556 L 381 614", LIGHT, 3, .6) + toes("M 392 695 v -10 M 408 695 v -10") });
+  if (!raised) parts.push({ seed: 39, sock: 628, soft: true, pts: [[398, 480], [448, 480], [448, 560], [448, 640], [446, 672], [440, 690], [424, 697], [406, 695], [398, 684], [398, 640], [399, 560]],
+    detail: line("M 412 490 L 411 612", LIGHT, 3, .6) + toes("M 418 695 v -9 M 432 695 v -9") });
+  parts.push({ seed: 37, fill: WHT, ink: false, pts: [[420, 380], [450, 372], [482, 380], [500, 420], [500, 470], [490, 520, .7], [470, 556, .7], [450, 566, .7], [430, 556, .7], [410, 520, .7], [400, 470], [402, 420]],
+      detail: `<path d="M 470 390 Q 494 400 498 440 Q 496 500 476 548 Q 488 480 470 390 Z" fill="${WHITE_S}" opacity=".7"/>` });
+  parts.push({ seed: 40, cls: "cw-tail", soft: true, pts: [[596, 650], [620, 672], [616, 696, .5], [580, 706, .5], [500, 708, .5], [420, 706, .5], [370, 700], [352, 688], [362, 680], [380, 688], [420, 692], [500, 694], [570, 690], [590, 676]],
+    detail: marks([[560, 694, 90, 12, 8], [500, 696, 90, 12, 8], [440, 695, 90, 12, 8], [366, 690, 40, 14, 8]]) });
   return parts;
 }
 function poseSit() {
-  return body("sit", [...sitParts(false), headPart("translate(438 282)", ["relaxed", "open", "happy"])],
-    shadow(472, 176), purr(330, 520, false) + purr(630, 540, true));
+  return body("sit", [...sitParts(false), headPart("translate(450 292)", ["relaxed", "open", "happy"])],
+    shadow(468, 170), purr(320, 520, false) + purr(620, 540, true));
 }
 // sitting up with a paw raised: batting at HELA's Hours, holding the hand to nibble it, grooming
 function poseBat() {
-  const paw = { seed: 38, cls: "cw-paw", soft: true, sock: [290, 300, 80, 76],
-    pts: [[364, 508], [344, 466], [324, 420], [308, 380], [300, 356], [312, 342], [330, 340], [344, 356], [358, 392], [382, 434], [408, 474]],
-    detail: `<g fill="#e99a94"><ellipse cx="322" cy="360" rx="7" ry="6"/><circle cx="308" cy="352" r="3.4"/><circle cx="314" cy="344" r="3.4"/><circle cx="324" cy="342" r="3.4"/></g>`
-      + line("M 352 470 C 340 440 330 408 322 380", LIGHT, 3, .6) + claws("M 304 350 q -8 -4 -6 -12 M 310 341 q -5 -7 0 -13 M 321 338 q -2 -8 4 -12") };
-  return body("bat", [...sitParts(true), headPart("translate(446 284) rotate(7)", ["focused", "open", "happy"]), paw],
-    shadow(472, 176));
+  const paw = { seed: 41, cls: "cw-paw", soft: true, sock: [296, 330, 80, 70],
+    pts: [[392, 500], [372, 460], [346, 414], [326, 382], [316, 360], [326, 346], [344, 344], [358, 360], [380, 396], [408, 440], [432, 480]],
+    detail: `<g fill="#e99a94"><ellipse cx="336" cy="362" rx="7" ry="6"/><circle cx="322" cy="356" r="3.4"/><circle cx="328" cy="348" r="3.4"/><circle cx="338" cy="346" r="3.4"/></g>`
+      + line("M 392 470 C 376 440 356 408 340 384", LIGHT, 3, .6) + claws("M 318 354 q -8 -4 -6 -12 M 324 345 q -5 -7 0 -13 M 335 342 q -2 -8 4 -12") };
+  return body("bat", [...sitParts(true), headPart("translate(456 294) rotate(7)", ["focused", "open", "happy"]), paw],
+    shadow(468, 170));
 }
 
 function poseStand() {
@@ -401,14 +406,15 @@ const SIZE = 18;
 
 /* Her places (plane units, feet point). The paperwork desk is left of the plane's
    origin: HELA's core owns its left half and the cabinet its top, so she keeps to the
-   strip on their right. One place lies under the briefcase, on the seam between the
-   two desks, so now and then the player finds her asleep beside the machine too.
+   strip on their right. One place is on the machine's desk, beside the briefcase (clear
+   of the case's clasps, the files and the machine); now and then she walks over and
+   the player finds her there.
    `sit` says whether she may sit up there without covering a drawer or the case. */
 const PLACES = {
   bed:   { x: -7.5, y: 95.5, lie: true, sit: true },    // her cushion, the desk's bottom right corner
   core:  { x: -11, y: 80, lie: false, sit: true },      // beside HELA's core, where her light is warm
   ledge: { x: -6, y: 57, lie: true, sit: false },       // the floor under the cabinet, where she hides
-  case:  { x: 6, y: 64, lie: true, sit: false },        // under the briefcase, on the seam of the two desks
+  case:  { x: 6, y: 66, lie: true, sit: true },         // beside the briefcase on the machine's desk: she sits or naps there
 };
 const ROAM = { x0: -14, x1: 6 };           // how far a leap may carry her (never into her core)
 

@@ -28,8 +28,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609271439";
-import { mend } from "./mend.js?202609271439";
+import { roman } from "./util.js?202609271538";
+import { mend } from "./mend.js?202609271538";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -347,7 +347,7 @@ class Comic {
     }[kind] || { word: "POW!", c: "#fff1c2", ink: "#15100a" };
     const gfx = this._gfx(), reduced = this._reduced();
     let x = innerWidth / 2, y = innerHeight * 0.42;
-    const mx = opts.big ? 240 : 150, my = opts.big ? 140 : 110;   // the whole word stays on screen
+    const mx = opts._mx || (opts.big ? 240 : 150), my = opts._my || (opts.big ? 140 : 110);   // the whole word stays on screen (FX: a phone fits it itself)
     if (at && at.width != null) { const q = this._beside(at, mx, my); x = q.x; y = q.y; }
     else if (at && at.x != null) { x = at.x; y = at.y; }
     x = Math.max(mx, Math.min(innerWidth - mx, x));

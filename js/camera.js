@@ -10,7 +10,7 @@
    (tools/dev/harness.py shot) stays at the identity "main" scene.
    ========================================================================= */
 
-import { audio } from "./audio.js?202609271439";
+import { audio } from "./audio.js?202609271538";
 
 const SCENES = new Set(["main", "market", "drawer", "timeline"]);
 const ZONE_SCENE = { market: "market", secret: "market", receptor: "drawer" };
@@ -80,7 +80,7 @@ export class Camera {
     const cam = this.cam;
     if (!cam.animate || typeof getComputedStyle === "undefined") return false;
     const own = cam.style.getPropertyValue("--cam-dur");
-    if (own && !this._turn) return false;          // another hand holds the camera (tutorial wake, refit)
+    if (own && !this._turn && !this._holding) return false;   // another hand holds the camera (tutorial wake, refit)
     const RM = this._reduced();
     const cs0 = getComputedStyle(cam);
     const v = (cs, k, d) => { const x = (cs.getPropertyValue(k) || "").trim(); return x === "" ? d : (x === "0" ? "0px" : x); };
@@ -91,6 +91,7 @@ export class Camera {
     if (this._turn) { try { this._turn.cancel(); } catch (e) {} this._turn = null; }
     (this._walls || []).forEach((w) => { try { w.cancel(); } catch (e) {} }); this._walls = [];
     cam.style.setProperty("--cam-dur", "0s");      // the CSS transition must not fight the animation
+    this._holding = true;
     cam.classList.add("is-panning");
     cam.dataset.scene = to;
     const cs = getComputedStyle(cam);
@@ -122,7 +123,7 @@ export class Camera {
     try {
       anim = cam.animate(frames, { duration: ms, easing: RM ? "cubic-bezier(.25,.1,.25,1)" : "cubic-bezier(.42,0,.2,1)" });
     } catch (e) {
-      cam.style.removeProperty("--cam-dur");        // the plain CSS pan takes it from here
+      cam.style.removeProperty("--cam-dur"); this._holding = false;   // the plain CSS pan takes it from here
       clearTimeout(this._settle);
       this._settle = setTimeout(() => cam.classList.remove("is-panning"), 900);
       return true;
@@ -142,8 +143,12 @@ export class Camera {
     const done = () => {
       if (this._turn !== anim) return;             // a newer turn took over
       this._turn = null; this._walls = [];
-      cam.style.removeProperty("--cam-dur");
       cam.classList.remove("is-panning");
+      // hand the transform back to CSS only once a frame has been drawn at rest: lifting
+      // the 0s in the same frame the animation ends let the CSS transition start from
+      // the animation's last frame and drift for .6 s (a hair of leftover tilt)
+      // (a timer, not frames: the nap holds every requestAnimationFrame, main.js)
+      setTimeout(() => { if (!this._turn) { cam.style.removeProperty("--cam-dur"); this._holding = false; } }, 60);
     };
     anim.onfinish = done;
     this._settle = setTimeout(done, ms + 400);     // a paused tab never strands the flag

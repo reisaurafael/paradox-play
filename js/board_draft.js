@@ -49,6 +49,52 @@
     cp.insertBefore(d, cp.firstChild);
   };
 
+  /* ── THE CHART ROLLS WITH THE HEAD (the owner, 27/09: one continuous workstation) ──
+     The chart rolls up on the Market scene (app.css THE CHART ROLLS UP). cabin.js used to
+     notice the scene on its 400 ms tick and then roll for .68 s, so turning back to the
+     desk landed on a rolled chart that unrolled afterwards. The camera flips #cam's
+     data-scene the moment the head starts to turn (camera.js _turnHead); this flips
+     chart-rolled in that same moment and gives the roll the turn's own length and curve,
+     so the sheet unrolls while the desk swings into view and rolls up as it swings away. */
+  if (!window.__pdxRollWithHead) {
+    window.__pdxRollWithHead = true;
+    const hookRoll = () => {
+      const cam = document.getElementById("cam"); if (!cam) return false;
+      let was = cam.dataset.scene === "market";
+      new MutationObserver(() => {
+        const now = cam.dataset.scene === "market", b = document.body;
+        if (now === was) return; was = now;
+        if (!b.classList.contains("cabin-on") || !document.getElementById("chart-roll")) return;
+        if (b.classList.contains("chart-rolled") === now) return;
+        const g = window.__game;
+        const calm = REDUCED || document.documentElement.classList.contains("pdx-a11y")
+          || !!(g && g._reducedMotion && g._reducedMotion());
+        const ms = calm ? 240 : ({ slow: 650, normal: 560, brisk: 500, fast: 450 })[(g && g.speed) || "normal"] || 560;
+        b.style.setProperty("--roll-ms", ms + "ms");
+        b.style.setProperty("--roll-ease", "cubic-bezier(.42,0,.2,1)");   // the head turn's own curve
+        b.classList.toggle("chart-rolled", now);
+        // the black sheet under the chart (#timeline-rail::after, it casts the chart's
+        // shadow) rests 90px past the chart's bottom for that shadow, so while rolling it
+        // ran ahead of the paper as a dark band under the rod. Its box is the chart's box
+        // plus the extension, so the chart's own edge sits at (1 - p) * 100% of it: ride
+        // exactly there on the same curve, and give the shadow its room back at the end.
+        if (!calm) {
+          const rail = document.getElementById("timeline-rail"), E = "cubic-bezier(.42,0,.2,1)";
+          const K = (bot) => ({ clipPath: `inset(0px -90px ${bot} 0px)` });
+          try {
+            if (rail) rail.animate(now
+              ? [Object.assign(K("0%"), { easing: E }), K("100%")]
+              : [Object.assign(K("100%"), { easing: E }), Object.assign(K("0%"), { offset: ms / (ms + 140) }), K("-90px")],
+              { duration: now ? ms : ms + 140, pseudoElement: "::after" });
+          } catch (e) {}
+        }
+        try { window.__audio && window.__audio.play("chart_creak"); } catch (e) {}
+      }).observe(cam, { attributes: true, attributeFilter: ["data-scene"] });
+      return true;
+    };
+    if (!hookRoll()) document.addEventListener("DOMContentLoaded", hookRoll, { once: true });
+  }
+
   /* ── THE ERA TURNS LIKE A COMIC PAGE (shared by the Origins and Singularity charts) ──
      My traveller crosses into another period and the chart re-skins in one move: a slab of
      ink edged with a paper gutter (the border between two comic panels) whips across the

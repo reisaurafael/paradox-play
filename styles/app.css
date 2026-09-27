@@ -3282,19 +3282,30 @@ body.cabin-on:not(.allocating) #hull-console .dice-idle,
 body.cabin-on:not(.allocating) #hull-console .escape-slot,
 body.cabin-on:not(.allocating) #hull-console .dice-actions { opacity: 0; pointer-events: none !important; }
 
-/* ── THE CHART ROLLS UP on the market scene, like a wall parchment ── */
+/* ── THE CHART ROLLS UP on the market scene, like a wall parchment ──
+   It rolls WITH the head: board_draft.js flips chart-rolled the moment the camera turns
+   (camera.js _turnHead) and sets --roll-ms / --roll-ease to that turn's own length and
+   curve, so the sheet unrolls while the desk swings into view and is flat as it lands. */
 body.cabin-on #timeline-rail > .cplot,
 body.cabin-on #timeline-rail > .cplot-sing,
 body.cabin-on #timeline-rail > .cplot-ori { clip-path: inset(0 0 0 0);
-  transition: clip-path .68s cubic-bezier(.35,.65,.3,1); }
+  transition: clip-path var(--roll-ms, .68s) var(--roll-ease, cubic-bezier(.35,.65,.3,1)); }
 body.cabin-on.chart-rolled #timeline-rail > .cplot,
 body.cabin-on.chart-rolled #timeline-rail > .cplot-sing,
 body.cabin-on.chart-rolled #timeline-rail > .cplot-ori { clip-path: inset(0 0 100% 0);
   pointer-events: none !important; }
+/* only the chart on screen rolls: the two hidden skins (opacity 0) took the same clip-path
+   transition on every turn, invisible work, and a skin that comes back while the chart is
+   rolled is already clipped by the class */
+body.cabin-on #timeline-rail:is(.skin-ori, .skin-sing) > .cplot,
+body.cabin-on #timeline-rail:not(.skin-ori) > .cplot-ori,
+body.cabin-on #timeline-rail:not(.skin-sing) > .cplot-sing,
+body.cabin-on #timeline-rail.skin-ori > .cplot-sing { transition: none; }
 body.cabin-on #timeline-rail > #chart-roll { display: block !important; }
 body.cabin-on #chart-roll { position: absolute; left: 4px; right: 4px; height: 26px; z-index: 6;
-  pointer-events: none; top: calc(100% - 30px); opacity: 0;
-  transition: top .68s cubic-bezier(.35,.65,.3,1), opacity .25s ease;
+  pointer-events: none; top: calc(100% - 30px + var(--ext-b, 0px)); opacity: 0;   /* the sheet's real foot, extension included, so the rod rides the paper's edge */
+  transition: top var(--roll-ms, .68s) var(--roll-ease, cubic-bezier(.35,.65,.3,1)),
+    opacity .18s ease calc(var(--roll-ms, .68s) - .18s);   /* unrolling: the rod rides the edge down, then goes */
   background: linear-gradient(180deg, #d8c49a, #b39a6a 40%, #6e5636 85%, #4a3822);
   border-radius: 13px;
   box-shadow: 0 4px 12px rgba(0,0,0,.55), inset 0 1.5px 0 rgba(255,244,214,.5), inset 0 -2px 4px rgba(0,0,0,.35); }
@@ -3304,10 +3315,12 @@ body.cabin-on #chart-roll::before, body.cabin-on #chart-roll::after { content: "
   box-shadow: 0 2px 5px rgba(0,0,0,.5); }
 body.cabin-on #chart-roll::before { left: -8px; }
 body.cabin-on #chart-roll::after { right: -8px; }
-body.cabin-on.chart-rolled #chart-roll { top: 74px; opacity: 1; }
+body.cabin-on.chart-rolled #chart-roll { top: 74px; opacity: 1;
+  transition: top var(--roll-ms, .68s) var(--roll-ease, cubic-bezier(.35,.65,.3,1)), opacity .12s ease; }
 @media (prefers-reduced-motion: reduce) {
   body.cabin-on #timeline-rail > .cplot, body.cabin-on #timeline-rail > .cplot-sing,
-  body.cabin-on #timeline-rail > .cplot-ori, body.cabin-on #chart-roll { transition: none; } }
+  body.cabin-on #timeline-rail > .cplot-ori, body.cabin-on #chart-roll,
+  body.cabin-on.chart-rolled #chart-roll { transition: none; } }
 
 /* the star chart's key steps aside from the parked arm (cabin only) */
 body.cabin-on .cplot-sing .cc-legend { left: auto; right: 12px; }
@@ -5888,7 +5901,7 @@ body.cabin-on .pcard.cfolio .badge { width: 89%; }
 }
 /* the sheet rolls up with the chart on the market scene */
 body.cabin-on #timeline-rail::after { clip-path: inset(0 0 0 0);
-  transition: clip-path .68s cubic-bezier(.35,.65,.3,1); }
+  transition: clip-path var(--roll-ms, .68s) var(--roll-ease, cubic-bezier(.35,.65,.3,1)); }
 body.cabin-on.chart-rolled #timeline-rail::after { clip-path: inset(0 0 100% 0); }
 @media (prefers-reduced-motion: reduce) { body.cabin-on #timeline-rail::after { transition: none; } }
 /* the soil follows the tear too, or it would paint a neat rectangle over a ragged sheet */

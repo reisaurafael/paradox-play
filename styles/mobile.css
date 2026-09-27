@@ -195,3 +195,194 @@ html.pdx-touch .pdx-ack::after { content: "Tap anywhere to go on"; font-size: .8
   box-shadow: 3px 3px 0 var(--tx-ink, #15100a); font: 600 .9rem/1.3 var(--f-body, "Inter", sans-serif); opacity: 0; transition: opacity .14s; }
 #pdx-touch-tip[hidden] { display: none; }
 #pdx-touch-tip.on { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PHASE 2: THE WORKSTATION ON A PHONE (js/mobile-table.js, html.pdx-m-on)
+   One camera over the real table: the plane (#cam) and the pip-boy (#hull)
+   share the transform screen = O + S * p, eased, so every view is a region
+   of the same desk. HELA's column (left) and the thumb rail (right) are fixed.
+   ══════════════════════════════════════════════════════════════════════════ */
+html.pdx-m-on body.cabin-on #cam.cam-world,
+html.pdx-m-on body.cabin-on #hull {
+  left: 0 !important; top: 0 !important; transform-origin: 0 0 !important;
+  transform: translate(var(--pdx-ox, 0px), var(--pdx-oy, 0px)) scale(var(--pdx-s, .3)) !important;
+  transition: transform var(--pdx-dur, 0ms) cubic-bezier(.45, .05, .25, 1) !important;
+  will-change: transform; }
+/* the helmet's own chrome is the desktop's frame; on a phone HELA's column carries it */
+html.pdx-m-on #hull .hull-rail, html.pdx-m-on #hull .vz-frame, html.pdx-m-on #hull .hull-visor,
+html.pdx-m-on #hull .hull-shadow, html.pdx-m-on #vz-holo, html.pdx-m-on #cursor-plane,
+html.pdx-m-on #pdx-scenes, html.pdx-m-on #pdx-tabkey, html.pdx-m-on #pdx-fs-pill,
+html.pdx-m-on #hela-eye > .he-svg, html.pdx-m-on #hela-eye > .he-caps, html.pdx-m-on #hela-eye > .he-chip,
+html.pdx-m-on .cam-veil { display: none !important; }
+html:not(.pdx-m-on) #pdx-mcol, html:not(.pdx-m-on) #pdx-mrail { display: none; }
+
+/* ── the pip-boy, made for a thumb: bigger dice in the same tray, words on the CRT ── */
+html.pdx-m-on body.cabin-on #hull-console .dice-pool { left: 224px; top: 345px; width: 172px; height: 44px; gap: 3px; }
+html.pdx-m-on body.cabin-on #hull-console .dice-pool .die { width: 40px !important; height: 40px !important;
+  border-radius: 7px; font-size: 1.02rem; }
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap { grid-template-columns: 44px repeat(3, 1fr); gap: 3px; }
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .matrix-fnlabel .fn { font-size: 8.6px; letter-spacing: .03em; }
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .cell { flex-direction: column; gap: 1px; position: relative; }
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .cell .mod-num { position: absolute; left: 3px; top: 2px; font-size: 7px; }
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .cell .mod-ico,
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .cell .mod-ico svg { width: 14px; height: 14px; }
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .cell .mod-cap { display: block; white-space: nowrap;
+  font: 600 8.4px/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .03em; text-transform: uppercase;
+  color: #8ff0bb; text-shadow: 0 0 4px rgba(95, 208, 138, .45); }
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .cell.filled .mod-ico,
+html.pdx-m-on body.cabin-on #hull-console .matrix-wrap .cell.filled .mod-cap { display: none; }
+
+/* ── the rivals' police files: a pile on the desk, a tap slides the dossier out ── */
+html.pdx-m-on #players-zone .pcard.cfolio.pdx-piled {
+  left: var(--pdx-fx) !important; top: var(--pdx-fy) !important; scale: var(--pdx-fk, .6);
+  transform-origin: 0 0 !important; z-index: var(--pdx-fz, 20) !important;
+  transition: left .34s cubic-bezier(.3, .8, .3, 1), top .34s cubic-bezier(.3, .8, .3, 1), scale .34s cubic-bezier(.3, .8, .3, 1) !important; }
+html.pdx-m-on #players-zone .pcard.cfolio.pdx-out { filter: drop-shadow(10px 14px 0 rgba(0, 0, 0, .45)); }
+
+/* ── HELA'S COLUMN: her eye, the Hour, her line as her comic caption, the log in phosphor ── */
+#pdx-mcol { position: fixed; z-index: 60200; left: 0; top: 0; bottom: 0; width: var(--pdx-colw, 160px);
+  box-sizing: border-box; padding: max(6px, env(safe-area-inset-top, 0px)) 7px max(6px, env(safe-area-inset-bottom, 0px)) max(7px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 6px; overflow: hidden;
+  background: radial-gradient(120% 70% at 30% 0%, rgba(111, 232, 200, .07), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, .16) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #0e1c1a, #0a1311);
+  border-right: 2px solid var(--cx-ink, #15100a); box-shadow: inset -1px 0 0 rgba(111, 232, 200, .25), 4px 0 0 rgba(0, 0, 0, .35); }
+#pdx-mcol .mc-head { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto auto; gap: 2px 6px; align-items: center; }
+#pdx-mcol .mc-eye { grid-row: span 2; width: 34px; height: 34px; }
+#pdx-mcol .mc-eye svg { width: 100%; height: 100%; overflow: visible; }
+#pdx-mcol .mc-burst { fill: var(--hela-seat, #f2a93b); stroke: var(--cx-ink, #15100a); stroke-width: 5; stroke-linejoin: round; }
+#pdx-mcol .mc-lid { fill: #fffbe8; stroke: var(--cx-ink, #15100a); stroke-width: 5; }
+#pdx-mcol .mc-iris { fill: var(--hela-seat, #f2a93b); stroke: var(--cx-ink, #15100a); stroke-width: 4; }
+#pdx-mcol .mc-pupil { fill: var(--cx-ink, #15100a); }
+#pdx-mcol .mc-glint { fill: #fffbe8; }
+#pdx-mcol .mc-id { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+#pdx-mcol .mc-id b { font: 700 .92rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .14em; color: var(--hela-seat, #f2a93b); }
+#pdx-mcol .mc-hour { font: 600 .74rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; color: #cfe9df; text-transform: uppercase; white-space: nowrap; }
+#pdx-mcol .mc-phases { display: flex; gap: 5px; }
+#pdx-mcol .mc-phases i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid #5f8a80; background: transparent; }
+#pdx-mcol .mc-phases i.done { background: #3f6a60; border-color: #3f6a60; }
+#pdx-mcol .mc-phases i.on { background: var(--hela-seat, #f2a93b); border-color: var(--cx-ink, #15100a); box-shadow: 0 0 0 2px rgba(242, 169, 59, .3); }
+#pdx-mcol .mc-tools { grid-column: 1 / -1; display: flex; gap: 5px; margin-top: 3px; }
+#pdx-mcol .mc-btn { flex: 1; min-height: 34px; min-width: 34px; padding: 0; display: grid; place-items: center;
+  border: 2px solid var(--cx-ink, #15100a); border-radius: 5px; background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a);
+  box-shadow: 2px 2px 0 var(--cx-ink, #15100a); -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
+#pdx-mcol .mc-btn[hidden] { display: none; }
+#pdx-mcol .mc-btn b { font: 700 1.1rem/1 var(--f-display, "Oswald", sans-serif); }
+#pdx-mcol .mc-btn svg { width: 18px; height: 18px; }
+#pdx-mcol .mc-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--cx-ink, #15100a); }
+body.pdx-help-hold #pdx-mcol .pdx-helpkey, body.pdx-tips-on #pdx-mcol .pdx-helpkey { background: var(--hela-seat, #f2a93b); }
+#pdx-mcol .mc-says { display: flex; flex-direction: column; gap: 5px; flex: 0 1 auto; overflow: hidden; }
+#pdx-mcol .mc-cap { background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a); border: 2px solid var(--cx-ink, #15100a);
+  border-radius: 3px; box-shadow: 3px 3px 0 var(--cx-ink, #15100a); padding: 5px 7px 6px;
+  font: 500 .8rem/1.25 var(--f-display, "Oswald", sans-serif); }
+#pdx-mcol .mc-cap.mc-you { box-shadow: 3px 3px 0 var(--cx-ink, #15100a), 0 0 0 2px var(--hela-seat, #f2a93b); }
+#pdx-mcol .mc-cap.mc-danger { background: #f7d9c8; }
+#pdx-mcol .mc-tag { display: inline-block; margin: 0 0 3px; padding: 1px 5px; background: var(--cx-ink, #15100a); color: var(--cx-paper, #f4e6b0);
+  font: 700 .64rem/1.2 var(--f-display, "Oswald", sans-serif); letter-spacing: .12em; }
+#pdx-mcol .mc-you .mc-tag { background: var(--hela-seat, #f2a93b); color: var(--cx-ink, #15100a); }
+#pdx-mcol .mc-txt { display: block; }
+#pdx-mcol .mc-txt b { font-weight: 700; }
+#pdx-mcol .mc-log { flex: 1 1 0; min-height: 0; overflow: hidden; border-top: 1px solid rgba(111, 232, 200, .25); padding-top: 4px;
+  -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); mask-image: linear-gradient(180deg, #000 70%, transparent); }
+#pdx-mcol .mc-log-h { margin: 0 0 3px; font: 700 .62rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: #6fe8c8; }
+#pdx-mcol .mc-log-l { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+#pdx-mcol .mc-log-l li { display: grid; grid-template-columns: 20px 1fr; gap: 3px; font: 500 .66rem/1.25 var(--f-mono, monospace); color: #8fbfb0; }
+#pdx-mcol .mc-log-l li.mc-new { color: #d9fff1; }
+#pdx-mcol .mc-log-l li b { color: #5f8a80; font-weight: 700; }
+#pdx-mcol .mc-log-l li svg { width: 16px; height: 10px; vertical-align: -1px; }
+
+/* ── THE THUMB RAIL: four inked keys, the view you look at is lit ── */
+#pdx-mrail { position: fixed; z-index: 60200; right: 0; top: 0; bottom: 0; width: var(--pdx-railw, 64px);
+  box-sizing: border-box; padding: max(6px, env(safe-area-inset-top, 0px)) max(5px, env(safe-area-inset-right, 0px)) max(6px, env(safe-area-inset-bottom, 0px)) 5px;
+  display: flex; flex-direction: column; gap: 6px; justify-content: center;
+  background: linear-gradient(90deg, rgba(20, 13, 7, .0), rgba(20, 13, 7, .55) 30%); }
+#pdx-mrail button { flex: 0 1 74px; min-height: 48px; padding: 4px 1px; display: grid; justify-items: center; align-content: center; gap: 3px;
+  border: 2px solid var(--cx-ink, #15100a); border-radius: 6px; background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a);
+  box-shadow: 2px 3px 0 var(--cx-ink, #15100a); -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
+#pdx-mrail button svg { width: 24px; height: 24px; }
+#pdx-mrail button span { font: 700 .6rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .05em; text-transform: uppercase; }
+#pdx-mrail button.is-on { background: var(--cx-ink, #15100a); color: var(--cx-paper, #f4e6b0); box-shadow: 2px 3px 0 var(--hela-seat, #f2a93b); }
+#pdx-mrail button.is-on svg { color: var(--hela-seat, #f2a93b); }
+#pdx-mrail button.beckon { background: var(--hela-seat, #f2a93b); animation: txBeckon 1.1s ease-in-out infinite; }
+#pdx-mrail button:active { transform: translate(2px, 2px); }
+
+/* ── the tutorial's lines on a phone: in HELA's column, under her header, never over play ──
+   (a docking by position only; tutorial-drive.js still writes and times every line) */
+html.pdx-m-on #tut-callout { position: fixed !important; left: max(6px, env(safe-area-inset-left, 0px)) !important; top: 96px !important;
+  right: auto !important; bottom: auto !important; width: calc(var(--pdx-colw, 160px) - 12px) !important; min-width: 0 !important; max-width: none !important;
+  max-height: calc(100vh - 104px) !important; overflow: hidden auto; box-sizing: border-box;
+  translate: none !important; transform: none !important; font-size: .8rem !important; padding: 7px 8px !important; }
+html.pdx-m-on #tut-callout .tc-text, html.pdx-m-on #tut-callout .tc-sub { font-size: .8rem !important; line-height: 1.28 !important; }
+html.pdx-m-on #tut-callout .tc-arrow, html.pdx-m-on #tut-callout::before, html.pdx-m-on #tut-callout::after { display: none !important; }
+html.pdx-m-on body:has(#tut-callout.on) #pdx-mcol .mc-says { visibility: hidden; }
+/* the lesson bar sits over the stage's top edge, clear of the column and the rail */
+html.pdx-m-on #tut-track { left: calc(var(--pdx-colw, 160px) + (100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px)) / 2) !important; top: 6px !important; }
+
+/* ── HELA's windows (overload, prompts, the Herald) dock at her column on a phone, never
+      in the middle of play: they open from under her header and may reach over the stage's
+      left edge when they carry more words (position only; cabin.js still builds them) ── */
+html.pdx-m-on .he-window { left: max(6px, env(safe-area-inset-left, 0px)) !important; top: 92px !important; transform: none !important; }
+html.pdx-m-on .he-window .he-svg { display: none; }
+html.pdx-m-on .he-window .he-pane { transform-origin: 0 0; max-width: min(380px, 48vw) !important; min-width: calc(var(--pdx-colw, 160px) - 12px);
+  max-height: calc(100vh - 100px); overflow: hidden auto; box-sizing: border-box; }
+html.pdx-m-on body:has(.he-window.open) #pdx-mcol .mc-says { visibility: hidden; }
+
+/* ── the chart in the hand: no page zoom or scroll under the fingers on a phone ── */
+html.pdx-m-on #cam, html.pdx-m-on #hull, html.pdx-m-on #pdx-life { touch-action: none; }
+
+/* ── the life number, once, in HELA's header ── */
+#pdx-mcol .mc-life { grid-column: 1 / -1; justify-self: start; font: 700 .7rem/1 var(--f-mono, monospace); letter-spacing: .12em; color: #8fbfb0; }
+#pdx-mcol .mc-life b { font: 700 1.05rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .02em; color: var(--hela-seat, #f2a93b); margin-left: 3px; }
+
+/* ── THE LIFETHREAD round the screen ── */
+#pdx-life { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 60250; pointer-events: none; overflow: visible; }
+html:not(.pdx-m-on) #pdx-life { display: none; }
+#pdx-life path { fill: none; }
+#pdx-life .lt-bed { stroke: rgba(0, 0, 0, .35); stroke-width: 3; }
+#pdx-life .lt-thread { stroke: var(--hela-seat, #f2a93b); stroke-width: 2.6; stroke-linecap: round; opacity: var(--lt-glow, 1);
+  transition: stroke-dasharray .6s cubic-bezier(.3, .8, .3, 1), opacity .6s ease; }
+#pdx-life .lt-fray path { stroke: var(--hela-seat, #f2a93b); stroke-width: 1.2; stroke-linecap: round; opacity: calc(var(--lt-glow, 1) * .8); }
+#pdx-life.lt-critical .lt-thread, #pdx-life.lt-critical .lt-fray path { stroke: #e0483a; animation: ltPulse 1.1s ease-in-out infinite; }
+#pdx-life.lt-dead .lt-fray { display: none; }
+@keyframes ltPulse { 0%, 100% { opacity: .95; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { #pdx-life.lt-critical .lt-thread, #pdx-life.lt-critical .lt-fray path { animation: none; } }
+
+/* ── the rail's action key (PASS at the Merchant, STAY on the chart) ── */
+#pdx-mrail .mr-act { margin-top: 4px; min-height: 52px; background: var(--hela-seat, #f2a93b); color: var(--cx-ink, #15100a);
+  font: 700 .9rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; text-transform: uppercase; }
+#pdx-mrail .mr-act[hidden] { display: none; }
+#pdx-mrail button[data-view] { flex: 0 1 64px; min-height: 44px; }
+
+/* ── THE CARD SHEET: the Merchant's card, read whole, with one big key ── */
+.pdx-sheet { position: fixed; z-index: 60260; left: calc(var(--pdx-colw, 160px) + 10px); right: calc(var(--pdx-railw, 64px) + 10px);
+  bottom: max(10px, env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end;
+  opacity: 0; translate: 0 16px; transition: opacity .18s ease, translate .22s cubic-bezier(.3, .9, .3, 1); }
+.pdx-sheet.on { opacity: 1; translate: 0 0; }
+.pdx-sheet .ps-card.card-pop { position: static; width: auto; pointer-events: auto; max-height: calc(100vh - 40px); overflow: auto;
+  box-shadow: 5px 5px 0 var(--cx-ink, #15100a); border: 2px solid var(--cx-ink, #15100a); }
+.pdx-sheet .cp-name { font-size: 1.15rem !important; }
+.pdx-sheet .cp-kind { font-size: .72rem !important; }
+.pdx-sheet .cp-desc { font-size: .95rem !important; margin: 7px 0 !important; }
+.pdx-sheet .cp-stat { font-size: .78rem !important; }
+.pdx-sheet .ps-keys { display: flex; flex-direction: column; gap: 8px; }
+.pdx-sheet .ps-act { min-width: 132px; min-height: 64px; padding: 0 14px; border: 3px solid var(--cx-ink, #15100a); border-radius: 6px;
+  background: var(--hela-seat, #f2a93b); color: var(--cx-ink, #15100a); box-shadow: 4px 4px 0 var(--cx-ink, #15100a);
+  font: 700 1.15rem/1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .05em; text-transform: uppercase; }
+.pdx-sheet .ps-close { min-height: 44px; border: 2px solid var(--cx-ink, #15100a); border-radius: 6px; background: var(--cx-paper, #f4e6b0);
+  color: var(--cx-ink, #15100a); font: 700 .9rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; text-transform: uppercase; box-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
+.pdx-sheet .ps-note { margin: 0; max-width: 132px; font: 600 .8rem/1.3 var(--f-body, "Inter", sans-serif); color: var(--cx-paper, #f4e6b0); text-shadow: 0 1px 2px #000; }
+html.pdx-m-on #market-zone .card.pdx-looked { outline: 3px solid var(--hela-seat, #f2a93b); outline-offset: 3px; }
+/* the game's own hover pop stays away on a phone (the sheet is the card's detail) */
+html.pdx-m-on .card-pop:not(.ps-card) { display: none !important; }
+
+/* ── the Settings panel's touch group (index.html #set-touch) ── */
+html:not(.pdx-touch) #set-touch { display: none !important; }
+
+/* her words name what a finger taps (js/touch.js __pdxWords): an inked keycap label */
+html.pdx-touch #tut-callout b.pw-key, html.pdx-touch .he-window b.pw-key { display: inline-block; padding: 0 .3em; border: 1.5px solid currentColor;
+  border-radius: 3px; font-weight: 700; letter-spacing: .04em; line-height: 1.25; }
+
+/* a tablet has room: HELA's column reads a size larger */
+html.pdx-tablet #pdx-mcol .mc-cap { font-size: .98rem; }
+html.pdx-tablet #pdx-mcol .mc-log-l li { font-size: .8rem; }
+html.pdx-tablet #pdx-mrail button span { font-size: .72rem; }

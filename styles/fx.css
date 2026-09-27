@@ -173,3 +173,41 @@ body.cx-skipping #fx-root { display: none; }
 .tl-tear { animation-duration: calc(2.5s * var(--pdx-pace, 1)); }
 .tl-tear polyline { animation-duration: calc(.45s * var(--pdx-pace, 1)); }
 #drawer-zone .cab2-cell.tl-filed .cab2-front { animation-duration: calc(2.1s * var(--pdx-pace, 1)); }
+
+/* ═══ THE PHONE (html.pdx-m-on, js/mobile-table.js): every comic effect at a phone's scale,
+   on the stage between HELA's column and the thumb rail. Only under this class, so the
+   desktop is untouched. Sizes use the independent `scale` property, which composes with
+   the effects' own transform animations; the speed lines and half the sparks go. ═══ */
+html.pdx-m-on .cx-hit { scale: .5; }
+html.pdx-m-on .cx-lines { display: none; }
+html.pdx-m-on .fx-ovl .fx-spark:nth-of-type(2n) { display: none; }
+html.pdx-m-on .fx-pop b { font-size: 1rem; }
+html.pdx-m-on .fx-pop.fx-bigpop b { font-size: 1.35rem; }
+html.pdx-m-on .fx-stamp b { font-size: .9rem; padding: 3px 8px 2px 6px; }
+html.pdx-m-on .fx-stamp span { font-size: .56rem; }
+html.pdx-m-on .fx-page { min-width: 200px; border-width: 2.5px; border-top-width: 6px; box-shadow: 3px 3px 0 var(--cx-ink, #15100a); }
+html.pdx-m-on .fx-page b { font-size: 1.25rem; padding: 5px 14px 3px; }
+html.pdx-m-on .fx-page span { font-size: .56rem; letter-spacing: .16em; }
+html.pdx-m-on .fx-shutslam { font-size: .95rem; letter-spacing: .24em; border-width: 2px; box-shadow: 2px 2px 0 #15100a; }
+html.pdx-m-on .fx-steam { width: 11px; height: 11px; }
+
+/* the EDGE MARKER: a small inked tab at the stage's edge pointing toward a subject in
+   another view (the files on the desk, the chart, the wagon, the case) */
+.fx-edgemark { position: absolute; left: 0; top: 0; opacity: 0; white-space: nowrap; will-change: transform, opacity;
+  padding: 3px 7px 2px; border: 2px solid var(--cx-ink, #15100a); box-shadow: 2px 2px 0 var(--cx-ink, #15100a);
+  background: var(--cx-paper, #f4e6b0); border-left: 5px solid var(--fx-c, #f7c65a);
+  font: italic 700 .8rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .05em; color: var(--cx-ink, #15100a); }
+.fx-edgemark.fx-edge-r { border-left-width: 2px; border-right: 5px solid var(--fx-c, #f7c65a); }
+
+/* the LIFE THREAD's comic tick (fx.js lifeTick; the MOBILE agent's own thread takes over
+   through window.__pdxLifeHit when it exists): the number, and a crackle on a loss */
+.fx-lifetick { position: absolute; left: 0; top: 0; opacity: 0; display: flex; flex-direction: column; align-items: center;
+  will-change: transform, opacity; pointer-events: none; }
+.fx-lifetick b { font: italic 700 1.3rem/1 var(--f-display, "Oswald", sans-serif); -webkit-text-stroke: 2px #15100a;
+  paint-order: stroke fill; text-shadow: 2px 2px 0 #15100a; }
+.fx-lt-loss b { color: #ff5a44; }
+.fx-lt-gain b { color: #8fe07a; }
+.fx-crackle { display: block; margin-bottom: 2px; overflow: visible; }
+.fx-crackle .ck-ink { fill: none; stroke: #15100a; stroke-width: 4; stroke-linejoin: round; }
+.fx-crackle .ck-col { fill: none; stroke: #ff7a55; stroke-width: 1.8; stroke-linejoin: round; }
+html.pdx-m-on .cx-hit.fx-ovl { scale: .8; }

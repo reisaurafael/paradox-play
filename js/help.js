@@ -20,7 +20,7 @@
    window.__pdxHelp = { isHeld, onHold, hold, isOpen, onOpen, open, close,
      toggle, note, overload } (the tutorial teaches Tab through it).
    ========================================================================= */
-import { FUNCTIONS } from "./util.js?202609271439";
+import { FUNCTIONS } from "./util.js?202609271538";
 
 const HOLD_MS = 250;        // a press held this long is a hold; shorter is a tap
 const NOTES_MAX = 6;        // HELA's notes shown on the hold view, newest first
@@ -178,8 +178,36 @@ function modulesPanel(g) {
   el.innerHTML = `<header><span class="ph-tag">THE TIME MACHINE</span></header>`
     + `<div class="ph-grid">${rows}</div>`
     + `<p class="ph-rule">One die value per function, filled left to right. Three dice in one function <b>overload</b> it: shut for the next Hour. Modules resolve 1 to 9, for everyone at once.</p>`
-    + `<p class="ph-valve"><b>ESCAPE VALVE</b> Takes one spare die. While a function is shut it <b>drains energy, your life</b>, equal to that die; otherwise it charges, and every 10 points buy a permanent +1 on a module.${charge}</p>`;
+    + `<p class="ph-valve"><b>ESCAPE VALVE</b> Takes one spare die. While a function is shut it <b>drains energy, your life</b>, equal to that die; otherwise it charges, and every 10 points buy a permanent +1 on a module.${charge}</p>`
+    + sealsLine();
   return { el, mw: r };
+}
+// THE ERA SEALS on the machine's casing (cabin.js #mano-seals): one per period, filled with enamel when
+// that period is mended (the ORI / ASC / SIN of the case file's receptor)
+const SEAL_ERAS = [["Origins", "O"], ["Ascension", "A"], ["Singularity", "S"]];
+function sealsLine() {
+  const seals = document.querySelectorAll("#hull-manopla .mano-seal");
+  if (!seals.length) return "";
+  const done = SEAL_ERAS.filter(([k]) => { const el = document.querySelector(`#hull-manopla .mano-seal[data-period="${k}"]`); return el && el.classList.contains("mended"); });
+  const now = done.length ? ` Mended: ${done.map(([k]) => k).join(", ")}.` : " None mended yet.";
+  return `<p class="ph-seals"><b>ERA SEALS</b> The three seals on your machine's casing, beside the screen, <b>O</b>, <b>A</b> and <b>S</b>, are the three periods of the timeline: Origins, Ascension, Singularity. `
+    + `Each fills with enamel when you mend that period (the ORI, ASC and SIN of your case file). Mend all three and the match ends.${now}</p>`;
+}
+// TODAY'S ORDERS: the day's three missions (chronicle.js), with live progress
+function ordersPanel() {
+  let list = [];
+  try { list = (window.__pdxChronicle && window.__pdxChronicle.missions && window.__pdxChronicle.missions()) || []; } catch (e) { list = []; }
+  if (!list.length) return null;
+  const el = document.createElement("section");
+  el.className = "ph-panel ph-orders";
+  el.innerHTML = `<header><span class="ph-tag">TODAY'S ORDERS</span></header>`
+    + list.map((m) => {
+      const state = m.done ? "done" : m.failed ? "failed" : "";
+      const prog = m.done ? `<i class="ph-stamp">DONE</i>` : m.failed ? `<i class="ph-stamp ph-miss">MISSED THIS MATCH</i>`
+        : `<i class="ph-prog">${esc(m.cur)} of ${esc(m.target)}</i>`;
+      return `<p class="ph-order ${state}"><b>${esc(m.title)}</b> <span>${esc(m.text)}</span> ${prog}</p>`;
+    }).join("");
+  return el;
 }
 function phasesPanel() {
   const cur = document.body.dataset.phase;
@@ -233,13 +261,15 @@ function buildHold() {
     let d = `M ${cx} ${y0} L ${cx} ${y1} M ${mods.mw.left} ${y1} L ${mods.mw.right} ${y1}`;
     const vr = mods.el.querySelector(".ph-valve").getBoundingClientRect();
     if (vent) d += ` M ${vr.left + 14} ${vr.bottom} L ${vent.left + vent.width / 2} ${vent.top + 2}`;
+    const sealsR = rectOf("#hull-manopla #mano-seals")[0], sl = mods.el.querySelector(".ph-seals");
+    if (sealsR && sl) { const q = sl.getBoundingClientRect(); d += ` M ${q.right - 14} ${q.bottom} L ${sealsR.left + sealsR.width / 2} ${sealsR.top + 2}`; }
     svg.innerHTML = `<path d="${d}"/>`;
     root.appendChild(svg);
   }
-  const merch = merchantPanel(g), phases = phasesPanel(), notesEl = notesPanel();
+  const merch = merchantPanel(g), phases = phasesPanel(), notesEl = notesPanel(), orders = ordersPanel();
   const onChart = centre(rectOf("#timeline-rail .pc-merch-live")[0]);
   const stall = centre(rectOf("#market-zone .market-meta")[0]);
-  for (const [el, prefer] of [[phases, centre(rectOf("#vz-phases")[0])], [merch, onChart || stall], [notesEl, null]]) {
+  for (const [el, prefer] of [[phases, centre(rectOf("#vz-phases")[0])], [merch, onChart || stall], [notesEl, null], [orders, null]]) {
     if (!el) continue;
     root.appendChild(el);
     const r = place(el, obstacles(placed), prefer);
@@ -277,7 +307,7 @@ function open() {
   tipsEl.setAttribute("role", "dialog"); tipsEl.setAttribute("aria-label", "Tips and questions");
   tipsEl.innerHTML = `<header><span class="ph-tag">TIPS AND QUESTIONS</span></header>`
     + TIPS.map(([q, a]) => `<p class="pt-qa"><b>${q}</b><span>${a}</span></p>`).join("")
-    + `<p class="pt-foot"><kbd>TAB</kbd> or <kbd>ESC</kbd> closes this. <b>Hold</b> <kbd>TAB</kbd> to see every module, the phases, the Merchant's rule and HELA's notes.</p>`;
+    + `<p class="pt-foot"><kbd>TAB</kbd> or <kbd>ESC</kbd> closes this. <b>Hold</b> <kbd>TAB</kbd> to see every module, the phases, the Merchant's rule, HELA's notes and today's orders.</p>`;
   document.body.appendChild(tipsEl);
   const chart = rectOf("#timeline-rail")[0];
   place(tipsEl, obstacles(), chart && scene() === "main" ? centre(chart) : { x: innerWidth / 2, y: innerHeight / 2 });

@@ -15,13 +15,16 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609271439";
-import { Game } from "./game.js?202609271439";
-import { icon } from "./icons.js?202609271439";
-import { roman } from "./util.js?202609271439";
-import { profile } from "./profile.js?202609271439";
+import { api, Connection } from "./net.js?202609271538";
+import { Game } from "./game.js?202609271538";
+import { icon } from "./icons.js?202609271538";
+import { roman } from "./util.js?202609271538";
+import { profile } from "./profile.js?202609271538";
 
 const R = (v) => roman(v);
+// ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
+// defines window.__pdxWords there; the desktop has none and her words stay as written)
+const pdxWords = (t) => (t && window.__pdxWords ? window.__pdxWords(t) : t);
 const FN = ["Recharge", "Paradox", "Travel"];
 
 // The three periods of the map, revealed one at a time as the player reaches them.
@@ -189,9 +192,9 @@ class Stage {
   // With next:true it returns a promise resolved when the player clicks Next.
   show(at, text, opts = {}) {
     const c = this.callout;
-    c.querySelector(".tc-text").innerHTML = text;
+    c.querySelector(".tc-text").innerHTML = pdxWords(text);
     const sub = c.querySelector(".tc-sub");
-    sub.innerHTML = opts.sub || "";
+    sub.innerHTML = pdxWords(opts.sub || "");
     sub.style.display = opts.sub ? "" : "none";
     c.classList.toggle("tone-warn", opts.tone === "warn");
     c.classList.remove("nudge");
@@ -811,7 +814,7 @@ class Coach {
       text = parts.join(" ");
       // a line about an earlier paradox never lingers over one that is not about him
       if (!text && this._causeText && this.stage && this.stage.callout.classList.contains("on") && !this.stage._next
-        && this.stage.callout.querySelector(".tc-text").innerHTML === this._causeText) this.stage.hide();
+        && this.stage.callout.querySelector(".tc-text").innerHTML === pdxWords(this._causeText)) this.stage.hide();
     } else if (k === "traveled") {
       if (p.seat === self && p.from !== p.to) {
         const col = this._travelCol || 1;

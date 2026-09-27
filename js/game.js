@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609271439";
-import { audio } from "./audio.js?202609271439";
+import { icon } from "./icons.js?202609271538";
+import { audio } from "./audio.js?202609271538";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609271439";
-import { comic } from "./comic.js?202609271439";
-import { fx } from "./fx.js?202609271439";
-import { CatEngine } from "./cat.js?202609271439";
-import { tutorials } from "./tutorial.js?202609271439";
-import { profile } from "./profile.js?202609271439";
-import { Camera } from "./camera.js?202609271439";
+import { juice } from "./juice.js?202609271538";
+import { comic } from "./comic.js?202609271538";
+import { fx } from "./fx.js?202609271538";
+import { CatEngine } from "./cat.js?202609271538";
+import { tutorials } from "./tutorial.js?202609271538";
+import { profile } from "./profile.js?202609271538";
+import { Camera } from "./camera.js?202609271538";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609271439";
+} from "./util.js?202609271538";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -4218,6 +4218,7 @@ export class Game {
     const step = this._beat(380);   // the RESOLUTION must breathe (+120%)
     const n = Math.abs(delta || 0);
     if (!n) return 0;
+    try { fx.lifeTick(seat, delta); } catch (e) {}   // a phone's life thread takes its comic tick (fx.js)
     const self = seat === this.seat;
     const numEl = self ? document.getElementById("vz-energy-n")
       : document.querySelector(`.pcard[data-seat="${CSS.escape(seat)}"] .bd-life-n`);

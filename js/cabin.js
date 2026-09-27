@@ -61,31 +61,33 @@
     </svg>`;
   }
 
-  /* ── THE ARM v4: the same machine (ids, boxes and hit areas unchanged since v2),
-        drawn in the desk's inked comic style: a loose linen sleeve cinched by the
-        leather bracer that carries the red escape valve, its cuff buttoned over the
-        wrist with the hextech core for a cufflink, a fingerless work glove with the
-        three ERA SEALS on its back, and the gauntlet's worn casing. One light for
-        everything, from the top left. The hand is shared with the right-hand cursor
-        (handArtSVG), and both follow the traveller's PERSONA. ── */
+  /* ── THE ARM v7: the same machine (ids, boxes and hit areas unchanged since v2),
+        with the traveller's arm drawn in the language of the cat and the briefcase:
+        one warm-dark ink edge round each body, painted volume, a rim of light. The
+        shirt sleeve rolled to the middle of the forearm, the bare forearm, the
+        leather bracer with the red escape valve, the hand in a fingerless glove.
+        The ERA SEALS and the hextech core sit on the gauntlet's casing. The hand is
+        shared with the right-hand cursor (handArtSVG), and both follow the
+        traveller's PERSONA. ── */
   const INK="#1a110a";
 
-  /* ── PERSONA: the traveller's arms. A build (masculine or feminine hands and
-        sleeve) and a skin tone, chosen in the menu and kept in this browser. The
+  /* ── PERSONA: the traveller's arms. A build (masculine or feminine hands, forearm
+        and sleeve) and a skin tone, chosen in the menu and kept in this browser. The
         drawings read the tone from CSS variables and show their build's own shapes
         (html[data-arm-build]), so a change repaints every hand at once, nothing is
         rebuilt. window.__pdxPersona = { get(), set({build, skin}), onChange(cb),
         skins (count), tones (a swatch colour per tone) }. ── */
-  const SKINS=[   // light, mid, dark, cel shadow, highlight, crease: from very light to very dark
-    ["#fbe5d5","#f3cab2","#dca98c","#c9937a","#fff4ec","#b57d66"],
-    ["#f8d3b0","#ebb58d","#cc8f67","#b87650","#fde6cf","#a9694a"],
-    ["#efc49c","#dba678","#bb8657","#a46d44","#f8dcbd","#8f5c38"],
-    ["#dca676","#c28855","#9f693a","#8a572f","#eec69c","#744620"],
-    ["#b98052","#9e653a","#7d4b27","#6a3d1f","#d6a172","#5a3218"],
-    ["#8d5d3d","#72472b","#56321c","#472614","#b3815b","#3b2010"],
-    ["#68452f","#533423","#3c2418","#2f1b11","#946a52","#28170d"],
+  const SKINS=[   // light, mid, dark, shadow, highlight, crease, warmth: from very light to very dark.
+    // Every shadow is the tone itself, deeper and redder; every highlight is warmer, never grey.
+    ["#fce8da","#f4cdb6","#e0ae93","#cf907a","#fff5ee","#bf7f6c","#eea394"],
+    ["#f8d3b0","#ebb58d","#cc8f67","#bf7652","#fde6cf","#aa6a4a","#e8957a"],
+    ["#f0c39a","#dca574","#bd8455","#a8683f","#f9dcbb","#925a36","#d98a62"],
+    ["#dea572","#c58650","#a26735","#8c5129","#efc79a","#77441f","#c7744a"],
+    ["#bb7f51","#9f6439","#7f4925","#6b381a","#d9a273","#5b2f14","#b0603e"],
+    ["#93603d","#79482b","#5e331c","#4c2413","#bb8660","#3e1d0e","#944634"],
+    ["#734a33","#5d3925","#472819","#3a1c10","#a07155","#2f160b","#7a3a27"],
   ];
-  const SKV=["--sk-hi","--sk-mid","--sk-lo","--sk-sh","--sk-lt","--sk-cr"];
+  const SKV=["--sk-hi","--sk-mid","--sk-lo","--sk-sh","--sk-lt","--sk-cr","--sk-rd"];
   const sk=(i)=>`var(${SKV[i]},${SKINS[1][i]})`;
   const persona=(function(){
     const KEY="pdx-persona", st={ build:"m", skin:1 }, subs=new Set();
@@ -96,8 +98,39 @@
       const r=document.documentElement; if(!r) return;
       SKINS[st.skin].forEach((c,i)=>r.style.setProperty(SKV[i],c));
       r.dataset.armBuild=st.build;
+      glove();
+    }
+    /* The fingerless glove wears the player's colours: the first colour (HELA's,
+       --hela-seat) for the leather, the second (--th-b, a pair theme) for the
+       knuckle strap, a pale tint of the first otherwise. A glove must never read as
+       skin: when the colour sits close to the chosen skin tone (amber, rust), the
+       leather is dyed deeper. Recomputed only when a colour or the tone changes. */
+    let gloveKey="";
+    function glove(){
+      const r=document.documentElement, b=document.body; if(!r) return;
+      const hex=(v)=>{ v=(v||"").trim(); const m=/^#([0-9a-f]{6})$/i.exec(v); return m?[0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)):null; };
+      const a=hex(getComputedStyle(r).getPropertyValue("--hela-seat"))||[91,143,214];
+      const t2=b?hex(b.style.getPropertyValue("--th-b")):null;
+      const key=a+"|"+t2+"|"+st.skin; if(key===gloveKey) return; gloveKey=key;
+      const mix=(x,y,k)=>x.map((v,i)=>Math.round(v*(1-k)+y[i]*k));
+      const css=(c)=>"#"+c.map(v=>v.toString(16).padStart(2,"0")).join("");
+      const skin=hex(SKINS[st.skin][1]), near=Math.hypot(a[0]-skin[0],a[1]-skin[1],a[2]-skin[2]);
+      const warm=a[0]>a[2]+40&&a[1]>a[2];            // an amber, rust or gold leather
+      let g=a;
+      if(near<110||warm) g=mix(a,[28,24,38],warm?.42:.3);
+      r.style.setProperty("--glove",css(g));
+      r.style.setProperty("--glove-dk",css(mix(g,[16,12,20],.45)));
+      r.style.setProperty("--glove-lt",css(mix(g,[255,246,226],.28)));
+      r.style.setProperty("--glove-trim",css(t2||mix(a,[255,246,226],.55)));
     }
     apply();
+    try{
+      // a new theme (menu pick, a reward) changes --hela-seat or --th-b: follow it
+      const mo=new MutationObserver(()=>glove());
+      const watch=()=>{ mo.observe(document.documentElement,{attributes:true,attributeFilter:["style"]});
+        if(document.body) mo.observe(document.body,{attributes:true,attributeFilter:["style"]}); };
+      if(document.body) watch(); else document.addEventListener("DOMContentLoaded", watch, { once:true });
+    }catch(e){}
     return {
       skins: SKINS.length, tones: SKINS.map(s=>s[1]),
       get(){ return { build:st.build, skin:st.skin }; },
@@ -117,183 +150,173 @@
 
   // gradients of the hand, prefixed per drawing so two hands can share a document
   function handDefs(p){
-    return `<linearGradient id="${p}Skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:${sk(0)}"/><stop offset=".5" style="stop-color:${sk(1)}"/><stop offset="1" style="stop-color:${sk(2)}"/></linearGradient>
-  <linearGradient id="${p}Glove" x1="0" y1="0" x2=".25" y2="1"><stop offset="0" stop-color="#946744"/><stop offset=".48" stop-color="#6c462a"/><stop offset="1" stop-color="#40271a"/></linearGradient>
-  <linearGradient id="${p}Brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d08a"/><stop offset=".45" stop-color="#b08640"/><stop offset="1" stop-color="#5e4420"/></linearGradient>
-  <linearGradient id="${p}Linen" x1="0" y1="0" x2=".1" y2="1"><stop offset="0" stop-color="#f7f1e1"/><stop offset=".45" stop-color="#e7dcc1"/><stop offset="1" stop-color="#b9a883"/></linearGradient>
-  <linearGradient id="${p}Stub" gradientUnits="userSpaceOnUse" x1="470" y1="0" x2="540" y2="0"><stop offset="0" stop-color="#e7dcc1" stop-opacity="0"/><stop offset="1" stop-color="#e7dcc1"/></linearGradient>
-  <linearGradient id="${p}StubInk" gradientUnits="userSpaceOnUse" x1="470" y1="0" x2="540" y2="0"><stop offset="0" stop-color="${INK}" stop-opacity="0"/><stop offset="1" stop-color="${INK}"/></linearGradient>`;
+    return `<linearGradient id="${p}Skin" gradientUnits="userSpaceOnUse" x1="600" y1="244" x2="640" y2="376"><stop offset="0" style="stop-color:${sk(0)}"/><stop offset=".5" style="stop-color:${sk(1)}"/><stop offset="1" style="stop-color:${sk(2)}"/></linearGradient>
+  <linearGradient id="${p}Vol" x1=".15" y1="0" x2=".75" y2="1"><stop offset="0" stop-color="#fff0d8" stop-opacity=".3"/><stop offset=".38" stop-color="#fff0d8" stop-opacity="0"/><stop offset=".62" stop-color="#5a1c08" stop-opacity="0"/><stop offset="1" stop-color="#5a1c08" stop-opacity=".38"/></linearGradient>
+  <linearGradient id="${p}Leather" x1="0" y1="0" x2=".2" y2="1"><stop offset="0" style="stop-color:var(--glove-lt,#6f93c8)"/><stop offset=".5" style="stop-color:var(--glove,#4a6fa8)"/><stop offset="1" style="stop-color:var(--glove-dk,#2c4166)"/></linearGradient>
+  <linearGradient id="${p}Brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d08a"/><stop offset=".45" stop-color="#b08640"/><stop offset="1" stop-color="#5e4420"/></linearGradient>`;
   }
 
-  /* One finger seen from above: from its knuckle (bx,by) along angle a, tapering to a
-     rounded tip. No drawn nails: the tip is read from its roundness and a glint. */
-  function fingerSVG(p, bx, by, a, len, w, bend){
-    const r=a*Math.PI/180, dx=Math.cos(r), dy=Math.sin(r), nx=-dy, ny=dx;
-    // the finger curls a little toward the little finger as it relaxes
-    const P=(t,s)=>{ const o=w*s+bend*t*t; return `${(bx+dx*len*t+nx*o).toFixed(1)} ${(by+dy*len*t+ny*o).toFixed(1)}`; };
-    const d=`M ${P(-.04,-.5)} C ${P(.35,-.54)} ${P(.7,-.44)} ${P(.86,-.39)} C ${P(.97,-.35)} ${P(1.03,-.12)} ${P(1.02,.04)} `
-      +`C ${P(1.01,.27)} ${P(.93,.45)} ${P(.82,.45)} C ${P(.64,.49)} ${P(.34,.56)} ${P(-.04,.5)} Z`;
-    return `<path d="${d}" fill="url(#${p}Skin)" stroke="${INK}" stroke-width="2.6"/>
-    <g pointer-events="none" fill="none" stroke-linecap="round">
-      <path d="M ${P(.06,.3)} C ${P(.4,.36)} ${P(.7,.32)} ${P(.9,.22)}" style="stroke:${sk(3)}" stroke-width="${(w*.3).toFixed(1)}" opacity=".6"/>
-      <path d="M ${P(.1,-.27)} C ${P(.4,-.33)} ${P(.66,-.29)} ${P(.84,-.22)}" style="stroke:${sk(4)}" stroke-width="2.4" opacity=".85"/>
-      <path d="M ${P(.44,-.32)} Q ${P(.47,-.02)} ${P(.44,.28)} M ${P(.74,-.28)} Q ${P(.76,-.04)} ${P(.74,.2)}" style="stroke:${sk(5)}" stroke-width="1.5" opacity=".75"/>
-      <path d="M ${P(.93,-.2)} Q ${P(.98,-.1)} ${P(.97,.02)}" stroke="#fff" stroke-width="1.6" opacity=".45"/>
-    </g>`;
+  /* ── THE HAND, drawn like the cat and the briefcase: one continuous silhouette
+        under a single warm-dark ink edge (nothing cuts the hand into parts), skin
+        painted with volume (light from the top left, a shadow side, a warm bounce
+        light under it, a rim of light on its top), five digits in a relaxed pose
+        (four fingers side by side and the thumb, the machine's first hand), no
+        nails, knuckles and tendons told by shading only. Over it the fingerless
+        glove in the player's colours, rendered like the briefcase's leather.
+        The feminine hand is smaller and slimmer, with a ring; the masculine one
+        broader. Fingers point +x, palm down, thumb below. ── */
+  const LINE="#24150c";
+  // a tapered brush mark (a fold, a shadow stroke): base (x,y), pointing at `a` degrees
+  function markD(x, y, a, len, w){
+    const r=a*Math.PI/180, dx=Math.cos(r), dy=Math.sin(r), nx=-dy, ny=dx, f=(v)=>v.toFixed(1);
+    return `M ${f(x+nx*w/2)} ${f(y+ny*w/2)} Q ${f(x+dx*len*.5+nx*w*.45)} ${f(y+dy*len*.5+ny*w*.45)} ${f(x+dx*len)} ${f(y+dy*len)} `
+      +`Q ${f(x+dx*len*.45-nx*w*.5)} ${f(y+dy*len*.45-ny*w*.5)} ${f(x-nx*w/2)} ${f(y-ny*w/2)} Z`;
   }
-  // the build's fingers, resting side by side: [knuckle x, y, angle, length, width, bend],
-  // drawn little finger first so each lies over the next
-  const FINGERS={
-    m: [[660,334,10,56,19,5],[664,313,4,70,22,5],[665,291,0,76,23,4],[662,269,-5,68,22,3]],
-    f: [[661,330,10,58,16,5],[665,311,4,73,18.5,5],[666,291,0,79,19.5,4],[663,271,-5,71,18.5,3]],
+  const HAND_PATHS={
+    wrist: "M 530 250 Q 556 252 566 256 Q 574 260 574 270 L 575 332 Q 574 342 566 344 Q 552 348 530 350 Z",
+    fingers: "M 660 252 Q 692 246 710 258 Q 717 263 715 271 Q 713 276 707 277 Q 726 280 735 290 Q 741 295 738 301 Q 736 305 731 306 Q 742 311 745 319 Q 748 325 743 330 Q 740 334 735 334 Q 738 341 731 347 Q 724 352 715 349 Q 690 345 664 340 Q 656 298 660 252 Z",
+    back: "M 572 254 Q 610 244 660 252 L 664 340 Q 620 352 574 344 Z",
+    thumb: "M 598 336 Q 592 326 600 318 Q 610 310 624 318 Q 648 330 660 348 Q 668 360 658 368 Q 646 376 630 368 Q 610 358 600 346 Z",
+    fist: "M 604 296 Q 600 258 620 246 Q 648 232 686 242 Q 718 250 728 276 Q 736 300 730 322 Q 722 346 694 352 Q 656 358 628 348 Q 606 338 604 296 Z",
+    fistThumb: "M 612 316 Q 606 304 616 297 Q 628 290 642 298 Q 664 310 674 326 Q 680 338 672 346 Q 662 354 646 348 Q 624 340 614 328 Z",
+    glove: "M 580 250 Q 604 244 622 246 Q 646 248 660 256 Q 668 262 670 278 Q 673 300 670 322 Q 668 336 658 342 Q 640 350 616 348 Q 594 346 584 340 Q 578 336 578 326 L 576 262 Q 576 252 580 250 Z",
+    cuff: "M 570 252 L 586 249 Q 594 248 595 256 L 597 336 Q 597 345 588 345 L 574 344 Q 566 343 566 334 L 564 260 Q 564 253 570 252 Z",
   };
-  function thumbSVG(p){
-    return `<path d="M 598 336 Q 592 326 600 318 Q 610 310 624 318 Q 648 330 660 348 Q 668 360 658 368 Q 646 376 630 368 Q 610 358 600 346 Z"
-        fill="url(#${p}Skin)" stroke="${INK}" stroke-width="2.6"/>
-    <g pointer-events="none" fill="none" stroke-linecap="round">
-      <path d="M 606 348 Q 628 364 652 366" style="stroke:${sk(3)}" stroke-width="6" opacity=".55"/>
-      <path d="M 606 322 Q 626 322 646 336" style="stroke:${sk(4)}" stroke-width="2.6" opacity=".85"/>
-      <path d="M 628 326 q -4 8 -2 16" style="stroke:${sk(5)}" stroke-width="1.5" opacity=".75"/>
-      <path d="M 656 352 Q 661 357 660 362" stroke="#fff" stroke-width="1.6" opacity=".45"/>
+  function handBuild(p, cls, b){
+    const H=HAND_PATHS, m=b==="m";
+    const hide = cls==="hand" ? ` style="display:none"` : "";   // the machine's fist shows only while it grabs (app.css)
+    const ink=(...ds)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="6.4" stroke-linejoin="round" transform="translate(.9 1.4)" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;
+    const skin=(d)=>`<path d="${d}" fill="url(#${p}Skin)"/><path d="${d}" fill="url(#${p}Vol)" pointer-events="none"/>`;
+    const soft=(d,w,o,i=3)=>`<path d="${d}" fill="none" style="stroke:${sk(i)}" stroke-width="${w}" stroke-linecap="round" opacity="${o}" pointer-events="none"/>`;
+    const ring = m ? "" : `<path d="M 684 277 Q 687 287 686 297" fill="none" stroke="${LINE}" stroke-width="6.4" stroke-linecap="round" pointer-events="none"/>
+      <path d="M 684 277 Q 687 287 686 297" fill="none" stroke="#e6bf5c" stroke-width="3.2" stroke-linecap="round" pointer-events="none"/>
+      <path d="M 684.4 280 Q 685.6 284 685.6 288" fill="none" stroke="#fff4d4" stroke-width="1.1" stroke-linecap="round" pointer-events="none"/>`;
+    const open=`<g class="${cls}-open">
+      ${ink(H.wrist,H.back,H.fingers,H.thumb)}
+      ${skin(H.wrist)}${skin(H.back)}${skin(H.fingers)}
+      <!-- the fingers are told apart by soft shadow and light, never by ink -->
+      ${soft("M 707 276 Q 688 273 666 274 M 731 305 Q 704 300 666 298 M 735 333 Q 704 327 664 322",3.2,.85)}
+      ${soft("M 705 281 Q 690 279 672 280 M 728 310 Q 704 305 672 304 M 732 338 Q 704 333 670 328",1.8,.4,4)}
+      ${soft("M 690 260 q 2 6 0 10 M 704 285 q 2 7 0 12 M 708 310 q 2 7 0 12 M 702 333 q 2 6 0 10",1.6,.45,5)}
+      ${soft("M 668 256 Q 690 249 707 259",3,.9,4)}
+      ${soft("M 672 338 Q 692 342 711 344",2.6,.7,6)}
+      ${ring}
+      ${skin(H.thumb)}
+      ${soft("M 600 322 Q 614 314 630 320",2.8,.75)}
+      ${soft("M 606 322 Q 626 322 646 336",2.4,.8,4)}
+      ${soft("M 610 356 Q 632 372 656 366",3,.7,6)}
+      ${soft("M 630 364 Q 646 372 656 366",4,.5,3)}
     </g>`;
+    const grab=`<g class="${cls}-grab"${hide}>
+      ${ink(H.wrist,H.fist,H.fistThumb)}
+      ${skin(H.wrist)}${skin(H.fist)}
+      ${soft("M 726 284 Q 700 294 670 293 M 728 308 Q 702 318 668 315 M 720 330 Q 696 340 666 336",3,.85)}
+      ${soft("M 648 244 Q 676 236 700 246 Q 720 254 726 272",3,.9,4)}
+      ${soft("M 700 350 Q 720 340 728 322",3,.7,6)}
+      ${skin(H.fistThumb)}
+      ${soft("M 616 300 Q 632 292 648 302",2.6,.75)}
+    </g>`;
+    // the glove: leather like the briefcase, its cuff in the second colour with a brass snap
+    const glove=`
+      ${ink(H.glove,H.cuff)}
+      <path d="${H.glove}" fill="url(#${p}Leather)"/>
+      <g pointer-events="none">
+        <path d="M 584 258 Q 612 248 646 254 Q 660 258 664 270 Q 642 262 614 264 Q 594 266 584 274 Z" fill="#fff" opacity=".16"/>
+        <path d="M 582 330 Q 620 342 662 332 Q 652 346 616 348 Q 592 346 582 338 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".75"/>
+        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.5" stroke-dasharray="4 3" opacity=".9"/>
+        <path d="M 590 256 Q 616 250 640 254" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.3" stroke-dasharray="4 3" opacity=".7"/>
+        <path d="M 646 256 q 6 -3 10 2 M 652 280 q 6 -2 9 3 M 654 306 q 6 -2 9 3" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="2.2" opacity=".8"/>
+        <path d="M 644 262 q 6 -3 10 2 M 650 286 q 6 -2 9 3" fill="none" stroke="#fff" stroke-width="1.4" opacity=".25"/>
+      </g>
+      <path d="${H.cuff}" style="fill:var(--glove-trim,#d8c8a0)"/>
+      <g pointer-events="none">
+        <path d="M 570 254 L 586 251 Q 592 251 592 258 L 592 272 Q 580 270 568 272 L 567 260 Z" fill="#fff" opacity=".22"/>
+        <path d="M 567 322 Q 580 328 596 322 L 597 336 Q 597 345 588 345 L 574 344 Q 566 343 566 334 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".35"/>
+        <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-dasharray="3 3" opacity=".8"/>
+        <circle cx="581" cy="296" r="5.4" fill="url(#${p}Brass)" stroke="${LINE}" stroke-width="1.6"/>
+        <circle cx="579.6" cy="294.4" r="1.6" fill="#fff4d4" opacity=".8"/>
+      </g>`;
+    // the feminine hand: the same drawing, smaller and slimmer, from the wrist
+    const fit = m ? ` transform="translate(560 300) scale(1.05) translate(-560 -300)"` : ` transform="translate(560 300) scale(.88 .76) translate(-560 -300)"`;
+    return `<g class="pb-${b}"${m ? "" : ` display="none"`}><g${fit}>${open}${grab}${glove}</g></g>`;
   }
-  function fistSVG(p){
-    return `<path d="M 604 296 Q 600 258 620 246 Q 648 232 686 242 Q 718 250 728 276 Q 736 300 730 322 Q 722 346 694 352 Q 656 358 628 348 Q 606 338 604 296 Z"
-          fill="url(#${p}Skin)" stroke="${INK}" stroke-width="2.6"/>
-    <g pointer-events="none" fill="none" stroke-linecap="round">
-      <path d="M 614 330 Q 660 352 724 320" style="stroke:${sk(3)}" stroke-width="9" opacity=".5"/>
-      <path d="M 726 284 Q 700 294 670 293 M 728 308 Q 702 318 668 315 M 720 330 Q 696 340 666 336" stroke="${INK}" stroke-width="2" opacity=".7"/>
-      <path d="M 648 244 Q 676 236 700 246 Q 720 254 726 272" style="stroke:${sk(4)}" stroke-width="2.8" opacity=".85"/>
-      <path d="M 708 262 q 5 3 7 9 M 714 290 q 5 3 6 9 M 710 316 q 5 3 5 9" style="stroke:${sk(5)}" stroke-width="1.5"/>
-    </g>
-    <path d="M 612 316 Q 606 304 616 297 Q 628 290 642 298 Q 664 310 674 326 Q 680 338 672 346 Q 662 354 646 348 Q 624 340 614 328 Z"
-          fill="url(#${p}Skin)" stroke="${INK}" stroke-width="2.6"/>
-    <path d="M 620 334 Q 644 348 668 344" style="stroke:${sk(3)}" stroke-width="5" fill="none" stroke-linecap="round" opacity=".55" pointer-events="none"/>`;
+  function handArtSVG(p, cls){
+    return `${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`;
   }
 
-  /* The ERA SEALS on the back of the glove: the three periods of the timeline this
-     traveller has mended (the case file's ORI / ASC / SIN receptor), in the
-     receptor's colours. Empty, a seal is an engraved leather well; mended, it fills
-     with enamel. Mend all three and the match ends, so they sit where the hand
-     always is. updateMachine toggles .mended. */
+  /* The ERA SEALS on the casing, beside the screen: the three periods of the
+     timeline this traveller has mended (the case file's ORI / ASC / SIN receptor),
+     in the receptor's colours. Empty, a seal is an engraved well; mended, it fills
+     with enamel. Mending all three ends the match. updateMachine toggles .mended. */
   const ERA_SEALS=[["Origins","O","#b98a45"],["Ascension","A","#3f9c7c"],["Singularity","S","#7d68c2"]];
-  function sealSVG(p, cx, cy, i){
+  function sealSVG(cx, cy, i){
     const [key, g, col]=ERA_SEALS[i];
     return `<g class="mano-seal" data-period="${key}">
-    <circle cx="${cx}" cy="${cy}" r="12" fill="url(#${p}Brass)" stroke="${INK}" stroke-width="2.2"/>
-    <circle cx="${cx}" cy="${cy}" r="9.2" fill="#24160b" stroke="#3a2710" stroke-width="1.1"/>
-    <circle class="ms-enamel" cx="${cx}" cy="${cy}" r="9.2" fill="${col}" opacity="0"/>
-    <path class="ms-enamel" d="M ${cx-7} ${cy-2} A 7.6 7.6 0 0 1 ${cx+2} ${cy-7.4}" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity="0"/>
-    <text class="ms-glyph" x="${cx}" y="${cy+3.9}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="11" fill="#8a6a3c">${g}</text>
-    <path d="M ${cx-8} ${cy+8} A 11.5 11.5 0 0 0 ${cx+8} ${cy+8}" fill="none" stroke="#2a1a08" stroke-width="1.8" stroke-linecap="round" opacity=".55" pointer-events="none"/>
+    <circle cx="${cx}" cy="${cy}" r="10.5" fill="url(#mnBrass)" stroke="${INK}" stroke-width="2"/>
+    <circle cx="${cx}" cy="${cy}" r="7.8" fill="#161b1f" stroke="#3a2710" stroke-width="1"/>
+    <circle class="ms-enamel" cx="${cx}" cy="${cy}" r="7.8" fill="${col}" opacity="0"/>
+    <path class="ms-enamel" d="M ${cx-6} ${cy-1.5} A 6.4 6.4 0 0 1 ${cx+1.5} ${cy-6.2}" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity="0"/>
+    <text class="ms-glyph" x="${cx}" y="${cy+3.4}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="9.6" fill="#8a6a3c">${g}</text>
   </g>`;
   }
 
-  /* The gloved hand, fingers pointing +x, palm down, thumb below. cls names the
-     open/closed groups ("hand" -> .hand-open/.hand-grab); gadgets adds the era seals
-     and the hextech cufflink that only the machine's hand wears. Fingers, thumb and
-     fist come in both builds (.pb-m / .pb-f, shown by html[data-arm-build]). */
-  function handArtSVG(p, cls, gadgets){
-    const fingers=(b)=>FINGERS[b].map(f=>fingerSVG(p,...f)).join("");
-    return `
-  <!-- the sleeve runs on under the machine; only the right hand ever shows this stub -->
-  <path d="M 470 246 Q 520 247 562 252 L 560 348 Q 520 354 470 358 Z" fill="url(#${p}Stub)" pointer-events="none"/>
-  <path d="M 470 246 Q 520 247 562 252 M 560 348 Q 520 354 470 358" fill="none" stroke="url(#${p}StubInk)" stroke-width="3" pointer-events="none"/>
-
-  <g class="${cls}-open">
-    <g class="pb-m">${fingers("m")}${thumbSVG(p)}</g>
-    <g class="pb-f" display="none">${fingers("f")}<g transform="translate(60 33) scale(.9)">${thumbSVG(p)}</g></g>
-  </g>
-  <g class="${cls}-grab"${gadgets ? ` style="display:none"` : ""}>
-    <g class="pb-m">${fistSVG(p)}</g>
-    <g class="pb-f" display="none"><g transform="translate(49 24) scale(.92)">${fistSVG(p)}</g></g>
-  </g>
-
-  <!-- GLOVE: back of the hand (fingerless), heavy ink under, stitched hem at the knuckles -->
-  <path d="M 580 250 Q 604 244 622 246 Q 646 248 660 256 Q 668 262 670 278 Q 673 300 670 322 Q 668 336 658 342 Q 640 350 616 348 Q 594 346 584 340 Q 578 336 578 326 L 576 262 Q 576 252 580 250 Z"
-        transform="translate(1.8 2.6)" fill="${INK}" pointer-events="none"/>
-  <path d="M 580 250 Q 604 244 622 246 Q 646 248 660 256 Q 668 262 670 278 Q 673 300 670 322 Q 668 336 658 342 Q 640 350 616 348 Q 594 346 584 340 Q 578 336 578 326 L 576 262 Q 576 252 580 250 Z"
-        fill="url(#${p}Glove)" stroke="${INK}" stroke-width="3"/>
-  <g pointer-events="none">
-    <path d="M 584 258 Q 612 248 646 254 Q 660 258 664 270 Q 642 262 614 264 Q 594 266 584 274 Z" fill="#c4915f" opacity=".5"/>
-    <path d="M 590 256 Q 616 250 640 254" fill="none" stroke="#f0c690" stroke-width="2.2" stroke-linecap="round" opacity=".55"/>
-    <path d="M 579 318 Q 622 334 669 316 L 668 326 Q 666 338 658 342 Q 640 350 616 348 Q 594 346 584 340 Q 579 336 579 326 Z" fill="#23140a" opacity=".5"/>
-    <g fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round" opacity=".45">
-      <path d="M 654 282 q -5 8 -3 16"/><path d="M 660 306 q -4 6 -2 12"/>
-    </g>
-    <path d="M 660 258 Q 668 268 670 282 Q 672 300 670 316 Q 668 332 658 342" fill="none" stroke="${INK}" stroke-width="2.4" opacity=".8"/>
-    <path d="M 655 262 Q 663 272 665 284 Q 667 300 665 314 Q 663 328 655 336" fill="none" stroke="#e2bd86" stroke-width="1.4" stroke-dasharray="4 3" opacity=".85"/>
-    <path d="M 648 254 q 6 -3 10 2 M 656 278 q 6 -2 9 3 M 658 304 q 6 -2 9 3" fill="none" stroke="#3a2414" stroke-width="2" opacity=".7"/>
-  </g>
-  ${gadgets ? `<!-- THE ERA SEALS, on the diagonal across the back of the hand -->
-  <g id="mano-seals">${sealSVG(p,623,270,0)}${sealSVG(p,636,294,1)}${sealSVG(p,649,318,2)}</g>` : `<!-- the plain glove wears a stitched patch where the seals would be -->
-  <g pointer-events="none">
-    <path d="M 598 262 Q 628 266 648 300 Q 650 318 640 326 Q 616 312 598 282 Q 592 268 598 262 Z" fill="#5a3a22" opacity=".5"/>
-    <path d="M 600 266 Q 626 270 644 300 Q 646 314 638 320" fill="none" stroke="#e2bd86" stroke-width="1.3" stroke-dasharray="3.5 3" opacity=".7"/>
-  </g>`}
-  <!-- the shirt's cuff, buttoned over the wrist and the glove's opening -->
-  <path d="M 564 249 L 598 245 Q 609 244 610 254 L 612 338 Q 612 349 601 350 L 569 351 Q 560 351 560 341 L 558 259 Q 558 250 564 249 Z"
-        transform="translate(1.6 2.4)" fill="${INK}" pointer-events="none"/>
-  <path d="M 564 249 L 598 245 Q 609 244 610 254 L 612 338 Q 612 349 601 350 L 569 351 Q 560 351 560 341 L 558 259 Q 558 250 564 249 Z"
-        fill="url(#${p}Linen)" stroke="${INK}" stroke-width="2.8"/>
-  <g pointer-events="none" fill="none" stroke-linecap="round">
-    <path d="M 564 254 L 604 250 M 566 345 L 606 344" stroke="#a8966f" stroke-width="1.2" stroke-dasharray="3 3"/>
-    <path d="M 566 256 Q 570 300 568 342" stroke="#fffaf0" stroke-width="2.4" opacity=".7"/>
-    <path d="M 561 320 Q 586 332 611 322 L 612 338 Q 612 349 601 350 L 569 351 Q 560 351 560 341 Z" fill="#8f7b58" stroke="none" opacity=".35"/>
-    <path d="M 604 256 Q 607 300 605 340" stroke="${INK}" stroke-width="1.4" opacity=".35"/>
-    <path d="M 586 250 Q 592 262 590 274 M 590 322 Q 596 334 594 346" stroke="#8f7b58" stroke-width="2" opacity=".6"/>
-  </g>
-  ${gadgets ? `<!-- the hextech core, worn as a cufflink -->
-  <circle cx="581" cy="296" r="11" fill="url(#${p}Brass)" stroke="${INK}" stroke-width="2.2"/>
-  <circle cx="581" cy="296" r="8.4" fill="#0a1418" stroke="#2c1d0c" stroke-width="1"/>
-  <circle id="hexcore" cx="581" cy="296" r="7" fill="url(#mnHex)" opacity=".72"/>
-  <path d="M 576 293 A 5 5 0 0 1 581 290" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".6" pointer-events="none"/>`
-  : `<circle cx="581" cy="296" r="6" fill="#efe6cf" stroke="${INK}" stroke-width="1.8"/>
-  <g fill="${INK}" pointer-events="none"><circle cx="579.4" cy="294.6" r="1.1"/><circle cx="582.6" cy="297.4" r="1.1"/></g>`}`;
-  }
-
-  /* The sleeve on the forearm, per build: loose linen from the elbow, cinched by the
-     bracer (tension folds fan out of the strap and the cloth puffs over its edge),
-     sagging underneath, with folds that turn round the arm; it goes on under the
-     machine to the cuff on the wrist. t and u move the top and bottom edges. */
-  function sleeveOutline(t, u){
-    return `M -800 ${234+t} C -700 ${226+t} -610 ${230+t} -540 ${242+t} C -470 ${228+t} -390 ${226+t} -330 ${244+t} `
-      +`C -270 ${230+t} -200 ${232+t} -150 ${246+t} C -80 ${236+t} 20 ${240+t} 90 ${246+t} C 120 ${248+t} 140 ${242+t} 156 ${246+t} `
-      +`Q 166 ${244+t} 172 ${252+t*.6} L 236 ${252+t*.6} L 236 ${360-u*.6} L 172 ${362-u*.6} Q 166 ${372-u} 154 ${368-u} `
-      +`C 120 ${374-u} 60 ${390-u} -20 ${396-u} C -120 ${404-u} -200 ${410-u} -250 ${400-u} C -320 ${410-u} -380 ${408-u} -410 ${396-u} `
-      +`C -480 ${404-u} -560 ${404-u} -600 ${392-u} C -680 ${398-u} -740 ${396-u} -800 ${394-u} Z`;
-  }
-  // a fold: a shadow wedge wide at (x0,y0), tapering to (x1,y1), lit on its upper lip
-  function foldSVG(x0,y0,x1,y1,c1,c2,w){
-    const d=`M ${x0} ${y0-w} C ${c1[0]} ${c1[1]-w*.6} ${c2[0]} ${c2[1]-w*.25} ${x1} ${y1} C ${c2[0]} ${c2[1]+w*.25} ${c1[0]} ${c1[1]+w*.6} ${x0} ${y0+w} Z`;
-    const lip=`M ${x0} ${y0-w} C ${c1[0]} ${c1[1]-w*.6} ${c2[0]} ${c2[1]-w*.25} ${x1} ${y1}`;
-    return `<path d="${d}" fill="#8a7552" opacity=".55"/>`
-      +`<path d="${lip}" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>`
-      +`<path d="${lip}" transform="translate(3 -4)" fill="none" stroke="#fffaf0" stroke-width="2.4" stroke-linecap="round" opacity=".65"/>`;
-  }
-  const SLEEVE={
-    m: { t: 0, u: 0, folds: [
-      [164,266,-10,246,[110,258],[50,248],8], [164,292,-60,296,[100,286],[30,288],10], [164,322,-60,364,[100,332],[30,346],10], [164,348,-20,394,[110,360],[50,380],8],
-      [-150,246,-250,400,[-170,300],[-210,350],11], [-330,244,-410,396,[-340,300],[-380,350],11], [-540,242,-600,392,[-540,300],[-570,350],9] ] },
-    f: { t: 9, u: 13, folds: [
-      [164,272,-10,256,[110,264],[50,258],7], [164,306,-60,312,[100,304],[30,306],8], [164,338,-20,378,[110,350],[50,366],7],
-      [-150,255,-250,387,[-170,300],[-210,344],9], [-330,253,-410,383,[-340,300],[-380,344],9] ] },
+  /* ── THE FOREARM, per build, in the same language: the shirt sleeve pushed up and
+        rolled to the middle of the forearm, the cloth given volume and folds the way
+        the cat's fur is (tapered shadow strokes, a lit side, a rim of light), then the
+        bare forearm down to the bracer, painted like the hand. Masculine: a broad
+        forearm under the heavy roll of an off-white linen work shirt. Feminine: a slim
+        forearm, a pale blue blouse with a narrow cuff and a pearl button, a thin gold
+        bracelet. ── */
+  const FOREARM={
+    m: { arm: "M -60 246 C 10 240 90 242 150 247 C 210 252 260 251 310 250 L 310 360 C 260 362 210 364 150 367 C 90 371 10 374 -60 372 Z",
+      top: 246, bot: 372,
+      sleeve: "M -800 226 C -640 222 -520 230 -420 226 C -300 222 -200 232 -110 234 L -86 386 C -200 396 -300 404 -420 398 C -520 404 -640 400 -800 402 Z",
+      roll: "M -110 228 C -90 220 -60 224 -40 218 C -16 214 6 224 14 240 C 22 264 14 286 20 306 C 24 336 16 366 2 382 C -14 394 -36 386 -54 392 C -74 398 -96 392 -106 380 C -118 350 -112 318 -118 290 C -120 262 -120 242 -110 228 Z",
+      cloth: ["#f7f2e6", "#e6dcc6", "#b9a987"],
+      folds: [[-150,238,196,56,11],[-250,236,160,62,12],[-160,392,-152,58,12],[-300,398,-166,64,12],[-420,230,175,70,11],[-560,396,-170,60,11]],
+      rollFolds: [[-72,226,78,72,10],[-30,222,96,78,10],[-88,386,-80,52,9],[-40,386,-100,48,9]] },
+    f: { arm: "M -60 264 C 10 260 90 261 150 264 C 210 267 260 266 310 266 L 310 346 C 260 347 210 348 150 350 C 90 352 10 355 -60 354 Z",
+      top: 264, bot: 354,
+      sleeve: "M -800 244 C -640 241 -520 247 -420 244 C -300 241 -200 248 -104 250 L -86 368 C -200 376 -300 382 -420 378 C -520 382 -640 380 -800 382 Z",
+      roll: "M -100 246 C -80 241 -50 243 -34 241 C -20 240 -8 246 -6 256 C -4 276 -8 290 -6 306 C -4 330 -8 350 -16 358 C -30 366 -54 362 -72 366 C -86 368 -98 362 -102 354 C -108 330 -104 310 -108 290 C -110 270 -108 254 -100 246 Z",
+      cloth: ["#eef4f8", "#d2e0ea", "#98acbe"],
+      folds: [[-160,252,194,50,9],[-280,248,168,56,10],[-190,374,-156,50,10],[-340,378,-170,56,10],[-500,248,175,60,9]],
+      rollFolds: [[-60,244,86,60,8],[-80,364,-86,40,7]] },
   };
-  function sleeveSVG(b){
-    const S=SLEEVE[b], d=sleeveOutline(S.t,S.u);
-    return `<g class="pb-${b}"${b==="f" ? ` display="none"` : ""}>
-    <path d="${d}" transform="translate(1.6 2.8)" fill="${INK}" pointer-events="none"/>
-    <path d="${d}" fill="url(#mnCloth)" stroke="${INK}" stroke-width="3.2"/>
-    <g pointer-events="none">
-      <path d="M -800 ${372-S.u} C -500 ${378-S.u} -200 ${392-S.u} 0 ${376-S.u} C 80 ${368-S.u} 130 ${358-S.u} 160 ${352-S.u}" fill="none" stroke="#6f5d40" stroke-width="22" stroke-linecap="round" opacity=".2"/>
-      <path d="M -800 ${248+S.t} C -500 ${243+S.t} -200 ${250+S.t} 150 ${256+S.t}" fill="none" stroke="#a8966f" stroke-width="1.5" stroke-dasharray="8 5" opacity=".8"/>
-      <path d="M -780 ${256+S.t} C -500 ${252+S.t} -240 ${258+S.t} 130 ${262+S.t}" fill="none" stroke="#fffaf0" stroke-width="3" stroke-linecap="round" opacity=".55"/>
-      ${S.folds.map(f=>foldSVG(...f)).join("")}
-      <path d="M 156 ${250+S.t} q 9 6 7 16 M 156 ${366-S.u} q 9 -6 7 -16" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round" opacity=".6"/>
-      <g stroke="${INK}" stroke-width="1.1" opacity=".22" stroke-linecap="round">
-        <path d="M -330 ${396-S.u} l 9 -12 M -316 ${397-S.u} l 9 -12 M -302 ${397-S.u} l 9 -12 M -288 ${397-S.u} l 9 -12 M -60 ${392-S.u} l 9 -12 M -46 ${390-S.u} l 9 -12 M -32 ${388-S.u} l 9 -12"/>
-      </g>
-    </g>
+  function forearmSVG(b){
+    const F=FOREARM[b], m=b==="m";
+    const ink=(d)=>`<path d="${d}" transform="translate(.9 1.4)" fill="${LINE}" stroke="${LINE}" stroke-width="6.4" stroke-linejoin="round" pointer-events="none"/>`;
+    const soft=(d,w,o,i=3)=>`<path d="${d}" fill="none" style="stroke:${sk(i)}" stroke-width="${w}" stroke-linecap="round" opacity="${o}" pointer-events="none"/>`;
+    const marks=(list,col,o)=>`<path d="${list.map(f=>markD(...f)).join(" ")}" fill="${col}" opacity="${o}" pointer-events="none"/>`;
+    const [cl,cm,cd]=F.cloth, y0=F.top, y1=F.bot, mid=(y0+y1)/2;
+    return `<g class="pb-${b}"${m ? "" : ` display="none"`}>
+    <!-- the sleeve toward the elbow -->
+    ${ink(F.sleeve)}
+    <path d="${F.sleeve}" fill="url(#mnCloth${b})"/><path d="${F.sleeve}" fill="url(#mnVol)" pointer-events="none"/>
+    ${marks(F.folds,cd,.55)}
+    ${marks(F.folds.map(([x,y,a,l,w])=>[x+5,y+(y<300?4:-4),a,l*.8,w*.35]),cl,.8)}
+    <path d="M -800 ${y0-12} C -560 ${y0-18} -300 ${y0-10} -120 ${y0-8}" fill="none" stroke="#fffaf0" stroke-width="3.4" stroke-linecap="round" opacity=".75" pointer-events="none"/>
+    <path d="M -800 ${y0-4} C -560 ${y0-10} -300 ${y0-2} -110 ${y0}" fill="none" stroke="${cd}" stroke-width="1.4" stroke-dasharray="7 5" opacity=".7" pointer-events="none"/>
+    <!-- the bare forearm -->
+    ${ink(F.arm)}
+    <path d="${F.arm}" fill="url(#mnArmSkin)"/><path d="${F.arm}" fill="url(#mnVol)" pointer-events="none"/>
+    ${soft(`M -40 ${y0+8} C 30 ${y0+2} 100 ${y0+4} 160 ${y0+10}`,3.4,.85,4)}
+    ${soft(`M -40 ${y1-6} C 40 ${y1-4} 110 ${y1-8} 170 ${y1-10}`,3.2,.6,6)}
+    <path d="M 20 ${mid+6} C 70 ${mid+2} 120 ${mid+4} 160 ${mid+8} C 120 ${mid+20} 70 ${mid+20} 20 ${mid+16} Z" style="fill:${sk(3)}" opacity=".18" pointer-events="none"/>
+    ${soft(`M 60 ${mid-8} C 100 ${mid-12} 130 ${mid-8} 160 ${mid-6}`,2,.3,5)}
+    ${m ? "" : `<path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="${LINE}" stroke-width="6.4" stroke-linecap="round" pointer-events="none"/>
+    <path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="#e6bf5c" stroke-width="3.2" stroke-linecap="round" pointer-events="none"/>
+    <path d="M 141 ${y0+6} Q 144 ${y0+18} 144 ${y0+30}" fill="none" stroke="#fff4d4" stroke-width="1.2" stroke-linecap="round" opacity=".8" pointer-events="none"/>`}
+    <!-- the shadow the roll casts on the skin -->
+    <path d="M -60 ${y0} C -20 ${y0+6} 0 ${mid} -10 ${y1} L -60 ${y1} Z" style="fill:${sk(3)}" opacity=".45" pointer-events="none"/>
+    <!-- the roll -->
+    ${ink(F.roll)}
+    <path d="${F.roll}" fill="url(#mnCloth${b})"/><path d="${F.roll}" fill="url(#mnVol)" pointer-events="none"/>
+    ${marks(F.rollFolds,cd,.6)}
+    <path d="M ${m?4:-16} ${y0-16} C ${m?14:-8} ${mid-40} ${m?10:-10} ${mid+30} ${m?0:-18} ${y1+8}" fill="none" stroke="${cm}" stroke-width="${m?9:6}" stroke-linecap="round" opacity=".8" pointer-events="none"/>
+    <path d="M ${m?-6:-22} ${y0-14} C ${m?4:-14} ${mid-40} ${m?0:-16} ${mid+30} ${m?-10:-24} ${y1+8}" fill="none" stroke="${cd}" stroke-width="1.6" stroke-linecap="round" opacity=".6" pointer-events="none"/>
+    <path d="M ${m?-96:-92} ${y0-14} C ${m?-60:-60} ${y0-24} ${m?-20:-30} ${y0-18} ${m?0:-14} ${y0-10}" fill="none" stroke="#fffaf0" stroke-width="3" stroke-linecap="round" opacity=".8" pointer-events="none"/>
+    ${m ? "" : `<circle cx="-40" cy="${mid}" r="5" fill="#fbf7ef" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/><circle cx="-41.4" cy="${mid-1.4}" r="1.4" fill="#fff" pointer-events="none"/>`}
   </g>`;
   }
 
@@ -307,17 +330,19 @@
   <radialGradient id="mnHex" cx=".4" cy=".35"><stop offset="0" stop-color="#bfeaff"/><stop offset=".55" stop-color="#4aa8d8"/><stop offset="1" stop-color="#1a4a66"/></radialGradient>
   <linearGradient id="mnAmber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c078"/><stop offset="1" stop-color="#8a6a2c"/></linearGradient>
   <linearGradient id="mnLeath" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#7a5234"/><stop offset=".5" stop-color="#553620"/><stop offset="1" stop-color="#2e1c0f"/></linearGradient>
-  <linearGradient id="mnCloth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5eedb"/><stop offset=".42" stop-color="#e6dabd"/><stop offset=".78" stop-color="#c7b692"/><stop offset="1" stop-color="#a5926e"/></linearGradient>
+  <linearGradient id="mnClothm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf7ec"/><stop offset=".5" stop-color="#ebe2cd"/><stop offset="1" stop-color="#c4b492"/></linearGradient>
+  <linearGradient id="mnClothf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f8fb"/><stop offset=".5" stop-color="#d9e5ee"/><stop offset="1" stop-color="#a9bccb"/></linearGradient>
+  <linearGradient id="mnArmSkin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:${sk(0)}"/><stop offset=".5" style="stop-color:${sk(1)}"/><stop offset="1" style="stop-color:${sk(2)}"/></linearGradient>
   <linearGradient id="mnValve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0573c"/><stop offset=".55" stop-color="#b3321f"/><stop offset="1" stop-color="#6e1a10"/></linearGradient>
   ${handDefs("mn")}
 </defs>
 <ellipse class="mano-shadow" cx="360" cy="440" rx="380" ry="44" fill="#000" opacity=".33"/>
 <path class="mano-shadow" d="M -800 364 L 110 352 Q 140 356 150 372 Q 60 392 -800 398 Z" fill="#000" opacity=".22" pointer-events="none"/>
 
-<!-- ===================== FOREARM: linen sleeve, bracer ===================== -->
+<!-- ===================== FOREARM: rolled sleeve, bare forearm, bracer ===================== -->
 <g id="arm-limb">
   <!-- REST: the straight extended forearm on the desk (no elbow in sight) -->
-  <g class="limb-rest">${sleeveSVG("m")}${sleeveSVG("f")}
+  <g class="limb-rest">${forearmSVG("m")}${forearmSVG("f")}
   </g>
   <!-- the leather bracer that carries the escape valve -->
   <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"
@@ -348,10 +373,10 @@
   </g>
 </g>
 
-<!-- ===================== WRIST + GLOVED HAND (drawn under the chassis lip) ===================== -->
+<!-- ===================== WRIST + BARE HAND (drawn under the chassis lip) ===================== -->
 <g id="arm-hand" transform="translate(-36 0)">${handArtSVG("mn", "hand", true)}
 </g>
-<!-- the casing's shadow falls on the glove (the light is top left) -->
+<!-- the casing's shadow falls on the hand (the light is top left) -->
 <path d="M 536 236 Q 552 238 562 246 L 568 350 Q 556 362 540 364 Z" fill="${INK}" opacity=".3" pointer-events="none"/>
 
 <!-- ===================== THE PIP-BOY CHASSIS (every functional box kept) ===================== -->
@@ -399,6 +424,13 @@
     <path d="M 258 186 L 380 186 L 300 322 L 258 322 Z" fill="#ffffff" opacity=".035"/>
   </g>
   <circle cx="228" cy="196" r="9" fill="url(#mnSteelL)" stroke="${INK}" stroke-width="2"/><line x1="228" y1="190" x2="228" y2="196" stroke="${INK}" stroke-width="1.6"/>
+  <!-- THE ERA SEALS, set in the casing beside the screen -->
+  <g id="mano-seals">${sealSVG(228,232,0)}${sealSVG(228,258,1)}${sealSVG(228,284,2)}</g>
+  <!-- the hextech core, set in the casing's right wall -->
+  <circle cx="545" cy="296" r="10.5" fill="url(#mnBrass)" stroke="${INK}" stroke-width="2"/>
+  <circle cx="545" cy="296" r="8.2" fill="#0a1418" stroke="#2c1d0c" stroke-width="1"/>
+  <circle id="hexcore" cx="545" cy="296" r="7" fill="url(#mnHex)" opacity=".72"/>
+  <path d="M 540 293 A 5 5 0 0 1 545 290" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".6" pointer-events="none"/>
   <path d="M 222 192 A 7 7 0 0 1 228 189" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".5" pointer-events="none"/>
   <g id="mano-boomg">
     <rect x="500" y="190" width="32" height="138" rx="6" fill="#0e1216" stroke="#1a2025" stroke-width="2.6"/>
@@ -510,7 +542,7 @@
   /* ═══════════════════════════════════════════════════════════════════════════
      THE RIGHT HAND: the primary cursor. It is the LEFT hand MIRRORED (x' = 1280-x),
      so it is anatomically right in EXACTLY the same drawing (same skin, same ink,
-     same leather glove and shirt cuff), but with NO gadgets (no era seals, no hextech cufflink), and
+     same bare hand), with its own rolled sleeve at the wrist, and
      smaller, so it hides less of the board. Rotated 38 deg about its fingertip so
      the fingers point up-left, into Hela's reticle.
      FINGERTIP = svg (538,300) = 41.1% x, 33.9% y of the viewBox. That is the
@@ -1436,8 +1468,12 @@
     const rolled=(scene==="market");
     if(rolled!==lastRolled){
       lastRolled=rolled;
-      document.body.classList.toggle("chart-rolled", rolled);
-      try{ window.__audio&&window.__audio.play("chart_creak"); }catch(e){}
+      // board_draft.js already rolled it with the head turn (and creaked); this only
+      // catches a change it missed, so the creak never plays twice or late
+      if(document.body.classList.contains("chart-rolled")!==rolled){
+        document.body.classList.toggle("chart-rolled", rolled);
+        try{ window.__audio&&window.__audio.play("chart_creak"); }catch(e){}
+      }
     }
   }
   let prevAllocOn=false;
@@ -1490,7 +1526,7 @@
       if(holo) holo.classList.toggle("holo-crit", crit);
       // (body.vz-crit is now owned by the HELA HUD tick, PRIMITIVE B state switch)
     }
-    // ERA SEALS on the glove: the periods of the timeline this traveller has mended
+    // ERA SEALS on the casing: the periods of the timeline this traveller has mended
     // (the case file's ORI / ASC / SIN receptor); mending all three ends the match
     const mended=(me&&me.delivered_periods)||[];
     ERA_SEALS.forEach(([key])=>{ const sl=armQ('.mano-seal[data-period="'+key+'"]');
