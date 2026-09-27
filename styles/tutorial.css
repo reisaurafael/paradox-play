@@ -76,7 +76,16 @@
 #tut-track .tt-leave { margin-left: 6px; cursor: pointer; border: 1px solid #5a3a55; background: transparent; color: #bca8bf;
   border-radius: 999px; padding: 3px 9px; font: 600 10px "JetBrains Mono", monospace; letter-spacing: .08em; }
 #tut-track .tt-leave:hover { color: #fff; border-color: #c77aa6; }
-@media (max-width: 1280px) { #tut-track .tt-chip:not(.now):not(.done) { display: none; } }
+#tut-track { transition: opacity .5s ease, transform .5s ease, left .45s ease, top .45s ease; }
+#tut-track .tt-count { display: none; color: #fff1cf; margin-right: 2px; white-space: nowrap; }
+/* smaller screens: a counter and the lesson at hand, nothing else */
+@media (max-width: 1500px) {
+  #tut-track .tt-title { letter-spacing: .12em; margin-right: 2px; }
+  #tut-track .tt-count { display: inline; }
+  #tut-track .tt-chip:not(.now) { display: none; }
+  #tut-track { font-size: 10px; padding: 3px 5px 3px 8px; }
+}
+@media (max-width: 1500px) { #tut-track .tt-title { font-size: 0; } #tut-track .tt-title::before { content: "LEARN"; font-size: 10px; } }
 
 /* ---- the fog over the periods not reached yet (drawn inside the star chart) ---- */
 .tut-fog .tf-period { transition: opacity 1.2s ease; }
@@ -167,7 +176,7 @@ body.tut-map-grow #chart-roll { transition: top 1.2s ease !important; }
    the end the recap hands the place back and the phase track returns ---- */
 body.tut-story:not(.tut-phases) #vz-phases,
 body.tut-story:not(.tut-phases) #phase-track { visibility: hidden !important; }
-body.tut-story #tut-track { top: 12px; }
+
 body.tut-phases #vz-phases { animation: tutBorn 1.2s ease-out; }
 
 /* a rival's die blinks on their case file while it pays them, in their colour */
@@ -182,4 +191,4 @@ body.tut-phases #vz-phases { animation: tutBorn 1.2s ease-out; }
 
 /* the learning bar steps aside while the camera faces the wagon or the cabinet */
 #tut-track.away { opacity: 0 !important; pointer-events: none !important; }
-@media (max-width: 1500px) { #tut-callout { max-width: min(400px, 31vw); } }
+@media (max-width: 1500px) { #tut-callout { max-width: min(360px, 28vw); } }

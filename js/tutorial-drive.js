@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609270131";
-import { Game } from "./game.js?202609270131";
-import { icon } from "./icons.js?202609270131";
-import { roman } from "./util.js?202609270131";
-import { profile } from "./profile.js?202609270131";
+import { api, Connection } from "./net.js?202609270144";
+import { Game } from "./game.js?202609270144";
+import { icon } from "./icons.js?202609270144";
+import { roman } from "./util.js?202609270144";
+import { profile } from "./profile.js?202609270144";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -141,7 +141,7 @@ class Stage {
 
     const tr = document.createElement("div");
     tr.id = "tut-track";
-    tr.innerHTML = `<span class="tt-title">LEARN TO PLAY</span>`
+    tr.innerHTML = `<span class="tt-title">LEARN TO PLAY</span><span class="tt-count"></span>`
       + LESSONS.map(([k, l]) => `<span class="tt-chip" data-k="${k}"><i></i>${l}</span>`).join("")
       + `<button class="tt-leave" type="button" title="Leave the tutorial">Leave</button>`;
     document.body.appendChild(tr);
@@ -162,6 +162,33 @@ class Stage {
       n.classList.toggle("done", done.has(k));
       n.classList.toggle("now", k === current && !done.has(k));
     });
+    const c = this.track.querySelector(".tt-count");
+    if (c) c.textContent = `${LESSONS.filter(([k]) => done.has(k)).length}/${LESSONS.length}`;
+  }
+  // The bar goes where the desk is free: top or bottom, centre or a side, whichever
+  // spot covers the least of the files, the machine, the dice, the gauge and the chart.
+  placeTrack() {
+    const t = this.track, now = performance.now();
+    if (t.classList.contains("gone") || t.classList.contains("away") || now - (this._trackT || 0) < 700) return;
+    this._trackT = now;
+    const w = t.offsetWidth, h = t.offsetHeight, W = innerWidth, H = innerHeight;
+    if (!w) return;
+    const soft = [];
+    KEY_AREAS.concat(["#tl-gauge", "#hull-console", "#hela-eye .he-svg"]).forEach((sel) => {
+      try { document.querySelectorAll(sel).forEach((n) => { const b = n.getBoundingClientRect(); if (b.width && onScreen(b) && visible(n) && b.width < W * .9) soft.push(b); }); } catch (e) {}
+    });
+    let best = null;
+    for (const [fx, top] of [[.5, 10], [.5, H - h - 10], [.25, 10], [.75, 10], [.25, H - h - 10], [.75, H - h - 10]]) {
+      const x = Math.max(8 + w / 2, Math.min(W - 8 - w / 2, W * fx)), l = x - w / 2;
+      let cover = 0;
+      soft.forEach((b) => { cover += Math.max(0, Math.min(l + w, b.right) - Math.max(l, b.left)) * Math.max(0, Math.min(top + h, b.bottom) - Math.max(top, b.top)); });
+      const same = this._trackAt && this._trackAt[0] === fx && this._trackAt[1] === top;
+      const score = cover - (same ? 400 : 0) + (fx === .5 && top === 10 ? -1 : 0);
+      if (!best || score < best.s) best = { s: score, fx, top, x };
+    }
+    this._trackAt = [best.fx, best.top];
+    t.style.left = Math.round(best.x) + "px";
+    t.style.top = Math.round(best.top) + "px";
   }
   trackOff() { this.track.classList.add("gone"); }
 
@@ -228,7 +255,7 @@ class Stage {
       // around the eye: close first, then a little farther, so the words never sit on
       // the machine, the dice, the chart, the files or the shelf (the tail keeps pointing at her)
       const cands = {};
-      [0, 80, 160].forEach((d, i) => {
+      [0, 80, 160, 260].forEach((d, i) => {
         cands["right" + i] = [q.x + 36 + d, q.y - 26, "left", d];
         cands["left" + i] = [q.x - 36 - cw - d, q.y - 26, "right", d];
         cands["below" + i] = [q.x - cw / 2, q.y + 40 + d, "", d];
@@ -307,6 +334,7 @@ class Stage {
     // the bar belongs to the desk: at the wagon or the cabinet it steps out of the way
     try { const sc = this.coach && this.coach.game && this.coach.game.camera && this.coach.game.camera.scene;
       this.track.classList.toggle("away", !!sc && sc !== "main"); } catch (e) {}
+    this.placeTrack();
     if (!force && !this.callout.classList.contains("on") && !this.rings.length) return;
     // rings
     this.rings.forEach((at, i) => {
@@ -769,7 +797,10 @@ class Coach {
         text = `-${onMe.damage} energy: ${who}'s <b>Paradox ${col + 1}</b> die struck everyone ${dir} them. That was you.`;
         key = "hit";
       } else if (others.length && causers.includes(self)) {
-        text = `${others.map((h) => h.seat).join(" and ")} lost ${others[0].damage}: your <b>Paradox ${col + 1}</b> die struck everyone ${dir} you.`;
+        const pos = this._posAtAlloc || {}, mc = pos[self];
+        const names = others.map((h) => h.seat).join(" and ");
+        const where = col === 1 && mc ? `in ${R(mc)}, your own century` : col === 0 ? "ahead of you, in a later century" : "behind you, in an earlier century";
+        text = `Your paradox landed. ${names} stood ${where}, so your <b>Paradox ${col + 1}</b> die cost ${others.length > 1 ? "each of them" : "them"} ${others[0].damage} energy.`;
         key = "p" + col;
       }
     } else if (k === "traveled") {
@@ -790,6 +821,7 @@ class Coach {
   async causeDone(w) {
     if (w.key === "hit" && this.once("why-hit")) await this.say(null, L.paradoxHit, { sub: w.text });
     else if (w.text && this.once("why-" + w.key)) await this.say(null, w.text);
+    if (/^p\d$/.test(w.key || "")) this.learn("paradox");
     w.cells.forEach((n) => n.classList.remove("tut-cause"));
     document.querySelectorAll(".tut-cause").forEach((n) => { if (!n.closest || !n.closest("#machine-body") || !this.req) n.classList.remove("tut-cause"); });
   }
@@ -805,6 +837,7 @@ class Coach {
       if (this.scripted && !this.done.has("win") && ((this._valveHour && p.hour > this._valveHour) || p.hour >= 12)) await this.wrapUp();
     }
     if ((k === "phase_started" || k === "phase_skipped") && this.hourNo === 1 && p.phase === "main") this.markTrack("machine");
+    if ((k === "phase_started" || k === "phase_skipped") && p.phase === "market") await this.shelfOffer(k === "phase_started");
     if (k === "game_over") this.gameOver(p);
   }
 
@@ -824,17 +857,6 @@ class Coach {
       await this.say(machineCell(fn, 0),
         `<b>${FN[fn] || "That function"} overloaded:</b> three dice in one function. It stays shut for the whole next Hour.`,
         { rings: [`#machine-body .matrix-fnlabel`] });
-    }
-    if (k === "paradox_resolved") {
-      if (p.target === self && this.once("hit")) {
-        await this.say(".vital-ekg",
-          `<b>Paradox.</b> ${p.causer} hit you for ${p.damage} energy from another century.`,
-          { sub: "Paradox 1 hits travellers ahead of you, 2 your own century, 3 those behind you." });
-      } else if (p.causer === self && this.once("hit-out")) {
-        this.learn("paradox");
-        await this.say(`#players-zone .pcard`,
-          `<b>Your paradox hit ${p.target} for ${p.damage} energy.</b> Paradox 1 strikes everyone ahead of you.`);
-      }
     }
 
     if (k === "exploded" && p.seat === self && this.once("exploded")) {
@@ -923,6 +945,11 @@ class Coach {
         this.born('#machine-body .cell[data-r="1"], #machine-body .matrix-fnlabel.fn-paradox');
         await new Promise((r) => setTimeout(r, 600));
         await this.say("#machine-body .matrix-wrap", L.paradox, { rings: ["#machine-body .matrix-fnlabel.fn-paradox"], avoid: MACHINE });
+        const reach = this.reach();
+        if (!reach.inReach) {
+          await this.say("#machine-body .matrix-wrap", `Right now it would hit no one: ${reach.behind} ${reach.many ? "are" : "is"} behind you. Travel first. From where you land, you strike next Hour.`,
+            { rings: ["#players-zone .pcard"], avoid: MACHINE });
+        }
       }
       if (stage === 3) {
         b.add("tut-mod3"); b.remove("tut-2x2");
@@ -932,6 +959,15 @@ class Coach {
         await this.say("#machine-body .matrix-wrap", L.paradoxAim, { rings: ['#machine-body .cell[data-r="1"][data-c="2"]'], avoid: MACHINE });
       }
     } finally { this._growing = false; }
+  }
+  // who his first two Paradox modules reach from where he stands now
+  reach() {
+    const v = this.game.view, me = this.me();
+    const others = ((v && v.travelers) || []).filter((t) => !t.is_self && t.name !== this.seat);
+    if (!me) return { inReach: true, behind: "", many: false };
+    const ahead = others.filter((t) => t.century > me.century), here = others.filter((t) => t.century === me.century);
+    const back = others.filter((t) => t.century < me.century);
+    return { inReach: !!(ahead.length || here.length), ahead, here, behind: back.map((t) => t.name).join(" and ") || "they", many: back.length > 1 };
   }
   born(sel) {
     document.querySelectorAll(sel).forEach((n) => { n.classList.add("tut-new"); setTimeout(() => n.classList.remove("tut-new"), 1600); });
@@ -1013,20 +1049,39 @@ class Coach {
     await this.say("#market-sign", L.merchantSign, { rings: ["#market-sign"], avoid: SHELF });
     await this.say("#market-zone .market-row", L.marketScene, { rings: ["#market-zone .market-row"], avoid: SHELF });
     await this.say("#market-zone .market-row", L.relics, { rings: ["#market-zone .market-row"], avoid: SHELF });
-    const gold = me ? me.gold : 0;
-    const cards = [...document.querySelectorAll("#market-zone .market-row .card")];
-    // the relic the lesson will buy: affordable, promised closest to where he stands
-    const cheap = (v && v.market_revealed || []).filter((c) => c.gold_cost <= Math.max(gold, 2))
-      .sort((a, b) => Math.abs(a.delivery_century - me.century) - Math.abs(b.delivery_century - me.century) || a.gold_cost - b.gold_cost)[0];
-    const card = cheap && cards.find((n) => n.dataset.name === cheap.name);
-    if (card) {
-      await this.say(card, L.marketCard.replace("{g}", cheap.gold_cost), { rings: [card], avoid: SHELF });
-      const stamp = card.querySelector(".card-deliver") || card;
-      await this.say(stamp, L.marketPromise, { rings: [stamp], avoid: SHELF });
-    }
     cam.setScene("main");
     await new Promise((r) => setTimeout(r, 900));
     this.onState && this.onState();
+  }
+
+  // THE RELIC HE CAN AFFORD, said only when it is true: at a Market phase, once the
+  // view shows the gold for the lesson relic. Before that, where the gold comes from.
+  async shelfOffer(phaseOpen) {
+    if (!this.scripted || !this.done.has("merchant") || this.done.has("shelf-offer")) return;
+    const v = this.game.view, me = this.me();
+    if (!v || !me || (me.hand || []).length) return;
+    const shelf = v.market_revealed || [];
+    const relic = shelf.find((c) => c.name === "Super Motor")
+      || shelf.slice().sort((a, b) => a.gold_cost - b.gold_cost || Math.abs(a.delivery_century - me.century) - Math.abs(b.delivery_century - me.century))[0];
+    if (!relic) return;
+    if (me.gold < relic.gold_cost) {
+      if (this.once("shelf-gold")) {
+        const cell = machineCell(0, 1);
+        await this.say(cell, `${cardName(relic)} costs ${relic.gold_cost} gold. You have ${me.gold}. Recharge's second module pays gold: fill it and the Merchant is in reach.`, { rings: [cell] });
+      }
+      return;
+    }
+    this.learn("shelf-offer");
+    const cam = this.game.camera;
+    if (cam.scene !== "market") { cam._engage(); cam.setScene("market"); await new Promise((r) => setTimeout(r, 1200)); }
+    const card = [...document.querySelectorAll("#market-zone .market-row .card")].find((n) => n.dataset.name === relic.name);
+    if (card) {
+      await this.say(card, L.marketCard.replace("{g}", relic.gold_cost), { rings: [card], avoid: SHELF });
+      const stamp = card.querySelector(".card-deliver") || card;
+      await this.say(stamp, L.marketPromise, { rings: [stamp], avoid: SHELF });
+    }
+    // no Market for him this phase: back to the desk; otherwise his decision takes it from here
+    if (!phaseOpen) { cam.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
   }
 
   onDecision(req) {
@@ -1034,7 +1089,10 @@ class Coach {
     this.req = req;
     this.pointing = false;
     this.trace("decision " + k);
-    if (k === "allocate") return this.allocate(req, hint);
+    if (k === "allocate") {
+      try { this._posAtAlloc = Object.fromEntries((this.game.view.travelers || []).map((t) => [t.name, t.century])); } catch (e) {}
+      return this.allocate(req, hint);
+    }
     if (k === "travel") return this.travel(req, hint);
     if (k === "market") return this.market(req, hint);
     if (k === "deliver") return this.deliver(req);
@@ -1193,6 +1251,10 @@ class Coach {
           `Drag a ${R(v)} onto <b>Paradox 2</b>: everyone in your own century loses ${v}.`,
           `Drag a ${R(v)} onto <b>Paradox 3</b>: everyone behind you loses ${v}.`][s.c];
         if (s.c === 0) sub = "Ahead means a higher century. Your paradox never hurts you.";
+        if (lesson === "strike") {
+          const r = this.reach(), who = s.c === 1 ? r.here : r.ahead.length ? r.ahead : r.here;
+          if (who && who.length) sub = `${who.map((t) => t.name).join(" and ")} ${who.length > 1 ? "stand" : "stands"} in ${R(who[0].century)}${s.c === 1 ? ", with you" : ""}. It lands this Hour, before anyone travels.`;
+        }
         this.markTrack("paradox");
       } else {
         text = [`Drag a ${R(v)} onto <b>Travel 1</b>: +${v} heat.`,

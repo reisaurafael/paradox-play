@@ -1935,14 +1935,18 @@
          the yellow box, the tutorial's card, the hand) has covered them for 0.7 s, and
          at most once every 2.5 s; a case file or a piece partly under them is tolerated.
      placement() reports the counts, for the checks. ══ */
-  const DEAD = 70, FLIP_GAP = 1500;
-  const OMEGA = 10, ZETA = .85, VMAX_EYE = 470;       // the eye's spring (rad/s), damping, top speed (px/s)
+  // SHE STOPS TO SPEAK. Silent, the eye follows the hand snappily (a critically damped
+  // spring, about 60 ms behind). With a line to say (four words or more) she stops at the
+  // nearest spot where her words cover nothing important, pulses while she speaks, and her
+  // balloon stands completely still until the line ends; then she follows again. Barks of
+  // one to three words ride the moving eye. Her boxes (YOUR MOVE...) are laid where they
+  // appear and stay; they move only with new content or when something important is under
+  // them, and then by a dissolve, never a slide.
+  const DEAD = 6, FLIP_GAP = 1500;
+  const OMEGA = 28, ZETA = .85, VMAX_EYE = 9000;      // the eye's spring (rad/s), damping, top speed (px/s)
   let ex2 = -1, ey2 = -1, evx = 0, evy = 0, lastF = 0, ancX = -1, ancY = -1, flipAt = 0, changes = 0, switches = 0;
   let parked = null, regionR = null, parkedPlaced = false, needXT = 0, needYT = 0, deskT = 0;
-  // her words aim at where the EYE IS GOING (never at the eye's own bounce), and while the
-  // hand rushes they hold still; they glide once, when the hand slows down
-  let tgtX = -1, tgtY = -1, mSpd = 0, lmx = -1, lmy = -1, holdW = false, slowAt = 0;
-  const FAST = 750, SLOW = 380, VMAX_B = 600, OMEGA_B = 7, ZETA_B = 1.15;
+  let talk = null, capsDirty = false, capsBadAt = 0, capsFading = false;
   function machineRegion(){
     const el2 = document.getElementById("hull-console");
     const r = el2 && el2.getBoundingClientRect();
@@ -2007,7 +2011,8 @@
     let dt = lastF ? (t - lastF) / 1000 : .016; lastF = t;
     if (dt > .05 || dt <= 0) dt = .016; else if (dt > .02) dt = .02;   // a held frame is not made up in one step
     refreshZones(t);
-    if (parked){
+    if (talk){ /* she stays where she stopped; parking waits */ }
+    else if (parked){
       const r = parked.col ? fileRegion() : machineRegion(); if (r) regionR = r;
       if (!inRect(regionR, 70)){ parked = null; changes++; ancX = -1; }
     } else {
@@ -2046,12 +2051,7 @@
       if ((nx !== sx || ny !== sy) && t - flipAt > FLIP_GAP){ sx = nx; sy = ny; flipAt = t; changes++; }
       const q = post3(ancX, ancY, sx, sy); tx = q.x; ty = q.y;
     }
-    tgtX = tx; tgtY = ty;
-    if (lmx >= 0) mSpd = mSpd * .75 + Math.hypot(mx - lmx, my - lmy) / dt * .25;
-    lmx = mx; lmy = my;
-    if (mSpd > FAST){ holdW = true; slowAt = 0; }
-    else if (holdW && mSpd < SLOW){ if (!slowAt) slowAt = t; else if (t - slowAt > 180) holdW = false; }
-    else slowAt = 0;
+    if (talk){ tx = talk.x; ty = talk.y; }          // speaking: she stands still
     if (ex2 < 0){ ex2 = tx; ey2 = ty; }            // the first frame only
     else {
       // two half steps keep the spring steady on a slow frame
@@ -2061,7 +2061,6 @@
       }
     }
     place(ex2, ey2);
-    words(dt);
   }
 
   // where she would stand on a given diagonal (sx2, sy2) for the current cursor
@@ -2218,12 +2217,10 @@
     const f = nearestFree(x, y, W, H, extra);
     return f ? ["free", f] : (curC || list[0]);
   }
-  // a block's TARGET offset from the eye's centre; words() slides it there
+  // a block's place on screen (its box b, decided around an eye at x, y) and its look
   function setBlock(el2, mode, b, x, y, isCaps){
-    el2._tox = b[0] - x; el2._toy = b[1] - y;
-    if (el2._bx == null){   // it appears: no slide, it opens where it belongs
-      el2.style.left = "30px"; el2.style.top = "30px"; el2.style.right = "auto"; el2.style.bottom = "auto";
-      words1(el2, 0); }
+    if (el2._bx == null){ el2.style.left = "30px"; el2.style.top = "30px"; el2.style.right = "auto"; el2.style.bottom = "auto"; }
+    el2._bx = b[0]; el2._by = b[1];
     if (el2._mode !== mode){
       el2._mode = mode;
       const vert = !isCaps && (mode === "a" || mode === "b");
@@ -2234,76 +2231,125 @@
       if (isCaps) el2.classList.toggle("he-below", mode === "cb" || mode === "rb" || mode === "lb");   // YOUR MOVE stays nearest her
     }
   }
-  // her words have their OWN place on screen: they follow the eye's target on an overdamped
-  // spring (no overshoot, no wobble, at most VMAX_B px/s), and hold still while the hand rushes
-  function words1(el2, dt){
-    if (el2._tox == null || tgtX < 0) return;
-    const Tx = tgtX + el2._tox, Ty = tgtY + el2._toy;
-    if (el2._bx == null){ el2._bx = el2._hx = Tx; el2._by = el2._hy = Ty; el2._bvx = el2._bvy = 0; }
-    else {
-      if (!holdW){ el2._hx = Tx; el2._hy = Ty; }
-      for (let n = 0; n < 2 && dt > 0; n++){
-        const h = dt / 2;
-        el2._bvx += (OMEGA_B * OMEGA_B * (el2._hx - el2._bx) - 2 * ZETA_B * OMEGA_B * el2._bvx) * h;
-        el2._bvy += (OMEGA_B * OMEGA_B * (el2._hy - el2._by) - 2 * ZETA_B * OMEGA_B * el2._bvy) * h;
-        const sp = Math.hypot(el2._bvx, el2._bvy);
-        if (sp > VMAX_B){ el2._bvx *= VMAX_B / sp; el2._bvy *= VMAX_B / sp; }
-        el2._bx += el2._bvx * h; el2._by += el2._bvy * h;
-      }
-      if (Math.abs(el2._bx - el2._hx) < .25 && Math.abs(el2._by - el2._hy) < .25 && Math.hypot(el2._bvx, el2._bvy) < 3){
-        el2._bx = el2._hx; el2._by = el2._hy; el2._bvx = el2._bvy = 0; }
-    }
-    // the element rides inside the eye, so its offset is its place minus the eye's
-    el2._ox = el2._bx - ex2; el2._oy = el2._by - ey2;
-    const tr = `${el2._ox.toFixed(1)}px ${el2._oy.toFixed(1)}px`;
+  // the element rides inside the eye, so its offset is its place on screen minus the eye's
+  function pin(el2, x, y){
+    if (el2._bx == null) return;
+    const tr = `${(el2._bx - x).toFixed(1)}px ${(el2._by - y).toFixed(1)}px`;
     if (el2._tr !== tr){ el2._tr = tr; el2.style.translate = tr; }
-    tail(el2);
+    if (el2 === chipEl){
+      const w = chipBox ? chipBox[0] : 300, tx = Math.round(Math.max(24, Math.min(w - 24, x - el2._bx)));
+      if (el2._tx !== tx){ el2._tx = tx; el2.style.setProperty("--he-tx", tx + "px"); }
+    }
   }
-  function words(dt){ for (const el2 of [chipEl, capsEl]) if (el2) words1(el2, dt); }
-  function tail(el2){
-    if (el2 !== chipEl) return;
-    const w = chipBox ? chipBox[0] : 300, tx = Math.round(Math.max(24, Math.min(w - 24, -el2._ox)));
-    if (el2._tx !== tx){ el2._tx = tx; el2.style.setProperty("--he-tx", tx + "px"); }
+  function area(b, z){ const w = Math.min(b[2], z[2]) - Math.max(b[0], z[0]), h = Math.min(b[3], z[3]) - Math.max(b[1], z[1]); return w > 0 && h > 0 ? w * h : 0; }
+  function capsRect(){ return capsEl && capsEl._bx != null && capsBox ? [capsEl._bx, capsEl._by, capsEl._bx + capsBox[0], capsEl._by + capsBox[1]] : null; }
+  // where she stops for a line: the nearest spot (from where she is) whose balloon covers
+  // nothing critical, as little of the files and cards as can be, not the hand, not her boxes
+  function stopSpot(){
+    const W = chipBox[0], H = chipBox[1];
+    const bx0 = talk ? talk.x : (ex2 < 0 ? mx : ex2), by0 = talk ? talk.y : (ey2 < 0 ? my : ey2);
+    const hand = mx >= 0 ? [mx - 40, my - 40, mx + 60, my + 70] : null;
+    const cr = capsEl && capsEl.querySelector(".cx-cap.on") ? capsRect() : null;
+    const offs = [[0, 0]];
+    for (const r of [40, 85, 140, 210, 290, 380]) for (let k = 0; k < 12; k++){ const a = k * Math.PI / 6; offs.push([Math.cos(a) * r, Math.sin(a) * r * .75]); }
+    let best = null, bc = 1e18;
+    for (const [dx, dy] of offs){
+      const x = Math.max(34, Math.min(innerWidth - 34, bx0 + dx)), y = Math.max(40, Math.min(innerHeight - 34, by0 + dy));
+      const eb = [x - 30, y - 30, x + 30, y + 30];
+      let ce = 0; for (const z of zones) if (z[4]) ce += area(eb, z);
+      if (hand) ce += area(eb, hand);
+      for (const [mode, b] of cands(x, y, W, H, sx === 1 ? "r" : "l", false, null)){
+        if (b[0] < 6 || b[1] < 6 || b[2] > innerWidth - 6 || b[3] > innerHeight - 6) continue;
+        let c = Math.hypot(x - bx0, y - by0) * 30 + ce * 60;
+        for (const z of zones) c += area(b, z) * (z[4] ? 60 : 1);
+        if (hand) c += area(b, hand) * 30;
+        if (cr) c += area(b, cr) * 30;
+        if (c < bc){ bc = c; best = { x, y, mode, box: b }; }
+      }
+    }
+    return best;
   }
+  // a line begins (nextSay has put the words in): a bark rides the eye, a line stops her
+  function beginLine(){
+    if (!eye) return;
+    if (!chipEl) chipEl = eye.querySelector(".he-chip");
+    if (!capsEl) capsEl = eye.querySelector(".he-caps");
+    const txt = (chipEl.textContent || "").trim(), n = txt ? txt.split(/\s+/).length : 0;
+    chipBox = [chipEl.offsetWidth || 300, chipEl.offsetHeight || 56];
+    zonesT = 0; refreshZones(performance.now());
+    if (n <= 3 && !talk) return;
+    const sp = stopSpot();
+    if (!sp){ return; }
+    if (talk && chipMode && chipMode !== sp.mode) switches++;
+    changes++;
+    talk = { x: sp.x, y: sp.y };
+    chipMode = sp.mode;
+    setBlock(chipEl, sp.mode, sp.box, sp.x, sp.y, false);
+    eye.classList.add("he-talking");
+  }
+  function endLine(){ talk = null; if (eye) eye.classList.remove("he-talking"); }
   function applySide(x, y){
     if (!eye) return;
     if (!chipEl) chipEl = eye.querySelector(".he-chip");
     if (!capsEl) capsEl = eye.querySelector(".he-caps");
     const saying = eye.classList.contains("he-says");
     const capsOn = !!(capsEl && capsEl.querySelector(".cx-cap.on"));
-    // words that were gone a while (faded out) come back where they belong, no slide from the old spot
-    const now0 = performance.now();
-    for (const [el2, on] of [[chipEl, saying], [capsEl, capsOn]]){
-      if (!el2) continue;
-      if (!on){ if (!el2._goneAt) el2._goneAt = now0; }
-      else if (el2._goneAt){ if (now0 - el2._goneAt > 700) el2._bx = null; el2._goneAt = 0; }
-    }
-    if (!saying && !capsOn){ chipSide = ""; return; }
     const t = performance.now();
-    if (chipSide === "") zonesT = 0;
-    chipSide = "x";
-    refreshZones(t);
+    if (saying || capsOn){
+      if (chipSide === "") zonesT = 0;
+      chipSide = "x";
+      refreshZones(t);
+    }
     const away = mx < 0 ? (x < innerWidth / 2 ? "r" : "l") : (sx === 1 ? "r" : "l");
     let cb = null;
-    if (chipEl && saying){
-      const [W, H] = chipBox;
-      const rel = chipEl._tox != null ? [chipEl._tox, chipEl._toy] : null;
-      const c = pick(x, y, W, H, chipMode, rel, away, false, null);
-      if (c[0] !== chipMode){ if (chipMode) switches++; changes++; }
-      chipMode = c[0]; cb = c[1];
-      setBlock(chipEl, chipMode, cb, x, y, false);
+    if (chipEl){
+      if (saying && !talk){   // a bark rides the eye
+        const [W, H] = chipBox;
+        const rel = chipEl._bx != null && chipEl._riding ? [chipEl._bx - chipEl._rx, chipEl._by - chipEl._ry] : null;
+        const c = pick(x, y, W, H, chipEl._riding ? chipMode : "", rel, away, false, null);
+        if (c[0] !== chipMode){ if (chipMode && chipEl._riding) switches++; changes++; }
+        chipMode = c[0]; cb = c[1];
+        setBlock(chipEl, chipMode, cb, x, y, false);
+        chipEl._riding = true; chipEl._rx = x; chipEl._ry = y;
+      } else {
+        chipEl._riding = false;
+        if (saying && chipEl._bx != null) cb = [chipEl._bx, chipEl._by, chipEl._bx + chipBox[0], chipEl._by + chipBox[1]];
+      }
+      pin(chipEl, x, y);   // a line (or its fold) stands still on screen
     }
-    if (capsEl && capsOn && capsBox){
-      const [W, H] = capsBox;
-      const rel = capsEl._tox != null ? [capsEl._tox, capsEl._toy] : null;
-      const c = pick(x, y, W, H, capsMode, rel, away, true, cb ? [cb] : null);
-      if (c[0] !== capsMode){ if (capsMode) switches++; changes++; }
-      capsMode = c[0];
-      setBlock(capsEl, capsMode, c[1], x, y, true);
+    if (capsEl){
+      if (capsOn && capsBox){
+        const cur = capsRect();
+        const fits = cur && freeBox(cur, cb ? [cb] : null, false, !!talk);
+        if (!cur || (capsDirty && !fits)){ if (!capsFading) layCaps(x, y, cb, !!cur); }
+        else if (!fits){   // something important (or the hand) has sat on them a while: dissolve away
+          if (!capsBadAt) capsBadAt = t;
+          else if (t - capsBadAt > 1200 && !capsFading) layCaps(x, y, cb, true);
+        } else capsBadAt = 0;
+        capsDirty = false;
+      } else if (!capsOn && capsEl._bx != null && !capsEl._goneAt) capsEl._goneAt = t;
+      if (capsOn) capsEl._goneAt = 0;
+      else if (capsEl._goneAt && t - capsEl._goneAt > 700){ capsEl._bx = null; capsEl._goneAt = 0; }
+      pin(capsEl, x, y);
     }
     const dc = eye.querySelector(".he-dchip");
     if (dc) dc.classList.toggle("flip-x", away === "l");
-    if (parked) parkedPlaced = true;
+  }
+  // her boxes find a place around her (and her words); from an old place they dissolve
+  // out and in, never slide
+  function layCaps(x, y, cb, fade){
+    const [W, H] = capsBox;
+    const c = pick(x, y, W, H, "", null, mx < 0 ? "r" : (sx === 1 ? "r" : "l"), true, cb ? [cb] : null);
+    capsBadAt = 0;
+    if (capsMode && c[0] !== capsMode) switches++;
+    changes++;
+    if (!fade){ capsMode = c[0]; setBlock(capsEl, capsMode, c[1], x, y, true); return; }
+    capsFading = true; capsEl.classList.add("he-fade");
+    setTimeout(() => {
+      capsMode = c[0]; setBlock(capsEl, capsMode, c[1], x, y, true);
+      if (eye) pin(capsEl, ex2 < 0 ? x : ex2, ey2 < 0 ? y : ey2);
+      capsEl.classList.remove("he-fade"); capsFading = false;
+    }, 220);
   }
   function place(x, y){
     const tr = `translate(${x - 30}px, ${y - 30}px)`;
@@ -2438,6 +2484,7 @@
     if (it.html && it.html.nodeType === 1){ chip.textContent = ""; chip.appendChild(it.html); }
     else chip.innerHTML = it.html;
     chipSide = "";   // new words, new size: measure and place again
+    beginLine();     // a line stops her where her words cover nothing important
     // already speaking: the words swap in place (comic.js fades them in); else she opens
     if (!eye.classList.contains("he-says")){ void eye.offsetWidth; eye.classList.add("he-says"); }
     try { it.onShow && it.onShow(it.ms); } catch (e) {}
@@ -2447,7 +2494,7 @@
       if (sayQ.length) { nextSay(); return; }
       // nothing waiting: she folds only if no new line comes within a moment
       saying = GRACE;
-      sayT = setTimeout(() => { if (eye) eye.classList.remove("he-says"); saying = null; }, 700);
+      sayT = setTimeout(() => { if (eye) eye.classList.remove("he-says"); saying = null; endLine(); }, 700);
     }, it.ms);
   }
 
@@ -2555,8 +2602,9 @@
   window.__helaEye = { say, manifest, aimSplit, clearSplit, blink, setPost, clearPost, direct, highlight,
     caps(){ if (!capsEl && eye) capsEl = eye.querySelector(".he-caps"); return capsEl; },
     live(){ return !!(eye && eye._live); }, posted(){ return !!(standAt || glide); }, backlog,
-    relayout(){ chipSide = ""; },
-    placement(){ return { chip: chipMode, caps: capsMode, zones: zones.length, chipBox, capsBox, changes, switches, parked: !!parked, why: whyMoved }; },   // for checks
+    relayout(){ chipSide = ""; capsDirty = true; },
+    stopped(){ return !!talk; },   // she is standing still, speaking
+    placement(){ return { chip: chipMode, caps: capsMode, zones: zones.length, chipBox, capsBox, changes, switches, parked: !!parked, talk: !!talk, why: whyMoved }; },   // for checks
     pos(){ if (!eye) return { x: 64, y: 96 }; const r = eye.getBoundingClientRect(); return { x: r.left + 30, y: r.top + 30 }; } };
   window.__helaSay = (html, opt) => say(html, opt);   // she owns her voice now
 
@@ -3379,13 +3427,22 @@
    a click, dragging only engages past a 7px threshold, and buttons on the
    file never start a drag. ═══ */
 (function deskLab(){
+  // positions belong to ONE match (its room code): a new match deals the files
+  // fresh, a reload of the same match puts them back where they were left
   const KEY="pdx-desklab-v1";
-  let pos={}; try{ pos=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(err){ pos={}; }
+  let saved={}; try{ saved=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(err){ saved={}; }
+  let code=saved.code||null, pos=(saved.code&&saved.pos)||{};
   let zTop=18; Object.keys(pos).forEach((k)=>{ if(pos[k].z>zTop) zTop=pos[k].z; });
+  const matchCode=()=>{ const g=window.__game; return (g&&g.conn&&g.conn.code)||null; };
+  const card=(seat)=>document.querySelector(`.cb-grid .pcard.cfolio[data-seat="${CSS.escape(seat)}"]`);
   function apply(){
+    const mc=matchCode();
+    if(mc&&mc!==code){ code=mc; pos={}; zTop=18; }
     for(const seat in pos){ const p=pos[seat];
-      const el=document.querySelector(`.cb-grid .pcard.cfolio[data-seat="${CSS.escape(seat)}"]`);
+      const el=card(seat);
       if(!el) continue;
+      // only a file that is truly off the wood comes back (the drag limits below)
+      p.x=Math.max(-30,Math.min(792,+p.x||0)); p.y=Math.max(6,Math.min(880,+p.y||0));
       el.style.left=p.x+"px"; el.style.top=p.y+"px";
       el.style.setProperty("--dk-rot",(p.r||0)+"deg"); el.style.zIndex=p.z||18;
     }
@@ -3398,7 +3455,7 @@
     raf=requestAnimationFrame(()=>{ raf=0; apply(); });
   }).observe(zone,{childList:true,subtree:true});
 
-  let held=null,pid=0,sx=0,sy=0,ox=0,oy=0,rot=0,zz=0,moved=false;
+  let held=null,pid=0,sx=0,sy=0,ox=0,oy=0,cx=0,cy=0,rot=0,zz=0,moved=false;
   document.addEventListener("pointerdown",(e)=>{
     if(e.button!==0||held) return;
     if(!document.body.classList.contains("cabin-on")) return;
@@ -3421,20 +3478,26 @@
       zz=Math.min(38,++zTop);                                   // last dropped rides highest, under hover's 40
       try{ window.__audio&&window.__audio.play("place",{power:.22}); }catch(err){}
     }
-    held.style.left=Math.max(-30,Math.min(792,ox+dx))+"px";     // the wood ends where the chart begins
-    held.style.top =Math.max(6,Math.min(880,oy+dy))+"px";       // and above the arm's harbour
+    // a state update can rebuild the file mid-drag: keep carrying the live one
+    if(!held.isConnected){ const live=held.dataset.seat&&card(held.dataset.seat);
+      if(live){ live.classList.add("dk-held"); live.style.zIndex=held.style.zIndex; held=live; } }
+    cx=Math.max(-30,Math.min(792,ox+dx)); cy=Math.max(6,Math.min(880,oy+dy));
+    held.style.left=cx+"px";     // the wood ends where the chart begins
+    held.style.top =cy+"px";       // and above the arm's harbour
   },true);
   const drop=(e)=>{
     if(!held||e.pointerId!==pid) return;
-    const el=held; held=null;
+    let el=held; held=null;
     if(!moved) return;
-    el.classList.remove("dk-held"); el.style.zIndex=zz;
-    document.body.classList.remove("dk-carrying");
-    // no file gets buried alive: a drop under the maleta keeps a graspable peek
-    if(el.offsetLeft<620&&el.offsetTop<380) el.style.top="380px";
+    // the file stays exactly where it was let go. A file rebuilt mid-drag is found again
+    // by its seat (a detached node reads offsetLeft 0, which used to throw it under the case)
     const seat=el.dataset.seat;
-    if(seat){ pos[seat]={x:el.offsetLeft,y:el.offsetTop,r:rot,z:zz};
-      try{ localStorage.setItem(KEY,JSON.stringify(pos)); }catch(err){} }
+    if(!el.isConnected&&seat){ const live=card(seat); if(live) el=live; }
+    el.classList.remove("dk-held"); el.style.zIndex=zz;
+    el.style.left=cx+"px"; el.style.top=cy+"px";
+    document.body.classList.remove("dk-carrying");
+    if(seat){ if(!code) code=matchCode(); pos[seat]={x:cx,y:cy,r:rot,z:zz};
+      try{ localStorage.setItem(KEY,JSON.stringify({code,pos})); }catch(err){} }
     try{ window.__audio&&window.__audio.play("place",{power:.42}); }catch(err){}
     const stop=(c2)=>{ c2.stopPropagation(); c2.preventDefault(); };
     el.addEventListener("click",stop,true);

@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609270131";
-import { roman } from "./util.js?202609270131";
+import { audio } from "./audio.js?202609270144";
+import { roman } from "./util.js?202609270144";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -145,6 +145,7 @@ class Fx {
     return !this.root || document.hidden || !!(g && g._skip) || (!!window.__helaMute && !this.tutorial);
   }
   _me() { return this.game && this.game.seat; }
+  _col(seat) { try { return this.game.colorOf(seat); } catch (e) { return null; } }
   _chartLive() { try { return !!(this.comic && this.comic._chart()); } catch (e) { return false; } }
   _view() { return this.game && this.game.view; }
   _tv(seat) { const v = this._view(); return v && v.travelers ? v.travelers.find((t) => t.name === seat) : null; }
@@ -267,7 +268,8 @@ class Fx {
     const n = document.createElement("div");
     n.className = `fx-${kind} fx-${tone || "plain"}`;
     n.style.left = Math.round(p.x) + "px"; n.style.top = Math.round(p.y) + "px";
-    n.style.setProperty("--fx-c", TONE[tone] || TONE.plain);
+    n.style.setProperty("--fx-c", opts.color || TONE[tone] || TONE.plain);
+    if (opts.color) n.classList.add("fx-seat");   // in the causer's colour
     const b = document.createElement("b"); b.textContent = word; n.appendChild(b);
     if (opts.sub) { const s = document.createElement("span"); s.textContent = opts.sub; n.appendChild(s); }
     this.root.appendChild(n);
@@ -293,6 +295,11 @@ class Fx {
   route(kind, at, opts) {
     const lv = this.level();
     if (lv === "off") return true;
+    // a paradox wears the colour of the traveller who landed it on the hit it names
+    if (kind === "paradox" && !opts.c && this._pdx) {
+      const h = this._pdx, now = performance.now();
+      if (now - h.t < 4000) opts.c = h.col;
+    }
     // a contract names its category and its result
     if (kind === "contract" && this._reward && !opts.word) {
       const f = REWARD[this._reward.category];
@@ -302,7 +309,7 @@ class Fx {
       const face = BIG_FACE[kind] || ["POW!", "plain"];
       const a = at && at.width != null ? { r: at, box: at, above: false }
         : at && at.x != null ? { r: { left: at.x, top: at.y, right: at.x, bottom: at.y, width: 0, height: 0 }, box: null, above: true } : null;
-      if (a) this.stamp(opts.word || face[0], face[1], a, { sound: false });
+      if (a) this.stamp(opts.word || face[0], face[1], a, { sound: false, color: opts.c });
       return true;
     }
     const now = performance.now();
@@ -342,6 +349,11 @@ class Fx {
     if (window.__helaMute && this.tutorial) this._tutorBig(kind, p);
     switch (kind) {
       case "hour_started": this._trips = {}; return;
+      case "paradox_resolved": {                // the colour of whoever landed the hit the panel names
+        const st = this._pdxStar(p);
+        this._pdx = st ? { col: st.col, t: performance.now() } : null;
+        return;
+      }
       case "module_resolved":                   // the escape valve dumps an overloaded die for energy
         if (p.kind === "escape_valve") for (const e of p.effects || []) if (e.energy > 0) this.pop("VENT!", "valve", () => this._seat(e.seat, "life"));
         return;
@@ -396,15 +408,26 @@ class Fx {
     }
   }
 
+  // the hit the big panel names (comic.js: mine first, else the first rival hit) and the
+  // colour of the traveller who fed that pool without being its victim (as game.js bills it)
+  _pdxStar(p) {
+    const me = this._me();
+    const hits = (p.hits || []).filter((h) => h.damage); if (!hits.length) return null;
+    const star = hits.find((h) => h.seat === me) || hits.find((h) => h.seat !== me) || hits[0];
+    let causers = [];
+    try { causers = (this.game._paradoxCausers && this.game._paradoxCausers(p.module)) || []; } catch (e) {}
+    const by = causers.find((c) => c !== star.seat) || causers[0];
+    return { star, col: by ? this._col(by) : null };
+  }
+
   // In the tutorial HELA's own lines are silent, and her big panels ride those lines
   // (comic.js say). With the tutorial's leave (this.tutorial), the same panels land here.
   _tutorBig(kind, p) {
     const me = this._me();
     const at = (seat) => { try { return this.comic._seatRect(seat); } catch (e) { return null; } };
     if (kind === "paradox_resolved") {
-      const hits = (p.hits || []).filter((h) => h.damage); if (!hits.length) return;
-      const star = hits.find((h) => h.seat === me) || hits[0];
-      return this.big("paradox", at(star.seat), { big: star.seat === me, sub: `-${star.damage}` });
+      const st = this._pdxStar(p); if (!st) return;
+      return this.big("paradox", at(st.star.seat), { big: st.star.seat === me, sub: `-${st.star.damage}`, c: st.col || undefined });
     }
     if (kind === "exploded") return this.big("boom", at(p.seat), { big: true });
     if (kind === "terminated") return this.big("terminated", at(p.seat), { big: true, sub: "TERMINATED" });
@@ -425,7 +448,7 @@ class Fx {
         return this.pop(word, au && !en ? "gold" : "energy", () => this._seat(p.seat, au && !en ? "gold" : "life"));
       }
       case "paradox_cast":                       // modules 4 to 6: who fed the pool
-        for (const c of p.causers || []) this.pop("ZAP!", "paradox", () => this._seat(c, "paradox"));
+        for (const c of p.causers || []) this.pop("ZAP!", "paradox", () => this._seat(c, "paradox"), { color: this._col(c) });
         return;
       case "heat":                               // module 7
         return this.pop((p.booms || 0) >= 9 ? "HSSSSS!" : "HSSS!", (p.booms || 0) >= 9 ? "danger" : "heat", () => this._seat(p.seat, "heat"));

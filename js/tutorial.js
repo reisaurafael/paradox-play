@@ -5,7 +5,7 @@
    with an "X" to dismiss. Each tip shows at most once (persisted), and the whole
    system can be turned off in Settings for experienced players.
    ========================================================================= */
-import { icon } from "./icons.js?202609270131";
+import { icon } from "./icons.js?202609270144";
 
 const LS_SEEN = "paradoxo.tutorials.seen";
 const LS_ON = "paradoxo.tutorials.enabled";

@@ -26,8 +26,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609270131";
-import { mend } from "./mend.js?202609270131";
+import { roman } from "./util.js?202609270144";
+import { mend } from "./mend.js?202609270144";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -357,9 +357,9 @@ class Comic {
     if (this.hitEl) { this.hitEl.remove(); this.hitEl = null; }
     const big = !!opts.big;
     const h = document.createElement("div");
-    h.className = "cx-hit" + (big ? " cx-hit-big" : "") + " cx-g-" + gfx;
+    h.className = "cx-hit" + (big ? " cx-hit-big" : "") + " cx-g-" + gfx + (opts.c ? " cx-seat" : "");   // FX: cx-seat wears the causer's colour
     h.style.left = x + "px"; h.style.top = y + "px";
-    h.style.setProperty("--cx-c", K.c); h.style.setProperty("--cx-ink", K.ink);
+    h.style.setProperty("--cx-c", opts.c || K.c); h.style.setProperty("--cx-ink", K.ink);
     const lines = (!reduced && gfx !== "low" && big) ? document.createElement("i") : null;
     if (lines) { lines.className = "cx-lines"; h.appendChild(lines); }
     const burst = document.createElement("i"); burst.className = "cx-burst"; h.appendChild(burst);

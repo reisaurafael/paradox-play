@@ -7898,3 +7898,17 @@ body.cx-on #hela-eye .he-chip.he-over::after { top: auto; bottom: -9px;
    her, and lets every click that is not on the brain (or the ledger) through to her */
 body.cabin-on #log-zone { z-index: 9; pointer-events: none; }
 body.cabin-on #log-zone #hela-brain-full, body.cabin-on #log-zone .ledger { pointer-events: auto; }
+/* SHE STOPS TO SPEAK (cabin.js): while a line is up the eye stands still and pulses
+   softly in her colour; her boxes move only by a dissolve */
+#hela-eye.he-talking .he-svg { animation: heTalk 1.7s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px var(--vz, #6fe8c8)) drop-shadow(0 0 2px rgba(0,0,0,.6)); }
+@keyframes heTalk { 0%, 100% { scale: 1; } 50% { scale: 1.09; } }
+#hela-eye .he-caps { transition: opacity .2s ease; }
+#hela-eye .he-caps.he-fade { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { #hela-eye.he-talking .he-svg { animation: none; } }
+/* the pointer (HELA's reticle and the gloved hand) at 80% of its old size, still vector
+   (the boxes shrink, the art scales crisp) and still on top of everything */
+body.cabin-on #cursor-plane .hela-radar { width: 83.2px; height: 83.2px; margin-left: -41.6px; margin-top: -41.6px; }
+body.cabin-on #cursor-plane .hand-right { width: 240px; height: 212.8px; margin-left: -92.2px; margin-top: -65.7px; }
+html body #menu-cursor .mc-radar { width: 83.2px; height: 83.2px; margin: -41.6px 0 0 -41.6px; }
+html body #menu-cursor .mc-hand { width: 240px; height: 212.8px; margin: -65.7px 0 0 -92.2px; }

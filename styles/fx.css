@@ -35,6 +35,18 @@
 .fx-stamp.fx-valve, .fx-stamp.fx-shield, .fx-stamp.fx-travel {
   background: radial-gradient(circle, rgba(10,70,90,.15) 1px, transparent 1.5px) 0 0 / 5px 5px, #dcf1f4; }
 
+/* A PARADOX WEARS ITS CAUSER'S COLOUR (fx.js route, comic.js cx-seat): the burst in the
+   seat colour, the ink a dark shade of it, the lettering a pale tint of it, so the words
+   stay readable on any seat colour. The same for the ZAP! pops and a Light-mode stamp. */
+.cx-hit.cx-seat { --cx-ink2: color-mix(in srgb, var(--cx-c) 22%, #0a0605); }
+.cx-hit.cx-seat .cx-burst { background: var(--cx-ink2); }
+.cx-hit.cx-seat .cx-word { color: color-mix(in srgb, var(--cx-c) 26%, #fff8e6);
+  -webkit-text-stroke-color: var(--cx-ink2); text-shadow: 4px 4px 0 var(--cx-ink2); }
+.cx-hit.cx-hit-big.cx-seat .cx-word { text-shadow: 6px 6px 0 var(--cx-ink2); }
+.cx-hit.cx-seat .cx-sub { background: var(--cx-ink2); }
+.cx-hit.cx-seat .cx-lines { background: repeating-conic-gradient(from 3deg, var(--cx-ink2) 0deg 1.4deg, transparent 1.4deg 6.5deg); }
+.fx-pop.fx-seat b { color: color-mix(in srgb, var(--fx-c) 72%, #ffffff); }
+
 /* Low graphics: flat paper, no halftone */
 body.gfx-low .fx-stamp { background: var(--cx-paper, #f4e6b0); }
 body.gfx-low .fx-pop b { text-shadow: none; }
