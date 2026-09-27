@@ -820,7 +820,7 @@
   }
   const ORGAN_TIP={
     "mano-screen": "THE SCREEN: your causality matrix; place this hour's dice into the modules",
-    "mano-vent":   "ESCAPE VALVE: dump a die to vent boom pressure (spends its value)",
+    "mano-vent":   "ESCAPE VALVE: takes one spare die; while a function is shut it drains that die in energy",
     "mano-boomg":  "BOOM GAUGE: pressure 0-12; at 12 the motor detonates",
     "hexcore":     "HEXTECH CORE: the reality simulator's heart",
     "tray-slot":   "GENERATORS: the qutrit dice condensed for this hour",
@@ -1621,13 +1621,21 @@
     lastMx=e.clientX; lastMy=e.clientY;
     const ship=e.target&&e.target.closest&&e.target.closest(
       "#timeline-rail .sea-fixg[data-seat], #timeline-rail .cc-shipg[data-seat], #timeline-rail .cm-shipg[data-seat]");
-    const seat=ship?ship.getAttribute("data-seat"):null;
+    const seat=ship&&chartInView()?ship.getAttribute("data-seat"):null;
     setPeek(seat&&document.querySelector(`.pcard.cfolio[data-seat="${CSS.escape(seat)}"]`)?seat:null);
+  }
+  // a traveller's file opens from the chart only while the chart is what he is looking at:
+  // never on the Market (the rolled chart and a pan must not throw a file over the shelf)
+  function chartInView(){
+    const app=window.__game, cam=document.getElementById("cam");
+    return !!(app&&app.camera&&app.camera.scene==="main")
+      &&!document.body.classList.contains("chart-rolled")&&!(cam&&cam.classList.contains("is-panning"));
   }
   function peekGuard(){
     // ships sail out from under a stationary pointer (no mouseleave fires),
     // and renderPlayers rebuilds the cards (class lost), both healed here
     if(!peekSeat) return;
+    if(!chartInView()){ setPeek(null); return; }
     const el=document.elementFromPoint(lastMx,lastMy);
     const ship=el&&el.closest&&el.closest("#timeline-rail [data-seat]");
     if(!ship||ship.getAttribute("data-seat")!==peekSeat){ setPeek(null); return; }
@@ -2469,6 +2477,9 @@
   function say(html, opt){
     opt = opt || {}; if (!html) return;
     if (window.__helaMute && !opt.force) return;   // the tutorial silences her ambient barks; only its own lines pass
+    // THE OWNER'S RULE: she speaks only when the player must act or something happened to
+    // HIM that he cannot see; her commentary waits in her notes, read while TAB is held
+    if (!opt.force && !opt.essential && window.__pdxHelp){ window.__pdxHelp.note(html, { key: opt.key }); return; }
     sayQ.push({ html, prio: opt.prio || 0, onShow: opt.onShow || null, ms: Math.max(readMs(html), opt.ms || 0),
       born: performance.now(), ttl: opt.ttl || 0 });
     while (sayQ.length > 2){   // keep two waiting at most: drop the least important older one
@@ -3363,7 +3374,10 @@
       (document.getElementById("screen-game") || document.body).appendChild(veil);
       void veil.offsetWidth;   // let the veil start transparent, so the first seal fades in
     }
-    document.body.classList.add("hh-sealing");
+    // the soft, dim table is for the desk only: on the Market the shelf stays sharp, its
+    // card faces must be readable (the veil blurred the whole wagon scene)
+    const desk = !(window.__game && window.__game.camera && window.__game.camera.scene !== "main");
+    if (desk) document.body.classList.add("hh-sealing");
     const rite = document.createElement("div");
     rite.className = "hh-rite";
     rite.innerHTML = `
@@ -3376,7 +3390,12 @@
       <div class="hr-glyph"><i>HOUR</i><b>${hour - 1}</b><em>PRESSED &amp; SHELVED</em></div>`;
     document.body.appendChild(rite);
     let raf = 0;
-    const follow = () => { const p = eyePos();
+    // it rides the eye, but never over the Merchant's shelf: there it waits above the shelf
+    const shelf = () => { const sh = document.querySelector("#market-zone .market-row");
+      const r = sh && sh.getBoundingClientRect(); return r && r.width > 20 && r.bottom > 0 && r.top < innerHeight ? r : null; };
+    const follow = () => { const p = eyePos(), r = shelf();
+      if (r && p.x > r.left - 120 && p.x < r.right + 120 && p.y > r.top - 120 && p.y < r.bottom + 120)
+        p.y = Math.max(120, r.top - 130);
       rite.style.transform = `translate(${p.x}px, ${p.y}px)`; raf = requestAnimationFrame(follow); };
     follow();
     requestAnimationFrame(() => requestAnimationFrame(() => rite.classList.add("on")));

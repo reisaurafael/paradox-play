@@ -102,7 +102,6 @@ html.pdx-a11y .phase-chip.active { text-decoration: underline; text-underline-of
   max-width: min(600px, 44vw, calc(var(--fit, 1) * 760px - 172px)); }
 :is(html[data-ts="2"], html[data-ts="3"], html.pdx-a11y) .cx-slot-turn { top: calc(14px + 48px * var(--tsf)); }
 :is(html[data-ts="2"], html[data-ts="3"], html.pdx-a11y) .cx-slot-event { top: calc(14px + 104px * var(--tsf)); }
-:is(html[data-ts="2"], html[data-ts="3"], html.pdx-a11y) .cx-slot-note { max-width: min(calc(430px * var(--tsf)), 40vw); }
 /* The case files: the second file's birthplace steps down as the first grows,
    so the first never covers the next one's name and energy; the where line
    keeps to one line. */

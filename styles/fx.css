@@ -87,6 +87,65 @@ html[data-fx="full"] body:not(.gfx-low) .card-fly.tone-deliver::before { content
           mask: radial-gradient(circle, transparent 0 34%, #000 40%, transparent 68%); }
 @media (prefers-reduced-motion: reduce) { .card-fly.tone-deliver::before { display: none; } }
 
+/* THE MOTOR HEATS (fx.js heatSync): inside the wrist machine's SVG, beside the boom
+   gauge. Three steps by the engine's booms: fh1 warm 1..4, fh2 hot 5..8, fh3 danger 9..11.
+   Only transform/opacity loops on a few small nodes; no filters. The strokes carry the
+   ink first and the colour on top (the comic line). */
+#fx-heat { --fxh: #f7c65a; --fxh-t: calc(2.8s * var(--pdx-pace, 1)); pointer-events: none; }
+#fx-heat.fh2 { --fxh: #ff8a3a; }
+#fx-heat.fh3 { --fxh: #ff4a36; --fxh-t: calc(1.9s * var(--pdx-pace, 1)); }
+#fx-heat .fxh-edge { fill: none; stroke: var(--fxh); stroke-width: 2.2; opacity: .55; }
+#fx-heat .fxh-glow { fill: none; stroke: var(--fxh); stroke-width: 7; opacity: .12; }
+#fx-heat.fh2 .fxh-edge { opacity: .75; } #fx-heat.fh2 .fxh-glow { opacity: .2; }
+#fx-heat.fh3 .fxh-edge { opacity: .95; stroke-width: 2.6; } #fx-heat.fh3 .fxh-glow { opacity: .3; }
+#fx-heat .fxh-ink { fill: none; stroke: #15100a; stroke-width: 4.6; stroke-linecap: round; }
+#fx-heat .fxh-col { fill: none; stroke: var(--fxh); stroke-width: 2.4; stroke-linecap: round; }
+#fx-heat .fxh-w { opacity: 0; animation: fxHeatRise var(--fxh-t) ease-out infinite; }
+#fx-heat .fxh-w2 { animation-delay: calc(var(--fxh-t) * -.5); }
+#fx-heat .fxh-w3 { animation-delay: calc(var(--fxh-t) * -.25); }
+#fx-heat .fxh-w4 { animation-delay: calc(var(--fxh-t) * -.75); }
+#fx-heat.fh1 .fxh-w3, #fx-heat.fh1 .fxh-w4, #fx-heat.fh2 .fxh-w4 { display: none; }
+#fx-heat .fxh-puff { fill: #f4e6b0; stroke: #15100a; stroke-width: 2; opacity: 0; display: none;
+  animation: fxHeatPuff calc(var(--fxh-t) * 1.3) ease-out infinite; }
+#fx-heat.fh2 .fxh-p1, #fx-heat.fh3 .fxh-puff { display: inline; }
+#fx-heat .fxh-p2 { animation-delay: calc(var(--fxh-t) * -.65); }
+#fx-heat .fxh-drop { fill: #bfe6ff; stroke: #15100a; stroke-width: 1.5; display: none; }
+#fx-heat.fh3 .fxh-drop { display: inline; }
+@keyframes fxHeatRise { 0% { transform: translateY(5px); opacity: 0; } 30% { opacity: .9; } 100% { transform: translateY(-26px); opacity: 0; } }
+@keyframes fxHeatPuff { 0% { transform: translate(0, 4px) scale(.6); opacity: 0; } 30% { opacity: .85; } 100% { transform: translate(10px, -22px) scale(1.25); opacity: 0; } }
+/* Light, Low graphics, calm motion: a still inked mark; the nap holds the loops still */
+#fx-heat.fx-still .fxh-w, #fx-heat.fx-still .fxh-puff { animation: none; opacity: .8; transform: translateY(-6px); }
+#fx-heat.fx-still .fxh-puff { opacity: .7; }
+@media (prefers-reduced-motion: reduce) {
+  #fx-heat .fxh-w, #fx-heat .fxh-puff { animation: none; opacity: .8; transform: translateY(-6px); } }
+body.pdx-nap #fx-heat .fxh-w, body.pdx-nap #fx-heat .fxh-puff { animation-play-state: paused; }
+
+/* OVERLOAD ON MY MACHINE (fx.js overload): the burst's inked sparks, and the SHUT stamp
+   slamming across the row; both one-shot and removed when done */
+.fx-ovl .fx-spark { position: absolute; left: 0; top: 0; width: 22px; height: 4px; margin: -2px 0 0 0;
+  transform-origin: 0 50%; opacity: 0; border-radius: 2px; background: #ffb13a; box-shadow: 0 0 0 1.5px #15100a; }
+.fx-shutslam { position: absolute; left: 0; top: 0; opacity: 0; text-align: center; white-space: nowrap;
+  padding: 3px 0 2px; border: 3px solid #15100a; background:
+    repeating-linear-gradient(135deg, rgba(21,16,10,.14) 0 6px, transparent 6px 12px), #ffd9c2;
+  box-shadow: 3px 3px 0 #15100a; color: #9e1e14;
+  font: italic 700 1.35rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .32em; }
+body.gfx-low .fx-shutslam { background: #ffd9c2; }
+
+/* THE SHUT PLATE that stays on a shut row (game.js _shutMark, app.css .fn-shut), inked as
+   a rubber stamp over a chained bar: static, readable, never a loop. Off keeps the plain plate. */
+html:not([data-fx="off"]) body.cabin-on #hull-console .matrix-wrap .fn-shut {
+  border: 2.5px solid #15100a; border-radius: 2px; color: #ffe2d4;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,106,72,.28) 0 7px, rgba(20,6,3,.9) 7px 14px);
+  box-shadow: 2px 2px 0 #15100a, inset 0 0 0 1.5px rgba(255,106,72,.8);
+  font-style: italic; text-shadow: 1.5px 1.5px 0 #15100a; }
+
+/* THE VALVE DRAINS LIFE (fx.js valveDrain): steam puffs off the valve, one-shot */
+.fx-steam { position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: 50%; opacity: 0;
+  background: #f4efe4; border: 1.8px solid #15100a; }
+/* a pop that is a number: bigger, red, the ink heavy (the -N beside my lifethread) */
+.fx-pop.fx-bigpop b { font-size: 1.7rem; -webkit-text-stroke-width: 2.2px; text-shadow: 3px 3px 0 var(--cx-ink, #15100a); }
+
 /* Low graphics: flat paper, no halftone */
 body.gfx-low .fx-stamp { background: var(--cx-paper, #f4e6b0); }
 body.gfx-low .fx-pop b { text-shadow: none; }

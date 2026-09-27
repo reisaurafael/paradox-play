@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609270213";
-import { Game } from "./game.js?202609270213";
-import { icon } from "./icons.js?202609270213";
-import { roman } from "./util.js?202609270213";
-import { profile } from "./profile.js?202609270213";
+import { api, Connection } from "./net.js?202609270852";
+import { Game } from "./game.js?202609270852";
+import { icon } from "./icons.js?202609270852";
+import { roman } from "./util.js?202609270852";
+import { profile } from "./profile.js?202609270852";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -518,20 +518,31 @@ class Coach {
 
   // A line the player must acknowledge. The game's event queue waits behind it.
   async say(at, text, opts = {}) {
+    if (this.quiet) return this.note(text, opts);
     this.trace("say " + text.replace(/<[^>]+>/g, "").slice(0, 60));
     await this.stage.show(at, text, { ...opts, next: true });
     this.stage.hide();
   }
   // A standing instruction: it stays until the player acts or another line replaces it.
   guide(at, text, opts = {}) {
+    if (this.quiet) return this.note(text, opts);
     this.trace("guide " + text.replace(/<[^>]+>/g, "").slice(0, 60));
     return this.stage.show(at, text, opts);
   }
   // a line that does not stop the game: it stays until he acts or the next line comes
   toast(at, text, opts = {}) {
+    if (this.quiet) return this.note(text, opts);
     this.trace("toast " + text.replace(/<[^>]+>/g, "").slice(0, 60));
     const { ms, ...rest } = opts; void ms;
     return this.stage.show(at, text, rest);
+  }
+
+  // After Learn to Play she keeps quiet: what she would have said waits in her notes,
+  // under Tab (help.js), and nothing pops on its own.
+  note(text, opts = {}) {
+    this.trace("note " + text.replace(/<[^>]+>/g, "").slice(0, 60));
+    try { const H = window.__pdxHelp; if (H && H.note) H.note(opts.sub ? `${text} ${opts.sub}` : text); } catch (e) {}
+    return Promise.resolve();
   }
 
   /* ── the wake (his): black, the camera pushed into the desk, the eye opens first ── */
@@ -809,7 +820,10 @@ class Coach {
       if (this.scripted && !this.done.has("win") && ((this._valveHour && p.hour > this._valveHour) || p.hour >= 12)) await this.wrapUp();
     }
     if ((k === "phase_started" || k === "phase_skipped") && this.hourNo === 1 && p.phase === "main") this.markTrack("machine");
-    if ((k === "phase_started" || k === "phase_skipped") && p.phase === "market") await this.shelfOffer(k === "phase_started");
+    if ((k === "phase_started" || k === "phase_skipped") && p.phase === "market") {
+      const v = this.game.view;
+      await this.shelfOffer(k === "phase_started" && !!(v && v.market_access));
+    }
     if (k === "game_over") this.gameOver(p);
   }
 
@@ -826,7 +840,19 @@ class Coach {
     if (k === "overloaded" && p.seat === self && this.once("overloaded")) {
       this.learn("overload");
       const fn = (p.functions || [p.function])[0];
-      await this.say(machineCell(fn, 0),
+      // the game's own explained overload moment (help.js), the same one every match shows
+      const H = window.__pdxHelp;
+      let shown = false;
+      if (H && H.overload) {
+        try {
+          const moment = H.overload((p.functions || [p.function]).filter((x) => x != null), { force: true, first: true });
+          await new Promise((r) => setTimeout(r, 150));
+          shown = !!document.querySelector(".pdx-ovl");
+          await moment;
+        } catch (e) {}
+      }
+      // he must see it: when the game's own moment did not show, her line does
+      if (!shown) await this.say(machineCell(fn, 0),
         `<b>${FN[fn] || "That function"} overloaded:</b> three dice in one function. It stays shut for the whole next Hour.`,
         { rings: [`#machine-body .matrix-fnlabel`] });
     }
@@ -898,7 +924,7 @@ class Coach {
   beforeDecision(req) {
     if (this._heraldDue) return this.heraldBeat().then(() => this.beforeDecision(req));
     const h = (req.options || {}).tutorial || {};
-    if (req.kind === "allocate") return this.grow(h.machine);
+    if (req.kind === "allocate") return this.grow(h.machine).then(() => this.shutReminder(req, h));
     return null;
   }
   // his machine grows: four cells, then Paradox, then the third module
@@ -940,6 +966,20 @@ class Coach {
     const ahead = others.filter((t) => t.century > me.century), here = others.filter((t) => t.century === me.century);
     const back = others.filter((t) => t.century < me.century);
     return { inReach: !!(ahead.length || here.length), ahead, here, behind: back.map((t) => t.name).join(" and ") || "they", many: back.length > 1 };
+  }
+  // an Hour with a shut function: before he places a die, why that row takes none
+  async shutReminder(req, h) {
+    const me = this.me();
+    const shut = (me && me.overloaded_functions) || [];
+    if (!this.scripted || !shut.length || !this.once("shut-" + this.hour())) return;
+    const fn = shut[0], name = FN[fn] || "That function";
+    const row = [`#machine-body .matrix-fnlabel.fn-sealed`, machineCell(fn, 0), machineCell(fn, 1), machineCell(fn, 2)];
+    await this.say(machineCell(fn, 0), `<b>${name} is shut this Hour.</b> It overloaded last Hour: three dice in one function. No die can go there until this Hour is over.`,
+      { rings: row, avoid: MACHINE });
+    if (h && h.lesson === "valve" && h.matrix && h.matrix[2] && h.matrix[2][0] === 3 && h.matrix[2][1] === 3) {
+      await this.say(machineCell(2, 0), "No rival stands ahead of you or in your century, so Paradox would hit no one. Your pair of <b>III</b> goes to <b>Travel</b>.",
+        { rings: [machineCell(2, 0), machineCell(2, 1)], avoid: MACHINE });
+    }
   }
   born(sel) {
     document.querySelectorAll(sel).forEach((n) => { n.classList.add("tut-new"); setTimeout(() => n.classList.remove("tut-new"), 1600); });
@@ -1036,17 +1076,21 @@ class Coach {
     const relic = shelf.find((c) => c.name === "Super Motor")
       || shelf.slice().sort((a, b) => a.gold_cost - b.gold_cost || Math.abs(a.delivery_century - me.century) - Math.abs(b.delivery_century - me.century))[0];
     if (!relic) return;
+    const cam = this.game.camera;
+    const face = async () => { if (cam.scene !== "market") { cam._engage(); cam.setScene("market"); await new Promise((r) => setTimeout(r, 1200)); } };
+    const cardOnShelf = () => [...document.querySelectorAll("#market-zone .market-row .card")].find((n) => n.dataset.name === relic.name && visible(n)) || null;
     if (me.gold < relic.gold_cost) {
       if (this.once("shelf-gold")) {
-        const cell = machineCell(0, 1);
-        await this.say(cell, `${cardName(relic)} costs ${relic.gold_cost} gold. You have ${me.gold}. Recharge's second module pays gold: fill it and the Merchant is in reach.`, { rings: [cell] });
+        // the relic he cannot afford yet, boxed on the shelf while she names it
+        await face();
+        await this.say(cardOnShelf, `${cardName(relic)} costs ${relic.gold_cost} gold. You have ${me.gold}. Recharge's second module pays gold: fill it and the Merchant is in reach.`, { rings: [cardOnShelf], avoid: SHELF });
+        if (!phaseOpen) { cam.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
       }
       return;
     }
     this.learn("shelf-offer");
-    const cam = this.game.camera;
-    if (cam.scene !== "market") { cam._engage(); cam.setScene("market"); await new Promise((r) => setTimeout(r, 1200)); }
-    const card = [...document.querySelectorAll("#market-zone .market-row .card")].find((n) => n.dataset.name === relic.name);
+    await face();
+    const card = cardOnShelf();
     if (card) {
       await this.say(card, L.marketCard.replace("{g}", relic.gold_cost), { rings: [card], avoid: SHELF });
       const stamp = card.querySelector(".card-deliver") || card;
@@ -1397,9 +1441,9 @@ class Coach {
           setTimeout(step, 400);
           return;
         }
-        this.guide("#drawer-zone .ct-paper.ct-choose", "Pick one. <b>Chaos</b> hurts rivals, <b>Time</b> gives extra turns, <b>Resource</b> pays you.",
-          { sub: "A die then decides which of its three results you get. Not the same kind twice in a row.",
-            rings: ["#drawer-zone .ct-paper.ct-choose"] });
+        // his first real choice: no ring, pointer or aim on any one paper
+        this.guide(null, "Three kinds of contract. <b>Chaos</b> hurts rivals, <b>Time</b> gives you extra turns, <b>Resource</b> pays you. Your choice.",
+          { sub: "A die then decides which of its three results you get. Not the same kind twice in a row.", rings: [] });
         setTimeout(step, 400);
       };
       step();
@@ -1481,8 +1525,10 @@ class Coach {
     await this.say(".vital-chip.vc-cp", "<b>How to win:</b> the most contract points when time settles.",
       { sub: "+1 per relic returned, +1 per termination, +1 the first time you end an Hour on XX and on X, +1 for being alive at the end.", rings: [".vital-chip.vc-cp"] });
     await this.phasesRecap();
+    await this.tabLesson();
     await this.say(null, L.gradEnd, { sub: "Press <kbd>T</kbd> for the machine reference." });
     this.learn("win");
+    this.quiet = true;
     this.scripted = false;
     document.body.classList.remove("tut-story");
     try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(null); } catch (e) {}
@@ -1496,6 +1542,27 @@ class Coach {
       cam._engage(); cam.setScene("main");
     }
     try { this.game.updateBeacon(); } catch (e) {}
+  }
+
+  // TAB, the last lesson, by doing: a tap opens her tips and his questions, a hold shows
+  // what every module does, the Merchant's rules, the phases and her notes.
+  async tabLesson() {
+    const H = window.__pdxHelp;
+    if (!H || !H.isOpen || !H.isHeld) return;
+    const key = "#pdx-tabkey";
+    const until = (fn, ms) => new Promise((resolve) => { const t0 = Date.now(); const iv = setInterval(() => { if (fn() || Date.now() - t0 > ms) { clearInterval(iv); resolve(fn()); } }, 120); });
+    this.guide(key, "Tap <kbd>Tab</kbd>: my tips, and the answers to your questions.", { rings: [key] });
+    if (await until(() => H.isOpen(), 40000)) {
+      this.guide(null, "Tap <kbd>Tab</kbd> again to close it.", {});
+      await until(() => !H.isOpen(), 40000);
+    }
+    this.guide(key, "Now hold <kbd>Tab</kbd>: what every module does, the Merchant's rules, the phases, and my notes.", { rings: [key] });
+    if (await until(() => H.isHeld(), 40000)) {
+      this.guide(null, "Let go, and it all hides again.", {});
+      await until(() => !H.isHeld(), 40000);
+    }
+    this.clear();
+    await this.say(null, "From now on I speak only when you must act. Everything else waits under <kbd>Tab</kbd>.");
   }
 
   // his rivals at the table, and their files are his to arrange: a guided drag, then free
@@ -1544,10 +1611,17 @@ class Coach {
       this.guide(node, "This is my memory: every mark is an Hour. Click one to open its page.", { rings: [node] });
       await until(() => B.isOpen && B.isOpen(), 30000);
     }
-    const arrow = q(".hbp-arrow");
+    // the newest Hour is open, so only the arrow back has anywhere to go
+    const arrow = () => { const r = root(); if (!r) return null;
+      const all = [...r.querySelectorAll(".hbp-arrow")].filter((n) => !n.disabled && visible(n));
+      return all[0] || null; };
     if (B.isOpen && B.isOpen() && arrow()) {
-      this.guide(arrow, "Flip through the Hours with the arrows.", { rings: [arrow] });
-      await clickOn(".hbp-arrow", 25000);
+      const r = root(), a = arrow();
+      const h = parseInt(String(((r && r.querySelector(".hbp-head b")) || {}).textContent || "").replace(/\D+/g, ""), 10) || this.hour() || 1;
+      const isBack = a === (r && r.querySelector(".hbp-head .hbp-arrow"));
+      const back = Array.from({ length: Math.max(0, Math.min(4, h - 1)) }, (_, i) => h - 1 - i).join(", ");
+      this.guide(arrow, isBack ? `Flip back through the Hours with this arrow${back ? `: Hour ${back}` : ""}.` : "Flip through the Hours with this arrow.", { rings: [arrow] });
+      await clickOn(".hbp-arrow:not(:disabled)", 25000);
     }
     const clip = q(".hbp-clip");
     if (B.isOpen && B.isOpen() && clip()) {
@@ -1582,6 +1656,7 @@ class Coach {
   }
 
   gameOver(p) {
+    this.quiet = false;
     this.scripted = false;
     this.blockPass = false;
     const won = p && p.winner === this.seat;

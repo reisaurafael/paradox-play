@@ -49,6 +49,93 @@
     cp.insertBefore(d, cp.firstChild);
   };
 
+  /* ── THE ERA TURNS LIKE A COMIC PAGE (shared by the Origins and Singularity charts) ──
+     My traveller crosses into another period and the chart re-skins in one move: a slab of
+     ink edged with a paper gutter (the border between two comic panels) whips across the
+     whole sheet, extension included, the chart swaps under it, the ink whips off the far
+     side, and the new chart lands inside a heavy inked panel border with a jolt. Back in
+     time it runs left to right, forward right to left. Normal pace: in 360 ms, held 90,
+     out 380 (the new chart is fully in at 830), the border slams at 770 and is gone by
+     1190; every length scales with the pace. Light comic effects keep the wipe alone, shorter; Off, a skip or calm motion
+     swap at once. Only transform and opacity animate, on static layers (app.css
+     .chart-turn). paradoxo:skinwarp fires at the start with detail.landMs, the moment the
+     new chart is fully in (fx.js turns the era's page in then). swap() runs under the
+     ink, done() when it is over. A second chart that re-skins during a turn (Origins to
+     Singularity in one voyage) swaps under the same ink. */
+  let turning = null;   // the turn on screen: its swaps, whether they ran, its dones
+  window.__pdxChartTurn = window.__pdxChartTurn || function (back, swap, done) {
+    if (turning) {
+      if (turning.swapped) swap(); else turning.swaps.push(swap);
+      if (done) turning.dones.push(done);
+      return;
+    }
+    const rail = document.getElementById("timeline-rail");
+    const fx = window.__fx, lvl = fx && fx.level ? fx.level() : "full";
+    const P = (ms) => Math.round(window.__pdxPace ? window.__pdxPace(ms) : ms);
+    const fire = (landMs) => { try { window.dispatchEvent(new CustomEvent("paradoxo:skinwarp", { detail: { landMs } })); } catch (e) {} };
+    const now = () => { try { swap(); } finally { if (done) done(); } };
+    if (!rail || REDUCED || document.documentElement.classList.contains("pdx-a11y")) { now(); return; }
+    if (lvl === "off" || document.hidden || (fx && fx.game && fx.game._skip)) { fire(0); now(); return; }
+    const full = lvl !== "light";
+    const IN = P(full ? 360 : 300), HOLD = P(full ? 90 : 60), OUT = P(full ? 380 : 320), RUN = IN + HOLD + OUT;
+    const old = rail.querySelector(":scope > .chart-turn"); if (old) old.remove();
+    const t = document.createElement("div");
+    t.className = "chart-turn" + (full ? "" : " ct-light");
+    t.setAttribute("aria-hidden", "true");
+    t.innerHTML = `<i class="ct-ink"></i>${full ? `<i class="ct-frame"></i>` : ""}`;
+    rail.appendChild(t);
+    const tr = turning = { swaps: [swap], swapped: false, dones: done ? [done] : [] };
+    fire(RUN);
+    const dir = back ? 1 : -1, X = (v) => `translateX(${v}%) skewX(${-9 * dir}deg)`;
+    try {
+      t.firstChild.animate([
+        { transform: X(-106 * dir), easing: "cubic-bezier(.62,0,.86,.5)" },
+        { transform: X(0), offset: IN / RUN },
+        { transform: X(0), offset: (IN + HOLD) / RUN, easing: "cubic-bezier(.16,.56,.3,1)" },
+        { transform: X(106 * dir) }], { duration: RUN, fill: "both" });
+    } catch (e) {}
+    chartTurnSound(IN, RUN, full);
+    setTimeout(() => { tr.swapped = true; for (const f of tr.swaps) try { f(); } catch (e) {} }, IN);
+    let end = RUN;
+    if (full) {
+      const FR = P(420), at = RUN - P(60);
+      end = at + FR;
+      try {
+        t.lastChild.animate([
+          { opacity: 0, transform: "scale(1.045)" },
+          { opacity: 1, transform: "none", offset: .16, easing: "linear" },
+          { opacity: 1, transform: "none", offset: .5, easing: "ease-in" },
+          { opacity: 0, transform: "none" }], { duration: FR, delay: at, fill: "both" });
+        rail.animate([{ transform: "none" }, { transform: "translate(-3px, 2px)" },
+          { transform: "translate(2px, -1px)" }, { transform: "none" }], { duration: P(170), delay: at + P(60) });
+      } catch (e) {}
+    }
+    setTimeout(() => { t.remove(); turning = null; for (const f of tr.dones) try { f(); } catch (e) {} }, end + 20);
+  };
+  // the sound of the turn: the ink's whoosh, then (full) the panel's thud as it lands
+  function chartTurnSound(IN, RUN, full) {
+    try {
+      const A = window.__audio; if (!A || !A.ctx) return;
+      const C = A.ctx, bus = A.sfxBus || A.master || C.destination, t = C.currentTime, len = (RUN / 1000) + .1;
+      const nb = C.createBuffer(1, Math.ceil(C.sampleRate * len), C.sampleRate), dd = nb.getChannelData(0);
+      for (let i = 0; i < dd.length; i++) dd[i] = Math.random() * 2 - 1;
+      const ns = C.createBufferSource(); ns.buffer = nb;
+      const bp = C.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.4;
+      bp.frequency.setValueAtTime(420, t); bp.frequency.exponentialRampToValueAtTime(2600, t + IN / 1000);
+      bp.frequency.exponentialRampToValueAtTime(700, t + RUN / 1000);
+      const g = C.createGain(); g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.11, t + IN / 1000);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + RUN / 1000);
+      ns.connect(bp); bp.connect(g); g.connect(bus); ns.start(t); ns.stop(t + len);
+      if (!full) return;
+      const s = t + RUN / 1000 - .03, o = C.createOscillator(), og = C.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(140, s); o.frequency.exponentialRampToValueAtTime(48, s + .22);
+      og.gain.setValueAtTime(0.0001, s); og.gain.exponentialRampToValueAtTime(0.32, s + .012);
+      og.gain.exponentialRampToValueAtTime(0.0001, s + .34);
+      o.connect(og); og.connect(bus); o.start(s); o.stop(s + .36);
+    } catch (e) {}
+  }
+
   /* ── THE COMIC MARKS ON A CHART PIECE (shared by all three charts) ──
      The case files wear the comic's emanata (comic.js); the pieces on the chart wear the
      same four, from public state only: ! Wanted, sweat drops at critical energy (6 or
@@ -180,35 +267,39 @@
     return pts;
   };
 
-  /* ── THE MERCHANT, READ ALOUD (shared by all three charts) ──
-     Players could not tell WHEN, HOW or WHY the Merchant moves. The rule is now written
-     next to him, in plain words, from public state (view.merchant_plan, server/serialize.py):
-     a one-line summary that is always there, and three lines (WHEN / HOW / WHY, plus his
-     last move) that open on hover, during the Market phase and while he moves. At those
-     moments the chart also draws the line to the traveller he is chasing and rings the
-     centuries his roll can reach. Static SVG shown or hidden by CSS: no loops, no filters. */
+  /* ── THE MERCHANT, READ ALOUD (shared by all three charts and the TAB layer) ──
+     Players could not tell WHEN, WHY, HOW or WHERE the Merchant moves. The rule is written
+     in plain words from public state (view.merchant_plan, server/serialize.py). The chart
+     keeps a one-line summary under him (who he chases, how many dice) and, on hover, in
+     the Market phase and while TAB is held, the line to the traveler he chases and rings
+     on the centuries his roll can reach. The full rule is read on TAB (js/help.js), at a
+     size that can be read. Static SVG shown or hidden by CSS: no loops, no filters. */
   const MROM = c => (c >= 1 && c <= 30 ? ROM[c - 1] : String(c));
   window.__pdxMerchantRule = window.__pdxMerchantRule || function (v) {
     const p = (v && v.merchant_plan) || {};
     const n = p.dice || (v && v.merchant_movement_dice) || 1;
     const me = v && (v.travelers || []).find(t => t.is_self);
     const who = p.target_seat ? (me && me.name === p.target_seat ? "you" : p.target_seat) : null;
-    const how = [`Rolls ${n} ${n === 1 ? "die" : "dice"} (1 to 3 each) and moves up to the total,`,
-      "stopping early if he reaches his target.",
-      "1 die at the start, 2 once anyone ends an Hour on XX,",
-      `3 once anyone ends an Hour on X${p.harald ? "; +1 while anyone has Harald's Bluetooth" : ""}.`];
+    const how = `He rolls ${n} ${n === 1 ? "die" : "dice"} (1 to 3 each) and sails that many centuries toward his target,`
+      + " stopping early if he reaches it. He rolls 1 die at the start, 2 once anyone ends an Hour on XX,"
+      + ` 3 once anyone ends an Hour on X${p.harald ? ", and 1 more while anyone has Harald's Bluetooth" : ""}.`;
     let why, short;
-    if (p.why === "secret") { why = ["Everyone is in his century, so he heads", "to the Secret Market at XI."]; short = "heads to XI"; }
-    else if (p.why === "future") { why = ["Everyone is with him at the Secret Market,", "so he heads to XXX."]; short = "heads to XXX"; }
+    if (p.why === "secret") { why = "Everyone is in his century, so he heads to the Secret Market at XI."; short = "heads to XI"; }
+    else if (p.why === "future") { why = "Everyone is with him at the Secret Market, so he heads to XXX."; short = "heads to XXX"; }
     else if (who) {
-      why = ["Chases the richest traveller not in his century:", `${who === "you" ? "YOU" : who} (${p.target_gold} gold), at ${MROM(p.target_century)}.`];
+      why = `He chases the richest traveler who is not in his century: ${who === "you" ? "YOU" : who} (${p.target_gold} gold), at ${MROM(p.target_century)}.`;
       short = `chases ${who === "you" ? "YOU" : window.__pdxInitials(who)}`;
-    } else { why = ["Chases the richest traveller not in his century."]; short = "chases the richest"; }
+    } else { why = "He chases the richest traveler who is not in his century."; short = "chases the richest"; }
+    const mc = v && v.merchant_century;
+    const stops = mc != null ? window.__pdxMerchantReach(mc, p.target_century, n).sort((a, b) => b - a).map(MROM) : [];
+    const where = mc == null ? "" : `He is at ${MROM(mc)} now. `
+      + (stops.length ? `His next roll can stop him at ${stops.length > 1 ? stops.slice(0, -1).join(", ") + " or " + stops[stops.length - 1] : stops[0]}.` : "He stays where he is.");
     let last = null;
     const roll = v && v.merchant_last_roll, mv = v && v.merchant_last_move;
-    if (roll) last = `Last move: rolled ${roll}, moved ${Math.abs(mv || 0)}${Math.abs(mv || 0) < roll ? ", stopped on reaching his target" : ""}.`;
+    if (roll) last = `Last move: he rolled ${roll} and sailed ${Math.abs(mv || 0)}${Math.abs(mv || 0) < roll ? ", stopping on his target" : ""}.`;
     const aim = p.why === "secret" ? "XI" : p.why === "future" ? "XXX" : who ? (who === "you" ? "YOU" : window.__pdxInitials(who)) : "";
-    return { n, who, aim, when: "At the end of every Market phase.", how, why, last, short: `${short} · ${n} ${n === 1 ? "die" : "dice"}` };
+    return { n, who, aim, when: "At the end of every Market phase, after the travelers at his port have traded.",
+      why, how, where, last, short: `${short} · ${n} ${n === 1 ? "die" : "dice"}` };
   };
   // which centuries can his next roll reach? (n dice of 1..3, capped at the target)
   window.__pdxMerchantReach = window.__pdxMerchantReach || function (mc, target, n) {
@@ -218,8 +309,9 @@
     for (let k = n; k <= 3 * n; k++) out.add(Math.max(1, Math.min(30, mc + dir * Math.min(k, D))));
     return [...out];
   };
-  /* The HUD beside the Merchant. o = { v, m: [x,y] his plate centre, tpos: [x,y] the chased
-     piece or null, pos: c => [x,y] or null, W, H, dark, avoid: [[x,y],...] piece centres } */
+  /* The HUD beside the Merchant: the chase line, the reach rings and the summary pill.
+     o = { v, m: [x,y] his plate centre, tpos: [x,y] the chased piece or null,
+     pos: c => [x,y] or null, dark, pillDy } */
   window.__pdxMerchantHUD = window.__pdxMerchantHUD || function (o) {
     const esc2 = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
     const hidden = window.__pdxMerchantHiddenNow();
@@ -244,34 +336,6 @@
         + `<circle cx="${q[0]}" cy="${q[1]}" r="15" fill="none" stroke="#e8c05a" stroke-width="2.2" stroke-dasharray="3.5 3"/>`;
     }
     s += `<g class="pc-mhud-key">${key}</g>`;
-    // the readout: a one-line summary that never leaves, and the full rule that opens
-    const lines = [["WHEN", [rule.when]], ["HOW", rule.how], ["WHY", rule.why]];
-    if (rule.last) lines.push(["LAST", [rule.last.replace(/^Last move: /, "")]]);
-    const FS = 8.8, LH = 11.2;
-    let rows = 0, longest = 0;
-    for (const [, ls] of lines) { rows += ls.length; for (const ln of ls) longest = Math.max(longest, ln.length); }
-    const PW = Math.max(250, Math.round(longest * FS * .5 + 62));
-    const PH = 12 + rows * LH + (lines.length - 1) * 3 + 8;
-    // pick the side that covers the fewest pieces
-    const cand = [[mx + 40, my - PH / 2], [mx - 40 - PW, my - PH / 2], [mx - PW / 2, my + 44], [mx - PW / 2, my - 44 - PH]];
-    const cl = (val, lo, hi) => Math.max(lo, Math.min(hi, val));
-    let best = null, bestK = 1e9;
-    for (const [cx0, cy0] of cand) {
-      const px = cl(cx0, 6, o.W - PW - 6), py = cl(cy0, 6, o.H - PH - 6);
-      let k = Math.abs(px - cx0) + Math.abs(py - cy0);
-      for (const [ax, ay] of (o.avoid || [])) if (ax > px - 26 && ax < px + PW + 26 && ay > py - 26 && ay < py + PH + 26) k += 400;
-      if (px < mx + 30 && px + PW > mx - 30 && py < my + 30 && py + PH > my - 30) k += 900;   // never on him
-      if (k < bestK) { bestK = k; best = [px, py]; }
-    }
-    const [px, py] = best;
-    let body = "", yy = py + 16;
-    lines.forEach(([lab, ls], li) => {
-      body += `<text x="${px + 10}" y="${yy}" font-family="Georgia,serif" font-weight="bold" font-size="${FS - .6}" letter-spacing="1.2" fill="#b8862a">${lab}</text>`;
-      ls.forEach((ln, j) => { body += `<text x="${px + 50}" y="${(yy + j * LH).toFixed(1)}" font-family="Georgia,serif" font-size="${FS}" fill="#2a1c08"${li === 2 && j === ls.length - 1 && rule.who ? ' font-weight="bold"' : ""}>${esc2(ln)}</text>`; });
-      yy += ls.length * LH + 3;
-    });
-    s += `<g class="pc-mhud-full"><rect x="${px}" y="${py}" width="${PW}" height="${PH.toFixed(1)}" rx="5" fill="#f8efd6" fill-opacity=".97" stroke="#2a1c08" stroke-width="1.8"/>`
-      + `<rect x="${px + 3}" y="${py + 3}" width="${PW - 6}" height="${(PH - 6).toFixed(1)}" rx="3" fill="none" stroke="#b8862a" stroke-width="1"/>${body}</g>`;
     // the summary pill, under his MERCHANT tag
     const sw = rule.short.length * 5.2 + 14;
     if (o.pillDy != null) s += `<g class="pc-mhud-pill" transform="translate(${mx} ${my + o.pillDy})"><rect x="${(-sw / 2).toFixed(1)}" y="-7" width="${sw.toFixed(1)}" height="14" rx="7" fill="${ink}" fill-opacity=".92" stroke="#e8c05a" stroke-width="1.3"/>`
@@ -1158,9 +1222,12 @@
   // no shark, nothing that could be read as a place to sail to.
   function seaExtArt(EX, EY) {
     const X1 = W + EX, Y1 = H + EY, L = BANDS.length;
+    // the sea starts 96 units INSIDE the chart's right and bottom edges, under the band
+    // where the chart fades into it (app.css), so that band shows water, never a gap
+    const XS = W - 96, YS = H - 96;
     const n = Math.max(2, Math.round(24 * EX / W));
     const seamPts = SEAMS.map((f, i) => {   // one jagged line per seam, shared by both bands
-      const pts = [];
+      const pts = [[XS, f(XS)], [W - 48, f(W - 48)]];
       for (let j = 0; j <= n; j++) { const x = W + EX * j / n, jj = j === 0 ? 0 : ((j * 2654435761 % 97) / 97 - 0.5);
         pts.push([x, f(x) + jj * BANDS[i].amp]); }
       return pts;
@@ -1169,32 +1236,39 @@
     let defs = "", g = `<rect x="0" y="0" width="${X1}" height="${Y1}" fill="#587f8f"/>`;
     for (let i = 0; i < L; i++) {
       const m = BANDS[i];
-      const top = i === 0 ? `M ${W} 0 L ${X1} 0` : `M ${W} ${SEAMS[i - 1](W).toFixed(1)} ${line(seamPts[i - 1])}`;
-      const bot = i === L - 1 ? `L ${X1} ${Y1} L 0 ${Y1} L 0 ${H} L ${W} ${H}`
+      const top = i === 0 ? `M ${XS} 0 L ${X1} 0` : `M ${seamPts[i - 1][0].map(v => v.toFixed(1)).join(" ")} ${line(seamPts[i - 1].slice(1))}`;
+      const bot = i === L - 1 ? `L ${X1} ${Y1} L 0 ${Y1} L 0 ${YS} L ${XS} ${YS}`
                               : line(seamPts[i].slice().reverse());
       const d = `${top} ${bot} Z`, cid = "seaxc" + m.id;
       defs += `<clipPath id="${cid}"><path d="${d}"/></clipPath>`;
-      const y0 = i === 0 ? 0 : Math.min(SEAMS[i - 1](W), SEAMS[i - 1](X1)) - 16;
-      const y1 = i === L - 1 ? Y1 : Math.max(SEAMS[i](W), SEAMS[i](X1)) + 16;
-      let rows = "";
+      const y0 = i === 0 ? 0 : Math.min(...seamPts[i - 1].map(q => q[1])) - 16;
+      const y1 = i === L - 1 ? Y1 : Math.max(...seamPts[i].map(q => q[1])) + 16;
+      // the chart's own wave rows, on its 48px grid and phase, in its two drifting layers
+      // (waveRows): where the chart fades into this sheet the waves are the same waves
+      let l1 = "", l2 = "";
       for (let y = Math.floor(y0 / 14) * 14 + 8; y < y1; y += 14) {
-        const kk = (y / 14) | 0, ph = (kk * (kk % 2 ? 29 : 17)) % 48, x0 = i === L - 1 ? -96 + ph : W - 96 + ph;
-        let pd = `M ${x0} ${y} `; for (let x = x0; x < X1 + 48; x += 48) pd += "q 12 -8 24 0 q 12 8 24 0 ";
-        rows += `<path d="${pd}" fill="none" stroke="${m.ink}" stroke-width="1" opacity="${kk % 2 ? .11 : .16}"/>`;
+        const kk = (y / 14) | 0, ph = (kk * (kk % 2 ? 29 : 17)) % 48;
+        const x0 = -96 + ph + (i === L - 1 ? 0 : 48 * Math.max(0, Math.floor(XS / 48) - 2));
+        let pd = `M ${x0} ${y} `; for (let x = x0; x < X1 + 96; x += 48) pd += "q 12 -8 24 0 q 12 8 24 0 ";
+        const row = `<path d="${pd}" fill="none" stroke="${m.ink}" stroke-width="1" opacity="${kk % 2 ? .11 : .16}"/>`;
+        if (kk % 2) l2 += row; else l1 += row;
       }
-      let curls = "";
       for (let c = 0; c < 10; c++) { const cx = W + 30 + rnd(c + i * 13, 7) * (EX - 60), cy = y0 + 20 + rnd(c + i * 13, 9) * Math.max(10, y1 - y0 - 40);
-        curls += `<path d="M ${cx.toFixed(0)} ${cy.toFixed(0)} q 7 -7 14 -2 q -6 0 -8 4" fill="none" stroke="#f4f8f6" stroke-width="1" opacity=".22"/>`; }
+        l2 += `<path d="M ${cx.toFixed(0)} ${cy.toFixed(0)} q 7 -7 14 -2 q -6 0 -8 4" fill="none" stroke="#f4f8f6" stroke-width="1" opacity=".22"/>`; }
       if (i === L - 1) for (let c = 0; c < 18; c++) { const cx = 30 + rnd(c, 21) * (W - 60), cy = H + 20 + rnd(c, 23) * (EY - 40);
-        curls += `<path d="M ${cx.toFixed(0)} ${cy.toFixed(0)} q 7 -7 14 -2 q -6 0 -8 4" fill="none" stroke="#f4f8f6" stroke-width="1" opacity=".22"/>`; }
+        l2 += `<path d="M ${cx.toFixed(0)} ${cy.toFixed(0)} q 7 -7 14 -2 q -6 0 -8 4" fill="none" stroke="#f4f8f6" stroke-width="1" opacity=".22"/>`; }
       g += `<g clip-path="url(#${cid})"><rect x="0" y="0" width="${X1}" height="${Y1}" fill="${m.paper[0]}"/>`
-        + `<rect x="0" y="0" width="${X1}" height="${Y1}" fill="${m.paper[1]}"/>${rows}${curls}</g>`;
+        + `<rect x="0" y="0" width="${X1}" height="${Y1}" fill="${m.paper[1]}"/>`
+        + `<g class="sea-waves w1">${l1}</g><g class="sea-waves w2">${l2}</g></g>`;
     }
     SEAMS.forEach((f, i) => {
-      g += `<path d="M ${W} ${(f(W) + 2).toFixed(1)} ${line(seamPts[i].map(q => [q[0], q[1] + 2]))}" fill="none" stroke="rgba(26,66,84,.28)" stroke-width="5"/>`
-        + `<path d="M ${W} ${f(W).toFixed(1)} ${line(seamPts[i])}" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="2"/>`;
+      g += `<path d="M ${XS} ${(f(XS) + 2).toFixed(1)} ${line(seamPts[i].map(q => [q[0], q[1] + 2]))}" fill="none" stroke="rgba(26,66,84,.28)" stroke-width="5"/>`
+        + `<path d="M ${XS} ${f(XS).toFixed(1)} ${line(seamPts[i])}" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="2"/>`;
     });
-    g += `<image href="${ROUGH_TEX}" x="0" y="0" width="${X1}" height="${Y1}" preserveAspectRatio="none" opacity=".55"/>`;
+    // the parchment tooth at the chart's own grain: its texture tiled at the chart's size
+    defs += `<pattern id="seaxRough" patternUnits="userSpaceOnUse" width="${W}" height="${H}">`
+      + `<image href="${ROUGH_TEX}" width="${W}" height="${H}" preserveAspectRatio="none"/></pattern>`;
+    g += `<rect x="0" y="0" width="${X1}" height="${Y1}" fill="url(#seaxRough)" opacity=".55"/>`;
     return `<defs>${defs}</defs>${g}`;
   }
   function baseMap() {
@@ -1498,12 +1572,12 @@
           return `<g transform="translate(${-6 - dice * 5} 30)"><g class="sea-dice">`
             + split.slice(0, 3).map((v, i) => d3Token(v, i * 10, 0)).join("") + `</g></g>`;
         })()}</g></g></g>${window.__pdxMerchTag(-22)}</g>`;
-      // WHEN / HOW / WHY beside him, the chase line and the reach (window.__pdxMerchantHUD)
+      // the chase line and the reach beside him (window.__pdxMerchantHUD)
       if (view.merchant_plan) {
         const pl = view.merchant_plan, tt = pl.target_seat && view.travelers.find(t2 => t2.name === pl.target_seat);
         g += window.__pdxMerchantHUD({ v: view, m: [x, y - 47 + 13],
           tpos: tt && tt.century !== mc && R.pcPos && R.pcPos[tt.name] || null,
-          pos: c2 => POS[c2] || null, W, H, dark: false, avoid: Object.values(R.pcPos || {}) });
+          pos: c2 => POS[c2] || null, dark: false });
       }
     }
     {

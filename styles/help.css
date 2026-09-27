@@ -1,0 +1,101 @@
+/* =========================================================================
+   help.css, THE TAB KEY (js/help.js): the hold view, the tips panel, the key
+   in the corner and HELA's overload window. Comic narrator boxes (the paper,
+   the ink, the hard shadow of comic.js) wearing HELA's tag in the player's
+   colour. Sizes are in rem, so the Settings text size carries them.
+   ========================================================================= */
+.ph-panel { position: fixed; z-index: 60400; box-sizing: border-box; pointer-events: none;
+  width: 25rem; max-width: calc(100vw - 16px); padding: .5rem .75rem .6rem;
+  font: 400 .88rem/1.32 var(--f-display, "Oswald", sans-serif); letter-spacing: .02em; color: #1d1409;
+  background: radial-gradient(circle, rgba(120,84,20,.12) 1px, transparent 1.4px) 0 0 / 5px 5px, var(--cx-paper, #f4e6b0);
+  border: 2.5px solid var(--cx-ink, #15100a);
+  box-shadow: 4px 4px 0 var(--cx-ink, #15100a), 0 0 0 5px var(--hela-seat, #c9a45c);
+  opacity: 0; transition: opacity .14s ease; }
+#pdx-help.on .ph-panel, #pdx-tips.on { opacity: 1; }
+.ph-panel header { display: flex; align-items: baseline; gap: .6rem; margin: 0 0 .4rem; }
+.ph-tag { padding: .2rem .45rem; background: var(--hela-seat, #c9a45c); color: var(--cx-ink, #15100a);
+  border: 2px solid var(--cx-ink, #15100a); font: 700 .74rem/1 var(--f-mono, monospace); letter-spacing: .14em; }
+.ph-sub { font-size: .78rem; opacity: .75; }
+.ph-panel b { font-weight: 700; }
+
+/* the machine's legend, laid out like the screen it sits above */
+.ph-mods { width: 46rem; }
+.ph-grid { display: grid; grid-template-columns: 6.6rem repeat(var(--ph-cols, 3), minmax(0, 1fr)); gap: .3rem; }
+.ph-fn { display: flex; flex-direction: column; justify-content: center; padding: .2rem .35rem;
+  border-left: 5px solid #5fae7c; font-size: .84rem; }
+.ph-fn.fn-paradox { border-left-color: #8d6fd0; }
+.ph-fn.fn-travel { border-left-color: #4e9ab8; }
+.ph-fn i { font-style: normal; font-size: .72rem; opacity: .8; }
+.ph-mod { position: relative; padding: .25rem .4rem .3rem 1.7rem; background: rgba(255,251,232,.72);
+  border: 1.5px solid rgba(21,16,10,.55); border-radius: 3px; font-size: .8rem; line-height: 1.25; }
+.ph-mod b { display: block; font-size: .8rem; letter-spacing: .06em; }
+.ph-num { position: absolute; left: .3rem; top: .28rem; width: 1.05rem; height: 1.05rem; border-radius: 50%;
+  background: var(--cx-ink, #15100a); color: var(--cx-paper, #f4e6b0);
+  font: 700 .66rem/1.05rem var(--f-mono, monospace); text-align: center; }
+.ph-shut.ph-mod { background: repeating-linear-gradient(-45deg, rgba(224,86,31,.16) 0 6px, rgba(255,251,232,.7) 6px 12px);
+  border-color: #b3391c; }
+.ph-shut.ph-fn i { color: #9e1e14; opacity: 1; font-weight: 700; }
+.ph-rule, .ph-valve { margin: .45rem 0 0; font-size: .8rem; }
+.ph-valve b:first-child { display: inline-block; margin-right: .35rem; padding: 0 .3rem; border: 1.5px solid var(--cx-ink, #15100a);
+  font: 700 .7rem/1.4 var(--f-mono, monospace); letter-spacing: .08em; }
+.ph-lines { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 60390; pointer-events: none;
+  opacity: 0; transition: opacity .14s ease; overflow: visible; }
+#pdx-help.on .ph-lines { opacity: 1; }
+.ph-lines path { fill: none; stroke: var(--hela-seat, #c9a45c); stroke-width: 3; stroke-linecap: round;
+  filter: drop-shadow(1px 1px 0 var(--cx-ink, #15100a)); }
+
+/* the phases of the Hour, the current one marked */
+.ph-phase { margin: .25rem 0 0; padding: .2rem .4rem; border-left: 4px solid transparent; }
+.ph-phase b { letter-spacing: .06em; margin-right: .4rem; }
+.ph-phase i { font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .12em; padding: .1rem .3rem;
+  background: var(--cx-ink, #15100a); color: var(--hela-seat, #c9a45c); font-style: normal; vertical-align: .1rem; }
+.ph-phase span { display: block; font-size: .8rem; }
+.ph-phase.ph-now { border-left-color: var(--hela-seat, #c9a45c); background: rgba(255,251,232,.72); }
+
+/* the Merchant's rule: WHEN / WHY / HOW / WHERE */
+.ph-merch { width: 27rem; }
+.ph-merch dl { display: grid; grid-template-columns: 4.2rem 1fr; gap: .28rem .5rem; margin: 0; }
+.ph-merch dt { font: 700 .74rem/1.5 var(--f-mono, monospace); letter-spacing: .1em; color: #7a4a0c; }
+.ph-merch dd { margin: 0; font-size: .84rem; }
+
+/* HELA's notes: her commentary, kept here instead of talking over the game */
+.ph-note { margin: .25rem 0 0; font-size: .82rem; }
+.ph-note i { font: 700 .62rem/1 var(--f-mono, monospace); letter-spacing: .1em; margin-right: .4rem; opacity: .7; font-style: normal; }
+.ph-note .cx-name { display: inline-block; padding: 0 4px; border: 1.5px solid var(--cx-ink, #15100a); border-radius: 2px;
+  background: var(--seat, #c9a45c); font-weight: 700; line-height: 1.2; }
+
+/* TAP: tips and questions */
+#pdx-tips { z-index: 60450; width: 34rem; max-height: calc(100vh - 70px); overflow-y: auto; pointer-events: auto;
+  overscroll-behavior: contain; }
+.pt-qa { margin: .45rem 0 0; }
+.pt-qa b { display: block; font-size: .92rem; letter-spacing: .03em; }
+.pt-qa span { display: block; font-size: .86rem; }
+.pt-foot { margin: .6rem 0 0; padding-top: .4rem; border-top: 1.5px dashed rgba(21,16,10,.45); font-size: .8rem; }
+.ph-panel kbd, #pdx-tabkey kbd { display: inline-block; padding: 0 .3rem; border: 1.5px solid var(--cx-ink, #15100a); border-radius: 3px;
+  background: #fffbe8; color: var(--cx-ink, #15100a); box-shadow: 1.5px 1.5px 0 var(--cx-ink, #15100a);
+  font: 700 .66rem/1.35 var(--f-mono, monospace); }
+
+/* the key in the corner: always there in a match, it never pops */
+#pdx-tabkey { position: fixed; left: 16px; top: 46px; z-index: 60300; display: flex; align-items: center; gap: .4rem;
+  padding: .2rem .5rem .2rem .3rem; cursor: pointer;
+  background: var(--cx-paper, #f4e6b0); border: 2px solid var(--cx-ink, #15100a); box-shadow: 2px 2px 0 var(--cx-ink, #15100a);
+  font: 600 .74rem/1.2 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; color: #1d1409; }
+#pdx-tabkey[hidden] { display: none; }
+#pdx-tabkey .pk-notes { font-style: normal; font: 700 .64rem/1 var(--f-mono, monospace); padding: .15rem .3rem;
+  background: var(--hela-seat, #c9a45c); border: 1.5px solid var(--cx-ink, #15100a); }
+body.pdx-help-hold #pdx-tabkey, body.pdx-tips-on #pdx-tabkey { box-shadow: 0 0 0 3px var(--hela-seat, #c9a45c), 2px 2px 0 var(--cx-ink, #15100a); }
+
+/* HELA's overload window (help.js overload, through window.__helaEye.manifest) */
+.he-window.he-ovl .he-pane { max-width: 30rem; padding: .7rem .9rem .6rem; color: #eaf6f0;
+  font: 400 .92rem/1.35 var(--f-display, "Oswald", sans-serif); letter-spacing: .02em; }
+.he-window.he-ovl .he-pane::before { content: "\25C9  HELA \00B7  OVERLOAD"; display: block; margin-bottom: .45rem;
+  font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .16em; color: #ffcf6a; }
+.pdx-ovl p { margin: 0 0 .45rem; }
+.pdx-ovl b { color: #ffcf6a; }
+.pdx-ovl .pdx-ack { margin: .2rem 0 0; font: 700 .7rem/1 var(--f-mono, monospace); letter-spacing: .1em; color: var(--vz, #6fe8c8); }
+
+/* the accessible interface: bolder, and more contrast on the small print */
+html.pdx-a11y .ph-panel { font-weight: 500; }
+html.pdx-a11y .ph-sub, html.pdx-a11y .ph-fn i, html.pdx-a11y .ph-note i { opacity: 1; }
+html.pdx-a11y .ph-mod, html.pdx-a11y .ph-merch dd, html.pdx-a11y .ph-phase span, html.pdx-a11y .pt-qa span { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .ph-panel, .ph-lines { transition: none; } }

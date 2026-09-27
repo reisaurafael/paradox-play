@@ -68,7 +68,7 @@
       app.__oriHooked=true;
       const orig=app.playEvent.bind(app); app.playEvent = async m => { try{onEvent(m);}catch(e){} return orig(m); };
       const od=app.onDecision.bind(app); app.onDecision = req => { const r=od(req); try{pollDecisions();}catch(e){} return r; };
-      window.__oriState=R; window.__oriFx=(f)=>{ R.fx.push(f); drainFx(); }; window.__oriAudit=()=>auditCache; window.__oriPresenting=()=>__live()&&(fxBusy||R.fx.length>0||R.sailing); window.__oriPeriodOf=periodOf; window.__oriWarp=(b)=>{ warping=false; window.__skinWarping=false; playWarp(!!b, b?"the deep past":"the ages ahead", ()=>{ const r=document.getElementById("timeline-rail"); if(r) { r.classList.toggle("skin-ori",!!b); renderNow(); } }); };
+      window.__oriState=R; window.__oriFx=(f)=>{ R.fx.push(f); drainFx(); }; window.__oriAudit=()=>auditCache; window.__oriPresenting=()=>__live()&&(fxBusy||R.fx.length>0||R.sailing); window.__oriPeriodOf=periodOf; window.__oriWarp=(b)=>{ window.__pdxChartTurn(!!b, ()=>{ const r=document.getElementById("timeline-rail"); if(r) { r.classList.toggle("skin-ori",!!b); renderNow(); } }); };
       wireAudio();
     }
     return true;
@@ -168,6 +168,9 @@
       g+=`<circle cx="${x}" cy="${y}" r="${(rnd(i,17)*0.7+0.4).toFixed(2)}" fill="#4a3218" opacity=".16"/>`; }
     // a cartouche: the old surveyors' mark for the edge of the known
     const cart=(x,y,txt)=>`<g transform="translate(${x} ${y})" opacity=".55"><path d="M -86 -14 H 86 Q 96 0 86 14 H -86 Q -96 0 -86 -14 Z" fill="rgba(240,226,192,.55)" stroke="#7a5a24" stroke-width="1.2"/><path d="M -80 -9 H 80 M -80 9 H 80" stroke="#7a5a24" stroke-width=".5" opacity=".6"/><text y="4" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="12" letter-spacing="2" fill="#5a3e14">${txt}</text></g>`;
+    // the printed border runs on with the sheet: top and left always, the right side down and
+    // the bottom side along only where the sheet does not run on past them (app.css)
+    g+=`<defs>${frameGold("cmxGoldFrame")}</defs>`+frameSides("cmxGoldFrame",o=>[["cmx-t",`M ${W-60} ${o} H ${X1+20}`],["cmx-l",`M ${o} ${H-60} V ${Y1+20}`],["cmx-r",`M ${W-o} ${H-60} V ${Y1+20}`],["cmx-b",`M ${W-60} ${H-o} H ${X1+20}`]]);
     g+=cart(W+130,H*.5,"TERRA INCOGNITA");
     g+=cart(W*.5,H+64,"HIC SVNT DRACONES");
     return `<defs>${defs}</defs>${g}`;
@@ -365,13 +368,14 @@
     f+=`</g>`;
     return g+f;
   }
+  // THE PRINTED BORDER, side by side (app.css hides a side where the sheet runs on past it,
+  // and vellumExtArt carries the other sides on to the sheet's torn edge)
+  const FRAME=[[6,"#5a3c10",1.8,1],[13,"url(#GOLD)",12,1],[13,"#fff0a8",1.6,.6],[20,"#5a3c10",1.4,1],[24,"#3f5f9a",4.5,.85],[28,"#5a3c10",.9,.8]];
+  const frameGold=id=>`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="7" x2="0" y2="${H-7}"><stop offset="0" stop-color="#ffdf6b"/><stop offset=".45" stop-color="#f2b62e"/><stop offset=".62" stop-color="#e8a01c"/><stop offset="1" stop-color="#a87414"/></linearGradient>`;
+  const frameSides=(gold,sides)=>FRAME.map(([o,c,w,op])=>sides(o).map(([cls,d])=>`<path class="${cls}" d="${d}" fill="none" stroke="${c.replace("GOLD",gold)}" stroke-width="${w}" stroke-linecap="square"${op<1?` opacity="${op}"`:""}/>`).join("")).join("");
   function borderFrame(){
-    let g=`<rect x="6" y="6" width="${W-12}" height="${H-12}" fill="none" stroke="#5a3c10" stroke-width="1.8"/>`;
-    g+=`<rect x="13" y="13" width="${W-26}" height="${H-26}" fill="none" stroke="url(#cmGoldBar)" stroke-width="12"/>`;
-    g+=`<rect x="13" y="13" width="${W-26}" height="${H-26}" fill="none" stroke="#fff0a8" stroke-width="1.6" opacity=".6"/>`;
-    g+=`<rect x="20" y="20" width="${W-40}" height="${H-40}" fill="none" stroke="#5a3c10" stroke-width="1.4"/>`;
-    g+=`<rect x="24" y="24" width="${W-48}" height="${H-48}" fill="none" stroke="#3f5f9a" stroke-width="4.5" opacity=".85"/>`;
-    g+=`<rect x="28" y="28" width="${W-56}" height="${H-56}" fill="none" stroke="#5a3c10" stroke-width=".9" opacity=".8"/>`;
+    let g=`<defs>${frameGold("cmGoldFrame")}</defs>`;
+    g+=frameSides("cmGoldFrame",o=>[["cm-bd-t",`M ${o} ${o} H ${W-o}`],["cm-bd-l",`M ${o} ${o} V ${H-o}`],["cm-bd-r",`M ${W-o} ${o} V ${H-o}`],["cm-bd-b",`M ${o} ${H-o} H ${W-o}`]]);
     const tx=W/2;
     g+=`<g transform="translate(${tx.toFixed(0)} 6)"><path d="M-212 0 h424 v20 l-10 8 h-404 l-10 -8 z" fill="#4a2e12" stroke="url(#cmGold)" stroke-width="1.4"/><text x="0" y="15" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="11.5" letter-spacing="1.6" fill="#f0d68a">ITINERARIVM SAECVLORVM · the six walled kingdoms</text></g>`;
     return g;
@@ -523,9 +527,9 @@
         g+=`<g class="cm-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cm-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cm-aura">${plate}</g><g transform="scale(${sc})">${window.__pdxOutline(shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost}))}</g>${tag}</g>${em.g}</g>`;
       });
     }
-    // WHEN / HOW / WHY beside the Merchant, the chase line and his reach (board_draft.js)
+    // the chase line and his reach beside the Merchant (board_draft.js); the rule is on TAB
     if(R.mAnchor&&view.merchant_plan&&window.__pdxMerchantHUD){ const pl=view.merchant_plan, tt=pl.target_seat&&view.travelers.find(t2=>t2.name===pl.target_seat);
-      g+=window.__pdxMerchantHUD({v:view,m:[R.mAnchor[0],R.mAnchor[1]+1],tpos:tt&&tt.century!==mc&&R.pcPos[tt.name]||null,pos:c2=>POS[c2]||null,W,H,dark:false,avoid:Object.values(R.pcPos)}); }
+      g+=window.__pdxMerchantHUD({v:view,m:[R.mAnchor[0],R.mAnchor[1]+1],tpos:tt&&tt.century!==mc&&R.pcPos[tt.name]||null,pos:c2=>POS[c2]||null,dark:false}); }
     g+=orderSlate();
     g+=highlights();
     return g;
@@ -743,35 +747,15 @@
 
   /* ═══ SKIN + RENDER ═══ */
   let skinInit=false, warping=false;
-    function updateSkin(){
+  function updateSkin(){
     const r=document.getElementById("timeline-rail"); if(!r) return;
     const s=selfT(); const want=window.__forceSkin?(window.__forceSkin==="ori"):((s?periodOf(s.century):"none")==="Origins"); const cur=r.classList.contains("skin-ori");
     const era=(w)=>{ try{ document.body.classList.toggle("era-ori", !!w); }catch(e){} };
-    if(!skinInit){ skinInit=true; r.classList.toggle("skin-ori",want); era(want); renderNow(); return; }
-    if(want===cur) return; if(warping || window.__skinWarping){ r.classList.toggle("skin-ori",want); era(want); renderNow(); return; }
-    warping=true; playWarp(want, (s?periodOf(s.century):"Origins"), ()=>{ r.classList.toggle("skin-ori",want); era(want); renderNow(); });
-  }
-  function warpSound(){ try{ const A=window.__audio; if(!A||!A.ctx) return; const C=A.ctx, bus=A.master||C.destination, t=C.currentTime;
-    // ONE mechanical gesture: three ratchet teeth -> heavy drum CLUNK -> steam breath on the open
-    [0,0.05,0.10].forEach((d,i)=>{ const o=C.createOscillator(); o.type="square"; o.frequency.value=520-i*90; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(bus); g.gain.setValueAtTime(0,t+d); g.gain.linearRampToValueAtTime(0.05,t+d+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+d+0.05); o.start(t+d); o.stop(t+d+0.06); });
-    const o=C.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(150,t+0.17); o.frequency.exponentialRampToValueAtTime(58,t+0.36); const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(bus); g.gain.setValueAtTime(0,t+0.17); g.gain.linearRampToValueAtTime(0.30,t+0.185); g.gain.exponentialRampToValueAtTime(0.0001,t+0.52); o.start(t+0.17); o.stop(t+0.55);
-    const nb=C.createBuffer(1,C.sampleRate>>1,C.sampleRate); const dd=nb.getChannelData(0); for(let i=0;i<dd.length;i++) dd[i]=Math.random()*2-1; const ns=C.createBufferSource(); ns.buffer=nb; const nf=C.createBiquadFilter(); nf.type="highpass"; nf.frequency.value=3200; const ng=C.createGain(); ng.gain.value=0; ns.connect(nf); nf.connect(ng); ng.connect(bus); ng.gain.setValueAtTime(0,t+0.36); ng.gain.linearRampToValueAtTime(0.045,t+0.41); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.75); ns.start(t+0.36); ns.stop(t+0.8); }catch(e){} }
-  function playWarp(entering, per, atFlash){
-    // THE SHUTTER: the manopla swaps the record drum, iris closes, the era
-    // plate CHUNKS over, iris opens on the new chart. Mechanical, <1s, no text.
-    if(typeof per==="function"){ atFlash=per; per=null; }
-    const rail=document.getElementById("timeline-rail"); if(!rail){ atFlash&&atFlash(); warping=false; window.__skinWarping=false; return; }
-    let w=rail.querySelector(".cplot-warp");
-    if(w && !w.classList.contains("iris-shutter")){ w.remove(); w=null; }
-    if(!w){ rail.insertAdjacentHTML("beforeend", `<div class="cplot-warp iris-shutter"><div class="iris-leaf"></div></div>`); w=rail.querySelector(".cplot-warp"); }
-    if(REDUCED){ atFlash&&atFlash(); warping=false; window.__skinWarping=false; return; }
-    window.__skinWarping=true;
-    try{ window.dispatchEvent(new CustomEvent("paradoxo:skinwarp")); }catch(e){}
-    w.classList.remove("opening"); void w.offsetWidth; w.classList.add("closing");
-    warpSound();
-    setTimeout(()=>{ atFlash&&atFlash(); }, 340);
-    setTimeout(()=>{ w.classList.remove("closing"); w.classList.add("opening"); }, 470);
-    setTimeout(()=>{ w.classList.remove("opening"); warping=false; window.__skinWarping=false; }, 1000);
+    const flip=()=>{ r.classList.toggle("skin-ori",want); era(want); renderNow(); };
+    if(!skinInit){ skinInit=true; flip(); return; }
+    if(want===cur||warping) return;
+    // the era turns like a comic page (board_draft.js __pdxChartTurn): into the Origins is back in time
+    warping=true; window.__pdxChartTurn(want, flip, ()=>{ warping=false; });
   }
     let liveTimer=null;
   let __dirty = false;
@@ -788,7 +772,7 @@
     // ═══ THE CHART COULD NEVER CHANGE ERA AGAIN ═══════════════════════════════════
     // updateSkin() is NOT rendering. It is the function that DECIDES which of the three
     // charts is on screen, it reads the traveller's century, works out the period, and
-    // plays the warp shutter that swaps the drum. It used to sit at the BOTTOM of this
+    // plays the comic page turn that swaps the chart. It used to sit at the BOTTOM of this
     // function, and my `if (!__live()) return` gate put it out of reach: __live() asks
     // "am I the skin on screen?", so a chart that is NOT on screen could never run the
     // one piece of code that would PUT it on screen. The only other caller is mount(),
@@ -948,16 +932,6 @@
     .cm-tiles{display:flex;gap:6px;margin-top:5px;}
     .cm-tile{flex:1 1 0;min-width:88px;max-width:112px;background:#f4ead0;border:1px solid #a98a4e;border-radius:3px;padding:6px 7px;font-size:.5rem;line-height:1.35;color:#3a2c14;}
     .cm-tn{font-weight:bold;font-size:.56rem;color:#5a3a12;} .cm-tk{font-style:italic;opacity:.75;margin:1px 0 3px;} .cm-td{opacity:.9;max-height:52px;overflow:hidden;} .cm-tc{margin-top:4px;color:#8a5a12;font-weight:bold;letter-spacing:.4px;}
-    /* ── THE SHUTTER: the record-drum swap, iris closes, chart changes, iris opens ── */
-    #timeline-rail > div.cplot-warp { position:absolute; inset:74px 0 0 6px; display:block !important; z-index:40; opacity:0; pointer-events:none; overflow:hidden; border-radius:6px; }
-    #timeline-rail > div.cplot-warp.iris-shutter.closing,
-    #timeline-rail > div.cplot-warp.iris-shutter.opening { opacity:1; }
-    .iris-leaf { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); width:150%; aspect-ratio:1/1; border-radius:50%;
-      box-shadow: 0 0 0 260vmax #0d0a05, inset 0 0 26px rgba(210,180,110,.4), inset 0 0 3px rgba(210,180,110,.8); }
-    .cplot-warp.iris-shutter.closing .iris-leaf { animation: irisClose .3s cubic-bezier(.55,.05,.75,.4) forwards; }
-    .cplot-warp.iris-shutter.opening .iris-leaf { animation: irisOpen .52s cubic-bezier(.18,.6,.28,1) forwards; }
-    @keyframes irisClose { from { width:150%; } to { width:0%; } }
-    @keyframes irisOpen  { from { width:0%; } to { width:150%; } }
     #timeline-rail.cm-shake { animation: cmshake .1s linear 7; }
     @keyframes cmshake { 0%,100%{transform:translate(0,0);} 25%{transform:translate(2px,-1px);} 50%{transform:translate(-2px,1px);} 75%{transform:translate(1px,2px);} }
     @media (prefers-reduced-motion:no-preference){

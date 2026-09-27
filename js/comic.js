@@ -20,14 +20,16 @@
        layer stays silent and only marks the table.
    Also here: the MEANWHILE reveal grid, emanata on the case files, the phase
    line under the phase track, the consequence preview before Confirm, NEXT
-   HOUR, rare rival balloons, keyboard shortcuts. The Merchant's when, how and
-   why are the chart's own readout (the map); HELA points at it, never repeats it.
+   HOUR, rare rival balloons, keyboard shortcuts. The Merchant's when, why, how
+   and where are read on TAB (help.js); HELA points at them, never repeats them.
+   Her lines are spoken only when they are ESSENTIAL (something happened to me);
+   the rest is filed in HELA's notes, read while TAB is held (cabin.js say).
    Costs: no loops and no intervals; small DOM nodes animated on transform and
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609270213";
-import { mend } from "./mend.js?202609270213";
+import { roman } from "./util.js?202609270852";
+import { mend } from "./mend.js?202609270852";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -91,9 +93,9 @@ class Comic {
     const r = document.createElement("div");
     r.id = "cx-root";
     r.setAttribute("aria-live", "polite");
-    // narrator boxes (square, no tail): the chapter, my move, HELA's line as plain
-    // narration when her eye is not on screen, and the footnote
-    for (const k of ["chapter", "turn", "event", "note"]) {
+    // narrator boxes (square, no tail): the chapter, my move, and HELA's line as plain
+    // narration when her eye is not on screen (her footnotes are in her notes, help.js)
+    for (const k of ["chapter", "turn", "event"]) {
       const s = document.createElement("div");
       s.className = "cx-cap cx-slot-" + k;
       s.setAttribute("aria-hidden", "true");
@@ -118,7 +120,6 @@ class Comic {
       chk.checked = this._notesOn();
       chk.addEventListener("change", () => {
         try { localStorage.setItem(NOTES_KEY, chk.checked ? "on" : "off"); } catch (e) {}
-        if (!chk.checked) this.hide("note");
       });
     }
   }
@@ -140,20 +141,16 @@ class Comic {
   _backlog() { const E = window.__helaEye; return E && E.backlog ? E.backlog() : 0; }
   _len(parts) {
     let n = 0;
-    for (const p of parts) n += typeof p === "string" ? p.length : String((p && (p.b ?? p.key ?? p.sig ?? p.name)) || "").length;
+    for (const p of parts) n += typeof p === "string" ? p.length : String((p && (p.b ?? p.key ?? p.name)) || "").length;
     return n;
   }
 
   /* ---- message parts: strings, { name } (a seat chip in its colour, "You" for me),
-     { b } bold, { key } a keycap, { sig } a footnote signature. Text only. ---- */
+     { b } bold, { key } a keycap. Text only. ---- */
   _parts(body, parts) {
     for (const p of parts) {
       if (p == null || p === "") continue;
       if (typeof p === "string") { body.appendChild(document.createTextNode(p)); continue; }
-      if (p.sig != null) {
-        const g = document.createElement("span"); g.className = "cx-sig"; g.textContent = String(p.sig);
-        body.appendChild(g); continue;
-      }
       const e = document.createElement(p.name != null ? "span" : p.key != null ? "kbd" : "b");
       if (p.name != null) {
         e.className = "cx-name";
@@ -174,7 +171,7 @@ class Comic {
     const E = this._eye(), caps = E && E.caps && E.caps();
     const host = caps || this.root;
     if (!host) return;
-    for (const k of ["chapter", "note", "event", "turn"]) {
+    for (const k of ["chapter", "event", "turn"]) {
       const s = this.slots[k];
       if (s && s.parentNode !== host) host.appendChild(s);
     }
@@ -256,7 +253,7 @@ class Comic {
     n.className = "cx-say" + (opts.tone ? " cx-" + opts.tone : "");
     this._parts(n, parts);
     const prio = opts.prio == null ? 1 : opts.prio;
-    E.say(n, { prio, ttl: prio >= 2 ? 9000 : prio === 1 ? 6500 : 4000,   // a line too old to be news is dropped
+    E.say(n, { prio, essential: !!opts.essential, ttl: prio >= 2 ? 9000 : prio === 1 ? 6500 : 4000,   // a line too old to be news is dropped
       ms: Math.round(Math.max(opts.ms || 0, readMs(this._len(parts))) * this._slow()),
       onShow: (ms) => run(ms) });
   }
@@ -596,36 +593,27 @@ class Comic {
     this._parts(el, parts);
   }
 
-  /* ---- EDITOR'S NOTES: a comic footnote, "*" and signed HELA, that teaches one rule
-     at the moment it matters. Each at most once per match; it waits until HELA is
-     silent, so it never talks over her; it can be switched off in Settings. ---- */
+  /* ---- EDITOR'S NOTES: the rule behind what just happened, once per match. They no
+     longer pop over the game: they are filed in HELA's notes, read while TAB is held
+     (help.js), and can be switched off in Settings. ---- */
   _notesOn() { try { return localStorage.getItem(NOTES_KEY) !== "off"; } catch (e) { return true; } }
   note(key, text) {
-    if (!this._notesOn() || this._quiet()) return;
+    if (!this._notesOn() || this._quiet() || !window.__pdxHelp) return;
     this._noted = this._noted || new Set();
-    if (this._noted.has(key) || this._noteWait) return;   // one waiting note at a time
-    this._noteWait = { key, text, t0: performance.now() };
-    const tryShow = () => {
-      const w = this._noteWait; if (!w) return;
-      if (this._quiet() || performance.now() - w.t0 > 30000) { this._noteWait = null; return; }
-      if (this._backlog() > 0 || this.slots.note.classList.contains("on")) { this._noteT = setTimeout(tryShow, 700); return; }
-      this._noteWait = null; this._noted.add(w.key);
-      this.caption("note", ["*" + w.text + "  ", { sig: "HELA" }], {});
-    };
-    this._noteT = setTimeout(tryShow, 600);
+    if (this._noted.has(key)) return;
+    this._noted.add(key);
+    window.__pdxHelp.note(text, { key: "rule:" + key });
   }
   _notesFor(kind, p) {
     const me = this._me();
     if (kind === "phase_started" && p.phase === "market" && !p.solo)
-      this.note("merchant", "The Merchant moves at the end of every Market, toward the richest traveler he is not beside. The chart shows whom he chases and how many dice he rolls.");
+      this.note("merchant", "The Merchant moves at the end of every Market, toward the richest traveler he is not beside. The chart shows whom he chases; hold TAB for his whole rule.");
     else if (kind === "traveled" && p.to < p.from)
       this.note("past", "Sailing to the past costs 1 energy per century, 2 per century below X. The future is free.");
     else if (kind === "paradox_resolved" && (p.hits || []).length)
       this.note("paradox", "A paradox never hurts its maker. Future hits everyone ahead of you, Present everyone beside you, Past everyone behind.");
     else if (kind === "wanted")
       this.note("wanted", "A Wanted traveler carries a 4 gold bounty. Paying 4 gold at a Market (Declare) clears it.");
-    else if (kind === "overloaded" && p.seat === me)
-      this.note("overload", "Three dice in one function overload it: that function is shut for the next Hour.");
     else if (kind === "card_bought" && p.seat === me && !p.stolen)
       this.note("deliver", "A relic torn from its century unravels the last timeline. Return it while you stand on that century, in the Delivery phase: the timeline mends and you earn a contract point.");
     else if (kind === "heated" && p.seat === me && (p.booms || 0) >= 9)
@@ -675,6 +663,9 @@ class Comic {
       rows.push({ parts: [{ b: "TRAVEL: " }, `up to ${dist} centuries. Back to ${back === 0 ? "YEAR ZERO" : roman(back)} costs ${cost} energy; forward is free.`] });
       after -= cost;
     }
+    // three dice in one function: say it BEFORE Confirm, not after
+    m.forEach((row, r) => { if (row.length && row.every((v) => v)) rows.push({ tone: "danger",
+      parts: [{ b: "OVERLOAD: " }, `${["Recharge", "Paradox", "Travel"][r]} gets three dice, so it will be shut for the next Hour.`] }); });
     if (dist || heat || gain) {
       if (after <= 0) rows.push({ tone: "danger", parts: [{ b: "! " }, "The full trip back costs more energy than you have: you would stop short."] });
       else if (after <= 6) rows.push({ tone: "danger", parts: [{ b: "! " }, `This plan can leave you at ${after} energy: critical.`] });
@@ -695,7 +686,6 @@ class Comic {
     const mw = this._onScreen(document.querySelector("#hull-console .matrix-wrap") || document.getElementById("machine-zone"));
     if (mw) { box.style.left = Math.max(8, mw.left) + "px"; box.style.top = ""; box.style.bottom = (innerHeight - mw.top + 14) + "px"; }
     this._ghost(back, me);
-    if (m.some((r) => r.every((v) => v))) this.note("overload", "Three dice in one function overload it: that function is shut for the next Hour.");
   }
   _ghost(back, me) {
     const r = back != null && back !== me.century ? this._islandAt(back) : null;
@@ -726,8 +716,11 @@ class Comic {
       parts = [{ name: crit.name }, crit.name === me ? " are" : " is", ` down to ${crit.energy} energy.`];
     else if (plan && plan.target_seat)
       parts = ["The Merchant has his eye on ", { name: plan.target_seat }, " (see the chart)."];
-    if (!parts) return;
-    this.caption("chapter", parts, { tag: "NEXT HOUR" });
+    if (!parts || !window.__pdxHelp) return;
+    // commentary: it waits in HELA's notes (hold TAB), the latest one only
+    const n = document.createElement("span");
+    this._parts(n, [{ b: "Next Hour: " }, ...parts]);
+    window.__pdxHelp.note(n, { key: "next-hour" });
   }
 
   /* ---- RIVAL VOICES: a bot now and then says one short line in its own colour, at
@@ -835,19 +828,19 @@ class Comic {
         parts.push(hits.length === 1 && hits[0].seat !== me ? (same ? ` loses ${d} energy.` : " loses energy.") : (same ? ` lose ${d} energy.` : " lose energy."));
         const mine = hits.find((h) => h.seat === me), rival = hits.find((h) => h.seat !== me) || hits[0];
         const star = mine || rival;
-        this.say(parts, { tone: "danger", prio: 2, at: () => this._at(rival.seat),
+        this.say(parts, { tone: "danger", prio: 2, essential: !!mine, at: () => this._at(rival.seat),
           impact: ["paradox", () => this._seatRect(star.seat), { big: !!mine, sub: `-${star.damage}` }] });
         return;
       }
       case "exploded":
         this.say(p.seat === me ? [{ b: "BOOM! " }, "Your machine fails to hold the years: 12 heat. -2 energy, and you sit out the rest of this Hour."]
           : [{ b: "BOOM! " }, N(p.seat), "'s machine fails to hold the years: 12 heat. -2 energy, out for the rest of this Hour."],
-          { tone: "danger", prio: 2, at: () => this._at(p.seat), impact: ["boom", () => this._seatRect(p.seat), { big: true }] });
+          { tone: "danger", prio: 2, essential: p.seat === me, at: () => this._at(p.seat), impact: ["boom", () => this._seatRect(p.seat), { big: true }] });
         return;
       case "terminated":
         this.say([N(p.seat), v(p.seat, " is", " are") + " TERMINATED", p.by ? " by " : "", p.by ? N(p.by) : "",
           v(p.seat, ". The C.R.O.N.O.S. pulls them back to the far future, XXX. Their gear is recycled.", ". The C.R.O.N.O.S. pulls you back to the far future, XXX. Your gear is recycled.")],
-          { tone: "danger", prio: 2, at: () => this._at(p.seat), impact: ["terminated", () => this._seatRect(p.seat), { big: true, sub: "TERMINATED" }] });
+          { tone: "danger", prio: 2, essential: p.seat === me, at: () => this._at(p.seat), impact: ["terminated", () => this._seatRect(p.seat), { big: true, sub: "TERMINATED" }] });
         return;
       case "respawned":
         return this.say([N(p.seat), v(p.seat, " returns", " return") + ` at XXX with ${p.energy} energy.`], { prio: 0, at: () => this._at(p.seat) });
@@ -903,9 +896,9 @@ class Comic {
         return this.say([N(p.seat), v(p.seat, " recycles ", " recycle "), { b: this._card(p.card) }, p.energy ? ` for +${p.energy} energy.` : "."], { prio: 0, at: () => this._at(p.seat) });
       case "card_destroyed":
         if (!p.zone) return;
-        return this.say([{ b: this._card(p.card) }, " is destroyed."], { tone: "danger", prio: 1, at: () => (p.owner ? this._at(p.owner) : this._cardAt(p.card)) });
+        return this.say([{ b: this._card(p.card) }, " is destroyed."], { tone: "danger", prio: 1, essential: p.owner === me, at: () => (p.owner ? this._at(p.owner) : this._cardAt(p.card)) });
       case "card_stolen":
-        return this.say([N(p.seat), v(p.seat, " snatches ", " snatch "), { b: this._card(p.card) }, p.from ? " from " : "", p.from ? N(p.from) : "", "."], { tone: "danger", prio: 1, at: () => this._at(p.seat) });
+        return this.say([N(p.seat), v(p.seat, " snatches ", " snatch "), { b: this._card(p.card) }, p.from ? " from " : "", p.from ? N(p.from) : "", "."], { tone: "danger", prio: 1, essential: p.from === me, at: () => this._at(p.seat) });
       case "secret_market_opened":
         return this.say(["The sealed vault at century XI opens: relics the Incursion buried, for sale one at a time."], { tone: "good", prio: 1, at: () => this._islandAt(11) });
       case "briefcase_acquired":

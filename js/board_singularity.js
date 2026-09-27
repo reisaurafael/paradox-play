@@ -63,7 +63,7 @@
       app.__singHooked=true;
       const orig=app.playEvent.bind(app); app.playEvent = async m => { try{onEvent(m);}catch(e){} return orig(m); };
       const od=app.onDecision.bind(app); app.onDecision = req => { const r=od(req); try{pollDecisions();}catch(e){} return r; };
-      window.__singState=R; window.__singAudit=()=>auditCache; window.__singPresenting=()=>__live()&&(fxBusy||R.fx.length>0||R.sailing); window.__singPeriodOf=periodOf; window.__singWarp=(b)=>{ warping=false; playWarp(!!b,()=>{ const r=document.getElementById("timeline-rail"); if(r) { r.classList.toggle("skin-sing",!!b); renderNow(); } }); };
+      window.__singState=R; window.__singAudit=()=>auditCache; window.__singPresenting=()=>__live()&&(fxBusy||R.fx.length>0||R.sailing); window.__singPeriodOf=periodOf; window.__singWarp=(b)=>{ window.__pdxChartTurn(!b, ()=>{ const r=document.getElementById("timeline-rail"); if(r) { r.classList.toggle("skin-sing",!!b); renderNow(); } }); };
       wireAudio();
     }
     return true;
@@ -520,9 +520,9 @@
         g+=`<g class="cc-shipg pc-piece-g${t.is_self?" pc-self":""}${dead&&!ghost?" cc-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})"><line x1="${(x-bx).toFixed(1)}" y1="${(y-by).toFixed(1)}" x2="0" y2="${pcy}" stroke="${col}" stroke-width="2" stroke-linecap="round" opacity=".75" stroke-dasharray="2.6 2.4"/><g class="pc-piece"><g class="cc-aura">${plate}</g><g transform="scale(${sc})">${window.__pdxOutline(shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost}))}</g>${tag}</g>${em.g}</g>`;
       });
     }
-    // WHEN / HOW / WHY beside the Merchant, the chase line and his reach (board_draft.js)
+    // the chase line and his reach beside the Merchant (board_draft.js); the rule is on TAB
     if(R.mAnchor&&view.merchant_plan&&window.__pdxMerchantHUD){ const pl=view.merchant_plan, tt=pl.target_seat&&view.travelers.find(t2=>t2.name===pl.target_seat);
-      g+=window.__pdxMerchantHUD({v:view,m:[R.mAnchor[0],R.mAnchor[1]+1],tpos:tt&&tt.century!==mc&&R.pcPos[tt.name]||null,pos:c2=>POS[c2]||null,W,H,dark:true,avoid:Object.values(R.pcPos)}); }
+      g+=window.__pdxMerchantHUD({v:view,m:[R.mAnchor[0],R.mAnchor[1]+1],tpos:tt&&tt.century!==mc&&R.pcPos[tt.name]||null,pos:c2=>POS[c2]||null,dark:true}); }
     g+=orderSlate();
     g+=highlights();
     return g;
@@ -655,31 +655,11 @@
     const r=document.getElementById("timeline-rail"); if(!r) return;
     const s=selfT(); const want=window.__forceSkin?(window.__forceSkin==="sing"):((s?periodOf(s.century):"Singularity")==="Singularity"); const cur=r.classList.contains("skin-sing");
     const era=(w)=>{ try{ document.body.classList.toggle("era-sing", !!w); }catch(e){} };
-    if(!skinInit){ skinInit=true; r.classList.toggle("skin-sing",want); era(want); renderNow(); return; }
-    if(want===cur) return; if(warping || window.__skinWarping){ r.classList.toggle("skin-sing",want); era(want); renderNow(); return; }
-    warping=true; playWarp(want, (s?periodOf(s.century):"Singularity"), ()=>{ r.classList.toggle("skin-sing",want); era(want); renderNow(); });
-  }
-  function warpSound(){ try{ const A=window.__audio; if(!A||!A.ctx) return; const C=A.ctx, bus=A.master||C.destination, t=C.currentTime;
-    // ONE mechanical gesture: three ratchet teeth -> heavy drum CLUNK -> steam breath on the open
-    [0,0.05,0.10].forEach((d,i)=>{ const o=C.createOscillator(); o.type="square"; o.frequency.value=520-i*90; const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(bus); g.gain.setValueAtTime(0,t+d); g.gain.linearRampToValueAtTime(0.05,t+d+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+d+0.05); o.start(t+d); o.stop(t+d+0.06); });
-    const o=C.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(150,t+0.17); o.frequency.exponentialRampToValueAtTime(58,t+0.36); const g=C.createGain(); g.gain.value=0; o.connect(g); g.connect(bus); g.gain.setValueAtTime(0,t+0.17); g.gain.linearRampToValueAtTime(0.30,t+0.185); g.gain.exponentialRampToValueAtTime(0.0001,t+0.52); o.start(t+0.17); o.stop(t+0.55);
-    const nb=C.createBuffer(1,C.sampleRate>>1,C.sampleRate); const dd=nb.getChannelData(0); for(let i=0;i<dd.length;i++) dd[i]=Math.random()*2-1; const ns=C.createBufferSource(); ns.buffer=nb; const nf=C.createBiquadFilter(); nf.type="highpass"; nf.frequency.value=3200; const ng=C.createGain(); ng.gain.value=0; ns.connect(nf); nf.connect(ng); ng.connect(bus); ng.gain.setValueAtTime(0,t+0.36); ng.gain.linearRampToValueAtTime(0.045,t+0.41); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.75); ns.start(t+0.36); ns.stop(t+0.8); }catch(e){} }
-  function playWarp(entering, per, atFlash){
-    // THE SHUTTER: the manopla swaps the record drum, iris closes, the era
-    // plate CHUNKS over, iris opens on the new chart. Mechanical, <1s, no text.
-    if(typeof per==="function"){ atFlash=per; per=null; }
-    const rail=document.getElementById("timeline-rail"); if(!rail){ atFlash&&atFlash(); warping=false; window.__skinWarping=false; return; }
-    let w=rail.querySelector(".cplot-warp");
-    if(w && !w.classList.contains("iris-shutter")){ w.remove(); w=null; }
-    if(!w){ rail.insertAdjacentHTML("beforeend", `<div class="cplot-warp iris-shutter"><div class="iris-leaf"></div></div>`); w=rail.querySelector(".cplot-warp"); }
-    if(REDUCED){ atFlash&&atFlash(); warping=false; window.__skinWarping=false; return; }
-    window.__skinWarping=true;
-    try{ window.dispatchEvent(new CustomEvent("paradoxo:skinwarp")); }catch(e){}
-    w.classList.remove("opening"); void w.offsetWidth; w.classList.add("closing");
-    warpSound();
-    setTimeout(()=>{ atFlash&&atFlash(); }, 340);
-    setTimeout(()=>{ w.classList.remove("closing"); w.classList.add("opening"); }, 470);
-    setTimeout(()=>{ w.classList.remove("opening"); warping=false; window.__skinWarping=false; }, 1000);
+    const flip=()=>{ r.classList.toggle("skin-sing",want); era(want); renderNow(); };
+    if(!skinInit){ skinInit=true; flip(); return; }
+    if(want===cur||warping) return;
+    // the era turns like a comic page (board_draft.js __pdxChartTurn): out of the Singularity is back in time
+    warping=true; window.__pdxChartTurn(!want, flip, ()=>{ warping=false; });
   }
     let liveTimer=null;
   let __dirty = false;
@@ -696,7 +676,7 @@
     // ═══ THE CHART COULD NEVER CHANGE ERA AGAIN ═══════════════════════════════════
     // updateSkin() is NOT rendering. It is the function that DECIDES which of the three
     // charts is on screen, it reads the traveller's century, works out the period, and
-    // plays the warp shutter that swaps the drum. It used to sit at the BOTTOM of this
+    // plays the comic page turn that swaps the chart. It used to sit at the BOTTOM of this
     // function, and my `if (!__live()) return` gate put it out of reach: __live() asks
     // "am I the skin on screen?", so a chart that is NOT on screen could never run the
     // one piece of code that would PUT it on screen. The only other caller is mount(),
@@ -872,17 +852,6 @@
     .cc-tiles{display:flex;gap:6px;margin-top:5px;}
     .cc-tile{flex:1 1 0;min-width:86px;max-width:110px;background:#0d1424;border:1px solid #3a5480;border-radius:4px;padding:6px 7px;font-size:.5rem;line-height:1.35;}
     .cc-tn{font-weight:bold;font-size:.56rem;color:#eaf0ff;} .cc-tk{font-style:italic;opacity:.7;margin:1px 0 3px;} .cc-td{opacity:.85;max-height:52px;overflow:hidden;} .cc-tc{margin-top:4px;color:#e6b95a;font-weight:bold;letter-spacing:.5px;}
-    /* ── the DRAMATIC map transition, a temporal warp (crossing a period) ── */
-    /* ── THE SHUTTER: the record-drum swap, iris closes, chart changes, iris opens ── */
-    #timeline-rail > div.cplot-warp { position:absolute; inset:74px 0 0 6px; display:block !important; z-index:40; opacity:0; pointer-events:none; overflow:hidden; border-radius:6px; }
-    #timeline-rail > div.cplot-warp.iris-shutter.closing,
-    #timeline-rail > div.cplot-warp.iris-shutter.opening { opacity:1; }
-    .iris-leaf { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); width:150%; aspect-ratio:1/1; border-radius:50%;
-      box-shadow: 0 0 0 260vmax #0d0a05, inset 0 0 26px rgba(210,180,110,.4), inset 0 0 3px rgba(210,180,110,.8); }
-    .cplot-warp.iris-shutter.closing .iris-leaf { animation: irisClose .3s cubic-bezier(.55,.05,.75,.4) forwards; }
-    .cplot-warp.iris-shutter.opening .iris-leaf { animation: irisOpen .52s cubic-bezier(.18,.6,.28,1) forwards; }
-    @keyframes irisClose { from { width:150%; } to { width:0%; } }
-    @keyframes irisOpen  { from { width:0%; } to { width:150%; } }
     #timeline-rail.cc-shake { animation: ccshake .1s linear 7; }
     @keyframes ccshake { 0%,100%{transform:translate(0,0);} 25%{transform:translate(2px,-2px);} 50%{transform:translate(-3px,1px);} 75%{transform:translate(2px,3px);} }
     @media (prefers-reduced-motion:reduce){ .cc-tw,.cc-neb,.cc-rock,.cc-ovdlamp,.cc-sec-ring,.cc-sec-core,.cc-bh-disk,.cc-bh-glow,.cc-drift-flow,.cc-drift-glow,.cc-sun-rays,.cc-sun-ring,.cc-sun text,.cc-lit,.cc-beam,.cc-bob,.cc-rift,.cc-glow{animation:none;} }

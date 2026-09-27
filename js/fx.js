@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609270213";
-import { roman } from "./util.js?202609270213";
+import { audio } from "./audio.js?202609270852";
+import { roman } from "./util.js?202609270852";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -135,7 +135,7 @@ class Fx {
 
   /* ---- THE LEVEL ---- */
   storedLevel() { const v = lsGet(LEVEL_KEY); return LEVELS[v] ? v : "full"; }
-  setLevel(v) { if (LEVELS[v]) lsSet(LEVEL_KEY, v); this._markLevel(); }
+  setLevel(v) { if (LEVELS[v]) lsSet(LEVEL_KEY, v); this._markLevel(); this.heatSync(); }
   _markLevel() { try { document.documentElement.dataset.fx = this.storedLevel(); } catch (e) {} }
   // what plays now: Low graphics caps it at Light
   level() {
@@ -277,7 +277,7 @@ class Fx {
     for (let i = 0; i < 4 && this._live.some((q) => Math.abs(q.x - p.x) < 90 && Math.abs(q.y - p.y) < 26); i++) p.y += 28;
     this._live.push({ x: p.x, y: p.y, until: now + dur });
     const n = document.createElement("div");
-    n.className = `fx-${kind} fx-${tone || "plain"}`;
+    n.className = `fx-${kind} fx-${tone || "plain"}` + (opts.big ? " fx-bigpop" : "");
     n.style.left = Math.round(p.x) + "px"; n.style.top = Math.round(p.y) + "px";
     n.style.setProperty("--fx-c", opts.color || TONE[tone] || TONE.plain);
     if (opts.color) n.classList.add("fx-seat");   // in the causer's colour
@@ -367,6 +367,7 @@ class Fx {
   /* ---- THE CATALOGUE: every rules event, one effect (or none) ---- */
   event(kind, p) {
     if (!p) return;
+    if (kind === "heated" || kind === "exploded" || kind === "hour_started" || kind === "respawned") setTimeout(() => this.heatSync(), 0);
     if (window.__helaMute && this.tutorial) this._tutorBig(kind, p);
     switch (kind) {
       case "hour_started": this._trips = {}; return;
@@ -376,16 +377,16 @@ class Fx {
         this._paradoxPipeline(p);
         return;
       }
-      case "module_resolved":                   // the escape valve dumps an overloaded die for energy
-        if (p.kind === "escape_valve") for (const e of p.effects || []) if (e.energy > 0) this.pop("VENT!", "valve", () => this._seat(e.seat, "life"));
+      case "module_resolved":                   // §29.9: the valve drains energy while a function is shut
+        if (p.kind === "escape_valve") for (const e of p.effects || []) if (e.energy < 0) this.valveDrain(e.seat, -e.energy);
         return;
       case "valve_fed":                         // a calm valve charges the reactor
         if (p.fed > 0) this.pop("PSSSH!", "valve", () => this._seat(p.seat, "heat"));
         return;
       case "valve_reward":
         return this.stamp("FULL CHARGE!", "valve", () => this._seat(p.seat, "file"));
-      case "overloaded":
-        if ((p.functions || []).length) this.stamp("OVERLOAD!", "danger", () => this._seat(p.seat, "file"));
+      case "overloaded":                        // mine is the machine's own moment (overload, from game.js)
+        if ((p.functions || []).length && p.seat !== this._me()) this.stamp("OVERLOAD!", "danger", () => this._seat(p.seat, "file"));
         return;
       case "milestone":
         return this.stamp(`CENTURY ${roman(p.century)}!`, "good", () => this._isle(p.century) || this._seat(p.seat, "file"));
@@ -499,12 +500,32 @@ class Fx {
     if (this._quiet() || this.level() === "off") return;
     const beats = this._paradoxPairs(p);
     if (!beats || !beats.length) return;
+    this._pdxOwn = performance.now() + 1500;         // comic's own single panel stands down for this event
+    // the zaps belong beside the victims' case files and lifethread, which live on the desk:
+    // while the camera looks at the wagon or the paperwork they wait for the desk (8 s at most)
+    this._whenDesk(() => this._playBeats(beats), 8000);
+  }
+  _scene() { const c = document.getElementById("cam"); return (c && c.dataset.scene) || (this.game && this.game.camera && this.game.camera.scene) || "main"; }
+  _whenDesk(fn, maxMs) {
+    if (!document.body.classList.contains("cabin-on") || this._scene() === "main") { fn(); return; }
+    const cam = document.getElementById("cam");
+    if (!cam) { fn(); return; }
+    let done = false;
+    const mo = new MutationObserver(() => {
+      if (done || this._scene() !== "main") return;
+      done = true; mo.disconnect(); clearTimeout(t);
+      setTimeout(fn, this.ms(450));                  // once the camera has settled on the desk
+    });
+    mo.observe(cam, { attributes: true, attributeFilter: ["data-scene"] });
+    const t = setTimeout(() => { if (!done) { done = true; mo.disconnect(); } }, maxMs);   // too old to be news: dropped
+  }
+  _playBeats(beats) {
+    if (this._quiet() || this.level() === "off") return;
     const me = this._me();
     const one = Math.max(2100, Math.round(2800 * this.pace().impact));
     const beatMs = beats.length > 1 ? Math.max(1800, Math.round(one * .72)) : one;   // several beats read a little quicker
     const gap = Math.round(beatMs * .8);             // the next distance lands as this one fades
     const total = gap * (beats.length - 1) + beatMs;
-    this._pdxOwn = performance.now() + 1500;         // comic's own single panel stands down for this event
     const start = Math.max(0, this._bigUntil - performance.now());   // one big moment at a time
     this._bigUntil = performance.now() + start + total + 80;
     beats.forEach((beat, i) => setTimeout(() => {
@@ -585,6 +606,180 @@ class Fx {
       }
     } catch (e) {}
     setTimeout(() => h.remove(), dur + 80);
+  }
+
+  /* ---- THE MOTOR HEATS: a quiet, constant comic mark on MY time machine while it has
+     heat (engine: booms 0..12, the motor explodes at 12 and the booms are discarded).
+     Inked heat-wobble lines rise off the casing above the boom gauge, and the gauge's
+     edge is inked in the step's colour: warm 1..4 (amber, two lines), hot 5..8 (orange,
+     three lines, a steam puff), danger 9..11 (red, four quicker lines, two puffs and a
+     sweat drop). Nothing at 0. It lives INSIDE the wrist machine's SVG beside the gauge
+     (cabin.js #mano-boomg, attached from outside), so it travels with the machine when
+     the hand becomes the cursor. Only CSS transform/opacity loops on a handful of small
+     nodes, paced by --pdx-pace, held still by the nap (body.pdx-nap), still under calm
+     motion and in Light (a static inked mark), gone in Off. Synced on each game state. */
+  heatSync() {
+    try {
+      const g = this.game, v = g && g.view;
+      const me = v && v.travelers && v.travelers.find((t) => t.is_self || t.name === g.seat);
+      const b = me ? Math.max(0, Math.min(12, +me.booms || 0)) : 0;
+      const lv = this.storedLevel();
+      const step = b <= 0 || lv === "off" || (me && (me.statuses || []).includes("awaiting_respawn")) ? 0 : b >= 9 ? 3 : b >= 5 ? 2 : 1;
+      let el = document.getElementById("fx-heat");
+      if (!step) { if (el) el.remove(); return; }
+      const gauge = document.getElementById("mano-boomg");
+      const svg = gauge && gauge.ownerSVGElement;
+      if (!svg) { if (el) el.remove(); return; }
+      if (!el || el.ownerSVGElement !== svg) {
+        if (el) el.remove();
+        el = this._heatMarks();
+        gauge.parentNode.insertBefore(el, gauge.nextSibling);   // beside the gauge, under the machine's own controls
+      }
+      const cls = `fx-heat fh${step}` + (lv === "light" || document.body.classList.contains("gfx-low") ? " fx-still" : "");
+      if (el.getAttribute("class") !== cls) el.setAttribute("class", cls);
+      el.setAttribute("data-booms", String(b));
+    } catch (e) {}
+  }
+  _heatMarks() {
+    const NS = "http://www.w3.org/2000/svg";
+    const g = document.createElementNS(NS, "g");
+    g.id = "fx-heat";
+    g.setAttribute("aria-hidden", "true");
+    g.setAttribute("pointer-events", "none");
+    // the gauge's inked edge (a wide faint stroke under a thin one: a glow without filters)
+    g.innerHTML =
+      '<rect class="fxh-glow" x="496" y="186" width="40" height="146" rx="8"/>' +
+      '<rect class="fxh-edge" x="497.5" y="187.5" width="37" height="143" rx="7"/>' +
+      // four heat-wobble lines rising off the casing above the gauge
+      [490, 504, 518, 532].map((x, i) => `<g transform="translate(${x} 178)"><g class="fxh-w fxh-w${i + 1}">` +
+        '<path class="fxh-ink" d="M0 0 q-6 -9 0 -18 q6 -9 0 -18 q-5 -8 0 -14"/>' +
+        '<path class="fxh-col" d="M0 0 q-6 -9 0 -18 q6 -9 0 -18 q-5 -8 0 -14"/></g></g>').join("") +
+      // steam puffs off the gauge's side, and the sweat drop of the danger step
+      '<g transform="translate(548 212)"><circle class="fxh-puff fxh-p1" r="7"/></g>' +
+      '<g transform="translate(550 246)"><circle class="fxh-puff fxh-p2" r="6"/></g>' +
+      '<g transform="translate(486 204) scale(1.4)"><path class="fxh-drop" d="M0 -9 C 3 -3 5 0 5 3 A 5 5 0 0 1 -5 3 C -5 0 -3 -3 0 -9 Z"/></g>';
+    return g;
+  }
+
+  /* ---- OVERLOAD ON MY MACHINE (game.js awaits it, then HELA explains through help.js
+     with the row's yellow box): a jagged OVERLOAD! burst with inked sparks at the end of
+     the function's row, and a SHUT stamp slamming across the row, gone before her line.
+     The row keeps its steady SHUT plate (game.js _shutMark), inked as a stamp by fx.css.
+     Resolves when the moment is over; at once when there is nothing to show. ---- */
+  overload(p) {
+    const rows = (p && p.functions) || [];
+    if (!rows.length || this._quiet() || this.level() === "off") return Promise.resolve();
+    const rects = rows.map((r) => this._rowRect(r)).filter(Boolean);
+    if (!rects.length) return Promise.resolve();
+    if (this.level() === "light") {
+      const r = rects[0];
+      this.stamp("OVERLOAD!", "danger", { r, box: r, above: true });
+      return new Promise((res) => setTimeout(res, this.ms(700)));
+    }
+    const dur = Math.max(1600, this.ms(2000));
+    return new Promise((res) => {
+      const go = () => {
+        this._bigUntil = performance.now() + dur + 80;
+        rects.forEach((r, i) => setTimeout(() => this._overloadRow(r, dur - i * 120), i * 120));
+        setTimeout(res, dur + 60);
+      };
+      const wait = this._bigUntil - performance.now();   // one big moment at a time
+      wait > 0 ? setTimeout(go, wait + 40) : go();
+    });
+  }
+  _rowRect(r) {
+    const cells = [...document.querySelectorAll(`#hull-console .matrix-wrap .cell[data-r="${r}"]`)].map((c) => this._rect(c)).filter(Boolean);
+    if (!cells.length) return null;
+    const l = Math.min(...cells.map((c) => c.left)), t = Math.min(...cells.map((c) => c.top));
+    const rr = Math.max(...cells.map((c) => c.right)), b = Math.max(...cells.map((c) => c.bottom));
+    return { left: l, top: t, right: rr, bottom: b, width: rr - l, height: b - t };
+  }
+  _overloadRow(r, dur) {
+    if (!this.root) return;
+    const calm = this._calm();
+    // the burst stands above the machine's screen, over the shut row: the SHUT stamp across
+    // the row never covers its word, and it stays clear of the lifethread readout
+    const scr = this._rect(document.getElementById("mano-screen"));
+    const cx = r.left + r.width / 2, cy = (scr ? scr.top : r.top) - 40;
+    // the burst at the row's end
+    const h = document.createElement("div");
+    h.className = "cx-hit fx-zap fx-ovl cx-g-" + (document.body.classList.contains("gfx-low") ? "low" : "high");
+    h.style.left = Math.round(cx) + "px"; h.style.top = Math.round(cy) + "px";
+    h.style.transform = "scale(.72)";
+    h.style.setProperty("--cx-c", "#ff6a2a"); h.style.setProperty("--cx-ink", "#260604");
+    const burst = document.createElement("i"); burst.className = "cx-burst"; h.appendChild(burst);
+    const word = document.createElement("b"); word.className = "cx-word"; word.textContent = "OVERLOAD!"; h.appendChild(word);
+    // inked sparks flying off it
+    const sparks = [];
+    if (!calm) for (let i = 0; i < 6; i++) {
+      const sp = document.createElement("i"); sp.className = "fx-spark";
+      h.appendChild(sp); sparks.push(sp);
+    }
+    // the SHUT stamp across the row
+    const st = document.createElement("div");
+    st.className = "fx-shutslam";
+    st.style.left = Math.round(r.left + r.width / 2) + "px"; st.style.top = Math.round(r.top + r.height / 2) + "px";
+    st.style.width = Math.round(r.width + 8) + "px";
+    st.textContent = "SHUT";
+    this.root.append(h, st);
+    const fin = { duration: dur, easing: "linear", fill: "both" }, pop = Math.min(.12, 160 / dur);
+    try {
+      if (calm) {
+        h.animate([{ opacity: 0 }, { opacity: 1, offset: pop }, { opacity: 1, offset: .7 }, { opacity: 0 }], fin);
+        st.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 1, offset: .75 }, { opacity: 0 }], fin);
+      } else {
+        word.animate([
+          { transform: "translate(-50%,-50%) rotate(-4deg) scale(1.6)", opacity: 0, easing: "cubic-bezier(.2,.8,.3,1)" },
+          { transform: "translate(-50%,-50%) rotate(-4deg) scale(1)", opacity: 1, offset: pop },
+          { transform: "translate(-50%,-50%) rotate(-4deg) scale(1.02)", opacity: 1, offset: .7 },
+          { transform: "translate(-50%,-56%) rotate(-4deg) scale(1.04)", opacity: 0 }], fin);
+        burst.animate([
+          { transform: "translate(-50%,-50%) scale(.3) rotate(0deg)", opacity: 0, easing: "cubic-bezier(.2,.8,.3,1)" },
+          { transform: "translate(-50%,-50%) scale(1) rotate(8deg)", opacity: 1, offset: pop },
+          { transform: "translate(-50%,-50%) scale(1) rotate(9deg)", opacity: 1, offset: .7 },
+          { transform: "translate(-50%,-50%) scale(1.05) rotate(10deg)", opacity: 0 }], fin);
+        sparks.forEach((sp, i) => { const a = i * 60 + 15; sp.animate([
+          { transform: `rotate(${a}deg) translateX(40px) scaleX(.4)`, opacity: 0 },
+          { transform: `rotate(${a}deg) translateX(70px) scaleX(1)`, opacity: 1, offset: .12 },
+          { transform: `rotate(${a}deg) translateX(${110 + (i % 2) * 20}px) scaleX(.6)`, opacity: 0, offset: .45 },
+          { transform: `rotate(${a}deg) translateX(120px) scaleX(.6)`, opacity: 0 }], fin); });
+        st.animate([
+          { transform: "translate(-50%,-50%) rotate(-3deg) scale(1.5)", opacity: 0, offset: 0 },
+          { transform: "translate(-50%,-50%) rotate(-3deg) scale(1.5)", opacity: 0, offset: .1, easing: "cubic-bezier(.3,0,.6,1)" },
+          { transform: "translate(-50%,-50%) rotate(-3deg) scale(1)", opacity: 1, offset: .2 },
+          { transform: "translate(-50%,-50%) rotate(-3deg) scale(1)", opacity: 1, offset: .75 },
+          { transform: "translate(-50%,-50%) rotate(-3deg) scale(1)", opacity: 0 }], fin);
+      }
+    } catch (e) {}
+    setTimeout(() => { try { audio.play("chart_stamp"); } catch (e) {} }, Math.round(dur * .2));   // the SHUT lands with its sound
+    setTimeout(() => { h.remove(); st.remove(); }, dur + 60);
+  }
+
+  /* ---- THE VALVE DRAINS LIFE (§29.9): a die sent to the escape valve while a function is
+     shut costs its value in energy. Mine: steam hisses off the valve, a small VALVE! stamp
+     beside it and a red -N beside my lifethread. A rival's: a stamp beside their file. ---- */
+  valveDrain(seat, n) {
+    if (!n || this._quiet() || this.level() === "off") return;
+    if (seat !== this._me()) return this.stamp("VALVE -" + n, "danger", () => this._seat(seat, "life"));
+    const vent = this._rect(document.getElementById("mano-vent"));
+    try { audio.play("heat", { power: .5 }); } catch (e) {}   // the hiss
+    if (vent && this.level() === "full" && !this._calm()) this._steam(vent);
+    if (vent) this.stamp("VALVE!", "danger", { r: vent, box: vent, above: true }, { sound: false });
+    this.pop("-" + n, "danger", () => this._seat(seat, "life"), { big: true });
+  }
+  _steam(r) {
+    const x = r.left + r.width / 2, y = r.top + r.height * .3, dur = Math.max(1100, this.ms(1500));
+    for (let i = 0; i < 3; i++) {
+      const pf = document.createElement("i"); pf.className = "fx-steam";
+      pf.style.left = Math.round(x + (i - 1) * 9) + "px"; pf.style.top = Math.round(y) + "px";
+      this.root.appendChild(pf);
+      try { pf.animate([
+        { transform: "translate(-50%,-50%) scale(.5)", opacity: 0 },
+        { transform: "translate(-50%,-80%) scale(1)", opacity: .9, offset: .2 },
+        { transform: `translate(${-50 + (i - 1) * 60}%,-260%) scale(1.6)`, opacity: 0 }],
+        { duration: dur, delay: i * 110, easing: "ease-out", fill: "both" }); } catch (e) {}
+      setTimeout(() => pf.remove(), dur + i * 110 + 60);
+    }
   }
 
   /* ---- THE PAGE: a clear-line panel that turns in over the chart with a title, for

@@ -11,24 +11,36 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609270213";
-import { audio } from "./audio.js?202609270213";
+import { icon } from "./icons.js?202609270852";
+import { audio } from "./audio.js?202609270852";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609270213";
-import { comic } from "./comic.js?202609270213";
-import { fx } from "./fx.js?202609270213";
-import { CatEngine } from "./cat.js?202609270213";
-import { tutorials } from "./tutorial.js?202609270213";
-import { profile } from "./profile.js?202609270213";
-import { Camera } from "./camera.js?202609270213";
+import { juice } from "./juice.js?202609270852";
+import { comic } from "./comic.js?202609270852";
+import { fx } from "./fx.js?202609270852";
+import { CatEngine } from "./cat.js?202609270852";
+import { tutorials } from "./tutorial.js?202609270852";
+import { profile } from "./profile.js?202609270852";
+import { Camera } from "./camera.js?202609270852";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609270213";
+} from "./util.js?202609270852";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
 // leads the list, on the same track HELA lights at the top of the screen.
+// why an item has nothing to aim at, by its targeting kind (server/driver.py ACTIVE_TARGET)
+const NO_TARGET = {
+  traveler_synchronic: "no one in your century",
+  traveler_same_era: "no one in your era",
+  century_same_era: "no century in reach",
+  receptor_active: "no active relic in your receptor",
+  fishing_rod: "no Merchant relic costs 3 gold or less",
+  market_revealed: "the Merchant shows no relics",
+  recycled_card: "no recycled relic to take",
+  equipped_other: "no other traveler holds an item",
+};
+
 const PHASES = [
   ["leilao", "Auction"], ["delivery", "Delivery"], ["market", "Market"],
   ["main", "Generators"], ["activation", "Activation"],
@@ -290,6 +302,7 @@ export class Game {
             await this.playEvent(msg);
           } else {                   // state
             this.applyState(msg.view);
+            try { fx.heatSync(); } catch (e) {}   // the motor's heat marks follow the state (fx.js)
             await this._sleep(this._ms("state"));
           }
         } catch (err) {
@@ -1469,16 +1482,7 @@ export class Game {
         `<span class="mm-cell"><span class="mm-k">Speed</span><span class="mm-v">${dice} ${dice === 1 ? "die" : "dice"}</span></span>` +
         `<span class="mm-cell" title="Relics the Merchant still carries, salvaged from the Incursion. When none are left to save, the match ends."><span class="mm-k">Relics</span><span class="mm-v">${v.merchant_card_count}</span></span>` +
         `<span class="mm-cell"><span class="mm-k">Heading</span><span class="mm-v">${dir}${lm ? ` (${Math.abs(lm)})` : ""}</span></span>`;
-      // WHEN / HOW / WHY he moves, the same three facts the map shows beside him
-      try {
-        const rule = window.__pdxMerchantRule && window.__pdxMerchantRule(v);
-        if (rule) {
-          const e2 = (t) => String(t).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
-          this.dom.marketMeta.innerHTML += `<div class="mm-rule">`
-            + `<p><b>WHEN</b> ${e2(rule.when)}</p><p><b>HOW</b> ${e2(rule.how.join(" "))}</p>`
-            + `<p><b>WHY</b> ${e2(rule.why.join(" "))}</p>${rule.last ? `<p><b>LAST</b> ${e2(rule.last.replace(/^Last move: /, ""))}</p>` : ""}</div>`;
-        }
-      } catch (e) {}
+      // (WHEN, WHY, HOW and WHERE he moves are read on TAB, js/help.js)
     }
 
     // ---- Shopping mode: this seat is taking its Market turn, in-panel (no popup) ----
@@ -1898,6 +1902,7 @@ export class Game {
 
   cleanUpGenerators() {
     this._ovlShow = null;
+    this._ovlCleanHour = this.view ? this.view.hour : null;   // this Hour's seals have done their work
     this.myLastMatrix = null;
     this._lastAlloc = null;
     this._dealtSeats = null;
@@ -1908,6 +1913,26 @@ export class Game {
     if (window.__cabinPulse) window.__cabinPulse();
   }
 
+  // THE SHUT FUNCTIONS, for the marks on the machine: while allocating, the rows sealed
+  // this Hour; after a clean-up, the ones that just overloaded (shut NEXT Hour); until
+  // this Hour's clean-up, the ones shut now. { rows: Set of function indices, next }
+  shutRows() {
+    if (this.alloc) return { rows: this.alloc.unavailable, next: false };
+    const me = this._self();
+    const next = new Set([...(this._ovlShow || []), ...((me && me.overloaded_next) || [])]);
+    if (next.size) return { rows: next, next: true };
+    const hourDone = this.view && this._ovlCleanHour === this.view.hour;
+    return { rows: new Set(me && !hourDone ? me.overloaded_functions || [] : []), next: false };
+  }
+  // the readable mark across a shut row of the machine (not a flash: it stays while shut)
+  _shutMark(wrap, r, on, next) {
+    let m = wrap.querySelector(`.fn-shut[data-r="${r}"]`);
+    if (!on) { if (m) m.remove(); return; }
+    if (!m) { m = el("div", "fn-shut"); m.dataset.r = r; m.style.setProperty("--r", r); wrap.appendChild(m); }
+    const t = `SHUT ${next ? "NEXT" : "THIS"} HOUR`;
+    if (m.textContent !== t) m.textContent = t;
+  }
+
   renderMachineIdle() {
     // The Test Room's machine is LIVE (rows installed at auction): its own
     // renderer owns the slot. Classic games never take this branch.
@@ -1916,6 +1941,9 @@ export class Game {
     const body = this.dom.machine;
     body.innerHTML = "";
     body.appendChild(this.matrixEl(this.myLastMatrix || null, { interactive: false }));
+    const shut = this.shutRows();
+    if (shut.rows.size) body.appendChild(el("div", "shut-idle", [...shut.rows].sort()
+      .map((r) => `<b>${FUNCTIONS[r].name.toUpperCase()}<br>SHUT ${shut.next ? "NEXT" : "THIS"} HOUR</b>`).join("")));
   }
 
   matrixEl(matrix, { interactive }) {
@@ -1926,15 +1954,16 @@ export class Game {
     const selfT = this.view && this.view.travelers && this.view.travelers.find((x) => x.is_self);
     const buffs = {};
     (selfT && selfT.matrix_buffs || []).forEach(([m, b]) => { buffs[m] = b; });
+    const shut = this.shutRows();
     FUNCTIONS.forEach((fn, r) => {
       const lab = el("div", "matrix-fnlabel");
       lab.classList.add(fn.cls);              // fn-recharge/paradox/travel
       lab.title = fn.name;                    // gauntlet: shown as a brass ball, name on hover
       // sealed while allocating (the row is condemned this Hour), or sealed right now at
       // clean-up, where the overload is shown landing before the screen goes dark
-      const rowSealed = this.alloc ? this.alloc.unavailable.has(r)
-        : !!(this._ovlShow && this._ovlShow.has(r));
+      const rowSealed = shut.rows.has(r);
       if (rowSealed) lab.classList.add("fn-sealed");   // OVERLOAD: the row is condemned
+      this._shutMark(wrap, r, rowSealed, shut.next);
       lab.innerHTML = `<span class="fn ${fn.cls}">${fn.name}</span>`;
       wrap.appendChild(lab);
       fn.mods.forEach((mod, c) => {
@@ -2071,7 +2100,7 @@ export class Game {
       + `<div class="mh-matrix">${rows}</div>`
       + `<div class="mh-parts">`
       + `<div class="mh-part"><i class="mh-k k-boom"></i><span><b>BOOM</b> pressure 0-12 \u00b7 the red zone risks detonation</span></div>`
-      + `<div class="mh-part"><i class="mh-k k-vent"></i><span><b>ESCAPE VALVE</b> dump a die to vent Heat,  only when a function overloads</span></div>`
+      + `<div class="mh-part"><i class="mh-k k-vent"></i><span><b>ESCAPE VALVE</b> takes one spare die: while a function is shut it drains that die in energy, otherwise it charges a +1 module upgrade</span></div>`
       + `<div class="mh-part"><i class="mh-k k-tray"></i><span><b>GENERATORS</b> your dice this hour,  drag one into a module</span></div>`
       + `<div class="mh-part"><i class="mh-k k-keys"></i><span><b>CLEAR / CONFIRM</b> reset, or seal the allocation</span></div>`
       + `</div>`
@@ -2113,6 +2142,7 @@ export class Game {
       const rowSealed = this.alloc.unavailable.has(r);
       const lab = wrap.querySelector(`.matrix-fnlabel.${fn.cls}`);
       if (lab) lab.classList.toggle("fn-sealed", rowSealed);
+      this._shutMark(wrap, r, rowSealed, false);
       fn.mods.forEach((mod, c) => {
         const sw = this._modSwap && this._modSwap[r + "," + c];
         const [glyph, caption] = sw || mod;
@@ -3352,8 +3382,10 @@ export class Game {
 
   // ── HELA SPEAKS ── The sacred rule: if it is not printed on a real object, it
   // is not a floating legend, it is HER voice. A transient line in the visor.
-  helaSay(html, ms = 5000, tone = "") {
-    if (document.body.classList.contains("cabin-on") && window.__helaSay) return window.__helaSay(html, { ms });
+  // essential: something happened to the player that he must hear now; everything else
+  // is filed in HELA's notes, read while TAB is held (cabin.js say, help.js)
+  helaSay(html, ms = 5000, tone = "", essential = false) {
+    if (document.body.classList.contains("cabin-on") && window.__helaSay) return window.__helaSay(html, { ms, essential });
     const old = document.getElementById("hela-msg"); if (old) old.remove();
     const m = el("div", "hela-msg" + (tone ? " hela-" + tone : "")); m.id = "hela-msg";
     m.innerHTML = `<span class="vz-sigil">${icon("hela")}</span>`
@@ -3489,7 +3521,11 @@ export class Game {
     if (!document.body.classList.contains("cabin-on")) return false;
     const zone = document.getElementById("rucksack-zone");
     if (!zone) return false;
-    this._actReady = new Set((req.options.actives || []).map((c) => c.name));
+    // an item with nothing in reach is not READY: it gets the NO TARGET mark instead of
+    // the glow, and firing it would only fizzle (driver._target_preview)
+    const acts = req.options.actives || [];
+    this._actReady = new Set(acts.filter((c) => !c.no_target).map((c) => c.name));
+    this._actNoTarget = new Map(acts.filter((c) => c.no_target).map((c) => [c.name, NO_TARGET[c.target_kind] || "nothing in reach"]));
     this._actStaged = [];
     this._actStagedSet = new Set();
     document.body.classList.add("activating-items");
@@ -3512,13 +3548,20 @@ export class Game {
     const me = this._self();
     const mine = me ? (me.hand || me.equipment || []) : [];
     document.querySelectorAll("#rucksack-zone .ruck-pocket .card").forEach((card) => {
-      card.classList.remove("act-ready", "act-used");
+      card.classList.remove("act-ready", "act-used", "act-notarget");
+      const tag = card.querySelector(".act-nt"); if (tag) tag.remove();
       if (!on) return;
       const name = card.dataset.name;
       const meta = mine.find((c) => c.name === name);
       const hasActive = !!(meta && /active/.test(meta.ability_type || ""));
       if (this._actStagedSet && this._actStagedSet.has(name)) card.classList.add("act-used");
       else if (this._actReady && this._actReady.has(name)) card.classList.add("act-ready");
+      else if (this._actNoTarget && this._actNoTarget.has(name)) {
+        card.classList.add("act-notarget");
+        const t = el("div", "act-nt");
+        t.innerHTML = `<b>NO TARGET</b><span>${this._actNoTarget.get(name)}</span>`;
+        card.appendChild(t);
+      }
       else if (hasActive) card.classList.add("act-used");   // fresh this phase, chained
     });
   }
@@ -3544,7 +3587,7 @@ export class Game {
   _endActivationUI() {
     document.body.classList.remove("activating-items");
     if (this._actClick) { document.removeEventListener("click", this._actClick, true); this._actClick = null; }
-    this._actReady = null; this._actStaged = null; this._actStagedSet = null;
+    this._actReady = null; this._actNoTarget = null; this._actStaged = null; this._actStagedSet = null;
     this._markActivationCards();
     if (window.__malaLock) window.__malaLock.disarm();
   }
@@ -4491,9 +4534,16 @@ export class Game {
         break;
       case "overloaded":
         this.flashPanel(payload.seat, "fx-pulse");
-        // on your own machine the seal is DRAWN, so you watch the function close
-        if (payload.seat === this.seat)
+        // on your own machine the seal is DRAWN, so you watch the function close, and
+        // HELA says what happened; the replay waits until you have read it (help.js)
+        if (payload.seat === this.seat) {
           this.showOverload([...(this._ovlShow || []), ...(payload.functions || [])]);
+          // the comic OVERLOAD! and SHUT stamp land first (fx.js), then HELA explains
+          if (!this._skip && !document.hidden) { try { await fx.overload(payload); } catch (e) {} }
+          const told = window.__pdxHelp && window.__pdxHelp.overload(payload.functions, { first: !this._ovlTold });
+          if (told && !window.__helaMute) this._ovlTold = true;
+          if (told && !this._skip && !document.hidden) await told;
+        }
         break;
       case "generator_rolled": this.pushRoll(payload); audio.play("dice"); break;
       case "merchant_moved": if (window.__room) window.__room.beat("travel");
@@ -4561,7 +4611,7 @@ export class Game {
         break;
       case "activation_fizzled": {
         if (payload.seat === this.seat)
-          this.helaSay(`The <b>${this.nameEn(payload.card)}</b> found no one within reach, the act dies in the chamber.`, 5200, "note");
+          this.helaSay(`The <b>${this.nameEn(payload.card)}</b> found no one within reach, the act dies in the chamber.`, 5200, "note", true);
         break;
       }
       case "activated": {
