@@ -288,10 +288,13 @@
   window.__pdxMerchTag = window.__pdxMerchTag || function (y) {
     let sub = "";
     try { const r = window.__game && window.__game.view && window.__pdxMerchantRule(window.__game.view); if (r && r.aim) sub = " \u2192 " + r.aim; } catch (e) {}
-    const txt = "MERCHANT" + sub, w = Math.round(txt.length * 6.6 + 14);
-    return `<g class="pc-tag pc-tag-merch" transform="translate(0 ${y})" pointer-events="none">`
-      + `<rect x="${-w / 2}" y="-7.5" width="${w}" height="15" rx="7.5" fill="#e8c05a" stroke="#2a1c08" stroke-width="1.5"/>`
-      + `<text y="3.3" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="8.8" letter-spacing="1" fill="#1c1206">${txt}</text></g>`;
+    // whom he chases is a reminder, not the game: it shows only while Tab is held (HELA
+    // extended, help.js); the table itself shows just his name (app.css .pc-tag-aim)
+    const one = (txt, cls) => { const w = Math.round(txt.length * 6.6 + 14);
+      return `<g class="pc-tag pc-tag-merch${cls}" transform="translate(0 ${y})" pointer-events="none">`
+        + `<rect x="${-w / 2}" y="-7.5" width="${w}" height="15" rx="7.5" fill="#e8c05a" stroke="#2a1c08" stroke-width="1.5"/>`
+        + `<text y="3.3" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="8.8" letter-spacing="1" fill="#1c1206">${txt}</text></g>`; };
+    return sub ? one("MERCHANT", " pc-tag-plain") + one("MERCHANT" + sub, " pc-tag-aim") : one("MERCHANT", "");
   };
   // FAN OUT a stack: pieces on one century push apart until their plates clear each
   // other (and stay inside the chart). pts = [{ x, y, r }], mutated in place.
@@ -1139,7 +1142,7 @@
     });
     if (m.id === "hma") {
       const sx2 = cx, sy2 = cy - ry + 16;
-      SHARKS += `<g class="sea-sign" data-tip="DANGER: shark waters (centuries I-IX): every league costs 2 energy" transform="translate(${sx2.toFixed(0)} ${sy2.toFixed(0)}) rotate(-3)">
+      SHARKS += `<g class="sea-sign pdx-ref" data-tip="DANGER: shark waters (centuries I-IX): every league costs 2 energy" transform="translate(${sx2.toFixed(0)} ${sy2.toFixed(0)}) rotate(-3)">
         <path d="M -4 16 q 4 2 8 0 M -6 19 q 6 3 12 0" stroke="#eaf4f6" stroke-width="1" fill="none" opacity=".5"/>
         <rect x="-1.4" y="-6" width="2.8" height="22" fill="#6a4a26" stroke="#241708" stroke-width=".9"/>
         <rect x="-24" y="-20" width="48" height="15" rx="2" fill="#c9a45c" stroke="#241708" stroke-width="1.1"/>
@@ -1189,7 +1192,7 @@
         <text x="26" y="4" font-family="Georgia" font-style="italic" font-size="8" fill="#3a2c16">${label}</text></g>`;
     let keyOpen = true;
     try { keyOpen = localStorage.getItem("seaKeyOpen") !== "0"; } catch (e) {}
-    return `<g class="sea-key${keyOpen ? "" : " folded"}" transform="translate(${kx} ${ky}) rotate(-1.2)">
+    return `<g class="sea-key pdx-ref${keyOpen ? "" : " folded"}" transform="translate(${kx} ${ky}) rotate(-1.2)">
       <g class="sea-key-body">
       <rect width="160" height="286" fill="#ead9b0" stroke="#5a4526" stroke-width="1.6" rx="2"/>
       <rect x="4" y="4" width="152" height="278" fill="none" stroke="#5a4526" stroke-width=".5" opacity=".6"/>
@@ -1227,8 +1230,8 @@
       <circle r="26" stroke-width="1"/><circle r="18" stroke-width=".5" opacity=".7"/>
       <path d="M0 -24 L4.5 -5 L0 0 L-4.5 -5 Z" fill="#8c2a1a" stroke="none"/>
       <path d="M0 24 L4.5 5 L0 0 L-4.5 5 Z M-24 0 L-5 -4.5 L0 0 L-5 4.5 Z M24 0 L5 -4.5 L0 0 L5 4.5 Z" fill="#3a3458" stroke="none" opacity=".6"/>
-      <text y="-31" text-anchor="middle" font-size="9" fill="#3a3458" stroke="none" font-family="Georgia" font-style="italic">future</text>
-      <text y="38" text-anchor="middle" font-size="9" fill="#3a3458" stroke="none" font-family="Georgia" font-style="italic">past</text></g>`;
+      <text class="pdx-ref" y="-31" text-anchor="middle" font-size="9" fill="#3a3458" stroke="none" font-family="Georgia" font-style="italic">future</text>
+      <text class="pdx-ref" y="38" text-anchor="middle" font-size="9" fill="#3a3458" stroke="none" font-family="Georgia" font-style="italic">past</text></g>`;
     for (const c of [10, 20]) {
       const [lx2, ly2] = ANCH.light[c];
       const ink = META[c].ink;
@@ -1653,8 +1656,8 @@
           : `<path d="M -2 3 l 4 3 m 0 -3 l -4 3 M 6 2 l 4 3 m 0 -3 l -4 3" stroke="#8a8072" stroke-width="1"/>
              <ellipse class="sea-fog f1" cx="2" cy="0" rx="17" ry="6" fill="#cfd6d2" opacity=".38"/>
              <ellipse class="sea-fog f2" cx="10" cy="5" rx="13" ry="5" fill="#dde2de" opacity=".3"/>`}
-        <line x1="${clx - cx2 + 38}" y1="${cly - cy2 + 7}" x2="2" y2="-2" stroke="#6a4a8a" stroke-width=".8" stroke-dasharray="2 3" opacity=".7"/>
-        <text x="${clx - cx2 + 38}" y="${cly - cy2 + 2}" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="10" fill="#6a4a8a"
+        <line class="pdx-ref" x1="${clx - cx2 + 38}" y1="${cly - cy2 + 7}" x2="2" y2="-2" stroke="#6a4a8a" stroke-width=".8" stroke-dasharray="2 3" opacity=".7"/>
+        <text class="pdx-ref" x="${clx - cx2 + 38}" y="${cly - cy2 + 2}" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="10" fill="#6a4a8a"
           stroke="#c8d6c3" stroke-width="3" paint-order="stroke">${open ? "the haven stands open" : "sealed haven"}</text></g>`;
     }
     const [wx, wy] = ANCH.well;

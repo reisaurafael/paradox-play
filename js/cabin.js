@@ -62,8 +62,8 @@
   }
 
   /* ── THE ARM v7: the same machine (ids, boxes and hit areas unchanged since v2),
-        with the traveller's arm drawn in the language of the cat and the briefcase:
-        one warm-dark ink edge round each body, painted volume, a rim of light. The
+        with the traveller's arm inked like the cat, the case files and the briefcase:
+        one warm-dark ink edge round each body, comic cel shading and hatching. The
         shirt sleeve rolled to the middle of the forearm, the bare forearm, the
         leather bracer with the red escape valve, the hand in a fingerless glove.
         The ERA SEALS and the hextech core sit on the gauntlet's casing. The hand is
@@ -150,19 +150,16 @@
 
   // gradients of the hand, prefixed per drawing so two hands can share a document
   function handDefs(p){
-    return `<linearGradient id="${p}Skin" gradientUnits="userSpaceOnUse" x1="600" y1="244" x2="640" y2="376"><stop offset="0" style="stop-color:${sk(0)}"/><stop offset=".5" style="stop-color:${sk(1)}"/><stop offset="1" style="stop-color:${sk(2)}"/></linearGradient>
-  <linearGradient id="${p}Vol" x1=".15" y1="0" x2=".75" y2="1"><stop offset="0" stop-color="#fff0d8" stop-opacity=".3"/><stop offset=".38" stop-color="#fff0d8" stop-opacity="0"/><stop offset=".62" stop-color="#5a1c08" stop-opacity="0"/><stop offset="1" stop-color="#5a1c08" stop-opacity=".38"/></linearGradient>
-  <linearGradient id="${p}Leather" x1="0" y1="0" x2=".2" y2="1"><stop offset="0" style="stop-color:var(--glove-lt,#6f93c8)"/><stop offset=".5" style="stop-color:var(--glove,#4a6fa8)"/><stop offset="1" style="stop-color:var(--glove-dk,#2c4166)"/></linearGradient>
-  <linearGradient id="${p}Brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d08a"/><stop offset=".45" stop-color="#b08640"/><stop offset="1" stop-color="#5e4420"/></linearGradient>`;
+    return `<linearGradient id="${p}Brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d08a"/><stop offset=".45" stop-color="#b08640"/><stop offset="1" stop-color="#5e4420"/></linearGradient>`;
   }
 
-  /* ── THE HAND, drawn like the cat and the briefcase: one continuous silhouette
-        under a single warm-dark ink edge (nothing cuts the hand into parts), skin
-        painted with volume (light from the top left, a shadow side, a warm bounce
-        light under it, a rim of light on its top), five digits in a relaxed pose
-        (four fingers side by side and the thumb, the machine's first hand), no
-        nails, knuckles and tendons told by shading only. Over it the fingerless
-        glove in the player's colours, rendered like the briefcase's leather.
+  /* ── THE HAND, inked like the case files and the briefcase: one silhouette under a
+        warm-dark ink edge, heavier on the shadow side (nothing cuts the hand into
+        parts), comic cel shading (a flat tone, one hard shadow shape per form, a
+        small hard highlight, a few hatching strokes in the deepest shadow), five
+        digits in a relaxed pose (four fingers side by side and the thumb, the
+        machine's first hand), no nails. Over it the fingerless glove in the
+        player's colours: matte worn leather, stitched, scuffed.
         The feminine hand is smaller and slimmer, with a ring; the masculine one
         broader. Fingers point +x, palm down, thumb below. ── */
   const LINE="#24150c";
@@ -183,62 +180,86 @@
     cuff: "M 570 252 L 586 249 Q 594 248 595 256 L 597 336 Q 597 345 588 345 L 574 344 Q 566 343 566 334 L 564 260 Q 564 253 570 252 Z",
   };
   function handBuild(p, cls, b){
-    const H=HAND_PATHS, m=b==="m";
+    const H=HAND_PATHS, m=b==="m", id=`${p}C${b}`;
     const hide = cls==="hand" ? ` style="display:none"` : "";   // the machine's fist shows only while it grabs (app.css)
-    const ink=(...ds)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="6.4" stroke-linejoin="round" transform="translate(.9 1.4)" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;
-    const skin=(d)=>`<path d="${d}" fill="url(#${p}Skin)"/><path d="${d}" fill="url(#${p}Vol)" pointer-events="none"/>`;
-    const soft=(d,w,o,i=3)=>`<path d="${d}" fill="none" style="stroke:${sk(i)}" stroke-width="${w}" stroke-linecap="round" opacity="${o}" pointer-events="none"/>`;
-    const ring = m ? "" : `<path d="M 684 277 Q 687 287 686 297" fill="none" stroke="${LINE}" stroke-width="6.4" stroke-linecap="round" pointer-events="none"/>
-      <path d="M 684 277 Q 687 287 686 297" fill="none" stroke="#e6bf5c" stroke-width="3.2" stroke-linecap="round" pointer-events="none"/>
-      <path d="M 684.4 280 Q 685.6 284 685.6 288" fill="none" stroke="#fff4d4" stroke-width="1.1" stroke-linecap="round" pointer-events="none"/>`;
+    const ink=(...ds)=>celInk(ds);
+    const clip=(n,d)=>`<clipPath id="${id}${n}"><path d="${d}"/></clipPath>`;
+    const inClip=(n,body)=>`<g clip-path="url(#${id}${n})" pointer-events="none">${body}</g>`;
+    const flat=(d)=>`<path d="${d}" style="fill:${sk(1)}"/>`;
+    const tone=(d,i)=>`<path d="${d}" style="fill:${sk(i)}"/>`;
+    const tick=(d,i,w)=>`<path d="${d}" fill="none" style="stroke:${sk(i)}" stroke-width="${w}" stroke-linecap="round"/>`;
+    const hatch=(d)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>`;
+    const ring = m ? "" : `<path d="M 684 277 Q 687 287 686 297" fill="none" stroke="${LINE}" stroke-width="6" stroke-linecap="round" pointer-events="none"/>
+      <path d="M 684 277 Q 687 287 686 297" fill="none" stroke="#e0b44e" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
+      <path d="M 684.6 280 L 685.4 285" fill="none" stroke="#fff4d4" stroke-width="1.2" stroke-linecap="round" pointer-events="none"/>`;
     const open=`<g class="${cls}-open">
+      ${clip("f",H.fingers)}${clip("t",H.thumb)}${clip("w",H.wrist)}
       ${ink(H.wrist,H.back,H.fingers,H.thumb)}
-      ${skin(H.wrist)}${skin(H.back)}${skin(H.fingers)}
-      <!-- the fingers are told apart by soft shadow and light, never by ink -->
-      ${soft("M 707 276 Q 688 273 666 274 M 731 305 Q 704 300 666 298 M 735 333 Q 704 327 664 322",3.2,.85)}
-      ${soft("M 705 281 Q 690 279 672 280 M 728 310 Q 704 305 672 304 M 732 338 Q 704 333 670 328",1.8,.4,4)}
-      ${soft("M 690 260 q 2 6 0 10 M 704 285 q 2 7 0 12 M 708 310 q 2 7 0 12 M 702 333 q 2 6 0 10",1.6,.45,5)}
-      ${soft("M 668 256 Q 690 249 707 259",3,.9,4)}
-      ${soft("M 672 338 Q 692 342 711 344",2.6,.7,6)}
+      ${flat(H.wrist)}${flat(H.back)}${flat(H.fingers)}
+      ${inClip("w", tone("M 520 322 Q 540 318 556 322 Q 566 318 580 316 L 580 360 L 520 360 Z",2))}
+      ${inClip("f", `
+        ${tone("M 664 268 Q 680 265 694 268 Q 702 270 711 272 L 712 279 Q 688 274 664 276 Z",2)}
+        ${tone("M 664 291 Q 682 289 698 292 Q 718 294 735 300 L 737 308 Q 704 302 664 300 Z",2)}
+        ${tone("M 662 315 Q 684 314 704 318 Q 724 321 741 327 L 741 336 Q 704 329 662 324 Z",2)}
+        ${tone("M 662 334 Q 684 339 700 340 Q 720 342 742 338 L 744 358 L 660 358 Z",2)}
+        ${tone("M 662 342 Q 686 347 704 348 L 704 358 L 660 358 Z",3)}
+        ${tick("M 707 276 Q 688 273 666 274 M 731 305 Q 704 300 666 298 M 735 333 Q 704 327 664 322",3,1.6)}
+        ${tone("M 672 256 Q 686 251 700 256 Q 686 256 673 260 Z M 678 282 Q 696 280 714 286 Q 696 285 679 286 Z M 680 306 Q 700 306 720 312 Q 700 310 681 310 Z M 678 328 Q 696 330 712 334 Q 696 334 679 332 Z",4)}
+        ${tick("M 691 261 q 2 5 0 8 M 705 286 q 2 6 0 10 M 709 311 q 2 6 0 10 M 703 334 q 2 5 0 8",3,1.4)}
+        ${hatch("M 664 344 l 6 -6 M 671 346 l 6 -6 M 678 347 l 6 -6")}`)}
       ${ring}
-      ${skin(H.thumb)}
-      ${soft("M 600 322 Q 614 314 630 320",2.8,.75)}
-      ${soft("M 606 322 Q 626 322 646 336",2.4,.8,4)}
-      ${soft("M 610 356 Q 632 372 656 366",3,.7,6)}
-      ${soft("M 630 364 Q 646 372 656 366",4,.5,3)}
+      ${flat(H.thumb)}
+      ${inClip("t", `
+        ${tone("M 598 344 Q 614 352 628 358 Q 644 364 664 356 L 670 380 L 590 380 Z",2)}
+        ${tone("M 604 362 Q 628 374 652 372 L 660 384 L 600 384 Z",3)}
+        ${tone("M 604 320 Q 612 314 624 318 Q 612 318 605 324 Z",4)}
+        ${hatch("M 626 366 l 5 -6 M 633 368 l 5 -6 M 640 369 l 5 -6")}`)}
+      ${tick("M 600 322 Q 614 313 630 319",3,2)}
     </g>`;
     const grab=`<g class="${cls}-grab"${hide}>
+      ${clip("k",H.fist)}${clip("kt",H.fistThumb)}${clip("w2",H.wrist)}
       ${ink(H.wrist,H.fist,H.fistThumb)}
-      ${skin(H.wrist)}${skin(H.fist)}
-      ${soft("M 726 284 Q 700 294 670 293 M 728 308 Q 702 318 668 315 M 720 330 Q 696 340 666 336",3,.85)}
-      ${soft("M 648 244 Q 676 236 700 246 Q 720 254 726 272",3,.9,4)}
-      ${soft("M 700 350 Q 720 340 728 322",3,.7,6)}
-      ${skin(H.fistThumb)}
-      ${soft("M 616 300 Q 632 292 648 302",2.6,.75)}
+      ${flat(H.wrist)}${flat(H.fist)}
+      ${inClip("w2", tone("M 520 322 Q 540 318 556 322 Q 566 318 580 316 L 580 360 L 520 360 Z",2))}
+      ${inClip("k", `${tone("M 600 322 Q 640 330 672 332 Q 704 332 736 316 L 740 360 L 600 360 Z",2)}
+        ${tone("M 652 244 Q 680 238 704 248 Q 680 246 654 250 Z",4)}
+        ${tick("M 726 284 Q 700 294 670 293 M 728 308 Q 702 318 668 315 M 720 330 Q 696 340 666 336",3,2)}
+        ${hatch("M 690 348 l 6 -7 M 698 347 l 6 -7 M 706 345 l 6 -7")}`)}
+      ${flat(H.fistThumb)}
+      ${inClip("kt", tone("M 610 322 Q 640 340 676 338 L 680 360 L 606 360 Z",2))}
+      ${tick("M 616 300 Q 632 292 648 302",3,2)}
     </g>`;
-    // the glove: leather like the briefcase, its cuff in the second colour with a brass snap
+    // the glove: matte, worn leather in the player's colour, stitched, a few scuffs;
+    // its cuff in the second colour with a brass snap
     const glove=`
+      ${clip("g",H.glove)}${clip("c",H.cuff)}
       ${ink(H.glove,H.cuff)}
-      <path d="${H.glove}" fill="url(#${p}Leather)"/>
-      <g pointer-events="none">
-        <path d="M 584 258 Q 612 248 646 254 Q 660 258 664 270 Q 642 262 614 264 Q 594 266 584 274 Z" fill="#fff" opacity=".16"/>
-        <path d="M 582 330 Q 620 342 662 332 Q 652 346 616 348 Q 592 346 582 338 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".75"/>
-        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.5" stroke-dasharray="4 3" opacity=".9"/>
-        <path d="M 590 256 Q 616 250 640 254" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.3" stroke-dasharray="4 3" opacity=".7"/>
-        <path d="M 646 256 q 6 -3 10 2 M 652 280 q 6 -2 9 3 M 654 306 q 6 -2 9 3" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="2.2" opacity=".8"/>
-        <path d="M 644 262 q 6 -3 10 2 M 650 286 q 6 -2 9 3" fill="none" stroke="#fff" stroke-width="1.4" opacity=".25"/>
-      </g>
+      <path d="${H.glove}" style="fill:var(--glove,#4a6fa8)"/>
+      ${inClip("g", `
+        <path d="M 576 318 Q 594 326 612 322 Q 634 318 650 322 Q 662 318 674 312 L 676 360 L 570 360 Z" style="fill:var(--glove-dk,#2c4166)"/>
+        <path d="M 586 258 Q 604 250 624 250 Q 640 250 652 256 Q 632 254 612 256 Q 598 258 587 264 Z" style="fill:var(--glove-lt,#6f93c8)"/>
+        ${hatch("M 588 344 l 8 -9 M 597 346 l 8 -9 M 606 347 l 8 -9 M 615 348 l 8 -9")}
+        <path d="M 604 282 l 10 -2 M 620 296 l 6 4 M 596 304 l 7 -3 M 634 270 l 5 3" fill="none" style="stroke:var(--glove-lt,#6f93c8)" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M 612 312 l 6 -2 M 640 290 l 4 4" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <path d="M 590 257 Q 616 251 640 255" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <path d="M 646 256 q 6 -3 10 2 M 652 280 q 6 -2 9 3 M 654 306 q 6 -2 9 3" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="2.2"/>`)}
       <path d="${H.cuff}" style="fill:var(--glove-trim,#d8c8a0)"/>
-      <g pointer-events="none">
-        <path d="M 570 254 L 586 251 Q 592 251 592 258 L 592 272 Q 580 270 568 272 L 567 260 Z" fill="#fff" opacity=".22"/>
-        <path d="M 567 322 Q 580 328 596 322 L 597 336 Q 597 345 588 345 L 574 344 Q 566 343 566 334 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".35"/>
-        <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-dasharray="3 3" opacity=".8"/>
-        <circle cx="581" cy="296" r="5.4" fill="url(#${p}Brass)" stroke="${LINE}" stroke-width="1.6"/>
-        <circle cx="579.6" cy="294.4" r="1.6" fill="#fff4d4" opacity=".8"/>
-      </g>`;
+      ${inClip("c", `
+        <path d="M 560 324 Q 574 330 586 326 Q 594 324 600 320 L 600 350 L 560 350 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".45"/>
+        <path d="M 568 256 L 588 252 L 588 258 L 568 262 Z" fill="#fff" opacity=".3"/>
+        <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-dasharray="3 3"/>`)}
+      <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>
+      <path d="M 578 293 l 3 -1.5" fill="none" stroke="#fff4d4" stroke-width="1.6" stroke-linecap="round" pointer-events="none"/>`;
     // the feminine hand: the same drawing, smaller and slimmer, from the wrist
     const fit = m ? ` transform="translate(560 300) scale(1.05) translate(-560 -300)"` : ` transform="translate(560 300) scale(.88 .76) translate(-560 -300)"`;
     return `<g class="pb-${b}"${m ? "" : ` display="none"`}><g${fit}>${open}${grab}${glove}</g></g>`;
+  }
+  /* The comic ink edge: one silhouette per body, heavier on the shadow side (a second
+     pass of ink pushed down and right), lighter on the lit side. */
+  function celInk(ds){
+    const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;
+    return g("2.2 3.2",5)+g(".4 .6",4.2);
   }
   function handArtSVG(p, cls){
     return `${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`;
@@ -260,10 +281,9 @@
   </g>`;
   }
 
-  /* ── THE FOREARM, per build, in the same language: the shirt sleeve pushed up and
-        rolled to the middle of the forearm, the cloth given volume and folds the way
-        the cat's fur is (tapered shadow strokes, a lit side, a rim of light), then the
-        bare forearm down to the bracer, painted like the hand. Masculine: a broad
+  /* ── THE FOREARM, per build, inked the same way: the shirt sleeve pushed up and
+        rolled to the middle of the forearm (flat cloth, a hard shadow, tapered fold
+        strokes, a little hatching), then the bare forearm down to the bracer. Masculine: a broad
         forearm under the heavy roll of an off-white linen work shirt. Feminine: a slim
         forearm, a pale blue blouse with a narrow cuff and a pearl button, a thin gold
         bracelet. ── */
@@ -285,38 +305,45 @@
   };
   function forearmSVG(b){
     const F=FOREARM[b], m=b==="m";
-    const ink=(d)=>`<path d="${d}" transform="translate(.9 1.4)" fill="${LINE}" stroke="${LINE}" stroke-width="6.4" stroke-linejoin="round" pointer-events="none"/>`;
-    const soft=(d,w,o,i=3)=>`<path d="${d}" fill="none" style="stroke:${sk(i)}" stroke-width="${w}" stroke-linecap="round" opacity="${o}" pointer-events="none"/>`;
-    const marks=(list,col,o)=>`<path d="${list.map(f=>markD(...f)).join(" ")}" fill="${col}" opacity="${o}" pointer-events="none"/>`;
+    const marks=(list,col)=>`<path d="${list.map(f=>markD(...f)).join(" ")}" fill="${col}" pointer-events="none"/>`;
+    const hatch=(d)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round" opacity=".7" pointer-events="none"/>`;
+    const inClip=(n,body)=>`<g clip-path="url(#mnF${b}${n})" pointer-events="none">${body}</g>`;
     const [cl,cm,cd]=F.cloth, y0=F.top, y1=F.bot, mid=(y0+y1)/2;
     return `<g class="pb-${b}"${m ? "" : ` display="none"`}>
-    <!-- the sleeve toward the elbow -->
-    ${ink(F.sleeve)}
-    <path d="${F.sleeve}" fill="url(#mnCloth${b})"/><path d="${F.sleeve}" fill="url(#mnVol)" pointer-events="none"/>
-    ${marks(F.folds,cd,.55)}
-    ${marks(F.folds.map(([x,y,a,l,w])=>[x+5,y+(y<300?4:-4),a,l*.8,w*.35]),cl,.8)}
-    <path d="M -800 ${y0-12} C -560 ${y0-18} -300 ${y0-10} -120 ${y0-8}" fill="none" stroke="#fffaf0" stroke-width="3.4" stroke-linecap="round" opacity=".75" pointer-events="none"/>
-    <path d="M -800 ${y0-4} C -560 ${y0-10} -300 ${y0-2} -110 ${y0}" fill="none" stroke="${cd}" stroke-width="1.4" stroke-dasharray="7 5" opacity=".7" pointer-events="none"/>
-    <!-- the bare forearm -->
-    ${ink(F.arm)}
-    <path d="${F.arm}" fill="url(#mnArmSkin)"/><path d="${F.arm}" fill="url(#mnVol)" pointer-events="none"/>
-    ${soft(`M -40 ${y0+8} C 30 ${y0+2} 100 ${y0+4} 160 ${y0+10}`,3.4,.85,4)}
-    ${soft(`M -40 ${y1-6} C 40 ${y1-4} 110 ${y1-8} 170 ${y1-10}`,3.2,.6,6)}
-    <path d="M 20 ${mid+6} C 70 ${mid+2} 120 ${mid+4} 160 ${mid+8} C 120 ${mid+20} 70 ${mid+20} 20 ${mid+16} Z" style="fill:${sk(3)}" opacity=".18" pointer-events="none"/>
-    ${soft(`M 60 ${mid-8} C 100 ${mid-12} 130 ${mid-8} 160 ${mid-6}`,2,.3,5)}
-    ${m ? "" : `<path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="${LINE}" stroke-width="6.4" stroke-linecap="round" pointer-events="none"/>
-    <path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="#e6bf5c" stroke-width="3.2" stroke-linecap="round" pointer-events="none"/>
-    <path d="M 141 ${y0+6} Q 144 ${y0+18} 144 ${y0+30}" fill="none" stroke="#fff4d4" stroke-width="1.2" stroke-linecap="round" opacity=".8" pointer-events="none"/>`}
-    <!-- the shadow the roll casts on the skin -->
-    <path d="M -60 ${y0} C -20 ${y0+6} 0 ${mid} -10 ${y1} L -60 ${y1} Z" style="fill:${sk(3)}" opacity=".45" pointer-events="none"/>
+    <clipPath id="mnF${b}s"><path d="${F.sleeve}"/></clipPath><clipPath id="mnF${b}a"><path d="${F.arm}"/></clipPath><clipPath id="mnF${b}r"><path d="${F.roll}"/></clipPath>
+    <!-- the sleeve toward the elbow: flat cloth, a hard shadow, folds, a little hatching -->
+    ${celInk([F.sleeve])}
+    <path d="${F.sleeve}" fill="${cm}"/>
+    ${inClip("s", `
+      <path d="M -800 ${y0-16} C -600 ${y0-22} -400 ${y0-12} -100 ${y0-10} L -100 ${y0+4} C -400 ${y0+2} -600 ${y0-6} -800 ${y0} Z" fill="${cl}"/>
+      <path d="M -800 ${y1+4} C -680 ${y1-8} -560 ${y1+6} -440 ${y1-6} C -320 ${y1-16} -220 ${y1-2} -90 ${y1-12} L -90 ${y1+60} L -800 ${y1+60} Z" fill="${cd}"/>
+      ${marks(F.folds,cd)}
+      ${marks(F.folds.map(([x,y,a,l,w])=>[x+5,y+(y<300?4:-4),a,l*.8,w*.35]),cl)}
+      ${hatch(`M -300 ${y1+18} l 9 -12 M -286 ${y1+18} l 9 -12 M -272 ${y1+18} l 9 -12 M -170 ${y1+14} l 9 -12 M -156 ${y1+13} l 9 -12`)}
+      <path d="M -800 ${y0-4} C -560 ${y0-10} -300 ${y0-2} -110 ${y0}" fill="none" stroke="${cd}" stroke-width="1.4" stroke-dasharray="7 5"/>`)}
+    <!-- the bare forearm: flat skin, one hard shadow along its underside -->
+    ${celInk([F.arm])}
+    <path d="${F.arm}" style="fill:${sk(1)}"/>
+    ${inClip("a", `
+      <path d="M -60 ${y1-24} C -20 ${y1-20} 20 ${y1-28} 64 ${y1-22} C 104 ${y1-16} 140 ${y1-26} 184 ${y1-24} C 230 ${y1-22} 270 ${y1-28} 310 ${y1-26} L 310 ${y1+10} L -60 ${y1+10} Z" style="fill:${sk(2)}"/>
+      <path d="M -40 ${y0+6} C 20 ${y0+2} 90 ${y0+3} 150 ${y0+8} C 90 ${y0+9} 20 ${y0+9} -40 ${y0+12} Z" style="fill:${sk(4)}"/>
+      <path d="M -60 ${y0} C -24 ${y0+10} -6 ${mid} -14 ${y1} L -60 ${y1} Z" style="fill:${sk(3)}"/>
+      ${hatch(`M -8 ${y1-6} l 7 -9 M 2 ${y1-4} l 7 -9 M 12 ${y1-3} l 7 -9`)}
+      ${m ? `<path d="M 44 ${y0+18} l 6 -3 M 66 ${y0+26} l 6 -3 M 90 ${y0+17} l 6 -3 M 112 ${y0+27} l 6 -3" fill="none" style="stroke:${sk(3)}" stroke-width="1.3" stroke-linecap="round"/>` : ""}`)}
+    ${m ? "" : `<path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="${LINE}" stroke-width="6" stroke-linecap="round" pointer-events="none"/>
+    <path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="#e0b44e" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
+    <path d="M 141 ${y0+8} L 142.5 ${y0+20}" fill="none" stroke="#fff4d4" stroke-width="1.2" stroke-linecap="round" pointer-events="none"/>`}
     <!-- the roll -->
-    ${ink(F.roll)}
-    <path d="${F.roll}" fill="url(#mnCloth${b})"/><path d="${F.roll}" fill="url(#mnVol)" pointer-events="none"/>
-    ${marks(F.rollFolds,cd,.6)}
-    <path d="M ${m?4:-16} ${y0-16} C ${m?14:-8} ${mid-40} ${m?10:-10} ${mid+30} ${m?0:-18} ${y1+8}" fill="none" stroke="${cm}" stroke-width="${m?9:6}" stroke-linecap="round" opacity=".8" pointer-events="none"/>
-    <path d="M ${m?-6:-22} ${y0-14} C ${m?4:-14} ${mid-40} ${m?0:-16} ${mid+30} ${m?-10:-24} ${y1+8}" fill="none" stroke="${cd}" stroke-width="1.6" stroke-linecap="round" opacity=".6" pointer-events="none"/>
-    <path d="M ${m?-96:-92} ${y0-14} C ${m?-60:-60} ${y0-24} ${m?-20:-30} ${y0-18} ${m?0:-14} ${y0-10}" fill="none" stroke="#fffaf0" stroke-width="3" stroke-linecap="round" opacity=".8" pointer-events="none"/>
-    ${m ? "" : `<circle cx="-40" cy="${mid}" r="5" fill="#fbf7ef" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/><circle cx="-41.4" cy="${mid-1.4}" r="1.4" fill="#fff" pointer-events="none"/>`}
+    ${celInk([F.roll])}
+    <path d="${F.roll}" fill="${cm}"/>
+    ${inClip("r", `
+      <path d="M -130 ${y1-18} C -90 ${y1-26} -50 ${y1-12} -10 ${y1-22} C 10 ${y1-26} 20 ${y1-14} 30 ${y1-18} L 30 ${y1+40} L -130 ${y1+40} Z" fill="${cd}"/>
+      <path d="M -110 ${y0-14} C -80 ${y0-24} -40 ${y0-22} ${m?0:-14} ${y0-12} L ${m?2:-12} ${y0-4} C -40 ${y0-12} -80 ${y0-12} -110 ${y0-4} Z" fill="${cl}"/>
+      ${marks(F.rollFolds,cd)}
+      <path d="M ${m?4:-16} ${y0-16} C ${m?14:-8} ${mid-40} ${m?10:-10} ${mid+30} ${m?0:-18} ${y1+8}" fill="none" stroke="${cl}" stroke-width="${m?8:5}" stroke-linecap="round"/>
+      <path d="M ${m?-6:-22} ${y0-14} C ${m?4:-14} ${mid-40} ${m?0:-16} ${mid+30} ${m?-10:-24} ${y1+8}" fill="none" stroke="${LINE}" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+      ${hatch(`M -96 ${y1-2} l 8 -10 M -84 ${y1} l 8 -10 M -72 ${y1+1} l 8 -10`)}`)}
+    ${m ? "" : `<circle cx="-40" cy="${mid}" r="5" fill="#fbf7ef" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/><path d="M -42 ${mid-2} l 2 -1" stroke="#fff" stroke-width="1.4" stroke-linecap="round" pointer-events="none"/>`}
   </g>`;
   }
 
@@ -330,9 +357,6 @@
   <radialGradient id="mnHex" cx=".4" cy=".35"><stop offset="0" stop-color="#bfeaff"/><stop offset=".55" stop-color="#4aa8d8"/><stop offset="1" stop-color="#1a4a66"/></radialGradient>
   <linearGradient id="mnAmber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c078"/><stop offset="1" stop-color="#8a6a2c"/></linearGradient>
   <linearGradient id="mnLeath" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#7a5234"/><stop offset=".5" stop-color="#553620"/><stop offset="1" stop-color="#2e1c0f"/></linearGradient>
-  <linearGradient id="mnClothm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf7ec"/><stop offset=".5" stop-color="#ebe2cd"/><stop offset="1" stop-color="#c4b492"/></linearGradient>
-  <linearGradient id="mnClothf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f8fb"/><stop offset=".5" stop-color="#d9e5ee"/><stop offset="1" stop-color="#a9bccb"/></linearGradient>
-  <linearGradient id="mnArmSkin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:${sk(0)}"/><stop offset=".5" style="stop-color:${sk(1)}"/><stop offset="1" style="stop-color:${sk(2)}"/></linearGradient>
   <linearGradient id="mnValve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0573c"/><stop offset=".55" stop-color="#b3321f"/><stop offset="1" stop-color="#6e1a10"/></linearGradient>
   ${handDefs("mn")}
 </defs>
@@ -987,6 +1011,8 @@
     // ALLOCATION IS A CLEAN MOMENT: no floating organ tips while dice are in hand
     // (the legend lives on TAB now, the deepest info rung, on demand only).
     if(document.body.classList.contains("allocating")){ manoHoverOff(); return; }
+    // and only while TAB is held: a reminder, never on the plain table (the owner, 27/09)
+    if(!document.body.classList.contains("pdx-help-hold")){ manoHoverOff(); return; }
     const g=e.target&&e.target.closest&&e.target.closest("#mano-screen,#mano-vent,#mano-boomg,#hexcore,#mano-seals,#tray-slot,#mano-clear,#mano-confirm");
     const t=manoTipEl();
     if(!g){ if(mhOrgan){ mhOrgan=null; t.classList.remove("on"); } return; }
@@ -1360,6 +1386,9 @@
         .map(n=>`<div class="mc-l ${n.getAttribute("class")||""}">${n.innerHTML}</div>`).join("");
     }
     if(!html.replace(/<[^>]*>/g,"").trim()) html="";
+    // the legend is a reminder: it lives in HELA extended (hold Tab, help.js "YOUR VOYAGE"),
+    // not on the plain table; the chart's lit ports and their FREE / cost tags are the game
+    html="";
     const live=!!html;
     if(html!==cmdLast){ cmdLast=html; cmdEl.innerHTML=html; }
     cmdEl.classList.toggle("on", live);

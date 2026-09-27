@@ -1,21 +1,21 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609271635";
-import { hydrateIcons, icon } from "./icons.js?202609271635";
-import { seatColor, initials, el } from "./util.js?202609271635";
-import { Game } from "./game.js?202609271635";
-import { audio } from "./audio.js?202609271635";
-import { tutorials } from "./tutorial.js?202609271635";
-import { profile } from "./profile.js?202609271635";
-import { access } from "./access.js?202609271635";
+import { api, Connection } from "./net.js?202609271951";
+import { hydrateIcons, icon } from "./icons.js?202609271951";
+import { seatColor, initials, el } from "./util.js?202609271951";
+import { Game } from "./game.js?202609271951";
+import { audio } from "./audio.js?202609271951";
+import { tutorials } from "./tutorial.js?202609271951";
+import { profile } from "./profile.js?202609271951";
+import { access } from "./access.js?202609271951";
 import "./menu-cursor.js";
 import "./help.js";
-import { colourPicker, colourWish } from "./chronicle.js?202609271635";
-import { launchTutorial } from "./tutorial-drive.js?202609271635";
-import { PadCursor } from "./controle.js?202609271635";
-import { fx, PACES, LEVELS } from "./fx.js?202609271635";
-import { initResume, leaveWords } from "./resume.js?202609271635";
+import { colourPicker, colourWish } from "./chronicle.js?202609271951";
+import { launchTutorial } from "./tutorial-drive.js?202609271951";
+import { PadCursor } from "./controle.js?202609271951";
+import { fx, PACES, LEVELS } from "./fx.js?202609271951";
+import { initResume, leaveWords } from "./resume.js?202609271951";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live

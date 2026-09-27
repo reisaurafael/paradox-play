@@ -129,7 +129,7 @@
     return `<g class="cc-world${broken?" cc-broken":""}${wreck?" cc-wreck":""}" data-c="${c}" transform="translate(${x} ${y})" style="color:${col}">
       <circle class="cc-hit" data-c="${c}" r="${Math.max(38,gr*1.0).toFixed(1)}" fill="transparent"/>
       <circle r="${gr}" fill="url(#ccStar${singleEra(c)})" opacity="${lit?1:.75}" class="${lit?"cc-lit":""}"/>
-      ${dual?`<path d="M 0 ${(-gr).toFixed(1)} A ${gr} ${gr} 0 0 1 0 ${gr} Z" fill="url(#ccStar${eras[1]})" opacity=".85"/><line x1="0" y1="${(-gr*0.72).toFixed(1)}" x2="0" y2="${(gr*0.72).toFixed(1)}" stroke="#eef4ff" stroke-width="1.6" opacity=".8"/><text x="${(-gr*0.5).toFixed(1)}" y="${(-rr*2.5).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="7.5" font-weight="bold" fill="${HUE[eras[0]]}" stroke="#04040c" stroke-width="1.8" paint-order="stroke">${eras[0].toUpperCase()}</text><text x="${(gr*0.5).toFixed(1)}" y="${(-rr*2.5).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="7.5" font-weight="bold" fill="${HUE[eras[1]]}" stroke="#04040c" stroke-width="1.8" paint-order="stroke">${eras[1].toUpperCase()}</text>`:""}
+      ${dual?`<path d="M 0 ${(-gr).toFixed(1)} A ${gr} ${gr} 0 0 1 0 ${gr} Z" fill="url(#ccStar${eras[1]})" opacity=".85"/><line x1="0" y1="${(-gr*0.72).toFixed(1)}" x2="0" y2="${(gr*0.72).toFixed(1)}" stroke="#eef4ff" stroke-width="1.6" opacity=".8"/><text class="pdx-ref" x="${(-gr*0.5).toFixed(1)}" y="${(-rr*2.5).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="7.5" font-weight="bold" fill="${HUE[eras[0]]}" stroke="#04040c" stroke-width="1.8" paint-order="stroke">${eras[0].toUpperCase()}</text><text class="pdx-ref" x="${(gr*0.5).toFixed(1)}" y="${(-rr*2.5).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="7.5" font-weight="bold" fill="${HUE[eras[1]]}" stroke="#04040c" stroke-width="1.8" paint-order="stroke">${eras[1].toUpperCase()}</text>`:""}
       ${rays}
       <circle r="${rr}" fill="${lit?"#fff":"#eef4ff"}"/><circle r="${(rr*0.5).toFixed(1)}" fill="${col}"/>
       ${(c===10||c===20)?`<circle r="${(rr*2).toFixed(1)}" fill="none" stroke="#e8c05a" stroke-width="1.4" opacity=".85"/>`:""}
@@ -351,7 +351,7 @@
             fill="#d68a6a" opacity=".72">THE DEBRIS BELT</text>
           <text x="${lx.toFixed(0)}" y="${(ly+15).toFixed(0)}" text-anchor="middle"
             font-family="'Courier New',monospace" font-size="7.5" letter-spacing="1.4"
-            fill="#a86a52" opacity=".7">2 ENERGY / CENTURY</text></g>`;
+            fill="#a86a52" opacity=".7" class="pdx-ref">2 ENERGY / CENTURY</text></g>`;
     return g;
   }
   function deadSun(){
@@ -370,7 +370,7 @@
   }
   function gyro(){
     const x=W-46,y=64;
-    return `<g class="cc-gyro" transform="translate(${x} ${y})" font-family="'Courier New',monospace">
+    return `<g class="cc-gyro pdx-ref" transform="translate(${x} ${y})" font-family="'Courier New',monospace">
       <circle r="20" fill="none" stroke="#3a4f7a" stroke-width="1"/><circle r="13" fill="none" stroke="#3a4f7a" stroke-width=".5" opacity=".6"/>
       <path d="M0 -18 l3 7 h-6 z" fill="#9a8cf0"/><text y="-22" text-anchor="middle" font-size="6" fill="#9a8cf0">FUTURE</text>
       <path d="M0 18 l3 -7 h-6 z" fill="#e0b23a"/><text y="30" text-anchor="middle" font-size="6" fill="#e0b23a">PAST · YEAR ZERO</text>
@@ -718,7 +718,7 @@
     const rb=rail.getBoundingClientRect(); const bw=rb.width-6, bh=rb.height-74; if(bw<60||bh<60) return false;   // the cplot is inset 74px top + 6px left, derive W from the REAL content box so the chart fills it
     W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
     const base=baseMap();
-    rail.insertAdjacentHTML("beforeend",`<div class="cplot-sing"><svg class="pc-star" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cc-base">${base.out}</g><g class="cc-live"></g><g class="cc-fx"></g><g class="cc-top"></g></svg><div class="cc-cmd"></div><div class="cc-legend">${legendHTML()}</div><div class="cc-tip"></div></div>`);
+    rail.insertAdjacentHTML("beforeend",`<div class="cplot-sing"><svg class="pc-star" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cc-base">${base.out}</g><g class="cc-live"></g><g class="cc-fx"></g><g class="cc-top"></g></svg><div class="cc-cmd"></div><div class="cc-legend pdx-ref">${legendHTML()}</div><div class="cc-tip"></div></div>`);
     if(window.__pdxSheetExt) window.__pdxSheetExt(rail.querySelector(".cplot-sing"),W,H,skyExtArt);
     const svg=rail.querySelector(".cplot-sing .pc-star");
     svg.addEventListener("click",e=>{ const t=e.target.closest(".cc-hit, .cc-glow, .cc-cost, .cc-world, .cc-sun"); let c=(t&&t.dataset&&t.dataset.c!==undefined)?+t.dataset.c:nearestStar(e); if(c!=null&&!isNaN(c)) onWorldClick(c); });

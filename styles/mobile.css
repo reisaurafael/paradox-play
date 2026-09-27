@@ -28,8 +28,8 @@ html.pdx-touch body { min-height: 100dvh; -webkit-tap-highlight-color: transpare
 html.pdx-touch body.cabin-on, html.pdx-touch body.cabin-on * {
   -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 html.pdx-touch body.cabin-on input, html.pdx-touch body.cabin-on textarea { -webkit-user-select: text; user-select: text; }
-/* double-tap zoom off (it waits 300ms on every tap); pinch zoom stays, a player may need it */
-html.pdx-touch body { touch-action: manipulation; }
+/* no zoom anywhere on touch (the owner): the menu scrolls up and down, nothing pinches */
+html.pdx-touch body { touch-action: pan-y; }
 /* what a finger drags must not pan or zoom the page while it drags */
 html.pdx-touch .die[draggable="true"],
 html.pdx-touch #players-zone .pcard.cfolio,
@@ -206,8 +206,7 @@ html.pdx-m-on body.cabin-on #cam.cam-world,
 html.pdx-m-on body.cabin-on #hull {
   left: 0 !important; top: 0 !important; transform-origin: 0 0 !important;
   transform: translate(var(--pdx-ox, 0px), var(--pdx-oy, 0px)) scale(var(--pdx-s, .3)) !important;
-  transition: transform var(--pdx-dur, 0ms) cubic-bezier(.45, .05, .25, 1) !important;
-  will-change: transform; }
+  transition: none !important; animation: none !important; }
 /* the helmet's own chrome is the desktop's frame; on a phone HELA's column carries it */
 html.pdx-m-on #hull .hull-rail, html.pdx-m-on #hull .vz-frame, html.pdx-m-on #hull .hull-visor,
 html.pdx-m-on #hull .hull-shadow, html.pdx-m-on #vz-holo, html.pdx-m-on #cursor-plane,
@@ -318,13 +317,12 @@ html.pdx-m-on body:has(#tut-callout.on) #pdx-mcol .mc-says { visibility: hidden;
 /* the lesson bar sits over the stage's top edge, clear of the column and the rail */
 html.pdx-m-on #tut-track { left: calc(var(--pdx-colw, 160px) + (100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px)) / 2) !important; top: 6px !important; }
 
-/* ── HELA's windows (overload, prompts, the Herald) dock at her column on a phone, never
-      in the middle of play: they open from under her header and may reach over the stage's
-      left edge when they carry more words (position only; cabin.js still builds them) ── */
-html.pdx-m-on .he-window { left: max(6px, env(safe-area-inset-left, 0px)) !important; top: 92px !important; transform: none !important; }
+/* ── HELA's windows (overload, prompts, the Herald) open at the stage's top left, right beside
+      her column, whole and readable (position only; cabin.js still builds them) ── */
+html.pdx-m-on .he-window { left: calc(var(--pdx-colw, 160px) + 8px) !important; top: 8px !important; transform: none !important; z-index: 60170 !important; }
 html.pdx-m-on .he-window .he-svg { display: none; }
-html.pdx-m-on .he-window .he-pane { transform-origin: 0 0; max-width: min(380px, 48vw) !important; min-width: calc(var(--pdx-colw, 160px) - 12px);
-  max-height: calc(100vh - 100px); overflow: hidden auto; box-sizing: border-box; }
+html.pdx-m-on .he-window .he-pane { transform-origin: 0 0; max-width: min(420px, calc(100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px) - 16px)) !important;
+  min-width: 180px; max-height: calc(100vh - 16px); overflow: hidden auto; box-sizing: border-box; }
 html.pdx-m-on body:has(.he-window.open) #pdx-mcol .mc-says { visibility: hidden; }
 
 /* ── the chart in the hand: no page zoom or scroll under the fingers on a phone ── */
@@ -404,3 +402,74 @@ html.pdx-tablet #pdx-mrail button span { font-size: .72rem; }
 /* the era seals on the casing (O / A / S): their letters read at phone scale */
 html.pdx-m-on #hull .mano-seal .ms-glyph { fill: #f0d49a; font-size: 11px; }
 html.pdx-m-on #hull .mano-seal.mended .ms-glyph { fill: #fff4dc; }
+
+/* ══ PHASE 2, round 3 (the owner, 27/09 evening): no panning, no zoom, a page swap ══ */
+/* the screen never moves under a finger in a match: no pan, no pinch, no double-tap zoom,
+   no pull-to-refresh; what scrolls inside (Settings, a long window, the dossier) keeps its
+   own vertical scroll */
+html.pdx-m-on, html.pdx-m-on body { touch-action: none; overscroll-behavior: none; }
+html.pdx-m-on .settings-panel, html.pdx-m-on .he-window .he-pane, html.pdx-m-on #tut-callout,
+html.pdx-m-on .pdx-sheet .ps-card, html.pdx-m-on .panel-detail, html.pdx-m-on .menu-sheet { touch-action: pan-y; }
+/* the chart alone on its page: the desk round the sheet is clipped (mobile-table.js --pdx-clip) */
+html.pdx-m-on body.cabin-on #cam.cam-world, html.pdx-m-on body.cabin-on #hull { clip-path: var(--pdx-clip, none); }
+/* the chart fits whole; its centuries take a bigger finger (the tap areas, not the drawing) */
+html.pdx-m-on #timeline-rail .cc-hit, html.pdx-m-on #timeline-rail .sea-hit, html.pdx-m-on #timeline-rail .cm-hit { r: 58px; }
+
+/* THE PAGE SWAP: an inked comic page turns over the stage and away */
+#pdx-swap { position: fixed; top: 0; bottom: 0; z-index: 60150; display: none; pointer-events: none; }
+#pdx-swap.on { display: block; pointer-events: auto; }
+#pdx-swap .ps-page { position: absolute; inset: 0; transform-origin: 0 50%; backface-visibility: hidden;
+  background:
+    radial-gradient(circle, rgba(21, 16, 10, .16) 1.2px, transparent 1.6px) 0 0 / 9px 9px,
+    linear-gradient(135deg, #f7ebbf, #efdca4);
+  border: 4px solid var(--cx-ink, #15100a); box-shadow: inset 0 0 0 7px #f7ebbf, inset 0 0 0 10px var(--cx-ink, #15100a), -8px 0 0 rgba(0, 0, 0, .35);
+  display: grid; place-items: center; }
+#pdx-swap .ps-page b { font: 700 clamp(1.4rem, 5vw, 2.6rem)/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em;
+  color: var(--cx-ink, #15100a); text-shadow: 3px 3px 0 var(--hela-seat, #f2a93b); transform: rotate(-2deg); }
+
+/* THE COMPLETE FILE on a phone: the desktop's dossier, readable, over the arm and the table */
+html.pdx-m-on .panel-detail.dossier { left: calc(var(--pdx-colw, 160px) + 10px) !important; top: 8px !important; bottom: auto !important;
+  width: min(440px, calc(100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px) - 20px)) !important; max-height: calc(100vh - 16px) !important;
+  z-index: 60180 !important; transform: none !important; box-shadow: 8px 8px 0 rgba(0, 0, 0, .55) !important; }
+html.pdx-m-on .do-attach { display: none !important; }
+
+/* HELA'S TUTORIAL LINES, native to her column: her comic caption (paper, ink, her tag), sized to
+   the column, and an inked thread from the caption to what she rings (mobile-table.js #pdx-tutlink) */
+html.pdx-m-on #tut-callout { background: var(--cx-paper, #f4e6b0) !important; color: var(--cx-ink, #15100a) !important;
+  border: 2px solid var(--cx-ink, #15100a) !important; border-radius: 3px !important; outline: 0 !important;
+  box-shadow: 3px 3px 0 var(--cx-ink, #15100a), 0 0 0 2px var(--hela-seat, #f2a93b) !important; filter: none !important;
+  padding: 20px 8px 7px !important; font: 500 .8rem/1.28 var(--f-display, "Oswald", sans-serif) !important; }
+html.pdx-m-on #tut-callout::before { content: "HELA"; display: block !important; position: absolute; left: 7px; top: 5px;
+  padding: 1px 5px; background: var(--hela-seat, #f2a93b); color: var(--cx-ink, #15100a); border: 0 !important; right: auto !important; bottom: auto !important;
+  width: max-content !important; height: auto !important; margin: 0 !important; box-shadow: none !important;
+  font: 700 .6rem/1.2 var(--f-display, "Oswald", sans-serif); letter-spacing: .14em; transform: none; }
+html.pdx-m-on #tut-callout .tc-head, html.pdx-m-on #tut-callout .tc-sigil { display: none !important; }
+html.pdx-m-on #tut-callout .tc-text, html.pdx-m-on #tut-callout .tc-sub { color: var(--cx-ink, #15100a) !important;
+  font: 500 .8rem/1.28 var(--f-display, "Oswald", sans-serif) !important; text-shadow: none !important; }
+html.pdx-m-on #tut-callout .tc-text b, html.pdx-m-on #tut-callout .tc-sub b { color: var(--cx-ink, #15100a) !important; font-weight: 700 !important;
+  background: rgba(242, 169, 59, .35) !important; box-shadow: none !important; }
+html.pdx-m-on #tut-callout .tc-foot { margin-top: 5px !important; }
+html.pdx-m-on #tut-callout .tc-hint::after { padding: 1px 6px; background: var(--cx-ink, #15100a); color: var(--cx-paper, #f4e6b0);
+  font: 700 .66rem/1.3 var(--f-display, "Oswald", sans-serif) !important; letter-spacing: .08em; text-transform: uppercase; }
+html.pdx-m-on #tut-track { background: var(--cx-ink, #15100a) !important; border: 2px solid var(--cx-paper, #f4e6b0) !important; box-shadow: 2px 2px 0 rgba(0,0,0,.4) !important; }
+#pdx-tutlink { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 60195; pointer-events: none; display: none; }
+html.pdx-m-on #pdx-tutlink.on { display: block; }
+#pdx-tutlink path { fill: none; stroke-linecap: round; }
+#pdx-tutlink .tl-under { stroke: var(--cx-paper, #f4e6b0); stroke-width: 5; }
+#pdx-tutlink .tl-ink { stroke: var(--cx-ink, #15100a); stroke-width: 2.4; stroke-dasharray: 7 5; }
+#pdx-tutlink circle { fill: var(--hela-seat, #f2a93b); stroke: var(--cx-ink, #15100a); stroke-width: 2; }
+
+/* papers that open in place (a contract to stamp, a record to read: game.js _openDocInPlace)
+   open whole on the stage beside HELA's column, their stamp always in reach */
+html.pdx-m-on .doc-inplace { left: calc(var(--pdx-colw, 160px) + 10px) !important; top: 6px !important; z-index: 60175 !important;
+  max-height: calc(100vh - 12px); overflow: hidden auto; transform-origin: 0 0 !important; touch-action: pan-y; }
+html.pdx-m-on .doc-inplace .ctd, html.pdx-m-on .doc-inplace .ct-doc { min-height: 0 !important; padding: 12px 18px 10px !important;
+  width: min(420px, calc(100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px) - 24px)) !important; }
+html.pdx-m-on .doc-inplace .ctd-stampbtn { position: sticky; bottom: 4px; margin-top: 8px !important; min-height: 44px; z-index: 2; }
+
+/* a page is still: the chart never rolls or unrolls in front of him on a phone (the desktop
+   rolls it on the Market scene; here the Merchant is another page) */
+html.pdx-m-on body.cabin-on #timeline-rail > .cplot, html.pdx-m-on body.cabin-on #timeline-rail > .cplot-sing,
+html.pdx-m-on body.cabin-on #timeline-rail > .cplot-ori { transition: none !important; }
+html.pdx-m-on body.cabin-on:not(.chart-rolled) #chart-roll { display: none !important; }
+html.pdx-m-on #hull .hull-manopla, html.pdx-m-on body.cabin-on #hull-console { transition: none !important; }

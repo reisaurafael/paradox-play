@@ -28,8 +28,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609271635";
-import { mend } from "./mend.js?202609271635";
+import { roman } from "./util.js?202609271951";
+import { mend } from "./mend.js?202609271951";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -629,13 +629,12 @@ class Comic {
      the heat after module 7, how far the travel dice reach and what sailing all the
      way back costs (a ghost of my piece on the chart), and a warning when the plan
      can leave me critical. Rebuilt only when a die moves. Cards are not counted. ---- */
-  preview() {
+  // the rows, from public positions only (no DOM): [{ row (the function it belongs to), tone, parts }], plus where the
+  // travel dice could take me back to (the chart's ghost). null when nothing is placed.
+  previewRows() {
     const g = this.game;
-    if (!this.root || !g || !g.alloc || g.awaitingReveal || !g.view) return this.clearPreview();
-    // only while the machine is in view (the main desk); elsewhere it would cover the scene
-    if (g.camera && g.camera.scene && g.camera.scene !== "main") { if (this.prevEl) this.prevEl.style.display = "none"; return; }
-    if (this.prevEl) this.prevEl.style.display = "";
-    const me = g._self(); if (!me) return this.clearPreview();
+    if (!g || !g.alloc || g.awaitingReveal || !g.view) return null;
+    const me = g._self(); if (!me) return null;
     const m = g.alloc.matrix, rows = [];
     const others = (g.view.travelers || []).filter((t) => t.name !== me.name && !(t.statuses || []).includes("awaiting_respawn"));
     const PX = [["FUTURE", (t) => t.century > me.century], ["PRESENT", (t) => t.century === me.century], ["PAST", (t) => t.century < me.century]];
@@ -645,47 +644,45 @@ class Comic {
       const parts = [{ b: "PARADOX " + PX[c][0] + ": " }];
       if (!hit.length) parts.push("no one in reach");
       else { hit.forEach((t, i) => parts.push(i ? ", " : "", { name: t.name })); parts.push(` lose ${v}`); }
-      rows.push({ parts });
+      rows.push({ row: 1, parts });
     }
     const gain = (m[0][0] || 0) + (m[0][2] || 0);
-    if (gain) rows.push({ parts: [{ b: "RECHARGE: " }, `+${gain} energy`] });
+    if (gain) rows.push({ row: 0, parts: [{ b: "RECHARGE: " }, `+${gain} energy`] });
     const heat = m[2][0] || 0, dist = (m[2][1] || 0) + 2 * (m[2][2] || 0);
     let after = (me.energy || 0) + gain, exploded = false, back = null;
     if (heat) {
       const nb = (me.booms || 0) + heat;
       exploded = nb >= 12;
-      rows.push({ tone: exploded ? "danger" : "", parts: [{ b: "HEAT: " }, exploded ? `${nb}/12, the motor EXPLODES: -2 energy, no travel this Hour` : `${nb}/12`] });
+      rows.push({ row: 2, tone: exploded ? "danger" : "", parts: [{ b: "HEAT: " }, exploded ? `${nb}/12, the motor EXPLODES: -2 energy, no travel this Hour` : `${nb}/12`] });
       if (exploded) after -= 2;
     }
     if (dist && !exploded) {
       back = Math.max(0, me.century - dist);
       const cost = travelCost(me.century, back);
-      rows.push({ parts: [{ b: "TRAVEL: " }, `up to ${dist} centuries. Back to ${back === 0 ? "YEAR ZERO" : roman(back)} costs ${cost} energy; forward is free.`] });
+      rows.push({ row: 2, parts: [{ b: "TRAVEL: " }, `up to ${dist} centuries. Back to ${back === 0 ? "YEAR ZERO" : roman(back)} costs ${cost} energy; forward is free.`] });
       after -= cost;
     }
     // three dice in one function: say it BEFORE Confirm, not after
-    m.forEach((row, r) => { if (row.length && row.every((v) => v)) rows.push({ tone: "danger",
+    m.forEach((row, r) => { if (row.length && row.every((v) => v)) rows.push({ row: r, tone: "danger",
       parts: [{ b: "OVERLOAD: " }, `${["Recharge", "Paradox", "Travel"][r]} gets three dice, so it will be shut for the next Hour.`] }); });
     if (dist || heat || gain) {
-      if (after <= 0) rows.push({ tone: "danger", parts: [{ b: "! " }, "The full trip back costs more energy than you have: you would stop short."] });
-      else if (after <= 6) rows.push({ tone: "danger", parts: [{ b: "! " }, `This plan can leave you at ${after} energy: critical.`] });
+      if (after <= 0) rows.push({ row: 2, tone: "danger", parts: [{ b: "! " }, "The full trip back costs more energy than you have: you would stop short."] });
+      else if (after <= 6) rows.push({ row: 2, tone: "danger", parts: [{ b: "! " }, `This plan can leave you at ${after} energy: critical.`] });
     }
-    if (!rows.length) return this.clearPreview();
-    let box = this.prevEl;
-    if (!box) { box = document.createElement("div"); box.className = "cx-preview"; this.root.appendChild(box); this.prevEl = box; }
-    box.textContent = "";
-    const head = document.createElement("span"); head.className = "cx-tag"; head.textContent = "IF YOU CONFIRM";
-    box.appendChild(head);
-    for (const r of rows) {
-      const line = document.createElement("div");
-      line.className = "cx-pl" + (r.tone ? " cx-" + r.tone : "");
-      this._parts(line, r.parts);
-      box.appendChild(line);
-    }
-    // it sits just above the machine's screen, where the eyes already are
-    const mw = this._onScreen(document.querySelector("#hull-console .matrix-wrap") || document.getElementById("machine-zone"));
-    if (mw) { box.style.left = Math.max(8, mw.left) + "px"; box.style.top = ""; box.style.bottom = (innerHeight - mw.top + 14) + "px"; }
-    this._ghost(back, me);
+    return rows.length ? { rows, back, me } : null;
+  }
+  // the preview lives ONLY in HELA's extended view (hold Tab, help.js; the owner, 27/09):
+  // the table shows nothing of it. While Tab is held it keeps the chart's ghost of the
+  // trip back in step with the dice and tells the extended view to redraw its rows.
+  preview() {
+    const g = this.game;
+    const held = !!(window.__pdxHelp && window.__pdxHelp.isHeld && window.__pdxHelp.isHeld());
+    const onDesk = !(g && g.camera && g.camera.scene && g.camera.scene !== "main");
+    const pv = held && onDesk ? this.previewRows() : null;
+    if (this.prevEl) { this.prevEl.remove(); this.prevEl = null; }
+    if (!pv) { if (this.ghostEl) { this.ghostEl.remove(); this.ghostEl = null; } }
+    else this._ghost(pv.back, pv.me);
+    try { window.dispatchEvent(new Event("pdx-preview")); } catch (e) {}
   }
   _ghost(back, me) {
     const r = back != null && back !== me.century ? this._islandAt(back) : null;
@@ -795,8 +792,10 @@ class Comic {
         const hour = this.game && this.game.view ? this.game.view.hour : "";
         // HELA says what the phase is for and who may act, from her eye (no fixed line)
         this.phaseLine();
-        const pp = (this._phaseParts || [{ b: ph[0] + ": " }, ph[1]]).slice();
-        if (p.solo) pp[0] = { b: ph[0] + " (SOLO): " };
+        // the chapter names the phase and who can act; what the phase is FOR is a reminder,
+        // read in HELA's extended view (hold Tab, help.js "THE HOUR"), not on the table
+        const rest = (this._phaseParts || []).slice(2).map((x) => (x === "  Can act: " ? "Can act: " : x));
+        const pp = [{ b: ph[0] + (p.solo ? " (SOLO)" : "") }].concat(rest.length ? [". "].concat(rest) : []);
         this.caption("chapter", pp, { tag: "HOUR " + hour, now: true });
         return;
       }

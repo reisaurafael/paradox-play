@@ -10,7 +10,7 @@
    (tools/dev/harness.py shot) stays at the identity "main" scene.
    ========================================================================= */
 
-import { audio } from "./audio.js?202609271635";
+import { audio } from "./audio.js?202609271951";
 
 const SCENES = new Set(["main", "market", "drawer", "timeline"]);
 const ZONE_SCENE = { market: "market", secret: "market", receptor: "drawer" };
@@ -42,6 +42,9 @@ export class Camera {
     if (name === "timeline" && document.body.classList.contains("cabin-on")) name = "main";
     if (!this.cam || !SCENES.has(name) || name === this.scene) return;
     this.scene = name;
+    // ON A PHONE OR A TABLET the camera never moves: each view is a fixed page and a comic
+    // page swap changes it (js/mobile-table.js). The scene is still told to everyone who reads it.
+    if (document.documentElement.classList.contains("pdx-m-on")) { this.cam.dataset.scene = name; return; }
     // the seascape (waves + gulls) plays only while the chart fills the eyes
     try { if (window.__audio && window.__audio.setSeascape) window.__audio.setSeascape(name === "timeline"); } catch (e) {}
     if (window.__room) window.__room.setScene(name);   // the Room turns with us

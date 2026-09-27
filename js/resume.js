@@ -14,8 +14,8 @@
    older build of the game says so and offers only Discard: another game code may
    deal other dice from the same seed.
    ========================================================================= */
-import { seatColor } from "./util.js?202609271635";
-import { hydrateIcons } from "./icons.js?202609271635";
+import { seatColor } from "./util.js?202609271951";
+import { hydrateIcons } from "./icons.js?202609271951";
 
 const KEY = "pdx.resume.v1";           // play-shim.js writes the same key
 const IN_MATCH = "pdx.inMatch";         // sessionStorage: a match was on screen in this tab

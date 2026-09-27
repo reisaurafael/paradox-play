@@ -63,6 +63,15 @@
   };
 
   d.classList.add("pdx-touch", PHONE ? "pdx-phone" : "pdx-tablet");
+  // NO ZOOM on touch (the owner): the page never scales under two fingers or a double tap.
+  // (iOS ignores user-scalable for accessibility; its gesture events are refused below.)
+  try {
+    var vp = document.querySelector('meta[name="viewport"]');
+    if (vp) vp.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover");
+  } catch (e) {}
+  ["gesturestart", "gesturechange", "gestureend"].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+  });
   if (!FS_API) d.classList.add("pdx-no-fs");
   function syncShape() {
     var portrait = mm("(orientation: portrait)");

@@ -7284,6 +7284,20 @@ body.cabin-on #timeline-rail, body.cabin-on #market-zone { will-change: opacity;
   animation: pcEmPop .5s cubic-bezier(.3, 1.6, .5, 1) 1 both !important; }
 @keyframes pcEmPop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
 
+/* ═══ THE CHARTS' REFERENCE INK SHOWS ONLY WHILE TAB IS HELD (the owner, 27/09) ═══════
+   Without Tab the charts carry no helper or reference marks, clean for a player who knows
+   them; holding Tab (help.js body.pdx-help-hold) brings them back as a reminder. The
+   boards tag them .pdx-ref: the keys (the Sea's pinned CHART KEY, the Itinerarium's MAP
+   KEY, the Singularity's CHART KEY, button and open card alike), the Sea's 2 ENERGY
+   signpost and the Debris Belt's 2 ENERGY / CENTURY line, the future/past words on the
+   compasses and the Singularity's gyro, the Itinerarium's FROM THE FAR FUTURE note, the
+   period tags on the border centuries (MOD / CON ...), and the Sea's sealed-haven label.
+   The chart's real choices (lit ports, FREE / cost tags on a voyage) are never tagged.
+   Opacity only when hidden, so each mark keeps its own printed opacity when shown. */
+#timeline-rail .pdx-ref { transition: opacity .18s ease; }
+body:not(.pdx-help-hold) #timeline-rail .pdx-ref { opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .18s ease, visibility 0s linear .18s; }
+
 /* ═══ THE ERA TURNS LIKE A COMIC PAGE (board_draft.js window.__pdxChartTurn) ════════════
    Replaces the iris shutter. A slab of ink, halftone and speed lines, edged on both sides
    with a paper gutter (the white between two comic panels), whips across the whole
@@ -8075,3 +8089,16 @@ body.cam-on .game-grid::after { z-index: -2; height: 1274px; }
    above them (#cursor-plane lives in the top layer, #menu-cursor is 2147483647) and the
    phone's own covers (mobile.css 2147483100+, "turn your phone" and the like). */
 html body :is(.settings-backdrop, .menu-sheet-back, .chr-page) { z-index: 2147483020; }
+/* ═══ THE PLAIN TABLE: reminders live under Tab (the owner, 27/09: "without Tab these
+   things should not be on the screen: clean for experienced players, helpful for
+   beginners, a reminder when you're confused") ═════════════════════════════════════
+   While Tab is NOT held: the Merchant's tag is just his name (whom he chases, the chase
+   line, the rings where his roll can stop him and the summary pill show under Tab), and
+   HELA's memory hint ("drag to spin her...") is gone. The dice preview, the voyage
+   legend and the machine's organ tips are handled in comic.js / cabin.js. */
+#timeline-rail .pc-tag-aim { display: none; }
+body.pdx-help-hold #timeline-rail .pc-tag-aim { display: inline; }
+body.pdx-help-hold #timeline-rail .pc-tag-plain { display: none; }
+body:not(.pdx-help-hold) #timeline-rail .pc-mhud-key,
+body:not(.pdx-help-hold) #timeline-rail .pc-mhud-pill { visibility: hidden !important; opacity: 0 !important; }
+body:not(.pdx-help-hold) #hela-brain-full .hb-hint { display: none; }

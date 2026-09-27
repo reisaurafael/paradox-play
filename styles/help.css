@@ -1,6 +1,6 @@
 /* =========================================================================
-   help.css, THE TAB KEY (js/help.js): the hold view, the tips panel, the key
-   in the corner and HELA's overload window. Comic narrator boxes (the paper,
+   help.css, THE TAB KEY (js/help.js): HELA EXTENDED (the hold view), the tips
+   panel, the key in the corner and HELA's overload window. Comic narrator boxes (the paper,
    the ink, the hard shadow of comic.js) wearing HELA's tag in the player's
    colour. Sizes are in rem, so the Settings text size carries them, and nothing
    is printed smaller than HELA's own words (.84rem): small print was either cut
@@ -18,52 +18,6 @@
 .ph-tag { padding: .2rem .45rem; background: var(--hela-seat, #c9a45c); color: var(--cx-ink, #15100a);
   border: 2px solid var(--cx-ink, #15100a); font: 700 .84rem/1 var(--f-mono, monospace); letter-spacing: .1em; }
 .ph-panel b { font-weight: 700; }
-
-/* the machine's legend, laid out like the screen it sits above */
-.ph-mods { width: 46rem; }
-.ph-grid { display: grid; grid-template-columns: 6.6rem repeat(var(--ph-cols, 3), minmax(0, 1fr)); gap: .3rem; }
-.ph-fn { display: flex; flex-direction: column; justify-content: center; padding: .2rem .35rem;
-  border-left: 5px solid #5fae7c; font-size: .88rem; }
-.ph-fn.fn-paradox { border-left-color: #8d6fd0; }
-.ph-fn.fn-travel { border-left-color: #4e9ab8; }
-.ph-fn i { font-style: normal; font-size: .84rem; }
-.ph-mod { position: relative; padding: .25rem .4rem .3rem 1.9rem; background: rgba(255,251,232,.72);
-  border: 1.5px solid rgba(21,16,10,.55); border-radius: 3px; font-size: .84rem; line-height: 1.25; }
-.ph-mod b { display: block; font-size: .84rem; letter-spacing: .06em; }
-.ph-num { position: absolute; left: .3rem; top: .28rem; width: 1.3rem; height: 1.3rem; border-radius: 50%;
-  background: var(--cx-ink, #15100a); color: var(--cx-paper, #f4e6b0);
-  font: 700 .84rem/1.3rem var(--f-mono, monospace); text-align: center; }
-.ph-shut.ph-mod { background: repeating-linear-gradient(-45deg, rgba(224,86,31,.16) 0 6px, rgba(255,251,232,.7) 6px 12px);
-  border-color: #b3391c; }
-.ph-shut.ph-fn i { color: #9e1e14; opacity: 1; font-weight: 700; }
-.ph-rule, .ph-valve { margin: .45rem 0 0; font-size: .88rem; }
-.ph-valve b:first-child { display: inline-block; margin-right: .35rem; padding: 0 .3rem; border: 1.5px solid var(--cx-ink, #15100a);
-  font: 700 .84rem/1.4 var(--f-mono, monospace); letter-spacing: .06em; }
-.ph-lines { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 60390; pointer-events: none;
-  opacity: 0; transition: opacity .14s ease; overflow: visible; }
-#pdx-help.on .ph-lines { opacity: 1; }
-.ph-lines path { fill: none; stroke: var(--hela-seat, #c9a45c); stroke-width: 3; stroke-linecap: round;
-  filter: drop-shadow(1px 1px 0 var(--cx-ink, #15100a)); }
-
-/* the phases of the Hour, the current one marked */
-.ph-phase { margin: .25rem 0 0; padding: .2rem .4rem; border-left: 4px solid transparent; }
-.ph-phase b { letter-spacing: .06em; margin-right: .4rem; }
-.ph-phase i { font: 700 .84rem/1 var(--f-mono, monospace); letter-spacing: .08em; padding: .1rem .3rem;
-  background: var(--cx-ink, #15100a); color: var(--hela-seat, #c9a45c); font-style: normal; vertical-align: .1rem; }
-.ph-phase span { display: block; font-size: .88rem; }
-.ph-phase.ph-now { border-left-color: var(--hela-seat, #c9a45c); background: rgba(255,251,232,.72); }
-
-/* the Merchant's rule: WHEN / WHY / HOW / WHERE */
-.ph-merch { width: 27rem; }
-.ph-merch dl { display: grid; grid-template-columns: 4.6rem 1fr; gap: .28rem .5rem; margin: 0; }
-.ph-merch dt { font: 700 .84rem/1.4 var(--f-mono, monospace); letter-spacing: .06em; color: #7a4a0c; }
-.ph-merch dd { margin: 0; font-size: .88rem; }
-
-/* HELA's notes: her commentary, kept here instead of talking over the game */
-.ph-note { margin: .25rem 0 0; font-size: .88rem; }
-.ph-note .ph-hr { font-weight: 700; }
-.ph-note .cx-name { display: inline-block; padding: 0 4px; border: 1.5px solid var(--cx-ink, #15100a); border-radius: 2px;
-  background: var(--seat, #c9a45c); font-weight: 700; line-height: 1.2; }
 
 /* TAP: tips and questions */
 #pdx-tips { z-index: 60450; width: 34rem; max-height: calc(100vh - 70px); overflow-y: auto; pointer-events: auto;
@@ -98,22 +52,59 @@ body.pdx-help-hold #pdx-tabkey, body.pdx-tips-on #pdx-tabkey { box-shadow: 0 0 0
 
 /* the accessible interface: bolder, and more contrast on the small print */
 html.pdx-a11y .ph-panel { font-weight: 500; }
-html.pdx-a11y .ph-fn i { font-weight: 600; }
-html.pdx-a11y .ph-mod, html.pdx-a11y .ph-merch dd, html.pdx-a11y .ph-phase span, html.pdx-a11y .pt-qa span { font-weight: 600; }
-@media (prefers-reduced-motion: reduce) { .ph-panel, .ph-lines { transition: none; } }
+html.pdx-a11y .pt-qa span, html.pdx-a11y .ha { font-weight: 600; }
+html.pdx-a11y .ha { background: var(--hela-hot, #eafff8); }
+@media (prefers-reduced-motion: reduce) { .ph-panel { transition: none; } }
 
-/* the era seals on the glove, and TODAY'S ORDERS (chronicle.js missions) */
-.ph-seals { margin: .45rem 0 0; font-size: .88rem; }
-.ph-seals b:first-child { display: inline-block; margin-right: .35rem; padding: 0 .3rem; border: 1.5px solid var(--cx-ink, #15100a);
-  font: 700 .84rem/1.4 var(--f-mono, monospace); letter-spacing: .06em; }
-.ph-orders { width: 26rem; }
-.ph-order { position: relative; margin: .3rem 0 0; padding: .25rem .4rem .3rem; font-size: .88rem;
-  background: rgba(255,251,232,.72); border: 1.5px solid rgba(21,16,10,.55); border-radius: 3px; }
-.ph-order b { letter-spacing: .03em; }
-.ph-order i { font-style: normal; }
-.ph-order .ph-prog { display: block; font: 700 .84rem/1.3 var(--f-mono, monospace); color: #7a4a0c; }
-.ph-order .ph-stamp { display: inline-block; margin-top: .2rem; padding: .05rem .4rem; transform: rotate(-3deg);
-  font: 700 .84rem/1.3 var(--f-mono, monospace); letter-spacing: .1em; color: #1f6b3a; border: 2px solid #1f6b3a; }
-.ph-order.done { background: rgba(214,240,212,.8); }
-.ph-order.done > b, .ph-order.done > span { text-decoration: line-through; text-decoration-thickness: 1.5px; opacity: .8; }
-.ph-order .ph-stamp.ph-miss { color: #9e1e14; border-color: #9e1e14; }
+/* ═══ HELA EXTENDED (hold Tab): her augmented overlay on the live table. Small notes in
+   her CRT-paper and ink, translucent with soft edges, her colour as rim, glow and leader
+   lines. Nothing takes the pointer: the table stays playable underneath. Normal text
+   size, in rem. ═══ */
+#pdx-help { position: fixed; inset: 0; z-index: 60400; pointer-events: none; opacity: 0; transition: opacity .14s ease; }
+#pdx-help.on { opacity: 1; }
+#pdx-help .ha-lines { position: absolute; inset: 0; width: 100vw; height: 100vh; overflow: visible; }
+#pdx-help .ha-lines path { fill: none; stroke: var(--vz, #6fe8c8); stroke-width: 2; stroke-linecap: round;
+  filter: drop-shadow(0 0 1.5px rgba(0,0,0,.85)); }
+#pdx-help .ha-lines circle { fill: var(--vz, #6fe8c8); stroke: var(--cx-ink, #15100a); stroke-width: 1.2; }
+.ha { position: fixed; left: 0; top: 0; box-sizing: border-box; max-width: 23rem; pointer-events: none;
+  padding: .28rem .55rem .32rem; border-radius: 10px;
+  font: 400 .88rem/1.28 var(--f-display, "Oswald", sans-serif); letter-spacing: .015em; color: #120c06;
+  background:
+    radial-gradient(circle, rgb(var(--vz-rgb, 102 240 200) / .16) 1px, transparent 1.4px) 0 0 / 5px 5px,
+    color-mix(in srgb, var(--hela-hot, #eafff8) 84%, transparent);
+  border: 1.5px solid var(--vz, #6fe8c8);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .35), 0 0 14px rgb(var(--vz-rgb, 102 240 200) / .4);
+  opacity: 0; transition: opacity .14s ease; }
+.ha.on { opacity: 1; }
+.ha[hidden] { display: none; }
+.ha p { margin: 0; }
+.ha p + p { margin-top: .12rem; }
+.ha b { font-weight: 700; }
+.ha i { font-style: normal; }
+.ha .cx-name { display: inline-block; padding: 0 4px; border: 1.5px solid var(--cx-ink, #15100a); border-radius: 2px;
+  background: var(--seat, #c9a45c); font-weight: 700; line-height: 1.2; }
+.ha-t { display: inline-block; padding: 0 .3rem; margin-right: .15rem; border-radius: 3px;
+  background: var(--vz, #6fe8c8); color: var(--cx-ink, #15100a); font: 700 .84rem/1.3 var(--f-mono, monospace); letter-spacing: .06em; }
+.ha-fn { margin-right: .4rem; letter-spacing: .03em; }
+.ha-row, .ha-row p { color: #120c06; }
+.ha-row { border-left: 4px solid #5fae7c; }
+.ha-row.fn-paradox { border-left-color: #8d6fd0; }
+.ha-row.fn-travel { border-left-color: #4e9ab8; }
+.ha-mod { white-space: nowrap; margin-right: .45rem; }
+.ha-mod b { display: inline-block; min-width: 1.15rem; text-align: center; border-radius: 50%;
+  background: var(--cx-ink, #15100a); color: var(--hela-hot, #eafff8); font: 700 .84rem/1.15rem var(--f-mono, monospace); }
+.ha-if { margin-top: .15rem; }
+.ha-danger { color: #8e1c12; font-weight: 700; }
+.ha-shut { color: #9e1e14; font-weight: 700; }
+.ha-hour { max-width: 30rem; }
+.ha-hour p { padding-left: .3rem; border-left: 3px solid transparent; }
+.ha-hour p.ha-now { border-left-color: var(--vz, #6fe8c8); }
+.ha-desk { max-width: 21rem; }
+.ha-order.done > b, .ha-order.done > span { text-decoration: line-through; opacity: .75; }
+.ha-prog { font: 700 .84rem/1.3 var(--f-mono, monospace); color: #5a3a0c; }
+.ha-stamp { display: inline-block; padding: 0 .3rem; transform: rotate(-3deg); font: 700 .84rem/1.25 var(--f-mono, monospace);
+  letter-spacing: .06em; color: #1f6b3a; border: 2px solid #1f6b3a; }
+.ha-stamp.ha-miss { color: #9e1e14; border-color: #9e1e14; }
+@media (prefers-reduced-motion: reduce) { #pdx-help, .ha { transition: none; } }
+.ha-ph { white-space: nowrap; margin-right: .2rem; }
+.ha-hour { max-width: 34rem; }

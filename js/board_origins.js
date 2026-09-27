@@ -353,14 +353,14 @@
       g+=`<path d="M ${(x+Math.cos(a)*r1).toFixed(1)} ${(y+Math.sin(a)*r1).toFixed(1)} L ${(x+Math.cos(a+0.28)*5).toFixed(1)} ${(y+Math.sin(a+0.28)*5).toFixed(1)} L ${(x+Math.cos(a-0.28)*5).toFixed(1)} ${(y+Math.sin(a-0.28)*5).toFixed(1)} Z" fill="${long?"url(#cmGold)":"#a8341f"}" stroke="#5a3c10" stroke-width=".7"/>`; }
     g+=`<circle cx="${x.toFixed(0)}" cy="${y}" r="3" fill="#5a3c10"/>`;
     g+=`<g transform="translate(${x.toFixed(0)} ${y-38})"><circle r="5.5" fill="url(#cmGold)" stroke="#5a3c10" stroke-width=".9"/>${Array.from({length:8},(_,i)=>{const a=i*Math.PI/4; return `<line x1="${(Math.cos(a)*7).toFixed(1)}" y1="${(Math.sin(a)*7).toFixed(1)}" x2="${(Math.cos(a)*10).toFixed(1)}" y2="${(Math.sin(a)*10).toFixed(1)}" stroke="#a17518" stroke-width="1.2"/>`;}).join("")}</g>`;
-    g+=`<text x="${x.toFixed(0)}" y="${y-52}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="7.5" letter-spacing="1.5" fill="#6e4e22">FUTURE</text>`;
+    g+=`<text x="${x.toFixed(0)}" y="${y-52}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="7.5" letter-spacing="1.5" fill="#6e4e22" class="pdx-ref">FUTURE</text>`;
     g+=`<path d="M ${(x-8).toFixed(0)} ${y+38} q 4 -6 8 0 q 4 6 8 0" fill="none" stroke="#8a2a14" stroke-width="2.2" stroke-linecap="round"/><circle cx="${(x+9).toFixed(0)}" cy="${y+37}" r="1.6" fill="#8a2a14"/>`;
-    g+=`<text x="${x.toFixed(0)}" y="${y+52}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="7.5" letter-spacing="1.5" fill="#8a2a14">PAST</text>`;
+    g+=`<text x="${x.toFixed(0)}" y="${y+52}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="7.5" letter-spacing="1.5" fill="#8a2a14" class="pdx-ref">PAST</text>`;
     return g+`</g>`;
   }
   function rubrics(){
     const sx=W/820; let g="";
-    g+=`<g opacity=".8"><text x="${(52*sx).toFixed(0)}" y="46" font-family="Georgia,serif" font-style="italic" font-size="8" fill="#6e4e22">FROM THE FAR FUTURE</text><path d="M ${(148*sx).toFixed(0)} 50 q 18 8 30 28" stroke="#6e4e22" stroke-width="1" fill="none"/></g>`;
+    g+=`<g opacity=".8" class="pdx-ref"><text x="${(52*sx).toFixed(0)}" y="46" font-family="Georgia,serif" font-style="italic" font-size="8" fill="#6e4e22">FROM THE FAR FUTURE</text><path d="M ${(148*sx).toFixed(0)} 50 q 18 8 30 28" stroke="#6e4e22" stroke-width="1" fill="none"/></g>`;
     let f=`<g class="cm-forest" data-tip="the wild leagues, no road dares the woods between the ages" opacity=".85">`;
     const spots=[[645,330,0.9,1],[580,295,1.2,1],[520,335,1.0,0],[460,300,0.9,1],[565,378,1.1,0],[490,372,0.85,1],[610,340,0.8,0],[425,345,0.95,0],[365,278,1.0,0],[315,302,0.9,1],[350,352,1.05,0],[285,265,0.85,1],[320,382,0.9,0],[130,352,0.95,0],[82,348,0.85,1],[106,368,0.8,0],[728,878,0.9,1],[692,898,0.85,0],[750,900,0.75,1],[368,562,0.8,0],[342,574,0.75,1],[168,588,0.9,0],[120,600,0.8,1],[75,585,0.85,0]];
     for(const [x,y,s2,ev] of spots) f+=treeG((x*sx).toFixed(0),y,s2,ev);
@@ -389,7 +389,7 @@
     const shadow=`<ellipse cx="0" cy="${(13*s).toFixed(1)}" rx="${(19*s).toFixed(1)}" ry="${(7*s).toFixed(1)}" fill="#efe3c2" opacity=".55"/><ellipse cx="0" cy="${(15*s).toFixed(1)}" rx="${(13.5*s).toFixed(1)}" ry="${(2.6*s).toFixed(1)}" fill="rgba(60,40,16,.2)"/>`;
     const crown=mile?`<g transform="translate(0 ${(-25*s).toFixed(1)}) scale(${s.toFixed(3)})"><path d="M -9.5 3.5 L -9.5 -3 L -5 0.5 L 0 -6.5 L 5 0.5 L 9.5 -3 L 9.5 3.5 Z" fill="url(#cmGoldBar)" stroke="${ink}" stroke-width="1"/><rect x="-9.5" y="3.5" width="19" height="3.8" rx="1" fill="url(#cmGoldBar)" stroke="${ink}" stroke-width="1"/><circle cx="0" cy="-7.5" r="1.6" fill="#f6e08c" stroke="${ink}" stroke-width=".5"/><circle cx="-9.5" cy="-4" r="1.2" fill="#f6e08c" stroke="${ink}" stroke-width=".4"/><circle cx="9.5" cy="-4" r="1.2" fill="#f6e08c" stroke="${ink}" stroke-width=".4"/><circle cx="-4.5" cy="5.4" r="1.1" fill="#a8341f"/><circle cx="4.5" cy="5.4" r="1.1" fill="#2f6f9f"/></g>`:"";
     const scorch=broken?`<ellipse cx="0" cy="2" rx="16" ry="12" fill="#1c0e08" opacity=".55"/><path d="M-11 -13 L11 12 M-11 8 L11 -12" stroke="#3a140b" stroke-width="1.7" opacity=".9"/>`:"";
-    const dualTags=dual?`<text x="${(-12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[0]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[0].toUpperCase()}</text><text x="${(12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[1]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[1].toUpperCase()}</text>`:"";
+    const dualTags=dual?`<text class="pdx-ref" x="${(-12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[0]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[0].toUpperCase()}</text><text class="pdx-ref" x="${(12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[1]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[1].toUpperCase()}</text>`:"";
     const fs=(dual?15:14)*(mile?1.12:1);
     return `<g class="cm-world${broken?" cm-broken":""}${wreck?" cm-wreck":""}" data-c="${c}" transform="translate(${x} ${y})" style="color:${col}">
       <circle class="cm-hit" data-c="${c}" r="${Math.max(32,26*s).toFixed(1)}" fill="transparent"/>
@@ -814,7 +814,7 @@
     const rb=rail.getBoundingClientRect(); const bw=rb.width-6, bh=rb.height-74; if(bw<60||bh<60) return false;   // the cplot is inset 74px top + 6px left, derive W from the REAL content box so the chart fills it
     W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
     const base=baseMap();
-    rail.insertAdjacentHTML("beforeend",`<div class="cplot-ori"><svg class="pc-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cm-base">${base.out}</g><g class="cm-live"></g><g class="cm-fx"></g><g class="cm-top"></g></svg><div class="cm-cmd"></div><div class="cm-legend">${legendHTML()}</div><div class="cm-tip"></div></div>`);
+    rail.insertAdjacentHTML("beforeend",`<div class="cplot-ori"><svg class="pc-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cm-base">${base.out}</g><g class="cm-live"></g><g class="cm-fx"></g><g class="cm-top"></g></svg><div class="cm-cmd"></div><div class="cm-legend pdx-ref">${legendHTML()}</div><div class="cm-tip"></div></div>`);
     if(window.__pdxSheetExt) window.__pdxSheetExt(rail.querySelector(".cplot-ori"),W,H,vellumExtArt);
     const svg=rail.querySelector(".cplot-ori .pc-chart");
     svg.addEventListener("click",e=>{ const t=e.target.closest(".cm-hit, .cm-glow, .cm-cost, .cm-world, .cm-sun"); let c=(t&&t.dataset&&t.dataset.c!==undefined)?+t.dataset.c:nearestStar(e); if(c!=null&&!isNaN(c)) onWorldClick(c); });

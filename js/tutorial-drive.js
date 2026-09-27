@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609271635";
-import { Game } from "./game.js?202609271635";
-import { icon } from "./icons.js?202609271635";
-import { roman } from "./util.js?202609271635";
-import { profile } from "./profile.js?202609271635";
+import { api, Connection } from "./net.js?202609271951";
+import { Game } from "./game.js?202609271951";
+import { icon } from "./icons.js?202609271951";
+import { roman } from "./util.js?202609271951";
+import { profile } from "./profile.js?202609271951";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
@@ -1603,7 +1603,7 @@ class Coach {
       this.guide(null, "Tap <kbd>Tab</kbd> again to close it.", {});
       await until(() => !H.isOpen(), 40000);
     }
-    this.guide(key, "Now hold <kbd>Tab</kbd>: what every module does, the Merchant's rules, the phases, and my notes.", { rings: [key] });
+    this.guide(key, "Now hold <kbd>Tab</kbd>: my notes on everything in view. What your dice will do, the Hour, the Merchant, and my notes.", { rings: [key] });
     if (await until(() => H.isHeld(), 40000)) {
       this.guide(null, "Let go, and it all hides again.", {});
       await until(() => !H.isHeld(), 40000);

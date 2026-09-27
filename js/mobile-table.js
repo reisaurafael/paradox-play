@@ -5,16 +5,15 @@
    tablet with a wider column and more of the desk round each view) while the
    table is on screen (body.cabin-on). A desktop never gets past start().
 
-   NOTHING IS REDRAWN. The phone looks at the same table through a closer
-   camera: the real plane (the desk, the chart, the wagon, the records) and
-   the real pip-boy (#hull) are framed by ONE transform, screen = O + S * p,
-   so the device lies on the desk and every view is a region of the same
-   workstation. Changing view is the camera turning over that one plane (an
-   eased pan, transform only), never a cut:
-
-        MERCHANT (the wagon, above the desk)
-     RECORDS  <-  MACHINE (the pip-boy on the desk, the police files and
-                  the cat at its right)  ->  CHART (the desk's right half)
+   NOTHING IS REDRAWN, AND NOTHING MOVES. Each view (MACHINE, CHART, MERCHANT,
+   CASE, RECORDS, HELA's memory) is a fixed page: the real table's region for it,
+   shown at a fixed scale (one transform per view, screen = O + S * p, applied at
+   once, never animated, on #cam and #hull alike). A view changes only by the
+   rail's keys (or the automatic camera), under a comic-book PAGE SWAP: an inked
+   page turns in over the stage, the page behind it is cut to the new view, the
+   page turns away. The desktop camera never runs on touch (camera.js returns
+   early under html.pdx-m-on). The screen never pans, scrolls or zooms under a
+   finger, and there are no swipes.
 
    Fixed like the player's own body: HELA's column on the left (her eye, the
    Hour and its phases, her current line in her comic caption, the log in
@@ -29,23 +28,20 @@
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
 
-// the views, in the workstation's own geography (swipes follow it)
-// (the plane: the paperwork desk with the records cabinet and HELA's core at the left,
-//  the briefcase at the top of the main desk, the pip-boy below it, the chart at the right,
-//  the Merchant's wagon above them all)
+// the views, and the desktop scene each belongs to (the game and the tutorial read the scene)
 const VIEWS = {
-  machine:  { scene: "main",   label: "Machine",  rail: true, left: "brain", right: "chart", up: "case" },
-  chart:    { scene: "main",   label: "Chart",    rail: true, left: "machine", up: "merchant" },
-  merchant: { scene: "market", label: "Merchant", rail: true, down: "case" },
-  case:     { scene: "drawer", label: "Case",     rail: true, down: "machine", left: "records", right: "chart", up: "merchant" },
-  records:  { scene: "drawer", label: "Records",  rail: true, right: "case", down: "brain", up: "merchant" },
-  brain:    { scene: "drawer", label: "HELA",     rail: false, up: "records", right: "machine" },
+  machine:  { scene: "main",   label: "Machine",  rail: true },
+  chart:    { scene: "main",   label: "Chart",    rail: true },
+  merchant: { scene: "market", label: "Merchant", rail: true },
+  case:     { scene: "drawer", label: "Case",     rail: true },
+  records:  { scene: "drawer", label: "Records",  rail: true },
+  brain:    { scene: "drawer", label: "HELA",     rail: false },
 };
 // where each view looks, on the plane (the hull's plane is the same 2133x1200 box)
-const DEVICE = { x: 132, y: 792, w: 520, h: 408 };     // the pip-boy with the sleeve's handwheel
+const DEVICE = { x: 112, y: 742, w: 520, h: 458 };     // the pip-boy with the sleeve's handwheel, table round it
 // the rivals' files lie in a row on the desk above the glove (the hand rests on their lower
 // halves, as on a real desk); the frame's right edge is the row's right edge
-const PILE = { x0: 590, x1: 872, y: 764, k: 0.62 };
+const PILE = { x0: 604, x1: 930, y: 752, k: 0.64 };
 const CASE = { x: -30, y: -12, w: 990, h: 612 };       // the open briefcase, the cat beside it
 const CAT_AT = { x: 862, y: 452, size: 14 };          // she curls on the desk at the case's right (her only place on a phone)
 
@@ -56,7 +52,6 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 let view = "machine";
 let col = null, rail = null, stage = { x: 0, y: 0, w: 0, h: 0 };
 let S = 1, O = { x: 0, y: 0 };
-let zoom = 1, zc = null;                // the chart's own pinch zoom and its centre (plane px)
 let manualAt = 0;                       // the last time HE turned the head
 let prevView = "machine";
 let catSaved = null;
@@ -190,6 +185,11 @@ function frameRect(v) {
   }
   if (v === "chart") {
     const rail0 = document.getElementById("timeline-rail");
+    // the chart on show (three skins: the sea, the stars, the origins): its own drawing
+    const sk = [...rail0 ? rail0.querySelectorAll(":scope > .cplot, :scope > .cplot-sing, :scope > .cplot-ori") : []]
+      .find((n) => getComputedStyle(n).display !== "none" && n.getBoundingClientRect().width > 4);
+    const rs = sk && planeRectOf(sk);
+    if (rs && rs.w > 200) return { x: rs.x, y: rs.y, w: rs.w, h: rs.h };
     const r = planeRectOf(rail0);
     return r ? { x: r.x + 4, y: r.y + 60, w: Math.min(r.w, PLANE_W - r.x) - 8, h: Math.min(r.h, PLANE_H - r.y) - 64 } : { x: 1066, y: 60, w: 1060, h: 1130 };
   }
@@ -220,25 +220,13 @@ function paceMs() {
 const calm = () => !!(window.__pdxCalm || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
 function frame(v, animate) {
   const f = frameRect(v);
-  const base = Math.min(stage.w / f.w, stage.h / f.h);
-  if (v === "chart") {
-    // THE CHART FILLS THE STAGE (no desk at its sides): as wide as the stage, centred on his
-    // own piece; one finger slides it, two pinch it closer; the centre stays on the sheet
-    S = Math.max(stage.w / f.w, stage.h / f.h) * zoom;
-    if (!zc) zc = myPiece() || null;
-    const hw = stage.w / 2 / S, hh = stage.h / 2 / S;
-    const c = zc || { x: f.x + f.w / 2, y: f.y + f.h / 2 };
-    c.x = Math.max(f.x + Math.min(hw, f.w / 2), Math.min(f.x + f.w - Math.min(hw, f.w / 2), c.x));
-    c.y = Math.max(f.y + Math.min(hh, f.h / 2), Math.min(f.y + f.h - Math.min(hh, f.h / 2), c.y));
-    zc = c;
-    O.x = stage.x + stage.w / 2 - c.x * S;
-    O.y = stage.y + stage.h / 2 - c.y * S;
-  } else {
-  S = base;
+  S = Math.min(stage.w / f.w, stage.h / f.h);
   O.x = stage.x + (stage.w - f.w * S) / 2 - f.x * S;
   O.y = f.bottom ? stage.y + stage.h - (f.y + f.h) * S : stage.y + (stage.h - f.h * S) / 2 - f.y * S;
-  }
-  D.classList.toggle("pdx-zoomed", v === "chart");
+  // the chart alone on its page: the desk round the sheet is clipped away
+  D.style.setProperty("--pdx-clip", v === "chart"
+    ? `inset(${Math.max(0, f.y - 4)}px ${Math.max(0, PLANE_W - f.x - f.w - 4)}px ${Math.max(0, PLANE_H - f.y - f.h - 4)}px ${Math.max(0, f.x - 4)}px)` : "none");
+  D.classList.toggle("pdx-chart", v === "chart");
   D.style.setProperty("--pdx-dur", animate && !calm() ? paceMs() + "ms" : "0ms");
   D.style.setProperty("--pdx-s", S.toFixed(5));
   D.style.setProperty("--pdx-ox", O.x.toFixed(2) + "px");
@@ -249,9 +237,46 @@ function frame(v, animate) {
 /* ── turning the head: the view changes, the real camera follows its scene ── */
 function go(v, animate = true) {
   if (!VIEWS[v]) return;
+  if (animate && on() && v !== view && !calm()) { swapTo(v); return; }
+  land(v);
+}
+/* THE PAGE SWAP: an inked comic page turns in over the stage from its right edge, the view
+   is cut behind it, and the page turns away to the left: 360 ms, transform and opacity
+   only, the same every time. A new target during a swap waits for the page to land. */
+let swapping = false, swapNext = null, swapEl = null;
+const VIEW_TITLE = { machine: "THE MACHINE", chart: "THE CHART", merchant: "THE MERCHANT", case: "THE CASE", records: "THE RECORDS", brain: "HELA'S MEMORY" };
+function swapTo(v) {
+  if (swapping) { swapNext = v; return; }
+  swapping = true;
+  if (!swapEl) {
+    swapEl = document.createElement("div");
+    swapEl.id = "pdx-swap"; swapEl.setAttribute("aria-hidden", "true");
+    swapEl.innerHTML = `<div class="ps-page"><b></b></div>`;
+    document.body.appendChild(swapEl);
+  }
+  const page = swapEl.firstChild;
+  page.querySelector("b").textContent = VIEW_TITLE[v] || "";
+  swapEl.style.left = stage.x + "px"; swapEl.style.width = stage.w + "px";
+  swapEl.classList.add("on");
+  const half = 170;
+  // the timing lives in timers, not in the animations' own events: the cut and the end
+  // happen on time whatever a paused tab or a cancelled animation does
+  try {
+    page.getAnimations().forEach((an) => an.cancel());
+    page.animate([{ transform: "perspective(1400px) rotateY(-96deg)", opacity: .6 }, { transform: "perspective(1400px) rotateY(0deg)", opacity: 1 },
+      { transform: "perspective(1400px) rotateY(0deg)", opacity: 1, offset: .56 }, { transform: "perspective(1400px) rotateY(96deg)", opacity: .6 }],
+      { duration: 2 * half + 40, easing: "cubic-bezier(.35,0,.65,1)", fill: "both" });
+  } catch (e) {}
+  setTimeout(() => land(v), half);                       // the cut, behind the page
+  setTimeout(() => {
+    swapEl.classList.remove("on"); swapping = false;
+    if (view !== v) land(v);                             // never a label without its page
+    if (swapNext && swapNext !== view) { const n = swapNext; swapNext = null; swapTo(n); } else swapNext = null;
+  }, 2 * half + 60);
+}
+function land(v) {
   if (v !== view) prevView = view;
   view = v;
-  if (v !== "chart") { zoom = 1; zc = null; }
   closeSheet();
   const g = game(), cam = g && g.camera;
   const want = VIEWS[v].scene;
@@ -264,8 +289,10 @@ function go(v, animate = true) {
       g._onSceneArrive && g._onSceneArrive(want);
     } catch (e) {}
   }
+  // the page is still when it lands: the chart's roll and the arm's slide settle at once
+  document.body.classList.toggle("chart-rolled", want === "market");
   closeFiles();
-  frame(v, animate);
+  frame(v, false);
   paintRail();
   requestAnimationFrame(pile);
 }
@@ -290,7 +317,7 @@ function pile() {
   const zone = document.getElementById("players-zone");
   const zr = planeRectOf(zone);
   if (!zr) return;
-  const list = files().filter((f) => f !== outFile);
+  const list = files();
   if (!list.length) return;
   const w0 = list[0].offsetWidth || 250;
   const k = PILE.k, w = w0 * k, n = list.length, room = PILE.x1 - PILE.x0 - w;
@@ -304,42 +331,39 @@ function pile() {
     f.style.setProperty("--pdx-fz", String(20 + i));
   });
 }
-// a tap slides the dossier out of the pile, readable, over the stage; another tap puts it back
+// a tap opens the COMPLETE file, the desktop's own dossier (game.showPanelDetail), drawn
+// over everything on the stage (mobile.css); a tap outside puts it away (the game's own closer)
 function openFile(f) {
-  const zone = document.getElementById("players-zone");
-  const zr = planeRectOf(zone);
-  if (!zr) return;
-  closeFiles();
+  const g = game(); if (!g || !g.view || !g.showPanelDetail) return;
+  const t = g.view.travelers.find((x) => x.name === f.dataset.seat);
+  if (!t) return;
   outFile = f;
-  const w0 = f.offsetWidth || 250, h0 = f.offsetHeight || 330;
-  // as large as the stage allows, never past 1.25 screen px per plane px
-  const k = Math.min(stage.h * 0.94 / (h0 * S), stage.w * 0.8 / (w0 * S), 1.25 / S);
-  const cx = (stage.x + stage.w / 2 - O.x) / S, cy = (stage.y + stage.h / 2 - O.y) / S;
-  f.classList.add("pdx-out");
-  f.style.setProperty("--pdx-fx", (cx - w0 * k / 2 - zr.x).toFixed(1) + "px");
-  f.style.setProperty("--pdx-fy", (cy - h0 * k / 2 - zr.y).toFixed(1) + "px");
-  f.style.setProperty("--pdx-fk", k.toFixed(3));
-  f.style.setProperty("--pdx-fz", "60");
-  D.classList.add("pdx-file-out");
-  pile();
+  g.showPanelDetail(t, f);
+  // her paper lesson waits for a file to be lifted and let go: on a phone a tap is that
+  f.classList.add("dk-held"); setTimeout(() => f.classList.remove("dk-held"), 320);
 }
 function closeFiles() {
   if (!outFile) return;
-  outFile.classList.remove("pdx-out");
   outFile = null;
-  D.classList.remove("pdx-file-out");
-  pile();
+  const g = game(); if (g && g.hidePanelDetail) g.hidePanelDetail();
 }
 function wireFiles() {
+  // the files are never dragged on a phone (they stay in their row on the table): the desk's
+  // own drag (cabin.js deskLab, document capture) never hears the finger
+  window.addEventListener("pointerdown", (e) => {
+    if (!on()) return;
+    if (e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio")) e.stopPropagation();
+  }, true);
   document.addEventListener("click", (e) => {
     if (!on()) return;
     const f = e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio");
     if (f) {
       e.preventDefault(); e.stopPropagation();
-      if (f === outFile) closeFiles(); else openFile(f);
+      const g = game();
+      if (g && g.panelDetail && g.panelDetail.dataset.seat === f.dataset.seat) closeFiles(); else openFile(f);
       return;
     }
-    if (outFile && !(e.target.closest && e.target.closest("#pdx-mcol, #pdx-mrail"))) closeFiles();
+    if (outFile && !(e.target.closest && e.target.closest(".panel-detail, .do-attach"))) outFile = null;
   }, true);
 }
 
@@ -428,82 +452,7 @@ function paintRail() {
   });
 }
 
-/* ── swipes turn the head the matching way (never over a die, a file or a card) ── */
-function wireSwipes() {
-  let s0 = null;
-  document.addEventListener("pointerdown", (e) => {
-    if (!on() || e.pointerType !== "touch") { s0 = null; return; }
-    if (e.clientX < stage.x || e.clientX > stage.x + stage.w) { s0 = null; return; }
-    if (e.target.closest && e.target.closest(".die, .cell, .pcard, .card, button, input, .escape-drop, #hela-brain-full, .pdx-sheet")) { s0 = null; return; }
-    if (view === "chart") { s0 = null; return; }   // one finger slides the chart there
-    s0 = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
-  }, true);
-  document.addEventListener("pointerup", (e) => {
-    if (!s0 || e.pointerId !== s0.id) return;
-    const dx = e.clientX - s0.x, dy = e.clientY - s0.y, dt = performance.now() - s0.t;
-    s0 = null;
-    if (dt > 500) return;
-    const V = VIEWS[view];
-    let to = null;
-    if (Math.abs(dx) > 70 && Math.abs(dy) < Math.abs(dx) * 0.6) to = dx < 0 ? V.right : V.left;
-    else if (Math.abs(dy) > 70 && Math.abs(dx) < Math.abs(dy) * 0.6) to = dy > 0 ? V.up : V.down;
-    if (to) { manualAt = performance.now(); go(to); }
-  }, true);
-}
-
-/* ── THE CHART IN THE HAND: two fingers pinch it closer, one finger pans it once closer;
-      a tap is still a tap on a century (the chart's own click) ── */
-const touches = new Map();
-let pinch = null, pan = null, eatClick = 0;
 function stagePt(x, y) { return { x: (x - O.x) / S, y: (y - O.y) / S }; }
-function wireChart() {
-  document.addEventListener("pointerdown", (e) => {
-    if (!on() || view !== "chart" || e.pointerType !== "touch") return;
-    if (e.clientX < stage.x || e.clientX > stage.x + stage.w) return;
-    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (touches.size === 2) {
-      const [a, b] = [...touches.values()];
-      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: zoom, p: stagePt(mx, my) };
-      pan = null;
-    } else if (touches.size === 1) {
-      if (!zc) { const f = frameRect("chart"); zc = { x: (stage.x + stage.w / 2 - O.x) / S, y: (stage.y + stage.h / 2 - O.y) / S }; void f; }
-      pan = { x: e.clientX, y: e.clientY, c: { ...zc }, moved: false };
-    }
-  }, true);
-  document.addEventListener("pointermove", (e) => {
-    if (!touches.has(e.pointerId)) return;
-    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pinch && touches.size >= 2) {
-      const [a, b] = [...touches.values()];
-      const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
-      zoom = Math.max(1, Math.min(3.2, pinch.z * d / pinch.d));
-      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      const f = frameRect("chart"), base = Math.max(stage.w / f.w, stage.h / f.h), S2 = base * zoom;
-      // the point under the fingers stays under the fingers
-      zc = { x: pinch.p.x - (mx - (stage.x + stage.w / 2)) / S2, y: pinch.p.y - (my - (stage.y + stage.h / 2)) / S2 };
-      frame("chart", false); eatClick = performance.now() + 400;
-      e.preventDefault();
-    } else if (pan && zc) {
-      const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
-      if (!pan.moved && Math.hypot(dx, dy) < 10) return;
-      pan.moved = true;
-      zc = { x: pan.c.x - dx / S, y: pan.c.y - dy / S };
-      frame("chart", false); eatClick = performance.now() + 400;
-      e.preventDefault();
-    }
-  }, { capture: true, passive: false });
-  const up = (e) => {
-    touches.delete(e.pointerId);
-    if (touches.size < 2) pinch = null;
-    if (!touches.size) pan = null;
-  };
-  document.addEventListener("pointerup", up, true);
-  document.addEventListener("pointercancel", up, true);
-  document.addEventListener("click", (e) => {
-    if (performance.now() < eatClick) { eatClick = 0; e.preventDefault(); e.stopImmediatePropagation(); }
-  }, true);
-}
 
 /* ── THE MERCHANT'S CARD SHEET: on a phone the first tap on a card SHOWS it (his whole
       text, price, delivery, recycle); the big key under it acts (BUY, STEAL, RENEW, TAKE,
@@ -659,7 +608,8 @@ function wantedView() {
   if (k === "allocate" || k === "matrix_buff") return "machine";
   if (k === "travel" || k === "merchant_century") return "chart";
   if (k === "market" || k === "steal_target" || k === "destroy_target" || k === "secret_deal") return "merchant";
-  if (k === "deliver" || k === "reward_category" || k === "recycle" || k === "capacity" || k === "activation") return "case";
+  if (k === "reward_category") return "records";               // the contracts drawer holds the three kinds
+  if (k === "deliver" || k === "recycle" || k === "capacity" || k === "activation") return "case";
   if (k === "target") {
     if (o.target_type === "century") return "chart";
     if (o.target_type === "traveler") return "machine";      // the rivals' files lie there
@@ -679,7 +629,7 @@ function autoCamera() {
   }
   if (!pendingAuto) return;
   if (!autoOn() || document.body.classList.contains("tut")) { pendingAuto = null; return; }
-  if (fingers > 0 || performance.now() - manualAt < 1500 || sheet || outFile) return;   // wait
+  if (fingers > 0 || swapping || performance.now() - manualAt < 1500 || sheet || outFile) return;   // wait
   const v = pendingAuto; pendingAuto = null;
   if (v !== view) go(v);
 }
@@ -703,15 +653,45 @@ function wireAuto() {
 
 /* ── the tutorial steers: whatever HELA rings must be in view (her lessons were written
       for the whole desk; on a phone the view holding the ring comes to it) ── */
+/* the inked thread from her caption in the column to what she rings in the view */
+let tutLink = null;
+function paintTutLink() {
+  const c = document.getElementById("tut-callout");
+  const ring = [...document.querySelectorAll(".tut-ring")].map((r) => r.getBoundingClientRect())
+    .find((r) => r.width > 4 && r.left + r.width / 2 > stage.x && r.left + r.width / 2 < stage.x + stage.w);
+  const show = !!(on() && c && c.classList.contains("on") && ring && !swapping);
+  if (!tutLink) {
+    tutLink = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    tutLink.id = "pdx-tutlink"; tutLink.setAttribute("aria-hidden", "true");
+    tutLink.innerHTML = `<path class="tl-under"/><path class="tl-ink"/><circle r="4"/>`;
+    document.body.appendChild(tutLink);
+  }
+  tutLink.classList.toggle("on", show);
+  if (!show) return;
+  const cr = c.getBoundingClientRect();
+  const x0 = cr.right, y0 = cr.top + Math.min(cr.height / 2, 40);
+  // to the ring's nearest side, curving a little like a pen line
+  const x1 = ring.left < x0 ? ring.left + ring.width / 2 : ring.left, y1 = ring.top + ring.height / 2;
+  const mx = (x0 + x1) / 2, my = Math.min(y0, y1) - 24;
+  const d = `M ${x0} ${y0} Q ${mx} ${my} ${x1} ${y1}`;
+  tutLink.querySelectorAll("path").forEach((p) => p.setAttribute("d", d));
+  const dot = tutLink.querySelector("circle"); dot.setAttribute("cx", x1); dot.setAttribute("cy", y1);
+}
+let ringSeen = "";
 function followRings() {
-  if (!document.body.classList.contains("tut")) return;
+  if (!document.body.classList.contains("tut")) { ringSeen = ""; return; }
   const rings = [...document.querySelectorAll(".tut-ring")].filter((r) => r.getBoundingClientRect().width > 4);
+  // one move per ring she draws: a ring that stays never pulls the view again, so his own
+  // key always wins after that (and never within 1.5 s of it)
+  const sig = rings.map((r) => r.style.left + "," + r.style.top + "," + r.style.width).join("|");
+  if (!rings.length || sig === ringSeen || swapping) return;
+  if (performance.now() - manualAt < 1500) return;
+  ringSeen = sig;
   for (const r0 of rings) {
     const r = r0.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    const inside = cx > stage.x + 4 && cx < stage.x + stage.w - 4 && cy > 2 && cy < stage.h - 2;
-    if (inside) continue;
+    const inside = cx > stage.x + 4 && cx < stage.x + stage.w - 4 && cy > stage.y + 2 && cy < stage.y + stage.h - 2;
+    if (inside) return;
     const p = stagePt(cx, cy);
-    // the view whose frame holds that point, the closest-framed first
     const order = ["machine", "case", "chart", "records", "brain", "merchant"];
     for (const v of order) {
       const f = frameRect(v);
@@ -755,8 +735,6 @@ function followScene() {
 function start() {
   if (!D.classList.contains("pdx-touch")) return;   // a desktop: nothing
   wireFiles();
-  wireSwipes();
-  wireChart();
   wireSheet();
   wireAuto();
   const obs = new MutationObserver(sync);
@@ -768,7 +746,7 @@ function start() {
   addEventListener("resize", () => { if (on()) { layout(); frame(view, false); pile(); } });
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
-  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintCol(); paintRail(); paintAction(); paintLife(); autoCamera(); followRings(); } }); };
+  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintCol(); paintRail(); paintAction(); paintLife(); autoCamera(); followRings(); paintTutLink(); } }); };
   setInterval(() => {
     if (!on()) { if (life) life.style.display = "none"; return; }
     // the tutorial starting or ending moves the stage's top edge
