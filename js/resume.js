@@ -12,8 +12,8 @@
    when a new match starts. A record from an older build of the game says so and
    offers only Discard: another game code may deal other dice from the same seed.
    ========================================================================= */
-import { seatColor } from "./util.js?202609271554";
-import { hydrateIcons } from "./icons.js?202609271554";
+import { seatColor } from "./util.js?202609271559";
+import { hydrateIcons } from "./icons.js?202609271559";
 
 const KEY = "pdx.resume.v1";           // play-shim.js writes the same key
 const IN_MATCH = "pdx.inMatch";         // sessionStorage: a match was on screen in this tab

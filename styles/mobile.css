@@ -211,7 +211,7 @@ html.pdx-m-on body.cabin-on #hull {
 /* the helmet's own chrome is the desktop's frame; on a phone HELA's column carries it */
 html.pdx-m-on #hull .hull-rail, html.pdx-m-on #hull .vz-frame, html.pdx-m-on #hull .hull-visor,
 html.pdx-m-on #hull .hull-shadow, html.pdx-m-on #vz-holo, html.pdx-m-on #cursor-plane,
-html.pdx-m-on #pdx-scenes, html.pdx-m-on #pdx-tabkey, html.pdx-m-on #pdx-fs-pill,
+html.pdx-m-on #pdx-scenes, html.pdx-m-on #pdx-fs-pill,
 html.pdx-m-on #hela-eye > .he-svg, html.pdx-m-on #hela-eye > .he-caps, html.pdx-m-on #hela-eye > .he-chip,
 html.pdx-m-on .cam-veil { display: none !important; }
 html:not(.pdx-m-on) #pdx-mcol, html:not(.pdx-m-on) #pdx-mrail { display: none; }
@@ -386,3 +386,19 @@ html.pdx-touch #tut-callout b.pw-key, html.pdx-touch .he-window b.pw-key { displ
 html.pdx-tablet #pdx-mcol .mc-cap { font-size: .98rem; }
 html.pdx-tablet #pdx-mcol .mc-log-l li { font-size: .8rem; }
 html.pdx-tablet #pdx-mrail button span { font-size: .72rem; }
+
+/* help.js's TAB key, docked in HELA's column (mobile-table.js dockTabKey), dressed like her buttons;
+   the column's own "?" stands in only until the key exists */
+#pdx-mcol #pdx-tabkey { position: static !important; flex: 1; min-width: 34px; min-height: 34px; padding: 0 4px; gap: 3px; margin: 0;
+  display: flex; align-items: center; justify-content: center; border: 2px solid var(--cx-ink, #15100a); border-radius: 5px;
+  background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a); box-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
+#pdx-mcol #pdx-tabkey[hidden] { display: none; }
+#pdx-mcol #pdx-tabkey kbd { border: 0; background: none; padding: 0; }
+#pdx-mcol #pdx-tabkey kbd::before { font: 700 1.1rem/1 var(--f-display, "Oswald", sans-serif); }
+#pdx-mcol #pdx-tabkey > span { display: none; }
+#pdx-mcol #pdx-tabkey .pk-notes { font: 700 .6rem/1 var(--f-mono, monospace); padding: .1rem .2rem; }
+#pdx-mcol:has(#pdx-tabkey:not([hidden])) .mc-q { display: none; }
+
+/* the era seals on the casing (O / A / S): their letters read at phone scale */
+html.pdx-m-on #hull .mano-seal .ms-glyph { fill: #f0d49a; font-size: 11px; }
+html.pdx-m-on #hull .mano-seal.mended .ms-glyph { fill: #fff4dc; }

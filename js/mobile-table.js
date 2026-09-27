@@ -97,7 +97,7 @@ function build() {
       <span class="mc-phases" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <span class="mc-life" title="Your life (energy)">LIFE <b>-</b></span>
       <span class="mc-tools">
-        <button type="button" class="mc-btn pdx-helpkey" aria-label="Tips; press and hold for the table's reference"><b>?</b></button>
+        <button type="button" class="mc-btn pdx-helpkey mc-q" aria-label="Tips; press and hold for the table's reference"><b>?</b></button>
         <button type="button" class="mc-btn mc-fs" aria-label="Play full screen">${ICON.fs}</button>
         <button type="button" class="mc-btn mc-gear" aria-label="Settings">${ICON.gear}</button>
       </span>
@@ -352,8 +352,18 @@ function capHTML(cap) {
   return `<div class="mc-cap${kind}">${tag ? `<span class="mc-tag">${esc(tag.textContent)}</span>` : ""}<span class="mc-txt">${t.innerHTML}</span></div>`;
 }
 let lastSays = "", lastLog = "";
+// help.js's own TAB key moves into HELA's column (the tutorial rings THAT key, and touch.js
+// makes a press held on it the held reference); it goes back to the body off the phone layout
+function dockTabKey(inCol) {
+  const k = document.getElementById("pdx-tabkey");
+  if (!k || !col) return;
+  const tools = col.querySelector(".mc-tools");
+  if (inCol && k.parentElement !== tools) tools.insertBefore(k, tools.firstChild);
+  else if (!inCol && k.parentElement === tools) document.body.appendChild(k);
+}
 function paintCol() {
   if (!col) return;
+  dockTabKey(true);
   const hh = document.getElementById("hud-hour");
   col.querySelector(".mc-hour").textContent = hh ? "Hour " + hh.textContent.trim() : "";
   const ph = [...document.querySelectorAll("#vz-phases .vz-ph")];
@@ -714,6 +724,7 @@ function sync() {
   } else if (!w && mounted) {
     mounted = false;
     D.classList.remove("pdx-m-on", "pdx-file-out");
+    dockTabKey(false);
     closeFiles();
     files().forEach((f) => f.classList.remove("pdx-piled"));
     catHome(false);
