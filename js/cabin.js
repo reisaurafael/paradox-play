@@ -1936,10 +1936,13 @@
          at most once every 2.5 s; a case file or a piece partly under them is tolerated.
      placement() reports the counts, for the checks. ══ */
   const DEAD = 70, FLIP_GAP = 1500;
-  const OMEGA = 10, ZETA = .7, VMAX_EYE = 470;       // the eye's spring (rad/s), damping, top speed (px/s)
-  const OMEGA_W = 9, VMAX_WORDS = 250;               // her words' spring around her, their top speed
+  const OMEGA = 10, ZETA = .85, VMAX_EYE = 470;       // the eye's spring (rad/s), damping, top speed (px/s)
   let ex2 = -1, ey2 = -1, evx = 0, evy = 0, lastF = 0, ancX = -1, ancY = -1, flipAt = 0, changes = 0, switches = 0;
   let parked = null, regionR = null, parkedPlaced = false, needXT = 0, needYT = 0, deskT = 0;
+  // her words aim at where the EYE IS GOING (never at the eye's own bounce), and while the
+  // hand rushes they hold still; they glide once, when the hand slows down
+  let tgtX = -1, tgtY = -1, mSpd = 0, lmx = -1, lmy = -1, holdW = false, slowAt = 0;
+  const FAST = 750, SLOW = 380, VMAX_B = 600, OMEGA_B = 7, ZETA_B = 1.15;
   function machineRegion(){
     const el2 = document.getElementById("hull-console");
     const r = el2 && el2.getBoundingClientRect();
@@ -2043,7 +2046,12 @@
       if ((nx !== sx || ny !== sy) && t - flipAt > FLIP_GAP){ sx = nx; sy = ny; flipAt = t; changes++; }
       const q = post3(ancX, ancY, sx, sy); tx = q.x; ty = q.y;
     }
-    const px0 = ex2, py0 = ey2;
+    tgtX = tx; tgtY = ty;
+    if (lmx >= 0) mSpd = mSpd * .75 + Math.hypot(mx - lmx, my - lmy) / dt * .25;
+    lmx = mx; lmy = my;
+    if (mSpd > FAST){ holdW = true; slowAt = 0; }
+    else if (holdW && mSpd < SLOW){ if (!slowAt) slowAt = t; else if (t - slowAt > 180) holdW = false; }
+    else slowAt = 0;
     if (ex2 < 0){ ex2 = tx; ey2 = ty; }            // the first frame only
     else {
       // two half steps keep the spring steady on a slow frame
@@ -2053,7 +2061,7 @@
       }
     }
     place(ex2, ey2);
-    words(dt, px0 < 0 ? 0 : ex2 - px0, px0 < 0 ? 0 : ey2 - py0);
+    words(dt);
   }
 
   // where she would stand on a given diagonal (sx2, sy2) for the current cursor
@@ -2213,9 +2221,9 @@
   // a block's TARGET offset from the eye's centre; words() slides it there
   function setBlock(el2, mode, b, x, y, isCaps){
     el2._tox = b[0] - x; el2._toy = b[1] - y;
-    if (el2._ox == null){ el2._ox = el2._tox; el2._oy = el2._toy; el2._ovx = 0; el2._ovy = 0;   // it appears: no slide
+    if (el2._bx == null){   // it appears: no slide, it opens where it belongs
       el2.style.left = "30px"; el2.style.top = "30px"; el2.style.right = "auto"; el2.style.bottom = "auto";
-      el2.style.translate = `${el2._ox.toFixed(1)}px ${el2._oy.toFixed(1)}px`; tail(el2); }
+      words1(el2, 0); }
     if (el2._mode !== mode){
       el2._mode = mode;
       const vert = !isCaps && (mode === "a" || mode === "b");
@@ -2226,30 +2234,32 @@
       if (isCaps) el2.classList.toggle("he-below", mode === "cb" || mode === "rb" || mode === "lb");   // YOUR MOVE stays nearest her
     }
   }
-  // on screen a balloon moves with the eye AND its own slide; together they stay under
-  // LIM px/s (11 px a frame at 60 fps), so a slide made while the eye travels just takes longer
-  const LIM = 660;
-  function words(dt, dex, dey){
-    for (const el2 of [chipEl, capsEl]){
-      if (!el2 || el2._tox == null) continue;
-      if (el2._ox === el2._tox && el2._oy === el2._toy) continue;
-      const ox0 = el2._ox, oy0 = el2._oy;
-      for (let n = 0; n < 2; n++){
-        [el2._ox, el2._ovx] = spring(el2._ox, el2._ovx, el2._tox, dt / 2, OMEGA_W, 1, VMAX_WORDS);
-        [el2._oy, el2._ovy] = spring(el2._oy, el2._ovy, el2._toy, dt / 2, OMEGA_W, 1, VMAX_WORDS);
+  // her words have their OWN place on screen: they follow the eye's target on an overdamped
+  // spring (no overshoot, no wobble, at most VMAX_B px/s), and hold still while the hand rushes
+  function words1(el2, dt){
+    if (el2._tox == null || tgtX < 0) return;
+    const Tx = tgtX + el2._tox, Ty = tgtY + el2._toy;
+    if (el2._bx == null){ el2._bx = el2._hx = Tx; el2._by = el2._hy = Ty; el2._bvx = el2._bvy = 0; }
+    else {
+      if (!holdW){ el2._hx = Tx; el2._hy = Ty; }
+      for (let n = 0; n < 2 && dt > 0; n++){
+        const h = dt / 2;
+        el2._bvx += (OMEGA_B * OMEGA_B * (el2._hx - el2._bx) - 2 * ZETA_B * OMEGA_B * el2._bvx) * h;
+        el2._bvy += (OMEGA_B * OMEGA_B * (el2._hy - el2._by) - 2 * ZETA_B * OMEGA_B * el2._bvy) * h;
+        const sp = Math.hypot(el2._bvx, el2._bvy);
+        if (sp > VMAX_B){ el2._bvx *= VMAX_B / sp; el2._bvy *= VMAX_B / sp; }
+        el2._bx += el2._bvx * h; el2._by += el2._bvy * h;
       }
-      const dx = el2._ox - ox0, dy = el2._oy - oy0, L = LIM * dt;
-      if (Math.hypot(dex + dx, dey + dy) > L){
-        const dd = dx * dx + dy * dy, ed = dex * dx + dey * dy, disc = ed * ed - dd * (dex * dex + dey * dey - L * L);
-        const k = dd > 0 && disc >= 0 ? Math.max(0, Math.min(1, (-ed + Math.sqrt(disc)) / dd)) : 0;
-        el2._ox = ox0 + dx * k; el2._oy = oy0 + dy * k; el2._ovx *= k; el2._ovy *= k;
-      }
-      if (Math.abs(el2._ox - el2._tox) < .3 && Math.abs(el2._ovx) < 2){ el2._ox = el2._tox; el2._ovx = 0; }
-      if (Math.abs(el2._oy - el2._toy) < .3 && Math.abs(el2._ovy) < 2){ el2._oy = el2._toy; el2._ovy = 0; }
-      el2.style.translate = `${el2._ox.toFixed(1)}px ${el2._oy.toFixed(1)}px`;
-      tail(el2);
+      if (Math.abs(el2._bx - el2._hx) < .25 && Math.abs(el2._by - el2._hy) < .25 && Math.hypot(el2._bvx, el2._bvy) < 3){
+        el2._bx = el2._hx; el2._by = el2._hy; el2._bvx = el2._bvy = 0; }
     }
+    // the element rides inside the eye, so its offset is its place minus the eye's
+    el2._ox = el2._bx - ex2; el2._oy = el2._by - ey2;
+    const tr = `${el2._ox.toFixed(1)}px ${el2._oy.toFixed(1)}px`;
+    if (el2._tr !== tr){ el2._tr = tr; el2.style.translate = tr; }
+    tail(el2);
   }
+  function words(dt){ for (const el2 of [chipEl, capsEl]) if (el2) words1(el2, dt); }
   function tail(el2){
     if (el2 !== chipEl) return;
     const w = chipBox ? chipBox[0] : 300, tx = Math.round(Math.max(24, Math.min(w - 24, -el2._ox)));
@@ -2266,7 +2276,7 @@
     for (const [el2, on] of [[chipEl, saying], [capsEl, capsOn]]){
       if (!el2) continue;
       if (!on){ if (!el2._goneAt) el2._goneAt = now0; }
-      else if (el2._goneAt){ if (now0 - el2._goneAt > 700) el2._ox = null; el2._goneAt = 0; }
+      else if (el2._goneAt){ if (now0 - el2._goneAt > 700) el2._bx = null; el2._goneAt = 0; }
     }
     if (!saying && !capsOn){ chipSide = ""; return; }
     const t = performance.now();
@@ -2367,6 +2377,7 @@
   //    carry onShow, run the moment it appears (comic.js moves her eye and lands its
   //    impact then, so the picture and the words arrive together). ──
   let sayT = 0, sayQ = [], saying = null;
+  const GRACE = { grace: true };   // a line just ended: she stays open a moment for the next one
   function readMs(html){
     const n = html && html.nodeType === 1 ? (html.textContent || "").length
       : String(html || "").replace(/<[^>]*>/g, "").length;
@@ -2382,10 +2393,10 @@
       let k = 0; for (let i = 1; i < sayQ.length - 1; i++) if (sayQ[i].prio < sayQ[k].prio) k = i;
       sayQ.splice(k, 1);
     }
-    if (!saying) nextSay();
+    if (!saying || saying === GRACE){ clearTimeout(sayT); nextSay(); }
   }
   // lines on show plus waiting (comic.js paces the game's replay by it)
-  function backlog(){ return sayQ.length + (saying ? 1 : 0); }
+  function backlog(){ return sayQ.length + (saying && saying !== GRACE ? 1 : 0); }
   // a tiny synth for the parade's numbers: gains rise, losses fall, low volume
   window.__pdxTone = function(freq, dur, gain){
     try {
@@ -2434,8 +2445,9 @@
     // the next line swaps in place; with nothing waiting she closes, slowly
     sayT = setTimeout(() => {
       if (sayQ.length) { nextSay(); return; }
-      if (eye) eye.classList.remove("he-says");
-      saying = null;
+      // nothing waiting: she folds only if no new line comes within a moment
+      saying = GRACE;
+      sayT = setTimeout(() => { if (eye) eye.classList.remove("he-says"); saying = null; }, 700);
     }, it.ms);
   }
 
