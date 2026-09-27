@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609270144";
-import { Game } from "./game.js?202609270144";
-import { icon } from "./icons.js?202609270144";
-import { roman } from "./util.js?202609270144";
-import { profile } from "./profile.js?202609270144";
+import { api, Connection } from "./net.js?202609270152";
+import { Game } from "./game.js?202609270152";
+import { icon } from "./icons.js?202609270152";
+import { roman } from "./util.js?202609270152";
+import { profile } from "./profile.js?202609270152";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -255,7 +255,7 @@ class Stage {
       // around the eye: close first, then a little farther, so the words never sit on
       // the machine, the dice, the chart, the files or the shelf (the tail keeps pointing at her)
       const cands = {};
-      [0, 80, 160, 260].forEach((d, i) => {
+      [0, 80, 160, 260, 380].forEach((d, i) => {
         cands["right" + i] = [q.x + 36 + d, q.y - 26, "left", d];
         cands["left" + i] = [q.x - 36 - cw - d, q.y - 26, "right", d];
         cands["below" + i] = [q.x - cw / 2, q.y + 40 + d, "", d];
@@ -274,7 +274,7 @@ class Stage {
           const cx = Math.max(M, Math.min(W - cw - M, px)), cy = Math.max(M + 50, Math.min(H - ch - M, py));
           let cover = 0;
           soft.forEach((b) => { cover += Math.max(0, Math.min(cx + cw, b.right) - Math.max(cx, b.left)) * Math.max(0, Math.min(cy + ch, b.bottom) - Math.max(cy, b.top)); });
-          const score = cover * 3 + d * 120 + (Math.abs(cx - px) + Math.abs(cy - py)) * 200 + (k === this._rideSide ? -4000 : 0);
+          const score = cover * 3 + d * 90 + (Math.abs(cx - px) + Math.abs(cy - py)) * 60 + (k === this._rideSide ? -4000 : 0);
           if (!best || score < best.s) best = { k, s: score };
         }
         this._rideSide = best.k;

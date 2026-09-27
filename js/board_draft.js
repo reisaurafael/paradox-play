@@ -313,6 +313,7 @@
     let tok = null;
     const handover = () => {
       try { o.onLand && o.onLand(); } catch (e) {}
+      try { if (o.onLand !== null) window.__fxMerchantLanded && window.__fxMerchantLanded(p); } catch (e) {}   // ANCHORS DOWN beside his port (fx.js)
       o.onLand = null;
       if (tok) tok.remove();
       document.body.classList.remove("pc-mtrip");

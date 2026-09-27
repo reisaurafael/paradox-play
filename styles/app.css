@@ -7894,10 +7894,6 @@ body.cx-on #hela-eye .he-chip.he-over::after { top: auto; bottom: -9px;
 .hb-newsmore { position: absolute; right: 10px; top: 8px; padding: 3px 8px 2px; border-radius: 3px;
   font: 700 .66rem/1.2 var(--f-mono, monospace); letter-spacing: .1em; color: #120c06;
   background: var(--hela-hot, #eafff8); box-shadow: 0 0 0 2px var(--vz, #6fe8c8); pointer-events: none; }
-/* the cat never sits over HELA's brain: the desk quarter that holds it stands above
-   her, and lets every click that is not on the brain (or the ledger) through to her */
-body.cabin-on #log-zone { z-index: 9; pointer-events: none; }
-body.cabin-on #log-zone #hela-brain-full, body.cabin-on #log-zone .ledger { pointer-events: auto; }
 /* SHE STOPS TO SPEAK (cabin.js): while a line is up the eye stands still and pulses
    softly in her colour; her boxes move only by a dissolve */
 #hela-eye.he-talking .he-svg { animation: heTalk 1.7s ease-in-out infinite;

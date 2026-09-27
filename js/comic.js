@@ -26,8 +26,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609270144";
-import { mend } from "./mend.js?202609270144";
+import { roman } from "./util.js?202609270152";
+import { mend } from "./mend.js?202609270152";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -335,6 +335,7 @@ class Comic {
     // FX (js/fx.js): the Comic effects setting, the pace and one big panel at a time.
     // It may queue this panel, turn it into a stamp (Light) or drop it (Off).
     try { if (window.__fx && window.__fx.route(kind, at, opts)) return; } catch (e) {}
+    if (opts._at) at = opts._at;   // FX: a panel re-anchored beside its subject (Year Zero's well)
     const K = {
       paradox: { word: "ZZAP!", c: "#b98cff", ink: "#1a0f2e" },
       boom: { word: "BOOM!", c: "#ff7a2a", ink: "#2a0d02" },

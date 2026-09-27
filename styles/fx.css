@@ -47,6 +47,46 @@
 .cx-hit.cx-seat .cx-lines { background: repeating-conic-gradient(from 3deg, var(--cx-ink2) 0deg 1.4deg, transparent 1.4deg 6.5deg); }
 .fx-pop.fx-seat b { color: color-mix(in srgb, var(--fx-c) 72%, #ffffff); }
 
+/* THE PAGE (fx.js page): a clear-line panel turning in over the chart's top edge
+   with a period's name, an ink wipe running across it as it lands */
+.fx-page { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: stretch;
+  min-width: 300px; overflow: hidden; opacity: 0; will-change: transform, opacity; transform-origin: 0 50%;
+  border: 3px solid var(--cx-ink, #15100a); box-shadow: 5px 5px 0 var(--cx-ink, #15100a);
+  background:
+    radial-gradient(circle, rgba(21,16,10,.15) 1px, transparent 1.6px) 0 0 / 6px 6px,
+    var(--cx-paper, #f4e6b0);
+  border-top: 8px solid var(--fx-c, #f7c65a); }
+.fx-page b { padding: 8px 22px 4px; text-align: center;
+  font: italic 700 2rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em;
+  color: var(--cx-ink, #15100a); }
+.fx-page span { padding: 4px 12px 5px; text-align: center; background: var(--cx-ink, #15100a); color: var(--cx-paper, #f4e6b0);
+  font: 700 .64rem/1 var(--f-mono, monospace); letter-spacing: .22em; text-transform: uppercase; }
+.fx-page .fx-wipe { position: absolute; inset: 0; pointer-events: none; transform: translateX(-110%);
+  background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--fx-c, #f7c65a) 55%, transparent) 45%, transparent 70%); }
+body.gfx-low .fx-page { background: var(--cx-paper, #f4e6b0); }
+
+/* THE LAST TIMELINE ON THE MAP (mend.js sets --tl-whole 0..1 on the marks layer): where it
+   is unravelled the chart sits a little dim and worn at its edges and each loose century
+   carries a dark bruise; where it is mended a warm light pools. Static gradients only,
+   painted once; the whole chart warms as the count rises. No filters. */
+.tl-marks::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(24,12,6,.42) 100%);
+  opacity: calc((1 - var(--tl-whole, 0)) * .8); transition: opacity 1.6s ease; }
+.tl-mk.w::before { content: ""; position: absolute; inset: -38%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(16,8,4,.26) 30%, transparent 70%); }
+.tl-mk.m::before { content: ""; position: absolute; inset: -55%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,226,160,.2) 25%, transparent 70%); }
+body.gfx-low .tl-marks::before { display: none; }
+
+/* THE RELIC FLIES HOME: anime speed lines ring the delivery card in flight (it carries
+   them; they never loop and leave with it). Full comic effects only; calm motion drops them. */
+html[data-fx="full"] body:not(.gfx-low) .card-fly.tone-deliver::before { content: ""; position: absolute; left: 50%; top: 50%;
+  width: 260%; height: 260%; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; z-index: -1;
+  background: repeating-conic-gradient(from 2deg, rgba(247,198,90,.75) 0deg 1.6deg, transparent 1.6deg 9deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 34%, #000 40%, transparent 68%);
+          mask: radial-gradient(circle, transparent 0 34%, #000 40%, transparent 68%); }
+@media (prefers-reduced-motion: reduce) { .card-fly.tone-deliver::before { display: none; } }
+
 /* Low graphics: flat paper, no halftone */
 body.gfx-low .fx-stamp { background: var(--cx-paper, #f4e6b0); }
 body.gfx-low .fx-pop b { text-shadow: none; }
@@ -69,8 +109,6 @@ body.cx-skipping #fx-root { display: none; }
 .delta-float { animation-duration: calc(1.3s * var(--pdx-pace, 1)); }
 .briefcase-fx { animation-duration: calc(1.4s * var(--pdx-pace, 1)); }
 /* the mend (mend.js) */
-#tl-gauge .tlg-track i.pulse { animation-duration: calc(1.6s * var(--pdx-pace, 1)); }
-#tl-gauge.mending { animation-duration: calc(1.6s * var(--pdx-pace, 1)); }
 .tl-burst .tlb-a, .tl-burst .tlb-b { animation-duration: calc(.8s * var(--pdx-pace, 1)); }
 .tl-burst .tlb-rays { animation-duration: calc(2.2s * var(--pdx-pace, 1)); }
 .tl-tear { animation-duration: calc(2.5s * var(--pdx-pace, 1)); }

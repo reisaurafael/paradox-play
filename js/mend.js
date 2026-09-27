@@ -4,16 +4,20 @@
    mends it; whoever mended the most when time settles wins.
    -------------------------------------------------------------------------
    What this draws (rules unchanged, words and pictures only):
-     - THE GAUGE, in HELA's top rail: thirty notches, I to XXX. A mended century is
-       lit in the colour of the traveller who mended it (so the race still reads as
-       a race); a century whose relic is loose on the table carries a crack; the
-       rest wait, faded. A thin bar under the notches fills with the whole repair.
+     - NO GAUGE (the owner found the thirty notches in HELA's rail annoying). How
+       whole the timeline is lives in the world instead: the chart itself looks
+       worn and dim where the timeline is unravelled and lit where it is mended
+       (--tl-whole on the marks layer, fx.css), the music warms a little with each
+       mend (audio.setWarmth), the Temporal Herald prints the count with the
+       headline (game.js breakingNews), and HELA's brain files each mend on its
+       Hour's page (window.__helaBrainLog). window.__pdxTimelineWhole() gives
+       { mended, total, frac } to anything else that wants to show it.
      - ON THE CHART, at each century: a faint crack where the timeline is still
        unravelled (a sharper one where a loose relic belongs), and a ring of light
        in the mender's colour where it is mended. Small marks beside the islands,
        hollow in the middle, so no piece or number is ever covered.
      - THE MEND, when a relic lands home: the broken ring closes, light returns,
-       the notch fills and pulses, the drawer the relic is filed in glows, and a
+       the drawer the relic is filed in glows, and a
        comic panel lands on the beat of the delivery's own sound: KA-CHUNK, THE
        TIMELINE MENDS. HELA says it from her eye (comic.js).
      - A TEAR, when a paradox strikes: a jagged crack runs along the chart from the
@@ -21,12 +25,12 @@
      - TIME SETTLES: the end screen's restored timeline, how much was mended and
        each traveller's share in their colour, before the points.
    window.__pdxTimelineMend(century, progress, opts) is the shared hook the tutorial
-   calls; progress (optional) is a fraction 0..1 of the gauge, or a whole number of
-   mended centuries. Costs: marks are rebuilt only when what they show changes;
+   calls; progress (optional) is a fraction 0..1 of the whole timeline, or a whole
+   number of mended centuries (it sets how whole the chart looks). Costs: marks are rebuilt only when what they show changes;
    every animation is transform or opacity on a few small nodes, removed when done.
    All text enters the page through textContent.
    ========================================================================= */
-import { roman } from "./util.js?202609270144";
+import { roman } from "./util.js?202609270152";
 
 const N = 30;
 // the drawer a century's relic is filed in (Origins I to X, Ascension XI to XIX,
@@ -42,10 +46,9 @@ class Mend {
     this.comic = null;
     this.menders = new Map();   // century -> seat that mended it first
     this.loose = new Set();     // centuries whose relic is loose on the table
-    this.gaugeEl = null;
     this.marksEl = null;
     this._key = "";
-    this._progress = null;      // an explicit gauge value from the tutorial
+    this._progress = null;      // an explicit wholeness from the tutorial (0..1)
   }
 
   init(game, comic) {
@@ -54,6 +57,7 @@ class Mend {
       window.__pdxTimelineMend = (century, progress, opts) => this.mendAt(+century, Object.assign({ progress, sound: true }, opts || {}));
       window.__pdxTimelineSummary = () => this.summary();
       window.__pdxTimelineState = () => ({ mended: [...this.menders.keys()].sort((a, b) => a - b), loose: [...this.loose].sort((a, b) => a - b) });
+      window.__pdxTimelineWhole = () => ({ mended: this.menders.size, total: N, frac: this._frac() });
     } catch (e) {}
     window.addEventListener("resize", () => { this._key = ""; this._syncSoon(); });
   }
@@ -92,40 +96,19 @@ class Mend {
     if (key === this._key && this.marksEl && this.marksEl.isConnected && ch && this.marksEl.parentNode === ch.host) return;
     this._key = key;
     this._marks(ch);
+    this._gauge();   // the new marks layer wears how whole the timeline is
   }
 
-  /* ---- THE GAUGE in HELA's rail ---- */
+  /* ---- HOW WHOLE THE TIMELINE IS: no gauge; the chart's look and the music carry it ---- */
+  _frac() { return this._progress != null ? this._progress : this.menders.size / N; }
   _gauge() {
-    const rail = document.querySelector("#hull .vz-rail") || document.getElementById("topbar");
-    if (!rail) return;
-    let g = this.gaugeEl;
-    if (!g || !g.isConnected) {
-      g = document.createElement("div");
-      g.id = "tl-gauge";
-      const nm = document.createElement("span"); nm.className = "tlg-name"; nm.textContent = "THE LAST TIMELINE";
-      const tr = document.createElement("span"); tr.className = "tlg-track";
-      for (let c = 1; c <= N; c++) { const i = document.createElement("i"); i.dataset.c = c; tr.appendChild(i); }
-      const fill = document.createElement("span"); fill.className = "tlg-fill"; tr.appendChild(fill);
-      const ct = document.createElement("b"); ct.className = "tlg-count";
-      g.append(nm, tr, ct);
-      rail.appendChild(g);
-      this.gaugeEl = g;
-    } else if (g.parentNode !== rail) rail.appendChild(g);   // the helmet mounted after us: move in
-    const n = this.menders.size;
-    const frac = this._progress != null ? this._progress : n / N;
-    g.querySelectorAll(".tlg-track i").forEach((i) => {
-      const c = +i.dataset.c, s = this.menders.get(c);
-      const cls = s ? "m" : this.loose.has(c) ? "loose" : "";
-      if (i.className !== cls) i.className = cls;
-      if (s) i.style.setProperty("--seat", this._col(s)); else i.style.removeProperty("--seat");
-      const tip = s ? `${roman(c)}: mended by ${s === this._me() ? "you" : s}`
-        : this.loose.has(c) ? `${roman(c)}: unravelled, its relic is loose on the table` : `${roman(c)}: unravelled`;
-      if (i.title !== tip) i.title = tip;
-    });
-    g.querySelector(".tlg-fill").style.transform = `scaleX(${Math.max(0, Math.min(1, frac)).toFixed(3)})`;
-    const txt = `${n} / ${N} mended`;
-    const ct = g.querySelector(".tlg-count"); if (ct.textContent !== txt) ct.textContent = txt;
-    g.title = "The last timeline: every relic returned to its own century mends one. Whoever mended the most when time settles wins.";
+    const old = document.getElementById("tl-gauge"); if (old) old.remove();   // the retired rail gauge
+    const f = Math.max(0, Math.min(1, this._frac()));
+    if (this.marksEl) this.marksEl.style.setProperty("--tl-whole", f.toFixed(3));
+    if (this._warm !== f) {
+      this._warm = f;
+      try { window.__audio && window.__audio.setWarmth && window.__audio.setWarmth(f); } catch (e) {}
+    }
   }
 
   /* ---- THE CHART: a crack at every unravelled century, a ring of light where it is mended ---- */
@@ -182,12 +165,15 @@ class Mend {
     this._key = "";
     this.sync();
     if (document.hidden) return;
-    // the notch: fills in the mender's colour and pulses
-    const notch = this.gaugeEl && this.gaugeEl.querySelector(`.tlg-track i[data-c="${century}"]`);
-    if (notch) { notch.classList.remove("pulse"); void notch.offsetWidth; notch.classList.add("pulse");
-      setTimeout(() => notch.classList.remove("pulse"), pace(1800)); }
-    if (this.gaugeEl) { this.gaugeEl.classList.remove("mending"); void this.gaugeEl.offsetWidth; this.gaugeEl.classList.add("mending");
-      setTimeout(() => this.gaugeEl && this.gaugeEl.classList.remove("mending"), pace(1800)); }
+    // HELA's brain files the mend on this Hour's page, with how whole the timeline now is
+    if (!again) {
+      try {
+        const hr = (this.game && this.game.view && this.game.view.hour) || 0;
+        const who = seat === this._me() ? "You" : seat;
+        window.__helaBrainLog && window.__helaBrainLog(hr, "mend",
+          `${who} mended century ${roman(century)}. The last timeline is ${this.menders.size} of ${N} whole.`);
+      } catch (e) {}
+    }
     // the drawer the relic is filed in glows (the drawers are mine)
     if (seat === this._me()) {
       const cell = document.querySelector(`#drawer-zone .cab2-cell[data-drawer="${periodOf(century)}"]`);

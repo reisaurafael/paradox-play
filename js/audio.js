@@ -367,7 +367,16 @@ class AudioEngine {
 
     this.musicBus = this.ctx.createGain();
     this.musicBus.gain.value = this.vol.music;
-    this.musicBus.connect(this.master);
+    // THE LAST TIMELINE'S WARMTH (mend.js): two gentle shelves on the music. While
+    // the timeline is unravelled the score is a touch thin and bright; each mended
+    // century warms it a little (setWarmth 0..1). Subtle on purpose: at most 3 dB.
+    this.warmLow = this.ctx.createBiquadFilter();
+    this.warmLow.type = "lowshelf"; this.warmLow.frequency.value = 240; this.warmLow.gain.value = -1.5;
+    this.warmHigh = this.ctx.createBiquadFilter();
+    this.warmHigh.type = "highshelf"; this.warmHigh.frequency.value = 4200; this.warmHigh.gain.value = 0.8;
+    this.musicBus.connect(this.warmLow);
+    this.warmLow.connect(this.warmHigh);
+    this.warmHigh.connect(this.master);
     // gentle reverb-ish: a lowpassed delay feedback for space
     this.sfxBus = this.ctx.createGain();
     this.sfxBus.gain.value = this.vol.sfx;
@@ -389,6 +398,17 @@ class AudioEngine {
 
     this.ready = true;
     this._applySfxTone();
+    if (this._warmth != null) this.setWarmth(this._warmth);   // a mend heard before the audio woke
+  }
+
+  /* How whole the last timeline is, 0..1 (mend.js): the music warms as it mends. */
+  setWarmth(f) {
+    f = Math.max(0, Math.min(1, +f || 0));
+    this._warmth = f;
+    if (!this.ctx || !this.warmLow) return;
+    const t = this.ctx.currentTime;
+    this.warmLow.gain.setTargetAtTime(-1.5 + 4.5 * f, t, 1.2);     // -1.5 dB thin, +3 dB warm
+    this.warmHigh.gain.setTargetAtTime(0.8 - 2.6 * f, t, 1.2);     // +0.8 dB bright, -1.8 dB soft
   }
 
   /* Resume the context from a user gesture and start the music. */

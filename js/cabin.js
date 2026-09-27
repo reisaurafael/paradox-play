@@ -2250,6 +2250,7 @@
     const bx0 = talk ? talk.x : (ex2 < 0 ? mx : ex2), by0 = talk ? talk.y : (ey2 < 0 ? my : ey2);
     const hand = mx >= 0 ? [mx - 40, my - 40, mx + 60, my + 70] : null;
     const cr = capsEl && capsEl.querySelector(".cx-cap.on") ? capsRect() : null;
+    const keep = talk && chipEl && chipEl._bx != null ? [chipEl._bx, chipEl._by] : null;   // the next line stays put if it can
     const offs = [[0, 0]];
     for (const r of [40, 85, 140, 210, 290, 380]) for (let k = 0; k < 12; k++){ const a = k * Math.PI / 6; offs.push([Math.cos(a) * r, Math.sin(a) * r * .75]); }
     let best = null, bc = 1e18;
@@ -2260,7 +2261,7 @@
       if (hand) ce += area(eb, hand);
       for (const [mode, b] of cands(x, y, W, H, sx === 1 ? "r" : "l", false, null)){
         if (b[0] < 6 || b[1] < 6 || b[2] > innerWidth - 6 || b[3] > innerHeight - 6) continue;
-        let c = Math.hypot(x - bx0, y - by0) * 30 + ce * 60;
+        let c = Math.hypot(x - bx0, y - by0) * 30 + ce * 60 + (keep ? Math.hypot(b[0] - keep[0], b[1] - keep[1]) * 60 : 0);
         for (const z of zones) c += area(b, z) * (z[4] ? 60 : 1);
         if (hand) c += area(b, hand) * 30;
         if (cr) c += area(b, cr) * 30;
@@ -2285,6 +2286,7 @@
     talk = { x: sp.x, y: sp.y };
     chipMode = sp.mode;
     setBlock(chipEl, sp.mode, sp.box, sp.x, sp.y, false);
+    pin(chipEl, ex2 < 0 ? sp.x : ex2, ey2 < 0 ? sp.y : ey2);   // now, not next frame: the new words never show at the old spot
     eye.classList.add("he-talking");
   }
   function endLine(){ talk = null; if (eye) eye.classList.remove("he-talking"); }

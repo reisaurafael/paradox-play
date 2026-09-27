@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609270144";
-import { roman } from "./util.js?202609270144";
+import { audio } from "./audio.js?202609270152";
+import { roman } from "./util.js?202609270152";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -111,7 +111,13 @@ class Fx {
       window.__fx = this;
       window.__pdxPace = (ms) => (+ms || 0) * this.pace().anim;          // the chart scripts' clock (unrounded)
       window.__fxLanded = (seat, to) => this.landed(seat, to);          // a voyage makes landfall
+      window.__fxMerchantLanded = (p) => this.merchantLanded(p);        // the Merchant drops anchor
     } catch (e) {}
+    this._markLevel();
+    // MY CROSSING INTO ANOTHER PERIOD: the chart skins swap behind their iris shutter
+    // (board_origins.js / board_singularity.js playWarp); as it opens, the new era's
+    // page turns in with its name
+    window.addEventListener("paradoxo:skinwarp", () => setTimeout(() => this._eraPage(), 560));
   }
 
   /* ---- THE PACE ---- */
@@ -129,7 +135,8 @@ class Fx {
 
   /* ---- THE LEVEL ---- */
   storedLevel() { const v = lsGet(LEVEL_KEY); return LEVELS[v] ? v : "full"; }
-  setLevel(v) { if (LEVELS[v]) lsSet(LEVEL_KEY, v); }
+  setLevel(v) { if (LEVELS[v]) lsSet(LEVEL_KEY, v); this._markLevel(); }
+  _markLevel() { try { document.documentElement.dataset.fx = this.storedLevel(); } catch (e) {} }
   // what plays now: Low graphics caps it at Light
   level() {
     const v = this.storedLevel();
@@ -145,6 +152,10 @@ class Fx {
     return !this.root || document.hidden || !!(g && g._skip) || (!!window.__helaMute && !this.tutorial);
   }
   _me() { return this.game && this.game.seat; }
+  _period(c) {
+    try { if (window.__oriPeriodOf) return window.__oriPeriodOf(c); } catch (e) {}
+    return c <= 10 ? "Origins" : c <= 19 ? "Ascension" : "Singularity";
+  }
   _col(seat) { try { return this.game.colorOf(seat); } catch (e) { return null; } }
   _chartLive() { try { return !!(this.comic && this.comic._chart()); } catch (e) { return false; } }
   _view() { return this.game && this.game.view; }
@@ -312,6 +323,14 @@ class Fx {
       if (a) this.stamp(opts.word || face[0], face[1], a, { sound: false, color: opts.c });
       return true;
     }
+    if (kind === "yearzero" && !at) {                // YEAR ZERO lands beside the well on the chart
+      try {
+        const ch = this.comic && this.comic._chart();
+        const r = ch && this._rect(ch.host.querySelector(`.sea-well, .${ch.mark}[data-c="0"]`));
+        if (r) at = this._beside(r, 200, this._rect(ch.host));
+        if (at) opts._at = at;
+      } catch (e) {}
+    }
     const now = performance.now();
     const dur = Math.max(2100, Math.round((opts.big ? 3400 : 2800) * this.pace().impact));
     if (now < this._bigUntil) {
@@ -391,7 +410,7 @@ class Fx {
       case "secret_market_opened":
       {
         // on the vault's century, else the Merchant's stall, else under HELA's rail
-        const a = this._isle(11) || this._el("#market-zone") || this._el("#tl-gauge");
+        const a = this._isle(11) || this._el("#market-zone") || this._el("#hull .vz-rail");
         let chart = null;
         try { const ch = this.comic && this.comic._chart(); chart = ch && this._rect(ch.host); } catch (e) {}
         if (a) this.big("vault", this._beside(a.r, 170, chart), { big: true, sub: "THE VAULT OPENS" });
@@ -418,6 +437,81 @@ class Fx {
     try { causers = (this.game._paradoxCausers && this.game._paradoxCausers(p.module)) || []; } catch (e) {}
     const by = causers.find((c) => c !== star.seat) || causers[0];
     return { star, col: by ? this._col(by) : null };
+  }
+
+  /* ---- THE PAGE: a clear-line panel that turns in over the chart with a title, for
+     the big story beats of the map (a new period, the whole chart unrolled). Big tier:
+     it takes the stage like a panel, and the small effects wait for it. ---- */
+  page(title, sub, opts = {}) {
+    if ((this._quiet() && !opts.force) || this.level() === "off" || !this.root) return;
+    // the chart's frame (the rail), whose top edge is the torn border the page lands on
+    const host = this._rect(document.getElementById("timeline-rail"));
+    if (!host) return;
+    if (this.level() === "light") {                // Light: a stamp at the chart's top edge
+      const a = { r: { left: host.left + host.width / 2, right: host.left + host.width / 2, top: host.top + 30, bottom: host.top + 30, width: 0, height: 0 }, box: null, above: false };
+      return this.stamp(title, opts.tone || "plain", a, { sound: false });
+    }
+    const now = performance.now();
+    if (now < this._bigUntil && !opts._late) {       // one big thing at a time
+      setTimeout(() => this.page(title, sub, Object.assign({}, opts, { _late: true })), this._bigUntil - now + 60);
+      return;
+    }
+    const dur = Math.max(2600, this.ms(3400));
+    this._bigUntil = performance.now() + dur + 80;
+    const n = document.createElement("div");
+    n.className = "fx-page fx-" + (opts.tone || "plain");
+    n.style.setProperty("--fx-c", TONE[opts.tone] || TONE.plain);
+    // on the chart's top edge, where the torn border is: over sea, not over the pieces
+    n.style.left = Math.round(host.left + host.width / 2) + "px";
+    n.style.top = Math.round(Math.max(56, host.top + 18)) + "px";
+    const w = document.createElement("i"); w.className = "fx-wipe"; n.appendChild(w);
+    const b = document.createElement("b"); b.textContent = title; n.appendChild(b);
+    if (sub) { const sp = document.createElement("span"); sp.textContent = sub; n.appendChild(sp); }
+    this.root.appendChild(n);
+    const T = (ry, s = 1) => `translateX(-50%) perspective(900px) rotateY(${ry}deg) scale(${s})`;
+    const inAt = Math.min(.16, 420 / dur);
+    const frames = this._calm()
+      ? [{ opacity: 0, transform: T(0) }, { opacity: 1, transform: T(0), offset: inAt }, { opacity: 1, transform: T(0), offset: .8 }, { opacity: 0, transform: T(0) }]
+      // a page turning in from the left edge, held, turning away to the right
+      : [{ opacity: 0, transform: T(-80, .96), easing: "cubic-bezier(.2,.8,.3,1)" }, { opacity: 1, transform: T(0), offset: inAt },
+         { opacity: 1, transform: T(0), offset: .8, easing: "cubic-bezier(.6,0,.8,.4)" }, { opacity: 0, transform: T(70, .98) }];
+    try { n.animate(frames, { duration: dur, easing: "linear", fill: "both" }); } catch (e) {}
+    if (!this._calm()) try {                          // the ink wipe runs across as it lands
+      w.animate([{ transform: "translateX(-110%)" }, { transform: "translateX(110%)" }],
+        { duration: Math.max(420, this.ms(620)), delay: this.ms(180), easing: "cubic-bezier(.5,0,.3,1)", fill: "both" });
+    } catch (e) {}
+    try { audio.play("chart_stamp"); } catch (e) {}
+    setTimeout(() => n.remove(), dur + 60);
+  }
+  _eraPage() {
+    const rail = document.getElementById("timeline-rail"); if (!rail) return;
+    const P = rail.classList.contains("skin-ori") ? ["THE ORIGINS", "centuries I to X", "valve"]
+      : rail.classList.contains("skin-sing") ? ["THE SINGULARITY", "centuries XX to XXX", "paradox"]
+      : ["THE ASCENSION", "centuries XI to XIX", "travel"];
+    this.page(P[0], P[1], { tone: P[2] });
+  }
+  // the whole chart unrolled at the end of Learn to Play (tutorial-drive.js calls it)
+  chartReveal() { this.page("THE LAST TIMELINE", "all thirty centuries, I to XXX", { tone: "good", force: true }); }
+  // a relic landed home: after the KA-CHUNK, where it is filed (mine) or who returned it
+  delivered(p) {
+    if (!p) return;
+    if (p.seat === this._me()) {
+      const per = this._period(p.century);
+      return this.stamp("FILED: " + per.toUpperCase(), "good",
+        () => this._el(`#drawer-zone .cab2-cell[data-drawer="${per}"]`) || this._seat(p.seat, "file"));
+    }
+    return this.stamp("RETURNED!", "good", () => this._seat(p.seat, "file"));
+  }
+  // the Merchant's told voyage hands over at his new port (board_draft.js): beside it
+  merchantLanded(p) {
+    if (!p || p.to == null || p.teleport) return;
+    this.stamp("ANCHORS DOWN!", "gold", () => {
+      const a = this._isle(p.to); if (!a) return null;
+      let chart = null;
+      try { const ch = this.comic && this.comic._chart(); chart = ch && this._rect(ch.host); } catch (e) {}
+      const q = this._beside(a.r, 46, chart);
+      return { r: { left: q.x, right: q.x, top: q.y - 22, bottom: q.y - 22, width: 0, height: 0 }, box: null, above: false };
+    }, { sound: false });
   }
 
   // In the tutorial HELA's own lines are silent, and her big panels ride those lines
@@ -459,6 +553,10 @@ class Fx {
         this._immune[p.seat] = !!(tv && tv.atemporal_immune);
         // my own voyage was already inked when I plotted it: its landfall reads now
         if (p.seat === this._me() || !this._chartLive()) setTimeout(() => this.landed(p.seat, p.to), this.ms(900));
+        // a rival crossing into another period: the stamp names the era (mine turns a page)
+        const per = this._period(p.to);
+        if (p.seat !== this._me() && p.from > 0 && per !== this._period(p.from))
+          return this.stamp(per.toUpperCase() + "!", "travel", () => this._seat(p.seat, "travel"));
         if (n === 2) return this.stamp("DOUBLE JUMP!", "travel", () => this._seat(p.seat, "travel"));
         return this.pop("WHOOSH!", "travel", () => this._seat(p.seat, "travel"));
       }

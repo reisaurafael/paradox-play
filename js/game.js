@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609270144";
-import { audio } from "./audio.js?202609270144";
+import { icon } from "./icons.js?202609270152";
+import { audio } from "./audio.js?202609270152";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609270144";
-import { comic } from "./comic.js?202609270144";
-import { fx } from "./fx.js?202609270144";
-import { CatEngine } from "./cat.js?202609270144";
-import { tutorials } from "./tutorial.js?202609270144";
-import { profile } from "./profile.js?202609270144";
-import { Camera } from "./camera.js?202609270144";
+import { juice } from "./juice.js?202609270152";
+import { comic } from "./comic.js?202609270152";
+import { fx } from "./fx.js?202609270152";
+import { CatEngine } from "./cat.js?202609270152";
+import { tutorials } from "./tutorial.js?202609270152";
+import { profile } from "./profile.js?202609270152";
+import { Camera } from "./camera.js?202609270152";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609270144";
+} from "./util.js?202609270152";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -4552,10 +4552,12 @@ export class Game {
             onLand: () => { audio.play("deliver");   // the seal lands with its sound, not before it
               // and the last timeline mends there, on the same beat (mend.js)
               try { window.__pdxTimelineMend && window.__pdxTimelineMend(payload.century, null, { seat: payload.seat, sound: false }); } catch (e) {}
-              this._deliverSeal(payload.century); juice.flash("gold", { intensity: 0.34 }); juice.hitPause(70); this.flashPanel(payload.seat, "fx-pulse"); } });
+              this._deliverSeal(payload.century); juice.flash("gold", { intensity: 0.34 }); juice.hitPause(70); this.flashPanel(payload.seat, "fx-pulse");
+              fx.delivered(payload); } });   // FILED / RETURNED, after the KA-CHUNK (fx.js)
         this.breakingNews(`RELIC RESTORED AT CENTURY ${roman(payload.century)}`,
           `${payload.seat} lands the ${this.nameEn(payload.card)}, ${this._eraName(payload.century)} takes back its own`,
-          { kind: "delivered", name: payload.seat, century: payload.century });
+          { kind: "delivered", name: payload.seat, century: payload.century,
+            whole: (() => { try { const st = window.__pdxTimelineState(); return st.mended.length + (st.mended.includes(payload.century) ? 0 : 1); } catch (e) { return null; } })() });
         break;
       case "activation_fizzled": {
         if (payload.seat === this.seat)
@@ -5426,6 +5428,8 @@ export class Game {
       body = fill(ed.body);
       headline = fill(ed.head);          // the print room writes better heads than the wire
       sub = fill(ed.sub);
+      // the last timeline's count rides the headline (the rail gauge is retired, mend.js)
+      if (kind === "delivered" && opts.whole) sub += ` The last timeline stands ${opts.whole} of 30 centuries whole.`;
     }
     // HELA does not hand you a paper, she RETRIEVES it and reads it onto your visor.
     // Her voice: Norse Hel in a Bureau uniform, dry and hungry for the dying.
