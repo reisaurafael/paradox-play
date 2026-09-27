@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609270205";
-import { roman } from "./util.js?202609270205";
+import { audio } from "./audio.js?202609270213";
+import { roman } from "./util.js?202609270213";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -306,6 +306,8 @@ class Fx {
   route(kind, at, opts) {
     const lv = this.level();
     if (lv === "off") return true;
+    // the pipeline (below) is presenting this paradox: comic's single panel stands down
+    if (kind === "paradox" && !opts._pipe && performance.now() < (this._pdxOwn || 0)) return true;
     // a paradox wears the colour of the traveller who landed it on the hit it names
     if (kind === "paradox" && !opts.c && this._pdx) {
       const h = this._pdx, now = performance.now();
@@ -368,9 +370,10 @@ class Fx {
     if (window.__helaMute && this.tutorial) this._tutorBig(kind, p);
     switch (kind) {
       case "hour_started": this._trips = {}; return;
-      case "paradox_resolved": {                // the colour of whoever landed the hit the panel names
+      case "paradox_resolved": {                // the zaps follow the engine's own pipeline
         const st = this._pdxStar(p);
         this._pdx = st ? { col: st.col, t: performance.now() } : null;
+        this._paradoxPipeline(p);
         return;
       }
       case "module_resolved":                   // the escape valve dumps an overloaded die for energy
@@ -437,6 +440,151 @@ class Fx {
     try { causers = (this.game._paradoxCausers && this.game._paradoxCausers(p.module)) || []; } catch (e) {}
     const by = causers.find((c) => c !== star.seat) || causers[0];
     return { star, col: by ? this._col(by) : null };
+  }
+
+  /* ---- THE PARADOX PIPELINE (engine/paradox.py resolve_paradox_pool, §18.3-18.4) ----
+     One module's paradoxes form a pool of (causer, victim) pairs. The engine applies
+     them from the smallest causer-to-victim distance to the largest, and pairs of
+     EQUAL distance resolve together. The event only carries each victim's total, so
+     the pairs are rebuilt from public facts: the revealed machines (who fed this pool)
+     and the centuries (who is ahead, beside, behind). Then every victim on the table
+     gets one ZZAP per pair in its causer's colour: pairs of one distance land TOGETHER,
+     a little smaller (about 78%) and spread apart so no two overlap; the next distance
+     lands after them. A hit the rebuild cannot explain (a reflection, a card) still
+     gets its zap, in the last beat. */
+  _paradoxPairs(p) {
+    const col = (+p.module || 0) - 4;
+    if (!(col >= 0 && col <= 2)) return null;
+    const v = this._view(), g = this.game;
+    if (!v || !v.travelers) return null;
+    const hits = (p.hits || []).filter((h) => h.damage > 0);
+    if (!hits.length) return null;
+    const hit = new Map(hits.map((h) => [h.seat, h.damage]));
+    const tv = new Map(v.travelers.map((t) => [t.name, t]));
+    const live = v.travelers.filter((t) => !(t.statuses || []).includes("awaiting_respawn"));
+    const holds = (t, name) => (t.hand || t.equipment || []).some((c) => c && c.name === name);
+    const pairs = [];
+    for (const [seat, a] of Object.entries((g && g._lastAlloc) || {})) {
+      const c = tv.get(seat), m = a && a.matrix;
+      if (!c || !m || !m[1]) continue;
+      const add = (k, dmg) => {
+        for (const t of live) {
+          if (t.name === seat) continue;
+          const ok = k === 0 ? t.century > c.century : k === 1 ? (holds(c, "Window of Time") || t.century === c.century) : t.century < c.century;
+          if (ok && hit.has(t.name)) pairs.push({ causer: seat, victim: t.name, dist: Math.abs(t.century - c.century), dmg });
+        }
+      };
+      const val = m[1][col] || 0;
+      if (val > 0) add(col, val);
+      if (col === 0 && val > 0 && holds(c, "Spear of Destiny")) add(2, val);   // a future paradox also fires a past one
+    }
+    // a hit no pair explains still gets its zap, last
+    const far = pairs.reduce((mx, q) => Math.max(mx, q.dist), 0);
+    for (const h of hits) if (!pairs.some((q) => q.victim === h.seat)) pairs.push({ causer: null, victim: h.seat, dist: far + 1, dmg: h.damage });
+    // the number under a zap: that pair's share when it is certain (one pair, or the shares add up)
+    for (const h of hits) {
+      const mine = pairs.filter((q) => q.victim === h.seat);
+      const sum = mine.reduce((n, q) => n + (q.dmg || 0), 0);
+      mine.forEach((q) => { q.sub = mine.length === 1 ? `-${h.damage}` : sum === h.damage ? `-${q.dmg}` : ""; });
+    }
+    // group by distance, smallest first: each group is one beat
+    const beats = [];
+    for (const q of pairs.sort((a, b) => a.dist - b.dist)) {
+      const last = beats[beats.length - 1];
+      if (last && last[0].dist === q.dist) last.push(q); else beats.push([q]);
+    }
+    return beats;
+  }
+  _paradoxPipeline(p) {
+    if (this._quiet() || this.level() === "off") return;
+    const beats = this._paradoxPairs(p);
+    if (!beats || !beats.length) return;
+    const me = this._me();
+    const one = Math.max(2100, Math.round(2800 * this.pace().impact));
+    const beatMs = beats.length > 1 ? Math.max(1800, Math.round(one * .72)) : one;   // several beats read a little quicker
+    const gap = Math.round(beatMs * .8);             // the next distance lands as this one fades
+    const total = gap * (beats.length - 1) + beatMs;
+    this._pdxOwn = performance.now() + 1500;         // comic's own single panel stands down for this event
+    const start = Math.max(0, this._bigUntil - performance.now());   // one big moment at a time
+    this._bigUntil = performance.now() + start + total + 80;
+    beats.forEach((beat, i) => setTimeout(() => {
+      if (this._quiet()) return;
+      if (i) { try { audio.play("paradox", { power: .6 }); } catch (e) {} }   // each later distance on its own beat
+      if (this.level() === "light") {                // Light: a stamp per zap, in the causer's colour
+        beat.forEach((q) => this.stamp("ZZAP!", "paradox", () => this._seat(q.victim, "life"), { sound: false, color: q.causer ? this._col(q.causer) : null }));
+        return;
+      }
+      this._zaps(beat, beatMs, me);
+    }, start + i * gap));
+  }
+  // one beat: every zap together, spread apart, smaller when more than one
+  _zaps(beat, dur, me) {
+    const k = beat.length > 1 ? .78 : 1;
+    const pts = beat.map((q) => {
+      let r = null; try { r = this.comic && this.comic._seatRect(q.victim); } catch (e) {}
+      if (!r) return null;
+      const x = r.width != null ? r.left + r.width / 2 : r.x, y = r.width != null ? r.top + r.height / 2 : r.y;
+      // mine rides a little higher, so the lifethread's number stays in sight while it counts down
+      return { q, x, y: q.victim === me ? y - 40 : y };
+    }).filter(Boolean);
+    if (!pts.length) return;
+    // never at the exact same place: zaps closer than a burst apart are fanned out side by side
+    const min = (beat.some((q) => q.victim === me) ? 235 : 185) * k;   // a big panel's word is wider
+    for (let pass = 0; pass < 6; pass++) {
+      let moved = false;
+      for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) {
+        const dx = pts[b].x - pts[a].x, dy = pts[b].y - pts[a].y, d = Math.hypot(dx, dy);
+        if (d >= min) continue;
+        const push = (min - d) / 2 + 1, ux = d > 1 ? dx / d : 1, uy = d > 1 ? dy / d : .25;
+        pts[a].x -= ux * push; pts[a].y -= uy * push; pts[b].x += ux * push; pts[b].y += uy * push;
+        moved = true;
+      }
+      if (!moved) break;
+    }
+    for (const pt of pts) this._zap(pt, k, dur, pt.q.victim === me);
+  }
+  // one ZZAP panel, the comic layer's own look (app.css .cx-hit), drawn here so several can
+  // stand at once; in the causer's colour (fx.css .cx-seat)
+  _zap(pt, k, dur, big) {
+    const q = pt.q, gfx = document.body.classList.contains("gfx-low") ? "low" : document.body.classList.contains("gfx-medium") ? "medium" : "high";
+    const mx = (big ? 240 : 150) * k, my = (big ? 140 : 110) * k;   // the whole word stays on screen
+    const x = Math.max(mx, Math.min(innerWidth - mx, pt.x)), y = Math.max(my, Math.min(innerHeight - my, pt.y));
+    const h = document.createElement("div");
+    const col = q.causer ? this._col(q.causer) : null;
+    h.className = "cx-hit fx-zap" + (big ? " cx-hit-big" : "") + " cx-g-" + gfx + (col ? " cx-seat" : "");
+    h.style.left = Math.round(x) + "px"; h.style.top = Math.round(y) + "px";
+    if (k !== 1) h.style.transform = `scale(${k})`;
+    h.style.setProperty("--cx-c", col || "#b98cff"); h.style.setProperty("--cx-ink", "#1a0f2e");
+    const lines = (!this._calm() && gfx !== "low" && big) ? document.createElement("i") : null;
+    if (lines) { lines.className = "cx-lines"; h.appendChild(lines); }
+    const burst = document.createElement("i"); burst.className = "cx-burst"; h.appendChild(burst);
+    const word = document.createElement("b"); word.className = "cx-word"; word.textContent = "ZZAP!"; h.appendChild(word);
+    if (q.sub) { const sub = document.createElement("span"); sub.className = "cx-sub"; sub.textContent = q.sub; h.appendChild(sub); }
+    this.root.appendChild(h);
+    const rot = (Math.random() * 8 - 4).toFixed(1);
+    const fin = { duration: dur, easing: "linear", fill: "both" };
+    const pop = Math.min(.12, 150 / dur);
+    try {
+      if (this._calm()) h.animate([{ opacity: 0 }, { opacity: 1, offset: pop }, { opacity: 1, offset: .72 }, { opacity: 0 }], fin);
+      else {
+        word.animate([
+          { transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1.5)`, opacity: 0, easing: "cubic-bezier(.2,.8,.3,1)" },
+          { transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1)`, opacity: 1, offset: pop },
+          { transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1.02)`, opacity: 1, offset: .72 },
+          { transform: `translate(-50%,-54%) rotate(${rot}deg) scale(1.04)`, opacity: 0 }], fin);
+        burst.animate([
+          { transform: "translate(-50%,-50%) scale(.4) rotate(0deg)", opacity: 0, easing: "cubic-bezier(.2,.8,.3,1)" },
+          { transform: "translate(-50%,-50%) scale(1) rotate(6deg)", opacity: 1, offset: pop },
+          { transform: "translate(-50%,-50%) scale(1) rotate(7deg)", opacity: 1, offset: .72 },
+          { transform: "translate(-50%,-50%) scale(1.05) rotate(8deg)", opacity: 0 }], fin);
+        if (lines) lines.animate([
+          { transform: "translate(-50%,-50%) scale(.85)", opacity: 0 },
+          { transform: "translate(-50%,-50%) scale(1)", opacity: .8, offset: pop },
+          { transform: "translate(-50%,-50%) scale(1.04)", opacity: .7, offset: .7 },
+          { transform: "translate(-50%,-50%) scale(1.1)", opacity: 0 }], fin);
+      }
+    } catch (e) {}
+    setTimeout(() => h.remove(), dur + 80);
   }
 
   /* ---- THE PAGE: a clear-line panel that turns in over the chart with a title, for
@@ -519,10 +667,6 @@ class Fx {
   _tutorBig(kind, p) {
     const me = this._me();
     const at = (seat) => { try { return this.comic._seatRect(seat); } catch (e) { return null; } };
-    if (kind === "paradox_resolved") {
-      const st = this._pdxStar(p); if (!st) return;
-      return this.big("paradox", at(st.star.seat), { big: st.star.seat === me, sub: `-${st.star.damage}`, c: st.col || undefined });
-    }
     if (kind === "exploded") return this.big("boom", at(p.seat), { big: true });
     if (kind === "terminated") return this.big("terminated", at(p.seat), { big: true, sub: "TERMINATED" });
     if (kind === "wanted") return this.big("wanted", at(p.seat), { sub: "BOUNTY 4 GOLD" });
@@ -541,8 +685,7 @@ class Fx {
         const word = en && au ? "WHIRR-CLINK!" : en ? "WHIRR!" : "CLINK!";
         return this.pop(word, au && !en ? "gold" : "energy", () => this._seat(p.seat, au && !en ? "gold" : "life"));
       }
-      case "paradox_cast":                       // modules 4 to 6: who fed the pool
-        for (const c of p.causers || []) this.pop("ZAP!", "paradox", () => this._seat(c, "paradox"), { color: this._col(c) });
+      case "paradox_cast":                       // retired: each zap now wears its causer's colour (pipeline)
         return;
       case "heat":                               // module 7
         return this.pop((p.booms || 0) >= 9 ? "HSSSSS!" : "HSSS!", (p.booms || 0) >= 9 ? "danger" : "heat", () => this._seat(p.seat, "heat"));

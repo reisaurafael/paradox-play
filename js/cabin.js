@@ -857,7 +857,7 @@
       const b=document.querySelector("#hull-console .dice-actions "+sel);
       if(b&&document.body.classList.contains("allocating")&&(!guard||!b.disabled)) b.click();
     };
-    const c=hull.querySelector("#mano-clear"), k=hull.querySelector("#mano-confirm");
+    const c=document.getElementById("mano-clear"), k=document.getElementById("mano-confirm");
     if(c) c.addEventListener("click",()=>{ fwd(".btn:first-child",false);
       try{ window.__audio&&window.__audio.play("whiff"); }catch(e){} });
     if(k) k.addEventListener("click",()=>fwd(".btn.btn-primary",true));
@@ -923,7 +923,7 @@
         ],{duration:420,easing:"ease-out"}).onfinish=()=>h.remove();
       }
       // the machine PROCESSES the breach: screen strobes + phosphor notice
-      const scr=hull.querySelector("#mano-screen");
+      const scr=document.getElementById("mano-screen");
       if(scr&&scr.animate) scr.animate(
         [{filter:"brightness(1)"},{filter:"brightness(2.3) hue-rotate(14deg)",offset:.25},
          {filter:"brightness(.5)",offset:.5},{filter:"brightness(1.6)",offset:.72},{filter:"brightness(1)"}],
@@ -974,31 +974,31 @@
         {transform:`translate(${dx}px,${dy}px) scale(.4)`, opacity:0}
       ],{duration:520+Math.random()*260, delay:i*38, easing:"cubic-bezier(.4,.1,.7,1)"}).onfinish=()=>w.remove();
     }
-    const tray=hull.querySelector("#tray-slot");
+    const tray=document.getElementById("tray-slot");
     if(tray&&tray.animate) tray.animate(
       [{filter:"none"},{filter:"drop-shadow(0 0 10px rgba(95,208,138,.8))"},{filter:"none"}],
       {duration:900, delay:250});
   }
   function vialSurge(){
     if(!hull) return;
-    const scr=hull.querySelector("#mano-screen");
+    const scr=document.getElementById("mano-screen");
     if(scr&&scr.animate) scr.animate([{filter:"brightness(1)"},{filter:"brightness(1.7)"},{filter:"brightness(1)"}],{duration:480});
-    const hx=hull.querySelector("#hexcore");
+    const hx=document.getElementById("hexcore");
     if(hx&&hx.animate) hx.animate([{opacity:.6},{opacity:1},{opacity:.6}],{duration:480});
     try{ window.__audio&&window.__audio.play("dice"); }catch(e){}
   }
   function heatKick(){
     if(!hull) return;
-    const bg=hull.querySelector("#mano-boomg");
+    const bg=document.getElementById("mano-boomg");
     if(bg&&bg.animate) bg.animate([{filter:"brightness(1)"},{filter:"brightness(1.9)"},{filter:"brightness(1)"}],{duration:380});
-    const lit=hull.querySelectorAll("#mano-boomg .bseg.on");
+    const lit=document.querySelectorAll("#mano-boomg .bseg.on");
     const last=lit[lit.length-1];
     if(last&&last.animate) last.animate([{opacity:1},{opacity:.15},{opacity:1},{opacity:.15},{opacity:1}],{duration:560});
   }
   function onSkinWarp(){
     // the era swap IS the manopla's gesture: the CRT flickers as it re-projects
     if(!hull) return;
-    const scr=hull.querySelector("#mano-screen");
+    const scr=document.getElementById("mano-screen");
     if(scr&&scr.animate) scr.animate(
       [{filter:"brightness(1)"},{filter:"brightness(2.2) hue-rotate(20deg)",offset:.3},
        {filter:"brightness(.4)",offset:.55},{filter:"brightness(1)"}],
@@ -1034,7 +1034,7 @@
     // the arm dives into the dimensional window, the plane RIPPLES, and the
     // hand comes back with the goods (the card flight follows via card_bought)
     if(!hcOn) return;
-    const mano=hull&&hull.querySelector("#hull-manopla");
+    const mano=document.getElementById("hull-manopla");
     hcPlunge={ x: window.innerWidth/2, y: window.innerHeight*0.32, until: performance.now()+520 };
     if(mano) mano.classList.add("hand-grabbing");
     const rp=document.createElement("div");
@@ -1061,22 +1061,48 @@
     hcStarted=true; requestAnimationFrame(hcTick);
   }
   function setHandGrab(on){ hcDown=on;
-    const mano=hull&&hull.querySelector("#hull-manopla");
+    const mano=document.getElementById("hull-manopla");
     if(mano) mano.classList.toggle("hand-grabbing", on&&hcOn);
     const rh=cRHand||(hull&&hull.querySelector("#hand-right"));
     if(rh) rh.dataset.grab=(on&&activeHand==="right")?"1":"0";
   }
   function refreshHandPose(e){
-    const mano=hull&&hull.querySelector("#hull-manopla");
+    const mano=document.getElementById("hull-manopla");
     if(!mano||!e||!e.target||!e.target.closest) return;
     const overCat=!!e.target.closest("#cat, .cat-corner");
     mano.classList.toggle("hand-petting", overCat&&hcOn&&!hcDown);
   }
   let hcAway=null;
+  /* THE CURSOR IS ON TOP OF EVERYTHING, the arm included. #hull is one stacking context
+     (z 60, 5000 while the arm steers), so the Herald, HELA's windows and every dialog
+     painted OVER the arm on the side scenes. While the arm is the pointer it lives in the
+     cursor plane (the top layer, liftCursorPlane) and it goes home to the hull, under the
+     console as before, the moment it is an instrument again. Its CSS is written for both
+     parents (app.css `:is(#hull, #cursor-plane)`), and the plane mirrors the hull's classes. */
+  function armQ(sel){ const a=document.getElementById("hull-manopla"); return a?a.querySelector(sel):null; }
+  function armHome(asCursor){
+    const mano=document.getElementById("hull-manopla"), cp=document.getElementById("cursor-plane");
+    if(!mano||!hull||!cp) return;
+    const home=asCursor?cp:hull;
+    if(mano.parentElement===home) return;
+    if(asCursor) cp.insertBefore(mano, cp.firstChild);
+    else hull.insertBefore(mano, hull.querySelector("#hull-console"));
+  }
+  // The plane is a manual popover shown in the TOP LAYER, which paints above every
+  // z-index there is, today's and tomorrow's. Entering or leaving fullscreen puts the
+  // page in the top layer after it, so it is lifted again then.
+  function liftCursorPlane(cp){
+    if(!cp.showPopover) return;          // an older browser keeps the plane's z-index
+    cp.setAttribute("popover","manual");
+    const lift=()=>{ try{ if(cp.matches(":popover-open")) cp.hidePopover(); cp.showPopover(); }catch(e){} };
+    lift();
+    document.addEventListener("fullscreenchange", lift);
+  }
+  let cpMirror=null;
   let hcMano=null;
   function hcTick(){
     const app=window.__game;
-    if(!hcMano||!hcMano.isConnected) hcMano=hull?hull.querySelector("#hull-manopla"):null;
+    if(!hcMano||!hcMano.isConnected) hcMano=document.getElementById("hull-manopla");
     const mano=hcMano;
     const scene=app&&app.camera?app.camera.scene:"main";
     // POWER DISCIPLINE: the instant the eye leaves the desk, the pip-boy screen
@@ -1087,6 +1113,7 @@
     const on=!!mano&&document.body.classList.contains("cabin-on")&&activeHand==="left";
     if(on!==hcOn){
       hcOn=on;
+      armHome(on);
       document.body.classList.toggle("hand-cursor-on", on);
       if(on&&mano){
         // promote the layer NOW (don't wait for the 400ms pose tick): the
@@ -1237,7 +1264,7 @@
   function updatePose(){
     if(!hull) return;
     const app=window.__game;
-    const mano=hull.querySelector("#hull-manopla");
+    const mano=document.getElementById("hull-manopla");
     // the auction lives on the same screen: allocation places dice on the
     // matrix, and the sealed bid is wired INTO the device (the physical
     // CONFIRM key presses the seal), summon it for both, or the console
@@ -1290,7 +1317,7 @@
     const me=app.view&&app.view.travelers.find(t=>t.is_self);
     if(me){
       // BOOM pressure column: segments light bottom-up, the dome lamp panics at 10+
-      const segs=hull.querySelectorAll("#mano-boomg .bseg");
+      const segs=document.querySelectorAll("#mano-boomg .bseg");
       if(segs.length){ const b=Math.min(12,me.booms||0);
         segs.forEach((r,i)=>r.classList.toggle("on", i<b)); }
       hull.classList.toggle("mano-hot",(me.booms||0)>=10);
@@ -1340,7 +1367,7 @@
     for(let r=0;r<3;r++){
       const row=m?m[r]:[0,0,0];
       const sum=(row[0]||0)+(row[1]||0)+(row[2]||0);        // 0..9
-      const g=hull.querySelector(".mano-gem"+GEMS[r]);
+      const g=armQ(".mano-gem"+GEMS[r]);
       if(g){ const op = (sum? (0.42+Math.min(6,sum)/6*0.55) : 0.18).toFixed(2);
         if(g.getAttribute("opacity")!==op) g.setAttribute("opacity", op);
         g.classList.toggle("gem-lit", sum>0); }
@@ -1352,7 +1379,7 @@
     hull.classList.toggle("vent-armed", slotArmed&&document.body.classList.contains("allocating"));
     hull.classList.toggle("vent-loaded", !!(app.alloc&&app.alloc.escape));
     // idle screen readout (the CRT is always ON)
-    const ms=hull.querySelector(".ms-sub");
+    const ms=armQ(".ms-sub");
     if(ms&&me){ const c=me.century; const era=c<=10?"ORIGINS":c<=20?"ASCENSION":"SINGULARITY";
       const hr=(app.view&&app.view.hour!=null)?app.view.hour:"?";
       const txt=era+" \u00b7 HOUR "+hr;
@@ -1367,7 +1394,7 @@
     prevAllocOn=on;
   }
   function armPt(sx,sy){ // device SVG point (viewBox -800..780 x 0..470) -> viewport
-    const mano=hull&&hull.querySelector("#hull-manopla");
+    const mano=document.getElementById("hull-manopla");
     if(!mano) return {x:sx,y:sy};
     const r=mano.getBoundingClientRect();
     const sc=r.width/1580;
@@ -1388,7 +1415,7 @@
       if(!cell||!cell.classList.contains("filled")) return;
       if(cell.animate) cell.animate([{transform:"scale(1.4)",filter:"brightness(2.4)"},{transform:"scale(1)",filter:"brightness(1)"}],
         {duration:280,easing:"cubic-bezier(.34,1.56,.64,1)"});
-      const svg=hull.querySelector(".mano-svg");
+      const svg=armQ(".mano-svg");
       if(svg&&svg.animate) svg.animate([{transform:"translate(0,0)"},{transform:"translate(1.5px,-1.5px)"},{transform:"translate(-1px,1px)"},{transform:"translate(0,0)"}],
         {duration:120,easing:"ease-out"});
       updateMachine();   // pop the gem now
@@ -1411,12 +1438,16 @@
     // THE CURSOR PLANE, the pointer duo must overlay ABSOLUTELY EVERYTHING (tutorials,
     // rewards, game over). #hull is a transformed stacking context capped at z:60, so no
     // child can climb above the dialogs, the duo is re-homed to a body-level twin of the
-    // plane (same geometry, z:60000, pointer-events:none).
+    // plane (same geometry, the top layer, pointer-events:none).
     let cp=document.getElementById("cursor-plane");
-    if(!cp){ cp=document.createElement("div"); cp.id="cursor-plane"; document.body.appendChild(cp); }
+    if(!cp){ cp=document.createElement("div"); cp.id="cursor-plane"; document.body.appendChild(cp); liftCursorPlane(cp); }
     const _hr=hull.querySelector("#hela-radar"), _rh=hull.querySelector("#hand-right");
     if(_hr) cp.appendChild(_hr);
     if(_rh) cp.appendChild(_rh);
+    cp.className=hull.className;
+    cpMirror=new MutationObserver(()=>{ if(hull) cp.className=hull.className; });
+    cpMirror.observe(hull,{attributes:true,attributeFilter:["class"]});
+    armHome(hcOn);
     const console_=hull.querySelector("#hull-console");
     console_.appendChild(dice); console_.appendChild(mach);
     const station=hull.querySelector("#hull-station");
@@ -1435,7 +1466,7 @@
       const cr=document.createElement("div"); cr.id="chart-roll"; railEl.appendChild(cr);
     }
     // the arm peeks when you touch its parked sliver
-    const mano=hull.querySelector("#hull-manopla");
+    const mano=document.getElementById("hull-manopla");
     mano.addEventListener("mouseenter",()=>{ hoverPeek=true; updatePose(); });
     mano.addEventListener("mouseleave",()=>{ hoverPeek=false; updatePose(); manoHoverOff(); });
     mano.addEventListener("mousemove", manoHover);
@@ -1532,6 +1563,9 @@
       if(next && next.parentElement===parent) parent.insertBefore(n,next); else parent.appendChild(n);
       n.classList.remove("hull-knob");
     }
+    armHome(false);
+    if(cpMirror){ cpMirror.disconnect(); cpMirror=null; }
+    const cp0=document.getElementById("cursor-plane"); if(cp0) cp0.className="";
     saved=null; hull.remove(); hull=null;
     const app3=window.__game;
     if(app3&&origPlayEvent){ app3.playEvent=origPlayEvent; origPlayEvent=null; }

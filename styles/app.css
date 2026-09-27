@@ -3010,8 +3010,8 @@ body.cabin-on #hull-console .paradox-warn.pw-crt .pw-sub { font-size:.56rem; let
 @keyframes pwCrtIn  { from { opacity:0; } to { opacity:1; } }
 @keyframes pwCrtOut { to { opacity:0; } }
 /* the phosphor itself goes red while the machine alarms */
-body.paradox-crt #hull #mano-screen { filter:hue-rotate(-96deg) saturate(2.4) brightness(1.25); }
-body.paradox-crt #hull .mano-scan { opacity:0; }
+body.paradox-crt :is(#hull, #cursor-plane) #mano-screen { filter:hue-rotate(-96deg) saturate(2.4) brightness(1.25); }
+body.paradox-crt :is(#hull, #cursor-plane) .mano-scan { opacity:0; }
 
 /* ═══ HELA, tones for her reports ═══ */
 .hela-msg.hela-alert { border-color:rgba(255,110,90,.6);
@@ -3206,34 +3206,34 @@ body.vz-crit #hull .vz-ph.on::after { background:#ff8a72 !important; box-shadow:
    arm's box that point is 830px 466px, in the console's 30px 466px. Scaling both from
    the same corner keeps the console from sliding over the art. */
 :root { --mano-scale: 1.15; }
-#hull .hull-manopla { position: fixed; left: -830px; bottom: -434px; width: 1580px; height: 900px;
+:is(#hull, #cursor-plane) .hull-manopla { position: fixed; left: -830px; bottom: -434px; width: 1580px; height: 900px;
   pointer-events: auto; z-index: 6; transition: transform .5s cubic-bezier(.3,.9,.3,1);
   transform-origin: 830px 466px; transform: scale(var(--mano-scale)); }
 /* the park slide is in plane px, so it scales too, or the part left peeking out
    would change size with the scale */
-#hull .hull-manopla[data-pose="park"] { transform: translateY(calc(274px * var(--mano-scale))) scale(var(--mano-scale)); }
-#hull .mano-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-#hull .mano-svg * { pointer-events: visiblePainted; }
-#hull .hull-manopla { pointer-events: none; }
-#hull .hull-manopla > * { pointer-events: auto; }
-#hull .hull-manopla > .mano-svg { pointer-events: none; }
-#hull #hexcore { animation: hexPulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="park"] { transform: translateY(calc(274px * var(--mano-scale))) scale(var(--mano-scale)); }
+:is(#hull, #cursor-plane) .mano-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+:is(#hull, #cursor-plane) .mano-svg * { pointer-events: visiblePainted; }
+:is(#hull, #cursor-plane) .hull-manopla { pointer-events: none; }
+:is(#hull, #cursor-plane) .hull-manopla > * { pointer-events: auto; }
+:is(#hull, #cursor-plane) .hull-manopla > .mano-svg { pointer-events: none; }
+:is(#hull, #cursor-plane) #hexcore { animation: hexPulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes hexPulse { 0%,100% { opacity: .55; } 50% { opacity: .95; } }
-#hull .mano-gem { transition: opacity .18s ease; }
-#hull .mano-gem.gem-lit { filter: drop-shadow(0 0 4px currentColor); }
-#hull #mano-screen { transition: filter .3s ease; }
+:is(#hull, #cursor-plane) .mano-gem { transition: opacity .18s ease; }
+:is(#hull, #cursor-plane) .mano-gem.gem-lit { filter: drop-shadow(0 0 4px currentColor); }
+:is(#hull, #cursor-plane) #mano-screen { transition: filter .3s ease; }
 /* The screen glow is a box-shadow, not a filter. A `filter` on an SVG part makes
    the browser raster that part and then process the raster, and this glow stays on
    for the whole allocation phase, when the player moves the most. A box-shadow halo
    is resolved by the GPU at composite time and looks the same. */
-body.cabin-on.allocating #hull #mano-screen,
-body.cabin-on.gen-live #hull #mano-screen {
+body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-screen,
+body.cabin-on.gen-live :is(#hull, #cursor-plane) #mano-screen {
   box-shadow: 0 0 10px 2px rgba(95,208,138,.42),
     0 0 22px 6px rgba(95,208,138,.18);
   outline: 1px solid rgba(120,240,180,.32); }
-#hull.clench #mano-screen { animation: screenSnap .5s ease-out; }
+:is(#hull, #cursor-plane).clench #mano-screen { animation: screenSnap .5s ease-out; }
 @keyframes screenSnap { 0% { filter: brightness(2.4) drop-shadow(0 0 16px rgba(95,208,138,.8)); } 100% { filter: brightness(1); } }
-#hull.mano-hot .mano-svg { filter: drop-shadow(0 0 9px rgba(192,58,42,.32)); }
+:is(#hull, #cursor-plane).mano-hot .mano-svg { filter: drop-shadow(0 0 9px rgba(192,58,42,.32)); }
 #mano-tip { position: fixed; z-index: 10001; max-width: 320px; pointer-events: none;
   background: linear-gradient(168deg, #12232b, #0b171d); color: #9ad8ec;
   border: 1px solid #2f6a80; border-left: 3px solid #4aa8d8; border-radius: 2px;
@@ -3243,7 +3243,7 @@ body.cabin-on.gen-live #hull #mano-screen {
 .mano-steam { position: fixed; z-index: 661; width: 14px; height: 14px; margin: -7px;
   border-radius: 50%; pointer-events: none;
   background: radial-gradient(circle, rgba(214,246,228,.8), rgba(168,232,196,.25) 60%, transparent); }
-@media (prefers-reduced-motion: reduce) { #hull .hull-manopla, #hull #hexcore { transition: none; animation: none; } }
+@media (prefers-reduced-motion: reduce) { :is(#hull, #cursor-plane) .hull-manopla, :is(#hull, #cursor-plane) #hexcore { transition: none; animation: none; } }
 
 /* the console shares the manopla's fixed box; widgets are absolutely placed on the art */
 body.cabin-on #hull-console { position: fixed; left: -30px; bottom: -4px; width: 780px; height: 470px;
@@ -3565,12 +3565,12 @@ body.cabin-on #hull-console .dice-actions .btn:active { transform: translateY(1p
 /* subtle carbon-copy header underline */
 .panel-detail.dossier .do-caseno { color: #8a2a14; letter-spacing: .1em; }
 
-#hull #mano-screen, #hull #mano-vent, #hull #mano-boomg, #hull #hexcore, #hull #tray-slot { cursor: help; }
+:is(#hull, #cursor-plane) #mano-screen, :is(#hull, #cursor-plane) #mano-vent, :is(#hull, #cursor-plane) #mano-boomg, :is(#hull, #cursor-plane) #hexcore, :is(#hull, #cursor-plane) #tray-slot { cursor: help; }
 /* CLEAN MOMENT: no question-mark cursor while allocating, the legend is on TAB */
-body.cabin-on.allocating #hull #mano-screen, body.cabin-on.allocating #hull #mano-vent,
-body.cabin-on.allocating #hull #mano-boomg, body.cabin-on.allocating #hull #hexcore,
-body.cabin-on.allocating #hull #tray-slot { cursor: default; }
-#hull #mano-boomg { transform-box: fill-box; transform-origin: 514px 196px; }
+body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-screen, body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-vent,
+body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-boomg, body.cabin-on.allocating :is(#hull, #cursor-plane) #hexcore,
+body.cabin-on.allocating :is(#hull, #cursor-plane) #tray-slot { cursor: default; }
+:is(#hull, #cursor-plane) #mano-boomg { transform-box: fill-box; transform-origin: 514px 196px; }
 
 
 /* ═══ THE DESK: one warm light, contact shadows (M3, one light, one world) ═══ */
@@ -3595,8 +3595,8 @@ body.cabin-on #players-zone .pcard.cfolio { filter: drop-shadow(0 8px 12px rgba(
    frame): a drop-shadow on a 1580x900 SVG re-rasters and blurs the whole drawing
    on every nearby repaint. The art gets its own layer (will-change), and the shadow
    is its own element, a small blurred dark ellipse under the device. */
-body.cabin-on #hull .hull-manopla { will-change: transform; }
-body.cabin-on #hull .hull-manopla::before{
+body.cabin-on :is(#hull, #cursor-plane) .hull-manopla { will-change: transform; }
+body.cabin-on :is(#hull, #cursor-plane) .hull-manopla::before{
   content:""; position:absolute; left:8%; right:16%; bottom:26%; height:13%;
   z-index:-1; pointer-events:none; border-radius:50%;
   background:radial-gradient(ellipse, rgba(0,0,0,.62), rgba(0,0,0,.28) 58%,
@@ -3605,34 +3605,34 @@ body.cabin-on #hull .hull-manopla::before{
 
 
 /* ── the pip-boy SCREEN is always ON: a CRT scanline sweep + idle standby readout ── */
-#hull .mano-scan { position: absolute; left: 254px; top: 180px; width: 236px; height: 148px;
+:is(#hull, #cursor-plane) .mano-scan { position: absolute; left: 254px; top: 180px; width: 236px; height: 148px;
   pointer-events: none; overflow: hidden; border-radius: 9px; z-index: 8; mix-blend-mode: screen; }
 /* the sweep animates transform, not `top`: the same line of light going down, with
    no layout or paint per frame */
-#hull .mano-scan::before { content: ""; position: absolute; left: 0; right: 0;
+:is(#hull, #cursor-plane) .mano-scan::before { content: ""; position: absolute; left: 0; right: 0;
   top: 0; height: 40px; will-change: transform;
   background: linear-gradient(180deg, transparent, rgba(95,208,138,.10) 60%, rgba(120,240,180,.16), transparent);
   animation: manoScan 4.2s linear infinite; }
 @keyframes manoScan {
   0% { transform: translateY(-40px); } 100% { transform: translateY(148px); } }
-#hull .mano-standby { position: absolute; left: 254px; top: 180px; width: 236px; height: 148px;
+:is(#hull, #cursor-plane) .mano-standby { position: absolute; left: 254px; top: 180px; width: 236px; height: 148px;
   z-index: 8; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; font-family: var(--f-mono, monospace); color: #5fd08a; text-shadow: 0 0 6px rgba(95,208,138,.6);
   transition: opacity .3s ease; }
-#hull .mano-standby .ms-led { width: 8px; height: 8px; border-radius: 50%; background: #5fd08a;
+:is(#hull, #cursor-plane) .mano-standby .ms-led { width: 8px; height: 8px; border-radius: 50%; background: #5fd08a;
   box-shadow: 0 0 8px #5fd08a; animation: msBlink 1.8s ease-in-out infinite; }
 @keyframes msBlink { 50% { opacity: .3; } }
-#hull .mano-standby .ms-txt { font-size: .82rem; letter-spacing: .34em; font-weight: 700; }
-#hull .mano-standby .ms-sub { font-size: .5rem; letter-spacing: .18em; color: #3fa060; }
+:is(#hull, #cursor-plane) .mano-standby .ms-txt { font-size: .82rem; letter-spacing: .34em; font-weight: 700; }
+:is(#hull, #cursor-plane) .mano-standby .ms-sub { font-size: .5rem; letter-spacing: .18em; color: #3fa060; }
 /* during the GENERATORS PHASE the matrix takes the screen; standby steps aside.
    It stays lit after you confirm, because sealing your hand is not the end of the
    phase: the modules still have to resolve, and you watch that happen on the screen. */
-body.cabin-on.allocating #hull .mano-standby,
-body.cabin-on.gen-live #hull .mano-standby { opacity: 0; }
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mano-standby,
+body.cabin-on.gen-live :is(#hull, #cursor-plane) .mano-standby { opacity: 0; }
 body.cabin-on:not(.allocating):not(.buffing):not(.gen-live) #hull-console .matrix-wrap { opacity: 0; }
 /* lit, but hands off once the hand is sealed */
 body.cabin-on.gen-live:not(.allocating) #hull-console .matrix-wrap { pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { #hull .mano-scan::before, #hull .mano-standby .ms-led { animation: none; } }
+@media (prefers-reduced-motion: reduce) { :is(#hull, #cursor-plane) .mano-scan::before, :is(#hull, #cursor-plane) .mano-standby .ms-led { animation: none; } }
 
 
 /* ── allocation READABILITY: pick up a die -> legal modules invite, illegal dim
@@ -3651,13 +3651,13 @@ body.cabin-on.allocating #hull-console .matrix-wrap .cell.dragover {
 
 /* ── THE SNAP: sealing the hour (CONFIRM) is the Thanos beat, gems flash-lock,
       the device recoils, the screen whites out for a frame ── */
-#hull.clench .mano-gem.gem-lit { animation: gemSnap .55s ease-out; }
+:is(#hull, #cursor-plane).clench .mano-gem.gem-lit { animation: gemSnap .55s ease-out; }
 @keyframes gemSnap { 0% { filter: drop-shadow(0 0 14px currentColor) brightness(2.4); }
   40% { filter: drop-shadow(0 0 8px currentColor) brightness(1.6); } 100% { filter: none; } }
-#hull.clench .mano-svg { animation: deviceRecoil .32s ease-out; }
+:is(#hull, #cursor-plane).clench .mano-svg { animation: deviceRecoil .32s ease-out; }
 @keyframes deviceRecoil { 28% { transform: translateY(3px) scale(.994); } 60% { transform: translateY(-1px); } }
-#hull.clench #hexcore { animation: none; opacity: 1 !important; filter: drop-shadow(0 0 10px #7fd8ff); }
-@media (prefers-reduced-motion: reduce) { #hull.clench .mano-gem.gem-lit, #hull.clench .mano-svg { animation: none; } }
+:is(#hull, #cursor-plane).clench #hexcore { animation: none; opacity: 1 !important; filter: drop-shadow(0 0 10px #7fd8ff); }
+@media (prefers-reduced-motion: reduce) { :is(#hull, #cursor-plane).clench .mano-gem.gem-lit, :is(#hull, #cursor-plane).clench .mano-svg { animation: none; } }
 
 /* the revealed allocation reads bigger (the showdown "hand") */
 .bd-seals { gap: 4px !important; }
@@ -3698,7 +3698,7 @@ body.cabin-on #rucksack-zone #mala-extra .mala-ct { pointer-events: auto; }
 /* ═══ MATRIX BUFF on the pip-boy: the screen wakes, buffable modules invite,
    the chosen one stamps a permanent +1 (my Permanent-buff reward fix) ═══ */
 body.cabin-on.buffing #hull-console .matrix-wrap { opacity: 1 !important; }
-body.cabin-on.buffing #hull .mano-standby { opacity: 0; }
+body.cabin-on.buffing :is(#hull, #cursor-plane) .mano-standby { opacity: 0; }
 body.cabin-on.buffing #hull-console .matrix-wrap .cell { pointer-events: none; }
 body.cabin-on.buffing #hull-console .matrix-wrap .cell.cell-choose { pointer-events: auto; cursor: pointer;
   border-color: rgba(226,192,120,.9) !important;
@@ -3710,8 +3710,8 @@ body.cabin-on.buffing #hull-console .matrix-wrap .cell.cell-choose { pointer-eve
    drag-drop; a buff is a plain click). Make the art click-through while buffing so
    the armed cell is the hit target, and keep the console lit even if the buff armed
    on a side scene (belt-and-braces with the camera pull in _buffOnMatrix). */
-body.cabin-on.buffing #hull .mano-svg,
-body.cabin-on.buffing #hull .mano-svg * { pointer-events: none !important; }
+body.cabin-on.buffing :is(#hull, #cursor-plane) .mano-svg,
+body.cabin-on.buffing :is(#hull, #cursor-plane) .mano-svg * { pointer-events: none !important; }
 body.cabin-on.buffing #hull-console { opacity: 1 !important; }
 body.cabin-on.buffing #hull-console .matrix-wrap .cell.cell-choose { position: relative; z-index: 5; }
 /* the buff dock reads as a phosphor banner on the screen top (cabin) */
@@ -3746,38 +3746,38 @@ body.cabin-on .mch-buff .dd-title { color: #e2c078 !important; font-size: 10px; 
 body.cabin-on .mch-buff .dd-sub { color: #9fd8cf; font-size: 9px; opacity: .85; }
 
 /* ══ MANOPLA INDICATORS (boom column · vent states · chassis keys) ══ */
-#hull #mano-boomg .bseg { fill: #1a2229; stroke: #232b32; stroke-width: 1; }
-#hull #mano-boomg .bseg.on[data-z="g"] { fill: #5fd08a; filter: drop-shadow(0 0 3px rgba(95,208,138,.7)); }
-#hull #mano-boomg .bseg.on[data-z="a"] { fill: #e2c078; filter: drop-shadow(0 0 3px rgba(226,192,120,.7)); }
-#hull #mano-boomg .bseg.on[data-z="r"] { fill: #e0561f; filter: drop-shadow(0 0 4px rgba(224,86,31,.85)); }
-#hull.mano-hot #boom-lamp { fill: #ff5030; filter: drop-shadow(0 0 8px rgba(255,80,48,.9));
+:is(#hull, #cursor-plane) #mano-boomg .bseg { fill: #1a2229; stroke: #232b32; stroke-width: 1; }
+:is(#hull, #cursor-plane) #mano-boomg .bseg.on[data-z="g"] { fill: #5fd08a; filter: drop-shadow(0 0 3px rgba(95,208,138,.7)); }
+:is(#hull, #cursor-plane) #mano-boomg .bseg.on[data-z="a"] { fill: #e2c078; filter: drop-shadow(0 0 3px rgba(226,192,120,.7)); }
+:is(#hull, #cursor-plane) #mano-boomg .bseg.on[data-z="r"] { fill: #e0561f; filter: drop-shadow(0 0 4px rgba(224,86,31,.85)); }
+:is(#hull, #cursor-plane).mano-hot #boom-lamp { fill: #ff5030; filter: drop-shadow(0 0 8px rgba(255,80,48,.9));
   animation: boomLamp .85s steps(2,end) infinite; }
 @keyframes boomLamp { 50% { opacity: .3; } }
 
-#hull .vent-wheel { transform-box: fill-box; transform-origin: center; }
-#hull.vent-armed #mano-vent { filter: drop-shadow(0 0 7px rgba(226,192,120,.55)); }
-#hull.vent-armed .vent-wheel { animation: ventSpin 7s linear infinite; }
-#hull.vent-loaded #mano-vent { filter: drop-shadow(0 0 10px rgba(95,208,138,.75)); }
-#hull.vent-loaded .vent-wheel { animation: ventSpin 1.1s linear infinite; }
+:is(#hull, #cursor-plane) .vent-wheel { transform-box: fill-box; transform-origin: center; }
+:is(#hull, #cursor-plane).vent-armed #mano-vent { filter: drop-shadow(0 0 7px rgba(226,192,120,.55)); }
+:is(#hull, #cursor-plane).vent-armed .vent-wheel { animation: ventSpin 7s linear infinite; }
+:is(#hull, #cursor-plane).vent-loaded #mano-vent { filter: drop-shadow(0 0 10px rgba(95,208,138,.75)); }
+:is(#hull, #cursor-plane).vent-loaded .vent-wheel { animation: ventSpin 1.1s linear infinite; }
 @keyframes ventSpin { to { transform: rotate(360deg); } }
 
-#hull .mkey { pointer-events: auto; }
-#hull .mkey .mkey-cap, #hull .mkey .mkey-txt { transition: opacity .25s, filter .25s; }
-#hull .mkey .mkey-txt { opacity: 0; }
-#hull .mkey .mkey-cap { opacity: .45; filter: grayscale(.65) brightness(.75); transform-box: fill-box; }
-#hull .mkey .mkey-led { fill: #22303a; }
-body.cabin-on.allocating #hull .mkey { cursor: pointer; }
-body.cabin-on.allocating #hull .mkey .mkey-txt { opacity: 1; }
-body.cabin-on.allocating #hull .mkey .mkey-cap { opacity: 1; filter: none; }
-body.cabin-on.allocating #hull .mkey .mkey-led { fill: #5fd08a; filter: drop-shadow(0 0 3px rgba(95,208,138,.9)); }
-body.cabin-on.allocating #hull .mkey:hover .mkey-cap { filter: brightness(1.15); }
-body.cabin-on.allocating #hull .mkey:active .mkey-cap { transform: translateY(1.5px); }
-body.cabin-on.allocating #hull:not(.confirm-ready) #mano-confirm .mkey-cap { opacity: .5; filter: grayscale(.4); }
-body.cabin-on.allocating #hull:not(.confirm-ready) #mano-confirm { cursor: default; }
-body.cabin-on.allocating #hull.confirm-ready #mano-confirm .mkey-cap { animation: keyBeckon 1.6s ease-in-out infinite; }
+:is(#hull, #cursor-plane) .mkey { pointer-events: auto; }
+:is(#hull, #cursor-plane) .mkey .mkey-cap, :is(#hull, #cursor-plane) .mkey .mkey-txt { transition: opacity .25s, filter .25s; }
+:is(#hull, #cursor-plane) .mkey .mkey-txt { opacity: 0; }
+:is(#hull, #cursor-plane) .mkey .mkey-cap { opacity: .45; filter: grayscale(.65) brightness(.75); transform-box: fill-box; }
+:is(#hull, #cursor-plane) .mkey .mkey-led { fill: #22303a; }
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mkey { cursor: pointer; }
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mkey .mkey-txt { opacity: 1; }
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mkey .mkey-cap { opacity: 1; filter: none; }
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mkey .mkey-led { fill: #5fd08a; filter: drop-shadow(0 0 3px rgba(95,208,138,.9)); }
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mkey:hover .mkey-cap { filter: brightness(1.15); }
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mkey:active .mkey-cap { transform: translateY(1.5px); }
+body.cabin-on.allocating :is(#hull, #cursor-plane):not(.confirm-ready) #mano-confirm .mkey-cap { opacity: .5; filter: grayscale(.4); }
+body.cabin-on.allocating :is(#hull, #cursor-plane):not(.confirm-ready) #mano-confirm { cursor: default; }
+body.cabin-on.allocating :is(#hull, #cursor-plane).confirm-ready #mano-confirm .mkey-cap { animation: keyBeckon 1.6s ease-in-out infinite; }
 @keyframes keyBeckon { 50% { filter: brightness(1.4) drop-shadow(0 0 6px rgba(226,192,120,.85)); } }
 @media (prefers-reduced-motion: reduce) {
-  #hull .vent-wheel, #hull #boom-lamp, #hull .mkey .mkey-cap { animation: none !important; } }
+  :is(#hull, #cursor-plane) .vent-wheel, :is(#hull, #cursor-plane) #boom-lamp, :is(#hull, #cursor-plane) .mkey .mkey-cap { animation: none !important; } }
 
 /* ══ OVERLOAD: a sealed row is an ALARM, not a whisper ══ */
 body.cabin-on #hull-console .matrix-wrap .cell.locked { opacity: 1; position: relative;
@@ -3816,20 +3816,20 @@ body.hand-cursor-on.lf-rowpick #hull-console .matrix-wrap{
 body.hand-cursor-on.lf-hammer #hull-console .dice-pool .die{
   filter:none; opacity:1; }
 body.hand-cursor-on, body.hand-cursor-on * { cursor: none !important; }
-#hull .hull-manopla[data-pose="cursor"] { transition: none; z-index: 40; will-change: transform;
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] { transition: none; z-index: 40; will-change: transform;
   pointer-events: none !important; }
-#hull .hull-manopla[data-pose="cursor"] .mano-scan { opacity: 0; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] .mano-scan { opacity: 0; }
 
-#hull .hull-manopla[data-pose="cursor"] * { pointer-events: none !important; }
-#hull .hull-manopla[data-pose="cursor"] .mano-shadow { opacity: 0; }
-#hull .hull-manopla[data-pose="cursor"] .mano-standby { opacity: 0; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] * { pointer-events: none !important; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] .mano-shadow { opacity: 0; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] .mano-standby { opacity: 0; }
 body.cabin-on .hull-manopla[data-pose="cursor"] ~ #hull-console { opacity: 0; pointer-events: none; }
-#hull .hull-manopla .hand-grab { display: none; }
-#hull .hull-manopla.hand-grabbing .hand-grab { display: block !important; }
-#hull .hull-manopla.hand-grabbing .hand-open { display: none; }
-#hull .hull-manopla.hand-petting .mano-svg { animation: armPet 1.15s ease-in-out infinite; }
+:is(#hull, #cursor-plane) .hull-manopla .hand-grab { display: none; }
+:is(#hull, #cursor-plane) .hull-manopla.hand-grabbing .hand-grab { display: block !important; }
+:is(#hull, #cursor-plane) .hull-manopla.hand-grabbing .hand-open { display: none; }
+:is(#hull, #cursor-plane) .hull-manopla.hand-petting .mano-svg { animation: armPet 1.15s ease-in-out infinite; }
 @keyframes armPet { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-@media (prefers-reduced-motion: reduce) { #hull .hull-manopla.hand-petting { animation: none; } }
+@media (prefers-reduced-motion: reduce) { :is(#hull, #cursor-plane) .hull-manopla.hand-petting { animation: none; } }
 
 /* ══ CONTRACT PAPERS stapled to the open dossier (replace the CP seal track) ══ */
 .do-contract { position: fixed; width: 112px; height: 132px; padding: 9px 10px 6px;
@@ -3910,7 +3910,7 @@ body.mano-away .mano-standby, body.mano-away .mano-scan { opacity: 0 !important;
 .mano-help .mh-foot { margin-top: 16px; text-align: center; font-size: 9.5px; letter-spacing: .16em;
   color: #6aa588; text-transform: uppercase; }
 @media (prefers-reduced-motion: reduce) {
-  .mano-help, .mano-help .mh-card, #hull .mano-hint { transition: none; } }
+  .mano-help, .mano-help .mh-card, :is(#hull, #cursor-plane) .mano-hint { transition: none; } }
 
 /* ══ THE TICKETS: consumable vouchers as theater admissions in the lid rack ══ */
 /* The stub sits beside the ticket, not on top: the whole admission (a 24% stub, the
@@ -4060,7 +4060,7 @@ body.voucher-drag #ticket-drop { pointer-events: auto; outline: 2px dashed rgba(
   text-shadow: 0 0 10px rgba(95,208,138,.9); }
 
 /* the arm glides home when the free cursor disengages (no snap) */
-#hull .hull-manopla[data-pose="rest"] { transition: transform .48s cubic-bezier(.3,.7,.3,1); }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="rest"] { transition: transform .48s cubic-bezier(.3,.7,.3,1); }
 
 /* ══ BADGE, icon-first: legends die, the seat colour leads ══ */
 body.cabin-on .pcard.cfolio .bd-fuse > span,
@@ -4285,7 +4285,7 @@ body.voucher-drag #ticket-drop { pointer-events: auto; outline: 2px dashed rgba(
   text-shadow: 0 0 10px rgba(95,208,138,.9); }
 
 /* the arm glides home when the free cursor disengages (no snap) */
-#hull .hull-manopla[data-pose="rest"] { transition: transform .48s cubic-bezier(.3,.7,.3,1); }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="rest"] { transition: transform .48s cubic-bezier(.3,.7,.3,1); }
 
 /* ══ BADGE, icon-first: legends die, the seat colour leads ══ */
 body.cabin-on .pcard.cfolio .bd-fuse > span,
@@ -4340,13 +4340,13 @@ body.cabin-on .cb-grid .pcard.cfolio.pcard-choose { z-index: 45 !important; }
 .hotkey-list .hk span { color: var(--ink-100, #b9ad92); opacity: .85; }
 
 /* the arm-cursor flies LIGHT: child filters + pulses pause while tracking */
-#hull .hull-manopla[data-pose="cursor"] #hexcore { animation: none; }
-#hull .hull-manopla[data-pose="cursor"] .mano-gem.gem-lit { filter: none; }
-#hull .hull-manopla[data-pose="cursor"] #mano-boomg .bseg.on { filter: none; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] #hexcore { animation: none; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] .mano-gem.gem-lit { filter: none; }
+:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] #mano-boomg .bseg.on { filter: none; }
 /* snappier interaction transitions (Balatro law: feedback < 100ms) */
 body.cabin-on #hull-console .matrix-wrap .cell { transition: border-color .06s, background .06s, box-shadow .06s; }
-#hull .mkey .mkey-cap, #hull .mkey .mkey-txt { transition: opacity .12s, filter .12s; }
-#hull .mano-gem { transition: opacity .1s; }
+:is(#hull, #cursor-plane) .mkey .mkey-cap, :is(#hull, #cursor-plane) .mkey .mkey-txt { transition: opacity .12s, filter .12s; }
+:is(#hull, #cursor-plane) .mano-gem { transition: opacity .1s; }
 
 /* ══ THE BIT SWARM (Matrix): a lifted generator decompiles into orbiting bits ══ */
 .bit-swarm { position: fixed; inset: 0; pointer-events: none; z-index: 700; }
@@ -4925,8 +4925,8 @@ body.carrying-voucher #ticket-drop.hot { outline-color: rgba(127,211,160,.95);
   box-shadow: 0 0 18px rgba(127,211,160,.5); }
 body.carrying-card, body.carrying-card * { cursor: grabbing !important; }
 /* the fist (only when the arm IS the cursor) wraps the held card's lower front */
-body.carrying-card #hull .hull-manopla[data-pose="cursor"] .hand-grab { display: block !important; }
-body.carrying-card #hull .hull-manopla[data-pose="cursor"] .hand-open { display: none !important; }
+body.carrying-card :is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] .hand-grab { display: block !important; }
+body.carrying-card :is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] .hand-open { display: none !important; }
 
 /* the Paradox Sea starts hidden and reveals only once the skin is DECIDED
    (skin-ready) and no other skin claims the rail, kills the boot flash of the
@@ -5113,7 +5113,7 @@ body.cabin-on #cursor-plane .hand-right svg { width: 100%; height: 100%; display
 
 /* THE LEFT ARM RECEDES into the bottom-left corner on the side scenes when the
    RIGHT hand has taken over the pointer, present, but out of the way. */
-body.cabin-on #hull .hull-manopla[data-pose="corner"] {
+body.cabin-on :is(#hull, #cursor-plane) .hull-manopla[data-pose="corner"] {
   /* shrink AROUND the hand itself (local 1480,266 = the hand at rest), then tuck the
      whole limb into the bottom-left corner, receded, but still there. */
   transform-origin: 1480px 266px !important;
@@ -5154,15 +5154,15 @@ body.cabin-on.hand-right-on, body.cabin-on.hand-right-on * { cursor: none !impor
    colour is a label.)
    ═══════════════════════════════════════════════════════════════════════════ */
 body.cabin-on { --pb: #4aa8e0; --pb-dim: #2b6f9c; --pb-hot: #d6f0ff; }
-body.cabin-on.allocating #hull #mano-screen {
+body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-screen {
   filter: brightness(1.35) drop-shadow(0 0 8px rgba(74,168,224,.45)) !important; }
-#hull.clench #mano-screen { filter: drop-shadow(0 0 16px rgba(74,168,224,.8)); }
-body.cabin-on #hull .mano-scan {
+:is(#hull, #cursor-plane).clench #mano-screen { filter: drop-shadow(0 0 16px rgba(74,168,224,.8)); }
+body.cabin-on :is(#hull, #cursor-plane) .mano-scan {
   background: linear-gradient(180deg, transparent, rgba(74,168,224,.10) 60%,
     rgba(150,220,255,.18), transparent) !important; }
-body.cabin-on #hull .mano-standby { color: var(--pb) !important;
+body.cabin-on :is(#hull, #cursor-plane) .mano-standby { color: var(--pb) !important;
   text-shadow: 0 0 6px rgba(74,168,224,.6) !important; }
-body.cabin-on #hull .mano-standby .ms-led { box-shadow: 0 0 8px var(--pb) !important; background: var(--pb) !important; }
+body.cabin-on :is(#hull, #cursor-plane) .mano-standby .ms-led { box-shadow: 0 0 8px var(--pb) !important; background: var(--pb) !important; }
 body.cabin-on #hull-console .matrix-wrap .cell {
   border-color: rgba(74,168,224,.35) !important; }
 body.cabin-on.allocating #hull-console .matrix-wrap .cell:hover {
@@ -5253,7 +5253,7 @@ body.cabin-on #hull-console .matrix-wrap .cell.filled {
         looks the same on a marching dashed line and costs 8× less.
    ═══════════════════════════════════════════════════════════════════════════ */
 /* the sweeping band is the ::before, THAT is what was animating `top` */
-body.cabin-on #hull .mano-scan::before {
+body.cabin-on :is(#hull, #cursor-plane) .mano-scan::before {
   top: 0 !important;
   animation: manoScanT 4.2s linear infinite !important;
   will-change: transform; }
@@ -5275,7 +5275,7 @@ body.cabin-on #hull .mano-scan::before {
    before; now it is information. */
 
 @media (prefers-reduced-motion: reduce) {
-  body.cabin-on #hull .mano-scan { animation: none !important; } }
+  body.cabin-on :is(#hull, #cursor-plane) .mano-scan { animation: none !important; } }
 
 /* ═══ THE GENERATORS ARE COLOURED BY VALUE: I green · II yellow · III red ═══ */
 /* (data-v 1 tri-colour retired, identity colour won) */
@@ -5391,7 +5391,7 @@ body.cabin-on .cam-veil.show { display: block; }
 /* ── DIAGNOSTIC SCALPELS. One suspect each; whichever makes it smooth is the cost.
       F9 = the HAND · F10 = the RETICLE · F11 = force the PIP-BOY dark ── */
 body.dbg-no-hand #hand-right { display: none !important; }
-body.dbg-no-hand #hull .hull-manopla[data-pose="cursor"] { display: none !important; }
+body.dbg-no-hand :is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] { display: none !important; }
 body.dbg-no-radar #hela-radar { display: none !important; }
 /* with BOTH gone you get the OS pointer back */
 body.dbg-no-hand.dbg-no-radar, body.dbg-no-hand.dbg-no-radar * { cursor: auto !important; }
@@ -5419,7 +5419,7 @@ body.dbg-dark-pipboy .mano-standby, body.dbg-dark-pipboy .mano-scan { opacity: 0
      not the console. And the hover effect itself is an opacity fade on a ::after
      that is already there, a property the compositor can do without repainting.
    ═══════════════════════════════════════════════════════════════════════════ */
-#hull #mano-tip { left: 0 !important; top: 0 !important; will-change: transform; }
+:is(#hull, #cursor-plane) #mano-tip { left: 0 !important; top: 0 !important; will-change: transform; }
 
 /* every hover target in the device gets its own little layer */
 body.cabin-on #hull-console .matrix-wrap .cell,
@@ -5446,7 +5446,7 @@ body.cabin-on.allocating #hull-console .matrix-wrap .cell:hover {
       whole 1580×900 drawing, because SVG children cannot be composited apart. The
       chassis keys and the settings knob were doing exactly that on hover. Swap the
       filter for a plain fill/stroke change, which repaints only the key. ── */
-body.cabin-on.allocating #hull .mkey:hover .mkey-cap {
+body.cabin-on.allocating :is(#hull, #cursor-plane) .mkey:hover .mkey-cap {
   filter: none !important; stroke: #ffe6a8 !important; stroke-width: 2.4px !important; }
 #hull .icon-btn.hull-knob:hover,
 #hull .vz-rail .icon-btn.hull-knob:hover { filter: none !important; }
@@ -6005,6 +6005,12 @@ body.vz-crit .hela-loghead .hlh-line { color: #ff6a4a; }
   transform-origin: center center;
   pointer-events: none; z-index: 2147483647; display: none; }   /* the cursor is on top of absolutely everything */
 body.cabin-on #cursor-plane { display: block; }
+/* it is a manual popover in the TOP LAYER (cabin.js liftCursorPlane): above every z-index,
+   so undo what browsers give a popover (a centred, bordered, painted, scrolling box) */
+#cursor-plane[popover] { right: auto; bottom: auto; margin: 0; padding: 0; border: 0;
+  overflow: visible; background: none; color: inherit; }
+/* the left arm steers from here on the side scenes (cabin.js armHome), under HELA's gaze */
+#cursor-plane > .hull-manopla[data-pose="cursor"] { z-index: 0; }
 /* best-effort for the LIMB cursor (left hand = the whole manopla arm, which must
    stay in the hull): lift the hull over in-scene content while it steers. */
 body.hand-cursor-on #hull { z-index: 5000; }
@@ -7056,7 +7062,7 @@ body.gfx-medium .hh-veil, body.gfx-low .hh-veil { background: rgba(8,6,4,.22); }
 html.pdx-gecko *, html.pdx-gecko *::before, html.pdx-gecko *::after {
   -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 html.pdx-gecko .grain, html.pdx-gecko #hull .vz-scan { display: none !important; }
-html.pdx-gecko :is(.vzs-ring, .vzs-core, #hull #hexcore, #hull .vent-wheel, #hela-eye .he-spin,
+html.pdx-gecko :is(.vzs-ring, .vzs-core, :is(#hull, #cursor-plane) #hexcore, :is(#hull, #cursor-plane) .vent-wheel, #hela-eye .he-spin,
   #cursor-plane .hela-radar .hr-a, #cursor-plane .hela-radar .hr-b, #cursor-plane .hela-radar .hr-core,
   .ekg-line, .world-motes) { animation-timing-function: steps(6) !important; }
 

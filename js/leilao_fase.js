@@ -1096,7 +1096,7 @@
     pointer-events:none;
     transition:opacity .2s ease, filter .2s ease; }
   body.lf-rowpick #hull-console{ z-index:80 !important; }
-  body.lf-rowpick #hull .hull-manopla{ z-index:79 !important; }
+  body.lf-rowpick :is(#hull, #cursor-plane) .hull-manopla{ z-index:79 !important; }
 
   body.lf-rowpick #hull-console .matrix-wrap .cell,
   body.lf-rowpick #hull-console .matrix-wrap .matrix-fnlabel{
@@ -4819,7 +4819,7 @@
         el.style.setProperty("pointer-events", "auto", "important");
       });
     });
-    const h = document.querySelector("#hull .hull-manopla");
+    const h = document.querySelector("#hull-manopla");
     if (h){
       if (h.__lfAntes == null) h.__lfAntes = h.getAttribute("style") || "";
       h.style.setProperty("opacity", "1", "important");
@@ -4831,7 +4831,7 @@
       + getComputedStyle(c).opacity); } catch(e){}
   }
   function apagarDeVolta(){
-    ["#hull-console", "#hull .hull-manopla",
+    ["#hull-console", "#hull-manopla",
      "#hull-console .dice-pool", "#hull-console .dice-pool .die",
      "#hull-console .matrix-wrap", "#hull-console .matrix-wrap .cell",
      "#hull-console .escape-slot"].forEach(sel => {
