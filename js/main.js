@@ -1,21 +1,21 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609271559";
-import { hydrateIcons, icon } from "./icons.js?202609271559";
-import { seatColor, initials, el } from "./util.js?202609271559";
-import { Game } from "./game.js?202609271559";
-import { audio } from "./audio.js?202609271559";
-import { tutorials } from "./tutorial.js?202609271559";
-import { profile } from "./profile.js?202609271559";
-import { access } from "./access.js?202609271559";
+import { api, Connection } from "./net.js?202609271635";
+import { hydrateIcons, icon } from "./icons.js?202609271635";
+import { seatColor, initials, el } from "./util.js?202609271635";
+import { Game } from "./game.js?202609271635";
+import { audio } from "./audio.js?202609271635";
+import { tutorials } from "./tutorial.js?202609271635";
+import { profile } from "./profile.js?202609271635";
+import { access } from "./access.js?202609271635";
 import "./menu-cursor.js";
 import "./help.js";
-import { colourPicker, colourWish } from "./chronicle.js?202609271559";
-import { launchTutorial } from "./tutorial-drive.js?202609271559";
-import { PadCursor } from "./controle.js?202609271559";
-import { fx, PACES, LEVELS } from "./fx.js?202609271559";
-import { initResume, leaveWords } from "./resume.js?202609271559";
+import { colourPicker, colourWish } from "./chronicle.js?202609271635";
+import { launchTutorial } from "./tutorial-drive.js?202609271635";
+import { PadCursor } from "./controle.js?202609271635";
+import { fx, PACES, LEVELS } from "./fx.js?202609271635";
+import { initResume, leaveWords } from "./resume.js?202609271635";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -580,8 +580,12 @@ function backToMenu(msg) {
 document.getElementById("btn-lobby-back").addEventListener("click", () => { audio.play("click"); backToMenu(); });
 
 function leaveMatch() {
-  // leaving on purpose: the saved match goes too (Reconnect is for a reload)
-  try { window.__pdxResume && window.__pdxResume.discard(true); } catch (e) {}
+  // LEAVING KEEPS THE MATCH (the owner: "Always keep it"): the menu offers it back
+  // with Reconnect. A finished match has nothing left to keep.
+  try {
+    const R = window.__pdxResume, v = state.game && state.game.view;
+    if (R) { if (v && v.game_over) R.discard(); else R.keepForLater(); }
+  } catch (e) {}
   try { state.conn && state.conn.close(); } catch (e) {}
   location.href = location.pathname;
 }
@@ -589,8 +593,8 @@ window.__pdxLeaveMatch = leaveMatch;
 
 // The confirm is a line in place of the button, never a pop-up: it covers
 // nothing, and it stays until the player answers (Leave, Stay or Escape).
-// The words follow the table on screen: a match ends for good, Learn to Play can
-// simply be started again (js/resume.js leaveWords).
+// The words follow the table on screen: a match waits for Reconnect; Learn to Play
+// mid-lesson simply starts again (js/resume.js leaveWords).
 function setLeaveWords(box) {
   const w = leaveWords();
   const knob = box.classList.contains("leave-knob");
@@ -599,7 +603,7 @@ function setLeaveWords(box) {
   const q = box.querySelector(".leave-q");
   if (q) q.textContent = knob ? w.knob : w.q;
   const yes = box.querySelector(".leave-yes");
-  if (yes && !knob) yes.textContent = w.yes;
+  if (yes) yes.textContent = w.yes;
 }
 function wireLeave(box) {
   const ask = box.querySelector(".leave-ask");

@@ -507,6 +507,10 @@
       if (v === undefined) return m;
       return v ? '<b class="pw-key">' + v + "</b>" : "";
     });
+    // a delivery on a phone: the case and the cabinet are two views; a relic tapped in the
+    // case is carried, and the view turns to the cabinet by itself
+    if (phone) out = out.replace(/Drag (.+?) from your case into the open drawer/g,
+      'Tap <b class="pw-key">CASE</b>, tap $1, then tap the open drawer');
     // on touch the Merchant's card opens its sheet first, and the sheet's big key buys
     out = out.replace(/drag it into your case, or click it/g, "tap it, then its <b class=\"pw-key\">BUY</b> key");
     // the verbs of a mouse and a keyboard

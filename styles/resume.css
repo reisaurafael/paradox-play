@@ -31,6 +31,10 @@
 .resume-card .rc-table li.is-you { font-weight: 700; color: var(--ink); }
 .resume-card .rc-dot { width: .8rem; height: .8rem; border-radius: 50%; border: 2px solid var(--ink); flex: none; }
 .resume-card .rc-note { font-size: .86rem; line-height: 1.4; color: #3b2a10; margin: .15rem 0 0; }
+/* the warning before anything else is started */
+.resume-card .rc-warn { font: 700 .72rem/1.3 var(--f-mono); letter-spacing: .08em; text-transform: uppercase;
+  color: #7a2a18; margin: .1rem 0 0; }
+html.pdx-a11y .resume-card .rc-warn { color: var(--ink); text-decoration: underline; }
 .resume-card .rc-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 11rem; }
 .resume-card .rc-go { justify-content: center; white-space: nowrap; }
 .resume-card .rc-go:disabled { opacity: .85; cursor: progress; }
@@ -75,3 +79,5 @@ html.pdx-touch .resume-card button { min-height: 44px; }
 #set-leave .leave-wide .leave-btns .btn { justify-content: center; padding: .6em .8em; }
 html.pdx-touch #set-leave .leave-wide .btn { min-height: 44px; }
 html.pdx-touch .leave-knob .btn-sm { min-height: 40px; }
+/* the Menu key's confirm says where the match waits: it wraps instead of running off */
+.leave-knob .leave-q { white-space: normal; max-width: 21em; line-height: 1.3; }

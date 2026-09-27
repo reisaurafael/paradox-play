@@ -7,13 +7,15 @@
    and the main menu offers it back at the top: "Reconnect to your match", with
    the Hour, who is at the table and when it was saved, plus Discard.
 
-   The record never leaves this browser. It is cleared when the match ends, when
-   the player leaves it on purpose (Settings, the Menu key, the end screen) and
-   when a new match starts. A record from an older build of the game says so and
-   offers only Discard: another game code may deal other dice from the same seed.
+   The record never leaves this browser. LEAVING KEEPS IT (the owner, 27/09:
+   "Always keep it"): Leave from Settings or the Menu key goes to the menu with the
+   match waiting on this card. It goes only by Discard on this card, when the match
+   ends, or when another match starts (the card warns first). A record from an
+   older build of the game says so and offers only Discard: another game code may
+   deal other dice from the same seed.
    ========================================================================= */
-import { seatColor } from "./util.js?202609271559";
-import { hydrateIcons } from "./icons.js?202609271559";
+import { seatColor } from "./util.js?202609271635";
+import { hydrateIcons } from "./icons.js?202609271635";
 
 const KEY = "pdx.resume.v1";           // play-shim.js writes the same key
 const IN_MATCH = "pdx.inMatch";         // sessionStorage: a match was on screen in this tab
@@ -35,12 +37,26 @@ function remove() { try { localStorage.removeItem(KEY); } catch (e) {} }
 function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
 function ssSet(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
 
-/** The saved match, forgotten. block = a match is being left on purpose: the
-    last messages of it must not write the record back before the page goes. */
-function discard(block) {
-  if (block) window.__pdxResumeBlocked = true;
+/** The saved match, forgotten (Discard on the card, or a finished match left). */
+function discard() {
   remove();
   ssSet(IN_MATCH, null);
+}
+
+/** Leaving on purpose: the record stays as it was at the open decision. The page
+    is about to go; what the table does meanwhile (its AI stands in for the seat
+    that left) must neither overwrite nor clear it. */
+function keepForLater() {
+  window.__pdxResumeBlocked = true;
+  ssSet(IN_MATCH, null);
+}
+
+/** Is the match on screen the one the record keeps? */
+function keptNow() {
+  const saved = read();
+  const g = window.__game;
+  const code = g && g.conn && g.conn.code;
+  return !!(saved && code && saved.room === code);
 }
 
 function ago(ms) {
@@ -66,7 +82,7 @@ function txt(tag, cls, text) {
     deps: { enterRoom(name, code, seat, room, opts), fail(msg), audio } */
 export function initResume(deps) {
   const card = document.getElementById("resume-card");
-  window.__pdxResume = { discard, read };
+  window.__pdxResume = { discard, keepForLater, keptNow, read };
   if (!card) return;
   let serverCode = null;               // the running build's game code (/api/health)
   let busy = false;
@@ -138,8 +154,10 @@ export function initResume(deps) {
     if (old) note = "The game has changed since it was saved, so it cannot be picked up again.";
     else if (failed) note = "It did not come back exactly as it was, so it cannot be picked up.";
     else if (reloaded) note = "The page reloaded during your match. It is waiting right where you left it.";
-    else note = "Starting a new match replaces it.";
+    else note = "It is waiting right where you left it.";
     words.appendChild(txt("p", "rc-note", note));
+    // before he starts anything else: a new match takes this one's place
+    if (!old && !failed) words.appendChild(txt("p", "rc-warn", "Starting a new match replaces your saved one."));
     card.appendChild(words);
 
     const acts = txt("div", "rc-actions");
@@ -168,7 +186,7 @@ export function initResume(deps) {
       });
       box.querySelector(".leave-no").addEventListener("click", () => fold(true));
       box.querySelector(".leave-yes").addEventListener("click", () => {
-        discard(false);
+        discard();
         if (deps.audio) deps.audio.play("click");
         render();
         const next = document.getElementById("btn-tutorial");
@@ -182,7 +200,7 @@ export function initResume(deps) {
       const drop = txt("button", "btn btn-ghost rc-drop", "Discard");
       drop.type = "button";
       drop.addEventListener("click", () => {
-        discard(false);
+        discard();
         if (deps.audio) deps.audio.play("click");
         render();
         const next = document.getElementById("btn-tutorial");
@@ -270,9 +288,9 @@ export function initResume(deps) {
     if (landing.classList.contains("is-active") && !busy) render();
   }).observe(landing, { attributes: true, attributeFilter: ["class"] });
 
-  // Learn to Play's own Leave (its lesson track) leaves on purpose too.
+  // Learn to Play's own Leave (its lesson track) leaves on purpose too: keep it.
   document.addEventListener("click", (e) => {
-    if (e.target && e.target.closest && e.target.closest("#tut-track .tt-leave")) discard(true);
+    if (e.target && e.target.closest && e.target.closest("#tut-track .tt-leave")) keepForLater();
   }, true);
 
   render();
@@ -286,10 +304,16 @@ export function initResume(deps) {
   }
 }
 
-/** Labels of the Leave controls for the table on screen (a match, or Learn to Play). */
+/** Labels of the Leave controls for the table on screen. Leaving keeps the match
+    for Reconnect; only Learn to Play in the middle of its lessons is not kept
+    (its lesson steps live in the page), and then it simply starts again. */
 export function leaveWords() {
   const tut = document.body.classList.contains("tut") || document.body.dataset.roomMode === "tutorial";
-  return tut
-    ? { ask: "Leave Learn to Play", q: "Leave Learn to Play? You can start it again from the menu.", yes: "Leave", knob: "Leave Learn to Play?" }
-    : { ask: "Leave match and go to menu", q: "Leave this match? It ends here and Reconnect cannot bring it back.", yes: "Leave match", knob: "Leave the match for good?" };
+  const back = "You can come back to it from the menu with Reconnect.";
+  if (tut && !keptNow()) {
+    const q = "Leave Learn to Play? You can start it again from the menu.";
+    return { ask: "Leave Learn to Play", q, yes: "Leave", knob: q };
+  }
+  const q = `${tut ? "Leave Learn to Play" : "Leave the match"}? ${back}`;
+  return { ask: tut ? "Leave Learn to Play" : "Leave match and go to menu", q, yes: "Leave", knob: q };
 }

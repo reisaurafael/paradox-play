@@ -181,6 +181,15 @@ const MUSIC_SRC = {
   era_future:       ["audio/music/future.ogg", "audio/music/future.mp3"],
 };
 
+// THE FILES THAT ARE REALLY SHIPPED. Only these are ever requested: asking for a track
+// that is not there cost a 404 in the console of every session. Dropping a new file into
+// web/audio/music/ or web/audio/ambience/ means adding its path here too
+// (tests/test_audio_shipped.py fails until the list and the folder agree).
+const SHIPPED = new Set([
+  "audio/ambience/seascape.wav",
+]);
+const shipped = (urls) => urls.filter((u) => SHIPPED.has(u));
+
 class AudioEngine {
   constructor() {
     this.ctx = null;
@@ -221,7 +230,8 @@ class AudioEngine {
   // is absent (404) or undecodable, the caller then falls back to the synth.
   _loadTrack(key) {
     if (this._trackBuf[key] !== undefined) return this._trackBuf[key];
-    const urls = MUSIC_SRC[key] || [];
+    const urls = shipped(MUSIC_SRC[key] || []);
+    if (!urls.length) return (this._trackBuf[key] = Promise.resolve(null));   // no file: the synth plays
     const attempt = async () => {
       for (const url of urls) {
         try {
@@ -609,7 +619,7 @@ class AudioEngine {
   _seaBuffer() {
     if (this._seaBufP !== undefined) return this._seaBufP;
     const attempt = async () => {
-      for (const url of ["audio/ambience/seascape.ogg", "audio/ambience/seascape.wav"]) {
+      for (const url of shipped(["audio/ambience/seascape.ogg", "audio/ambience/seascape.wav"])) {
         try {
           const r = await fetch(url);
           if (!r.ok) continue;

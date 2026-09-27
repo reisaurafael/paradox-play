@@ -9,7 +9,7 @@
   // before the first paint.
   window.PARADOX_DEMO = true;
   document.documentElement.classList.add("pdx-demo");
-  const worker = new Worker("play-worker.js?202609271559", { type: "module" });
+  const worker = new Worker("play-worker.js?202609271635", { type: "module" });
   let nextId = 1;
   const httpWaiters = new Map();
   const sockets = new Map();
@@ -61,8 +61,8 @@
   // The game in the worker sends a record at every save point of the match (the
   // room, the seed, the human's answers: server/replay.py). It lives in this
   // browser's storage and nowhere else; after a reload the menu offers it back
-  // (js/resume.js). A purposeful leave sets __pdxResumeBlocked so the last few
-  // messages of a match being left cannot write it again.
+  // (js/resume.js). Leaving on purpose KEEPS it: __pdxResumeBlocked freezes it as it
+  // was, so the table's last moments (its AI standing in) neither write nor clear it.
   const RESUME_KEY = "pdx.resume.v1";
   function resumeSave(room, record) {
     if (window.__pdxResumeBlocked) return;
@@ -71,6 +71,7 @@
     } catch (err) { /* storage full or off: the match simply cannot be reconnected */ }
   }
   function resumeClear(room) {
+    if (window.__pdxResumeBlocked) return;     // a match left on purpose stays kept
     try {
       const raw = localStorage.getItem(RESUME_KEY);
       const cur = raw ? JSON.parse(raw) : null;

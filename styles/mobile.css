@@ -393,10 +393,12 @@ html.pdx-tablet #pdx-mrail button span { font-size: .72rem; }
   display: flex; align-items: center; justify-content: center; border: 2px solid var(--cx-ink, #15100a); border-radius: 5px;
   background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a); box-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
 #pdx-mcol #pdx-tabkey[hidden] { display: none; }
-#pdx-mcol #pdx-tabkey kbd { border: 0; background: none; padding: 0; }
+#pdx-mcol #pdx-tabkey kbd { border: 0 !important; background: none !important; box-shadow: none !important; padding: 0 !important; min-width: 0 !important; }
 #pdx-mcol #pdx-tabkey kbd::before { font: 700 1.1rem/1 var(--f-display, "Oswald", sans-serif); }
 #pdx-mcol #pdx-tabkey > span { display: none; }
-#pdx-mcol #pdx-tabkey .pk-notes { font: 700 .6rem/1 var(--f-mono, monospace); padding: .1rem .2rem; }
+#pdx-mcol #pdx-tabkey { position: relative !important; left: auto !important; top: auto !important; right: auto !important; bottom: auto !important; }
+#pdx-mcol #pdx-tabkey .pk-notes { position: absolute; right: -5px; top: -7px; font: 700 0/1 var(--f-mono, monospace); padding: 0; min-width: 16px; height: 16px; border-radius: 8px; display: grid; place-items: center; }
+#pdx-mcol #pdx-tabkey .pk-notes::first-letter { font-size: .62rem; }
 #pdx-mcol:has(#pdx-tabkey:not([hidden])) .mc-q { display: none; }
 
 /* the era seals on the casing (O / A / S): their letters read at phone scale */

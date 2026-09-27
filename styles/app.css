@@ -8067,3 +8067,11 @@ body.cabin-on #hull-console .mano-cmd .mc-l.sea-anchor svg { width: 13px; height
    moves: the same pixels as before. */
 body.cam-on .cam-world::after { z-index: -2; height: 1614px; }
 body.cam-on .game-grid::after { z-index: -2; height: 1274px; }
+/* ═══ A MODAL PANEL COVERS EVERYTHING BUT THE POINTER ═══════════════════════════════════
+   Settings (with its Leave confirm), the menu sheets (News, Community) and the Chronicle
+   page sat at z 900 / 950 / 70000, under HELA's eye (59900), her windows (59890), the Tab
+   panels (60400) and the Learn to Play callout (2147483000): her HOUR and YOUR MOVE boxes
+   drew on top of Settings mid-match. They now sit above all of it. Only the pointer stays
+   above them (#cursor-plane lives in the top layer, #menu-cursor is 2147483647) and the
+   phone's own covers (mobile.css 2147483100+, "turn your phone" and the like). */
+html body :is(.settings-backdrop, .menu-sheet-back, .chr-page) { z-index: 2147483020; }

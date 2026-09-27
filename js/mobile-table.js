@@ -37,7 +37,7 @@ const VIEWS = {
   machine:  { scene: "main",   label: "Machine",  rail: true, left: "brain", right: "chart", up: "case" },
   chart:    { scene: "main",   label: "Chart",    rail: true, left: "machine", up: "merchant" },
   merchant: { scene: "market", label: "Merchant", rail: true, down: "case" },
-  case:     { scene: "main",   label: "Case",     rail: true, down: "machine", left: "records", right: "chart", up: "merchant" },
+  case:     { scene: "drawer", label: "Case",     rail: true, down: "machine", left: "records", right: "chart", up: "merchant" },
   records:  { scene: "drawer", label: "Records",  rail: true, right: "case", down: "brain", up: "merchant" },
   brain:    { scene: "drawer", label: "HELA",     rail: false, up: "records", right: "machine" },
 };
@@ -154,7 +154,10 @@ function layout() {
   D.style.setProperty("--pdx-colw", colW + "px");
   D.style.setProperty("--pdx-railw", railW + "px");
   // the stage keeps clear of the notch and of the home bar (the table's art runs on under them)
-  stage = { x: colW, y: ins.t, w: W - colW - railW, h: H - ins.t - ins.b };
+  // the tutorial's lesson bar rides the stage's top edge: the views start under it
+  const bar = document.body.classList.contains("tut") ? 40 : 0;
+  stage = { x: colW, y: ins.t + bar, w: W - colW - railW, h: H - ins.t - ins.b - bar };
+  D.classList.toggle("pdx-m-tut", !!bar);
 }
 
 /* ── the camera: one transform for the plane and the pip-boy ── */
@@ -199,6 +202,15 @@ function frameRect(v) {
   if (v === "records") return planeRectOf(document.getElementById("drawer-zone")) || { x: -1066, y: 0, w: 1066, h: 1200 };
   return { x: 0, y: 0, w: PLANE_W, h: PLANE_H };
 }
+// his own piece on the chart (the century he stands on), in plane px
+function myPiece() {
+  const g = game(), me = g && g._self ? g._self() : null;
+  if (!me) return null;
+  const nodes = [...document.querySelectorAll(`#timeline-rail [data-c="${me.century}"]`)].filter((n) => {
+    const r = n.getBoundingClientRect(); return r.width > 1 && getComputedStyle(n).display !== "none" && !n.closest("[hidden]"); });
+  for (const n of nodes) { const r = planeRectOf(n); if (r) return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; }
+  return null;
+}
 function paceMs() {
   const g = game();
   let k = 1;
@@ -209,9 +221,11 @@ const calm = () => !!(window.__pdxCalm || (window.matchMedia && window.matchMedi
 function frame(v, animate) {
   const f = frameRect(v);
   const base = Math.min(stage.w / f.w, stage.h / f.h);
-  if (v === "chart" && zoom > 1.001) {
-    // the chart, pinched closer: the centre stays inside the sheet
-    S = base * zoom;
+  if (v === "chart") {
+    // THE CHART FILLS THE STAGE (no desk at its sides): as wide as the stage, centred on his
+    // own piece; one finger slides it, two pinch it closer; the centre stays on the sheet
+    S = Math.max(stage.w / f.w, stage.h / f.h) * zoom;
+    if (!zc) zc = myPiece() || null;
     const hw = stage.w / 2 / S, hh = stage.h / 2 / S;
     const c = zc || { x: f.x + f.w / 2, y: f.y + f.h / 2 };
     c.x = Math.max(f.x + Math.min(hw, f.w / 2), Math.min(f.x + f.w - Math.min(hw, f.w / 2), c.x));
@@ -224,7 +238,7 @@ function frame(v, animate) {
   O.x = stage.x + (stage.w - f.w * S) / 2 - f.x * S;
   O.y = f.bottom ? stage.y + stage.h - (f.y + f.h) * S : stage.y + (stage.h - f.h * S) / 2 - f.y * S;
   }
-  D.classList.toggle("pdx-zoomed", v === "chart" && zoom > 1.001);
+  D.classList.toggle("pdx-zoomed", v === "chart");
   D.style.setProperty("--pdx-dur", animate && !calm() ? paceMs() + "ms" : "0ms");
   D.style.setProperty("--pdx-s", S.toFixed(5));
   D.style.setProperty("--pdx-ox", O.x.toFixed(2) + "px");
@@ -262,7 +276,9 @@ function followCamera() {
   go(sc === "market" ? "merchant" : sc === "drawer" ? "records" : "machine");
 }
 // a scene of the real camera holds more than one phone view
-const SCENE_VIEWS = { main: ["machine", "chart", "case"], market: ["merchant"], drawer: ["records", "brain"] };
+// (the case is looked at with the records, as on the desktop's paperwork desk: a delivery
+//  takes the relic from the case to its drawer without the camera leaving that scene)
+const SCENE_VIEWS = { main: ["machine", "chart"], market: ["merchant"], drawer: ["records", "case", "brain"] };
 
 /* ── the rivals' police files, a pile on the desk at the device's right ── */
 function files() {
@@ -419,7 +435,7 @@ function wireSwipes() {
     if (!on() || e.pointerType !== "touch") { s0 = null; return; }
     if (e.clientX < stage.x || e.clientX > stage.x + stage.w) { s0 = null; return; }
     if (e.target.closest && e.target.closest(".die, .cell, .pcard, .card, button, input, .escape-drop, #hela-brain-full, .pdx-sheet")) { s0 = null; return; }
-    if (view === "chart" && zoom > 1.001) { s0 = null; return; }
+    if (view === "chart") { s0 = null; return; }   // one finger slides the chart there
     s0 = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
   }, true);
   document.addEventListener("pointerup", (e) => {
@@ -450,8 +466,9 @@ function wireChart() {
       const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
       pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: zoom, p: stagePt(mx, my) };
       pan = null;
-    } else if (touches.size === 1 && zoom > 1.001) {
-      pan = { x: e.clientX, y: e.clientY, c: zc ? { ...zc } : null, moved: false };
+    } else if (touches.size === 1) {
+      if (!zc) { const f = frameRect("chart"); zc = { x: (stage.x + stage.w / 2 - O.x) / S, y: (stage.y + stage.h / 2 - O.y) / S }; void f; }
+      pan = { x: e.clientX, y: e.clientY, c: { ...zc }, moved: false };
     }
   }, true);
   document.addEventListener("pointermove", (e) => {
@@ -462,7 +479,7 @@ function wireChart() {
       const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
       zoom = Math.max(1, Math.min(3.2, pinch.z * d / pinch.d));
       const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      const f = frameRect("chart"), base = Math.min(stage.w / f.w, stage.h / f.h), S2 = base * zoom;
+      const f = frameRect("chart"), base = Math.max(stage.w / f.w, stage.h / f.h), S2 = base * zoom;
       // the point under the fingers stays under the fingers
       zc = { x: pinch.p.x - (mx - (stage.x + stage.w / 2)) / S2, y: pinch.p.y - (my - (stage.y + stage.h / 2)) / S2 };
       frame("chart", false); eatClick = performance.now() + 400;
@@ -752,7 +769,12 @@ function start() {
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
   const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintCol(); paintRail(); paintAction(); paintLife(); autoCamera(); followRings(); } }); };
-  setInterval(() => { if (on()) { soon(); if (!outFile) pile(); } else if (life) life.style.display = "none"; }, 400);
+  setInterval(() => {
+    if (!on()) { if (life) life.style.display = "none"; return; }
+    // the tutorial starting or ending moves the stage's top edge
+    if (D.classList.contains("pdx-m-tut") !== document.body.classList.contains("tut")) { layout(); frame(view, true); }
+    soon(); if (!outFile) pile();
+  }, 400);
   sync();
 }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
