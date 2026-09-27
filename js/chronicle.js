@@ -49,9 +49,10 @@
      window.__pdxChronicle.snapshot()   the stable shape above
      window.__pdxChronicle.tutorialDone()     Learn to Play finished
    ========================================================================= */
-import { profile } from "./profile.js?202609270943";
-import { audio } from "./audio.js?202609270943";
-import { roman, esc, seatColor } from "./util.js?202609270943";
+import { profile } from "./profile.js?202609271103";
+import { audio } from "./audio.js?202609271103";
+import { roman, esc, seatColor } from "./util.js?202609271103";
+import { THEMES, THEME_BY_ID, TIER_NAME, applyTheme } from "./theme.js?202609271103";
 
 const PANEL = (() => {
   try { return parseInt(new URLSearchParams(location.search).get("panel")) || 0; } catch (e) { return 0; }
@@ -71,7 +72,8 @@ function blank() {
     streak: { now: 0, best: 0 },
     days: {},                    // "YYYY-MM-DD": { done: { missionId: at } }
     quests: {},                  // questId: at
-    equip: { badge: "cronos", herald: "standard", stamp: "filed" },
+    eras: [],                    // the eras you have delivered a relic to, ever (ERA_SPANS)
+    equip: { badge: "cronos", herald: "standard", stamp: "filed", colour: null },
   };
 }
 const num = (v, d = 0) => (typeof v === "number" && isFinite(v) ? v : d);
@@ -97,8 +99,9 @@ function clean(raw) {
   }
   if (raw.quests && typeof raw.quests === "object")
     for (const [id, at] of Object.entries(raw.quests)) if (QUEST_BY_ID[id]) d.quests[id] = num(at);
+  if (Array.isArray(raw.eras)) d.eras = raw.eras.filter((e) => ERA_SPANS.some((x) => x[0] === e));
   if (raw.equip && typeof raw.equip === "object") {
-    for (const kind of ["badge", "herald", "stamp"]) {
+    for (const kind of ["badge", "herald", "stamp", "colour"]) {
       const c = COSMETIC_BY_ID[raw.equip[kind]];
       if (c && c.kind === kind) d.equip[kind] = c.id;
     }
@@ -159,6 +162,11 @@ function inReach(col, from, to) {
   return col === 0 ? to > from : col === 1 ? to === from : to < from;
 }
 
+// the six eras (engine/constants.py ERAS); a border century belongs to both eras
+const ERA_SPANS = [["Antiquity", 1, 5], ["High Middle Ages", 5, 10], ["Low Middle Ages", 11, 15],
+  ["Modern", 15, 19], ["Contemporary", 19, 23], ["Timeless", 23, 30]];
+const erasOf = (c) => ERA_SPANS.filter(([, a, b]) => c >= a && c <= b).map(([n]) => n);
+
 /* ───────────────────────────── RECORDS ─────────────────────────────
    One personal best each. `better`: "high" keeps the larger value, "low" the
    smaller. value(m) reads the finished match and returns null when the record
@@ -190,6 +198,8 @@ const RECORDS = [
     value: (m) => m.leap || null },
 ];
 const RECORD_BY_ID = Object.fromEntries(RECORDS.map((r) => [r.id, r]));
+const ONE = { Hours: "Hour", relics: "relic", travellers: "traveller", wrecks: "wreck", centuries: "century" };
+const unitOf = (r, v) => (v === 1 && ONE[r.unit]) || r.unit;
 function fmtRecord(r, v) {
   if (v == null) return "--";
   if (r.id === "deepest") return v === 0 ? "Year Zero" : `Century ${roman(v)}`;
@@ -310,6 +320,9 @@ const QUESTS = [
   { id: "wrecker", tier: 2, name: "Wrecker", text: "Terminate a rival.", check: (q) => q.m && q.m.wrecks >= 1 },
   { id: "millennium", tier: 2, name: "Millennium Claim", text: "Claim a millennium milestone.", check: (q) => q.m && q.m.milestones >= 1 },
   { id: "relic_runner", tier: 2, name: "Relic Runner", text: "Deliver 10 relics in all.", check: (q) => q.tot("relics") >= 10 },
+  { id: "lamplighter", tier: 2, name: "Lamplighter", text: "Deliver two relics in one match.", check: (q) => q.m && q.m.relics >= 2 },
+  { id: "two_at_a_stroke", tier: 2, name: "Two at a Stroke", text: "Hit two travellers with one paradox.", check: (q) => q.m && q.m.widest >= 2 },
+  { id: "merchants_friend", tier: 2, name: "The Merchant's Friend", text: "Buy three items from the Merchant in one match.", check: (q) => q.m && q.m.buys >= 3 },
   { id: "duel", tier: 2, name: "Duel Won", text: "Win a two-player match.", check: (q) => q.final && q.m.won && q.m.n === 2 },
   { id: "crowded", tier: 2, name: "Crowded Table", text: "Win at a table of six.", check: (q) => q.final && q.m.won && q.m.n === 6 },
   // III. mastery
@@ -320,6 +333,7 @@ const QUESTS = [
   { id: "last_afloat", tier: 3, name: "Last One Afloat", text: "Win as the last traveller never terminated.",
     check: (q) => q.final && q.m.won && q.m.reason === "last_traveler" && q.m.died === 0 },
   { id: "hat_trick", tier: 3, name: "Hat Trick", text: "Win three matches in a row.", check: () => D.streak.best >= 3 },
+  { id: "double_wreck", tier: 3, name: "The Wrecker's Harvest", text: "Terminate two rivals in one match.", check: (q) => q.m && q.m.wrecks >= 2 },
   { id: "storm", tier: 3, name: "Paradox Storm", text: "Hit three travellers with one paradox.", check: (q) => q.m && q.m.widest >= 3 },
   { id: "heavy_hour", tier: 3, name: "The Heavy Hour", text: "Deal 10 paradox damage in a single Hour.",
     check: (q) => q.m && Math.max(q.m.bestHourDmg, q.m.dmgHour) >= 10 },
@@ -337,6 +351,12 @@ const QUESTS = [
   { id: "hela_file", tier: 4, name: "HELA Keeps a File", text: "Complete 30 daily missions.", check: () => D.totals.missions >= 30 },
   { id: "curator", tier: 4, name: "Curator of Ages", text: "Deliver 50 relics in all.", check: (q) => q.tot("relics") >= 50 },
   { id: "keeper", tier: 4, name: "Keeper of the Last Timeline", text: "Win 25 matches.", check: () => D.totals.wins >= 25 },
+  { id: "every_era", tier: 4, name: "Chronicler of Every Era", text: "Deliver a relic to each of the six eras, Antiquity to the Timeless, over any number of matches.",
+    check: (q) => new Set([...D.eras, ...(q.m && !q.m.filed ? q.m.eras : [])]).size >= ERA_SPANS.length },
+  { id: "outlaw", tier: 4, name: "The Outlaw's Crown", text: "Win a match with a warrant still on your head.",
+    check: (q) => q.final && q.m.won && q.m.wantedAtEnd },
+  { id: "back_from_dead", tier: 4, name: "Back from the Dead", text: "Be terminated and still win the match.",
+    check: (q) => q.final && q.m.won && q.m.died > 0 },
 ];
 const QUEST_BY_ID = Object.fromEntries(QUESTS.map((x) => [x.id, x]));
 
@@ -418,8 +438,8 @@ const COSMETICS = [
   { id: "standard", kind: "herald", name: "Standard Print", quest: null, note: "The Herald as the Bureau prints it." },
   { id: "red_extra", kind: "herald", name: "Red Extra", quest: "wrecker", note: "Blood-red headlines and a louder EXTRA." },
   { id: "night", kind: "herald", name: "Night Edition", quest: "full_docket", note: "Cream ink on the late-night black stock." },
-  { id: "blue", kind: "herald", name: "Bureau Blue", quest: "hat_trick", note: "The Bureau's own blue ink, for trusted readers." },
-  { id: "gold", kind: "herald", name: "Gold Foil Masthead", quest: "ten_crowns", note: "The masthead pressed in gold foil." },
+  { id: "bureau_blue", kind: "herald", name: "Bureau Blue", quest: "hat_trick", note: "The Bureau's own blue ink, for trusted readers." },
+  { id: "gold_foil", kind: "herald", name: "Gold Foil Masthead", quest: "ten_crowns", note: "The masthead pressed in gold foil." },
   // case file stamps
   { id: "filed", kind: "stamp", name: "FILED", quest: null, tone: "ink" },
   { id: "approved", kind: "stamp", name: "APPROVED BY HELA", quest: "daily_duty", tone: "teal" },
@@ -429,6 +449,14 @@ const COSMETICS = [
   { id: "mended", kind: "stamp", name: "TIMELINE MENDED", quest: "mended", tone: "gold" },
   { id: "legend", kind: "stamp", name: "LEGEND", quest: "keeper", tone: "gold" },
 ];
+// the colours (js/theme.js): green and blue to start, every other one a quest
+const COLOUR_QUEST = {
+  amber: "lamplighter", teal: "monarch", violet: "two_at_a_stroke", rust: "merchants_friend",
+  teal_gold: "hat_trick", crimson_ivory: "double_wreck", violet_jade: "heavy_hour", amber_midnight: "swift",
+  blue_rose: "untouchable", green_copper: "cold_engine", gold_violet: "week",
+  rainbow: "every_era", wanted: "outlaw", terminated: "back_from_dead",
+};
+for (const t of THEMES) COSMETICS.push({ id: t.id, kind: "colour", name: t.name, quest: COLOUR_QUEST[t.id] || null, theme: t });
 const COSMETIC_BY_ID = Object.fromEntries(COSMETICS.map((c) => [c.id, c]));
 const STAMP_INK = { ink: "#1d1a16", teal: "#11706d", violet: "#5a3aa8", red: "#a3241a", gold: "#9a6a12" };
 const unlocked = (c) => !c.quest || !!D.quests[c.quest];
@@ -455,7 +483,8 @@ function nickname() {
   return n || "Traveller";
 }
 function myColour() {
-  try { return seatColor(profile.get().colour || 0); } catch (e) { return "#f2a93b"; }
+  try { return equipped("colour").theme.a; } catch (e) {}
+  try { return seatColor(profile.get().colour || 0); } catch (e) { return "#6fae6a"; }
 }
 
 /* ───────────────────────────── THE MATCH ─────────────────────────────
@@ -475,7 +504,7 @@ class Match {
     this.buys = 0; this.secretBuys = 0; this.briefcase = 0; this.renews = 0; this.declared = 0;
     this.reactor = 0; this.overloads = 0; this.explosions = 0; this.activations = 0;
     this.rewards = 0; this.chaos = 0; this.milestones = 0; this.wanted = 0; this.herald = 0;
-    this.deepest = 30; this.leap = 0; this.purse = 0;
+    this.deepest = 30; this.leap = 0; this.purse = 0; this.eras = new Set(); this.wantedAtEnd = false;
     this.alloc = null; this.cent = null; this.roller = null; this.pendingChaos = null;
     this.over = false; this.filed = false; this.won = false; this.reason = ""; this.margin = 0;
     this.counts = null;          // decided once the table is known (vs AI, not the tutorial)
@@ -572,6 +601,7 @@ class Match {
       case "delivered":
         if (p.seat !== me) break;
         this.relics++; this.herald++;
+        for (const e of erasOf(num(p.century))) this.eras.add(e);
         if (inOrigins(p.century)) this.relicO++;
         if (inAscension(p.century)) this.relicA++;
         if (inSingularity(p.century)) this.relicS++;
@@ -611,6 +641,10 @@ class Match {
       case "game_over": {
         this.closeHour();
         this.over = true;
+        {
+          const v = this.view(), me = v && v.travelers && v.travelers.find((t) => t.is_self || t.name === this.me);
+          this.wantedAtEnd = !!(me && (me.is_wanted || (me.statuses || []).includes("wanted")));
+        }
         this.won = !!p.winner && p.winner === me;
         this.reason = String(p.reason || "");
         const sc = p.scores || {};
@@ -683,6 +717,7 @@ function file(m) {
   D.streak.now = m.won ? D.streak.now + 1 : 0;
   D.streak.best = Math.max(D.streak.best, D.streak.now);
   T.relics += m.relics; T.damage += m.dmg; T.wrecks += m.wrecks; T.herald += m.herald;
+  D.eras = ERA_SPANS.map(([n]) => n).filter((n) => D.eras.includes(n) || m.eras.has(n));
   m.filed = true;
   const at = Date.now();
   for (const r of RECORDS) {
@@ -710,6 +745,8 @@ function onEvent(kind, payload, game) {
     if (kind === "game_over") tutorialDone();
     return;
   }
+  // your look shows in every match you play (never in the tutorial's story)
+  if (kind === "hour_started" || kind === "phase_started") applyInPlay();
   if (!m.decide()) return;
   if (!D) load();
   const final = kind === "game_over";
@@ -724,7 +761,6 @@ function onEvent(kind, payload, game) {
   else if (quests.length) stamp("QUESTS", `${quests.length} quests filed`, quests.map((q) => q.name).join(" · "), "quest");
   if (done.length || quests.length || final) changed();
   if (final) watchResults(m);
-  if (kind === "hour_started" || kind === "phase_started") applyInPlay();
 }
 
 function tutorialDone() {
@@ -831,7 +867,7 @@ function resultBlock(m) {
   const lines = [];
   for (const r of m.newRecords) {
     const def = RECORD_BY_ID[r.id]; if (!def) continue;
-    lines.push(`<li class="cr-rec"><b>New record</b> ${esc(def.name)}: ${esc(fmtRecord(def, r.value))}${def.id === "deepest" ? "" : " " + esc(def.unit)}</li>`);
+    lines.push(`<li class="cr-rec"><b>New record</b> ${esc(def.name)}: ${esc(fmtRecord(def, r.value))}${def.id === "deepest" ? "" : " " + esc(unitOf(def, r.value))}</li>`);
   }
   for (const id of m.missionsDone) lines.push(`<li class="cr-mis"><b>Mission</b> ${esc(MISSION_BY_ID[id].title)}</li>`);
   for (const id of m.questsDone) lines.push(`<li class="cr-qst"><b>Quest</b> ${esc(QUEST_BY_ID[id].name)}</li>`);
@@ -845,6 +881,82 @@ function resultBlock(m) {
     </div>`;
   box.querySelector(".cr-open").addEventListener("click", () => open());
   return box;
+}
+
+/* ───────────────────────────── THE COLOURS ─────────────────────────────
+   The colour you wear (js/theme.js). The menu's picker is drawn here: green and
+   blue from the start, every other colour locked until its quest is done, and the
+   quest named on the line under the swatches. */
+function wearColour(id) {
+  const c = COSMETIC_BY_ID[id];
+  if (!c || c.kind !== "colour" || !unlocked(c)) return false;
+  D.equip.colour = id; save();
+  try { const base = c.theme.base; if (base != null && profile.get().colour !== base) profile.setColour(base); } catch (e) {}
+  applyTheme(id);
+  return true;
+}
+// the colour to ask the server for: a palette index, or the theme's id (server/lobby.py clean_colour)
+export function colourWish() {
+  if (!D) load();
+  const t = equipped("colour").theme;
+  return t.kind === "single" ? t.base : t.id;
+}
+const LOCK_SVG = `<svg class="chp-lock" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="7" width="10" height="7" rx="1.2" fill="currentColor"/></svg>`;
+const STAR_SVG = `<svg class="chp-star" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0-9 2.6-4.5 7.8-4.5 5.2 0 7.8 4.5 2.6 4.5 0 9-2.6 4.5-7.8 4.5-5.2 0-7.8-4.5-2.6-4.5Z" fill="#d9a441" stroke="#2a1606" stroke-width="1.2"/><circle r="2.2" fill="#2a1606"/></svg>`;
+function whyLine(c) {
+  const t = c.theme, tier = TIER_NAME[t.tier];
+  if (unlocked(c)) return `${t.name}: ${tier.toLowerCase()}${t.tier === "free" ? "" : " reward"}, yours to wear.`;
+  const q = QUEST_BY_ID[c.quest];
+  return `${t.name} (${tier.toLowerCase()}) is locked. Quest: ${q.name}. ${q.text}`;
+}
+export function colourPicker(box, nameEl, onPick) {
+  if (!box) return;
+  if (!D) load();
+  const cur = equipped("colour");
+  box.classList.add("chr-picker");
+  box.innerHTML = "";
+  let why = document.getElementById("prof-colour-why");
+  if (!why) {
+    why = document.createElement("p");
+    why.id = "prof-colour-why"; why.className = "chp-why"; why.setAttribute("aria-live", "polite");
+    box.insertAdjacentElement("afterend", why);
+  }
+  const say = (c) => { why.textContent = whyLine(c); why.classList.toggle("is-locked", !unlocked(c)); };
+  const rows = [["Colours", (t) => t.kind === "single"], ["Pairs", (t) => t.kind === "pair"],
+    ["Epic and legendary", (t) => t.tier === "epic" || t.tier === "legendary"]];
+  for (const [label, keep] of rows) {
+    const row = document.createElement("div");
+    row.className = "chp-row";
+    row.innerHTML = `<span class="chp-lbl" aria-hidden="true">${esc(label)}</span>`;
+    for (const t of THEMES.filter(keep)) {
+      const c = COSMETIC_BY_ID[t.id], ok = unlocked(c), on = cur.id === t.id;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `chp-sw chp-${t.kind} chp-tier-${t.tier}` + (on ? " is-on" : "") + (ok ? "" : " is-locked");
+      b.dataset.colour = t.id;
+      b.style.setProperty("--a", t.a);
+      if (t.b) b.style.setProperty("--b", t.b);
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      if (!ok) b.setAttribute("aria-disabled", "true");
+      b.setAttribute("aria-label", `${t.name}, ${TIER_NAME[t.tier].toLowerCase()}${ok ? "" : `, locked: quest ${QUEST_BY_ID[c.quest].name}`}`);
+      b.setAttribute("aria-describedby", "prof-colour-why");
+      b.innerHTML = (t.kind === "wanted" ? STAR_SVG : "") + (ok ? "" : LOCK_SVG);
+      b.addEventListener("mouseenter", () => say(c));
+      b.addEventListener("focus", () => say(c));
+      b.addEventListener("mouseleave", () => say(equipped("colour")));
+      b.addEventListener("blur", () => say(equipped("colour")));
+      b.addEventListener("click", () => {
+        if (!unlocked(c)) { say(c); try { audio.play("click"); } catch (e) {} return; }
+        wearColour(t.id);
+        if (onPick) onPick(); else colourPicker(box, nameEl, onPick);
+      });
+      row.appendChild(b);
+    }
+    box.appendChild(row);
+  }
+  if (nameEl) nameEl.textContent = cur.theme.name;
+  say(cur);
 }
 
 /* ───────────────────────────── THE MENU ENTRY ─────────────────────────────
@@ -937,7 +1049,9 @@ function onPageClick(e) {
   if (eq && !eq.disabled) {
     const c = COSMETIC_BY_ID[eq.dataset.equip];
     if (c && unlocked(c)) {
-      D.equip[c.kind] = c.id; save(); applyInPlay();
+      if (c.kind === "colour") wearColour(c.id);
+      else { D.equip[c.kind] = c.id; save(); }
+      applyInPlay();
       try { audio.play("click"); } catch (x) {}
       renderPage(); const again = pageEl.querySelector(`[data-equip="${c.id}"]`); if (again) again.focus({ preventScroll: true });
     }
@@ -951,7 +1065,7 @@ function onPageClick(e) {
     const box = clr.closest(".chr-clearbox");
     if (clr.classList.contains("chr-clear-ask")) box.classList.add("is-asking");
     else if (clr.classList.contains("chr-clear-no")) box.classList.remove("is-asking");
-    else if (clr.classList.contains("chr-clear-yes")) { D = blank(); save(); applyInPlay(); renderPage(); changed(); }
+    else if (clr.classList.contains("chr-clear-yes")) { D = blank(); save(); try { bootColour(); } catch (x) {} applyInPlay(); renderPage(); changed(); }
   }
 }
 
@@ -968,7 +1082,7 @@ function renderPage() {
       <h4><span>${roman(t.n)}. ${esc(t.name)}</span><small>${got} of ${qs.length} · ${t.pts} pt${t.pts > 1 ? "s" : ""} each</small></h4>
       <ul class="chr-quests">${qs.map((q) => {
         const ok = !!D.quests[q.id];
-        const KIND = { badge: "badge", herald: "Herald print", stamp: "stamp" };
+        const KIND = { badge: "badge", herald: "Herald print", stamp: "stamp", colour: "colour" };
         const unlocks = COSMETICS.filter((c) => c.quest === q.id).map((c) => `the ${c.name.replace(/^The /, "")} ${KIND[c.kind]}`);
         return `<li class="${ok ? "is-done" : ""}">
           <span class="chq-mark" aria-hidden="true">${ok ? "&#10003;" : ""}</span>
@@ -982,22 +1096,24 @@ function renderPage() {
     const v = D.records[r.id];
     return `<li class="chr-rec ${v ? "" : "is-empty"}">
       <span class="chr-rec-name">${esc(r.name)}</span>
-      <b class="chr-rec-val">${v ? esc(fmtRecord(r, v.value)) : "--"}${v && r.id !== "deepest" ? ` <small>${esc(r.unit)}</small>` : ""}</b>
+      <b class="chr-rec-val">${v ? esc(fmtRecord(r, v.value)) : "--"}${v && r.id !== "deepest" ? ` <small>${esc(unitOf(r, v.value))}</small>` : ""}</b>
       <span class="chr-rec-what">${esc(r.what)}</span>
       ${v ? `<span class="chr-rec-when">${esc(shortDate(v.at))} · ${v.players} seats · Hour ${v.hours}</span>` : ""}
     </li>`;
   }).join("");
-  const kinds = [["badge", "Traveller badge", "Pinned on your case in every match, and on your record card."],
+  const kinds = [["colour", "Colour", "Your piece, HELA's eye and her words. Green and blue to start; every other colour is a quest."],
+    ["badge", "Traveller badge", "Pinned on your case in every match, and on your record card."],
     ["herald", "Herald print", "How every Temporal Herald edition is printed for you."],
     ["stamp", "Case file stamp", "Pressed on your results and on your record card."]];
   const cos = kinds.map(([k, title, note]) => `<section class="chr-cos" aria-label="${esc(title)}">
       <h4>${esc(title)} <small>${esc(note)}</small></h4>
       <div class="chr-cos-row">${COSMETICS.filter((c) => c.kind === k).map((c) => {
         const ok = unlocked(c), on = equipped(k).id === c.id;
-        const face = k === "badge" ? badgeSvg(c.id, ok ? col : "#6b6456", "chc-art")
+        const face = k === "colour" ? `<span class="chp-sw chp-${c.theme.kind} chc-sw ${ok ? "" : "is-locked"}" style="--a:${c.theme.a};${c.theme.b ? `--b:${c.theme.b}` : ""}">${c.theme.kind === "wanted" ? STAR_SVG : ""}${ok ? "" : LOCK_SVG}</span>`
+          : k === "badge" ? badgeSvg(c.id, ok ? col : "#6b6456", "chc-art")
           : k === "stamp" ? `<span class="chr-inkstamp chr-ink-${c.tone}">${esc(c.name)}</span>`
           : `<span class="chc-herald chr-hs-${c.id}"><span class="bn-mast">The Temporal Herald</span></span>`;
-        const why = ok ? (on ? "Worn" : "Wear it") : `Quest: ${esc(QUEST_BY_ID[c.quest].name)}`;
+        const why = (k === "colour" ? `${esc(TIER_NAME[c.theme.tier])} · ` : "") + (ok ? (on ? "Worn" : "Wear it") : `Quest: ${esc(QUEST_BY_ID[c.quest].name)}`);
         return `<button type="button" class="chr-cos-item ${on ? "is-on" : ""} ${ok ? "" : "is-locked"}" data-equip="${c.id}" ${ok ? "" : "disabled"}
           aria-pressed="${on ? "true" : "false"}" aria-label="${esc(c.name)}, ${ok ? (on ? "worn" : "unlocked") : "locked"}">
           <span class="chc-face">${face}</span><span class="chc-name">${esc(c.name)}</span><span class="chc-why">${why}</span></button>`;
@@ -1163,7 +1279,7 @@ async function drawCard() {
     while (x.measureText(val).width > gw - 150 && vs > 30) { vs -= 4; x.font = `italic 700 ${vs}px ${D1}`; }
     x.fillText(val, px + 24, py + 104);
     const vw = x.measureText(val).width;
-    if (v && r.id !== "deepest") { x.font = `700 20px ${D1}`; x.fillStyle = "#4a3a20"; x.fillText(r.unit.toUpperCase(), px + 34 + vw, py + 104); }
+    if (v && r.id !== "deepest") { x.font = `700 20px ${D1}`; x.fillStyle = "#4a3a20"; x.fillText(unitOf(r, v.value).toUpperCase(), px + 34 + vw, py + 104); }
     x.font = `500 13px ${MONO}`; x.fillStyle = "#4a3a20";
     x.fillText(v ? `${shortDate(v.at)} · ${v.players} SEATS · HOUR ${v.hours}` : "NOT YET SET", px + 26, py + 132);
   });
@@ -1269,13 +1385,30 @@ function missions() {
 load();
 window.__pdxChronicle = {
   event: (k, p, g) => { try { onEvent(k, p, g); } catch (e) { console.warn("chronicle:", e); } },
-  missions, snapshot, open, close: () => close(), tutorialDone,
+  missions, snapshot, open, close: () => close(), tutorialDone, colourPicker, colourWish,
   day: () => dayKey(),
   onChange: (cb) => { listeners.add(cb); return () => listeners.delete(cb); },
   // for tests and the harness: the pool, the definitions and a given day's pick
   _defs: { RECORDS, POOL, QUESTS, COSMETICS, RANKS, dailyIds },
+  _match: () => (M ? { counts: M.counts, tutorial: M.tutorial, hour: M.hour, dmg: M.dmg, widest: M.widest, buys: M.buys, relics: M.relics, cp: M.cp } : null),
 };
+// The colour on first run of this version: the profile's colour if it is still
+// yours to wear (green or blue, or unlocked), otherwise green.
+function bootColour() {
+  if (!D.equip.colour) {
+    let id = "green";
+    try {
+      const pc = profile.get().colour, t = THEMES.find((x) => x.kind === "single" && x.base === pc);
+      if (t && unlocked(COSMETIC_BY_ID[t.id])) id = t.id;
+    } catch (e) {}
+    D.equip.colour = id; save();
+  }
+  const c = equipped("colour");
+  try { if (c.theme.base != null && profile.get().colour !== c.theme.base) profile.setColour(c.theme.base); } catch (e) {}
+  applyTheme(c.id);
+}
 function boot() {
+  try { bootColour(); } catch (e) { console.warn("chronicle colour:", e); }
   try { menuBlock(); } catch (e) { console.warn("chronicle menu:", e); }
   try { applyHerald(); } catch (e) {}
 }

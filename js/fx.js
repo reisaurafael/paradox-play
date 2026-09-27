@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609270943";
-import { roman } from "./util.js?202609270943";
+import { audio } from "./audio.js?202609271103";
+import { roman } from "./util.js?202609271103";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -435,14 +435,15 @@ class Fx {
   }
 
   // the hit the big panel names (comic.js: mine first, else the first rival hit) and the
-  // colour of the traveller who fed that pool without being its victim (as game.js bills it)
+  // colour of the traveller whose die reached that victim (game.js bills it the same way)
   _pdxStar(p) {
     const me = this._me();
     const hits = (p.hits || []).filter((h) => h.damage); if (!hits.length) return null;
     const star = hits.find((h) => h.seat === me) || hits.find((h) => h.seat !== me) || hits[0];
-    let causers = [];
-    try { causers = (this.game._paradoxCausers && this.game._paradoxCausers(p.module)) || []; } catch (e) {}
-    const by = causers.find((c) => c !== star.seat) || causers[0];
+    // the colour of the traveler whose die REACHED the star (by position), never merely a
+    // traveler who fed the pool
+    let by = null;
+    try { const q = (this._paradoxPairs(p) || []).flat().find((x) => x.victim === star.seat && x.causer); by = q ? q.causer : null; } catch (e) {}
     return { star, col: by ? this._col(by) : null };
   }
 

@@ -1,18 +1,22 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    THE CAT: a living animal on the records desk (the game's soul and its scale
-   ruler). A young orange tabby, white bib and socks, green eyes; his body next
+   ruler). A young orange tabby, white bib and socks, green eyes; her body next
    to the briefcase is how the player reads the size of the world.
 
-   He has his own places on the paperwork desk: his cushion in the corner, the
-   floor under the cabinet, and the warm spot beside HELA's core. He sleeps a
-   lot, sits and grooms, walks between his places now and then, hunts the hand
-   when it darts past him (and nibbles it), purrs under a slow hand, and plays
-   with HELA's memory when she spins, batting at the Hours without touching them.
-   Everything is rare and slow; nothing he does is constant.
+   She has her own places on the paperwork desk: her cushion in the corner, the
+   spot beside HELA's core, the floor under the cabinet, and a nook under the
+   briefcase. She sleeps a lot, sits and grooms, walks between her places now
+   and then, hunts the hand when it darts past her (and nibbles it), purrs under
+   a slow hand, and plays with HELA's memory when she spins, batting at the Hours
+   without touching them. Everything is rare and slow; nothing she does is constant.
 
    The drawing is static inked SVG in the desk's comic style (one light, top
-   left). The engine is event driven: timers decide, CSS transitions move him,
-   and the pointer is read only from real mouse moves. No frame loop.
+   left). Every pose is ONE body: all its parts share a single ink underlay, so
+   the outline runs round the whole silhouette and never between head, body and
+   legs; where a part lies over another, a soft fur-coloured edge tells them
+   apart. The outline itself is fur: edges marked as furry break into irregular
+   clumps swept along the coat. The engine is event driven: timers decide, CSS
+   transitions move her, and the pointer is read only from real mouse moves.
    API: new CatEngine() · start() · stop() · pet() · startle() · setMood(m)
    · hitTest(x, y) · _enter(state, secs) · state · root · onMeow.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -21,292 +25,339 @@ const NS = "http://www.w3.org/2000/svg";
 const VB_W = 900, VB_H = 700;
 
 const INK = "#24150c";
-const FUR_S = "#c26a2b", FUR_D = "#a4541f", STRIPE = "#b2531b";
-const WHITE_S = "#d8c8ad", PINK = "#e58f8a";
+const FUR = "url(#cwFur)", FUR_S = "#cd7431", FUR_H = "url(#cwFurH)";
+const WHT = "url(#cwWht)", WHT_H = "url(#cwWhtH)", WHITE_S = "#dccbb0";
+const STRIPE = "#b0501a", EDGE = "#94410f", LIGHT = "#ffd08f", PINK = "#e58f8a";
 
-/* ── drawing helpers ── */
-// a filled shape with a heavier ink edge on its shadow side (bottom right)
-const inked = (d, fill, w = 3.2) =>
-  `<path d="${d}" transform="translate(1.8 2.6)" fill="${INK}"/><path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="${w}"/>`;
-const fillOnly = (d, fill, op = 1) => `<path d="${d}" fill="${fill}"${op < 1 ? ` opacity="${op}"` : ""}/>`;
+const n1 = (v) => Math.round(v * 10) / 10;
+const pt = (p) => `${n1(p[0])} ${n1(p[1])}`;
 const line = (d, col = INK, w = 2, op = 1) =>
   `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"${op < 1 ? ` opacity="${op}"` : ""}/>`;
-// a leg: fill, sock, and an open outline so its top melts into the body
-const leg = (fillD, sockD, outD, fill = "url(#cwFur)", sock = "url(#cwWht)") =>
-  `<path d="${fillD}" fill="${fill}"/><path d="${sockD}" fill="${sock}"/>` + line(outD, INK, 3);
 
-function ear() {
-  const d = "M -98 -34 L -110 -150 Q -108 -162 -96 -156 L -18 -88 Z";
-  return inked(d, "url(#cwFurH)")
-    + fillOnly("M -88 -52 L -98 -136 L -36 -88 Z", "#f2b0a2")
-    + fillOnly("M -88 -52 L -98 -136 L -82 -118 L -72 -70 Z", "#d4857c", .6)
-    + `<g stroke="#fff6e6" stroke-width="2" fill="none" stroke-linecap="round" opacity=".9"><path d="M -86 -58 q 2 -20 -6 -38"/><path d="M -76 -62 q 4 -18 -2 -32"/><path d="M -66 -66 q 6 -14 4 -26"/></g>`
-    + line("M -106 -140 Q -105 -150 -99 -150", "#ffd08f", 3, .8);
+function rng(seed) {
+  let s = Math.imul(seed + 7, 2654435761) >>> 0 || 1;
+  return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296);
 }
 
-/* The head, drawn once and shared by every pose (one character in every drawing).
-   Local frame: centre (0,0), about 256 wide with the cheek tufts. */
-function head(sleepy) {
-  const H = "M 0 -94 C 64 -94 108 -56 112 -8 L 128 4 L 113 13 L 126 28 L 105 34 C 92 70 52 94 0 94 C -52 94 -92 70 -105 34 L -126 28 L -113 13 L -128 4 L -112 -8 C -108 -56 -64 -94 0 -94 Z";
-  const EL = "M -86 -12 Q -68 -40 -36 -34 Q -16 -28 -14 -8 Q -22 16 -50 17 Q -80 15 -86 -12 Z";
-  const ER = "M 86 -12 Q 68 -40 36 -34 Q 16 -28 14 -8 Q 22 16 50 17 Q 80 15 86 -12 Z";
-  const eyes = sleepy
-    ? `<g class="cw-sleepeyes">${line("M -84 -10 Q -52 10 -18 -10", INK, 5)}${line("M 18 -10 Q 52 10 84 -10", INK, 5)}${line("M -84 -10 l -9 -3 M 84 -10 l 9 -3", INK, 2.4)}</g>`
-    : `<g class="cw-eyes">
-      <g class="cw-eyeball">
-        <path d="${EL}" fill="url(#cwIris)" stroke="${INK}" stroke-width="2"/>
-        <g clip-path="url(#cwEL)">
-          <path d="M -86 -12 Q -68 -40 -36 -34 Q -16 -28 -14 -8 Q -40 -26 -86 -12 Z" fill="#2f4a10" opacity=".45"/>
-          <ellipse class="cw-pupil" cx="-50" cy="-8" rx="8.5" ry="19" fill="#120f08"/>
-        </g>
-        <circle cx="-60" cy="-19" r="7.5" fill="#fff"/><circle cx="-38" cy="5" r="3.2" fill="#fff" opacity=".85"/>
-        ${line("M -90 -8 Q -70 -46 -32 -37 Q -14 -31 -10 -10", INK, 5.5)}${line("M -86 -4 l -9 -4 M -88 -13 l -9 -1", INK, 2.4)}
-      </g>
-      <g class="cw-eyeball">
-        <path d="${ER}" fill="url(#cwIris)" stroke="${INK}" stroke-width="2"/>
-        <g clip-path="url(#cwER)">
-          <path d="M 86 -12 Q 68 -40 36 -34 Q 16 -28 14 -8 Q 40 -26 86 -12 Z" fill="#2f4a10" opacity=".45"/>
-          <ellipse class="cw-pupil" cx="50" cy="-8" rx="8.5" ry="19" fill="#120f08"/>
-        </g>
-        <circle cx="40" cy="-19" r="7.5" fill="#fff"/><circle cx="62" cy="5" r="3.2" fill="#fff" opacity=".85"/>
-        ${line("M 90 -8 Q 70 -46 32 -37 Q 14 -31 10 -10", INK, 5.5)}${line("M 86 -4 l 9 -4 M 88 -13 l 9 -1", INK, 2.4)}
-      </g>
-      <g class="cw-lid">${line("M -84 -6 Q -52 -34 -18 -8", INK, 5.5)}${line("M 18 -8 Q 52 -34 84 -6", INK, 5.5)}</g>
-    </g>`;
-  return `
-    <g class="cw-earL">${ear()}</g>
-    <g class="cw-earR"><g transform="scale(-1 1)">${ear()}</g></g>
-    ${inked(H, "url(#cwFurH)", 3.4)}
-    ${fillOnly("M 76 -72 C 100 -52 110 -30 112 -8 L 128 4 L 113 13 L 126 28 L 105 34 C 92 70 52 94 0 94 C -30 94 -58 84 -78 68 C -30 84 30 80 64 50 C 92 20 96 -30 76 -72 Z", FUR_S, .6)}
-    ${line("M -92 -46 C -76 -78 -40 -92 -4 -92", "#ffd08f", 4, .85)}
-    <g fill="${STRIPE}">
-      <path d="M -3 -93 Q -11 -70 0 -46 Q 10 -70 3 -93 Z"/><path d="M -34 -87 Q -43 -66 -28 -50 Q -28 -68 -23 -89 Z"/><path d="M 34 -87 Q 43 -66 28 -50 Q 28 -68 23 -89 Z"/>
-      <path d="M -112 -4 Q -92 -10 -76 -2 Q -94 2 -110 8 Z"/><path d="M -108 16 Q -90 12 -78 18 Q -92 22 -104 26 Z"/>
-      <path d="M 112 -4 Q 92 -10 76 -2 Q 94 2 110 8 Z"/><path d="M 108 16 Q 90 12 78 18 Q 92 22 104 26 Z"/>
-    </g>
-    ${fillOnly("M -8 -60 Q 0 -66 8 -60 L 15 4 Q 44 4 60 28 Q 66 68 0 88 Q -66 68 -60 28 Q -44 4 -15 4 Z", "url(#cwWhtH)")}
-    ${fillOnly("M 26 10 Q 52 16 60 30 Q 62 62 16 84 Q 44 58 26 10 Z", WHITE_S, .8)}
-    ${eyes}
-    <ellipse class="cw-blush" cx="-72" cy="24" rx="17" ry="8" fill="#f08a8a"/><ellipse class="cw-blush" cx="72" cy="24" rx="17" ry="8" fill="#f08a8a"/>
-    <path d="M -12 20 Q 0 15 12 20 Q 13 25 8 30 L 2 36 Q 0 38 -2 36 L -8 30 Q -13 25 -12 20 Z" fill="${PINK}" stroke="${INK}" stroke-width="2.2"/>
-    ${line("M -5 21 Q 0 19 5 21", "#fff", 1.8, .8)}
-    <g class="cw-mouth-calm">${line("M 0 37 L 0 45 M 0 45 Q -10 56 -22 47 M 0 45 Q 10 56 22 47", INK, 2.6)}</g>
-    ${sleepy ? "" : `<g class="cw-mouth-open">
-      <path d="M -21 43 Q -10 40 0 45 Q 10 40 21 43 Q 17 74 0 78 Q -17 74 -21 43 Z" fill="#5e1f2a" stroke="${INK}" stroke-width="2.4"/>
-      <path d="M -11 64 Q 0 57 11 64 Q 9 76 0 77 Q -9 76 -11 64 Z" fill="#e67f88"/>
-      <path d="M -16 45 L -12 57 L -8 46 Z M 16 45 L 12 57 L 8 46 Z" fill="#fff" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/>
-    </g>
-    <path class="cw-tongue" d="M -9 45 Q -10 70 0 72 Q 10 70 9 45 Q 0 50 -9 45 Z" fill="#e67f88" stroke="${INK}" stroke-width="2"/>`}
-    <g fill="#b89a7c"><circle cx="-24" cy="38" r="2"/><circle cx="-33" cy="32" r="2"/><circle cx="-35" cy="43" r="2"/><circle cx="24" cy="38" r="2"/><circle cx="33" cy="32" r="2"/><circle cx="35" cy="43" r="2"/></g>
-    <g fill="none" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" opacity=".95">
-      <path d="M -40 36 Q -100 26 -156 32 M -40 44 Q -98 46 -148 62 M -38 52 Q -88 64 -128 86"/>
-      <path d="M 40 36 Q 100 26 156 32 M 40 44 Q 98 46 148 62 M 38 52 Q 88 64 128 86"/>
-    </g>`;
+/* A closed outline through hand-placed points [x, y, fur]. Plain edges pass smoothly
+   through the points; an edge whose first point carries a fur weight breaks into
+   irregular clumps, each tip swept along the coat (a negative weight sweeps it the
+   other way). Also returns the grain: short strands running from each clump inward. */
+function fur(pts, seed = 1, amp = 9) {
+  const R = rng(seed), n = pts.length;
+  let area = 0;
+  for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; area += a[0] * b[1] - b[0] * a[1]; }
+  const cw = area > 0;
+  const P = (i) => pts[(i + n) % n];
+  const seg = (i) => {
+    const p0 = P(i - 1), p1 = P(i), p2 = P(i + 1), p3 = P(i + 2);
+    return [p1, [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6],
+      [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6], p2];
+  };
+  const at = (b, t) => {
+    const u = 1 - t, a = u * u * u, c = 3 * u * u * t, e = 3 * u * t * t, f = t * t * t;
+    return [a * b[0][0] + c * b[1][0] + e * b[2][0] + f * b[3][0], a * b[0][1] + c * b[1][1] + e * b[2][1] + f * b[3][1]];
+  };
+  let d = `M ${pt(pts[0])}`, strands = "";
+  for (let i = 0; i < n; i++) {
+    const b = seg(i), w = pts[i][2] || 0;
+    if (!w) { d += ` C ${pt(b[1])} ${pt(b[2])} ${pt(b[3])}`; continue; }
+    const len = Math.hypot(b[3][0] - b[0][0], b[3][1] - b[0][1]);
+    const k = Math.max(1, Math.round(len / (15 + R() * 10)));
+    const sw = Math.sign(w), aw = Math.abs(w);
+    for (let j = 0; j < k; j++) {
+      const t0 = j / k, t1 = (j + 1) / k, tm = t0 + (t1 - t0) * (0.5 + R() * 0.3);
+      const a0 = at(b, t0), a1 = at(b, t1), q = at(b, tm);
+      let dx = a1[0] - a0[0], dy = a1[1] - a0[1];
+      const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+      const nx = cw ? dy : -dy, ny = cw ? -dx : dx;
+      const h = amp * aw * (R() < 0.18 ? 0.25 : 0.5 + R() * 0.8);
+      const tip = [q[0] + nx * h + dx * h * 0.6 * sw, q[1] + ny * h + dy * h * 0.6 * sw];
+      const c1 = at(b, t0 + (tm - t0) * 0.45), c2 = at(b, tm + (t1 - tm) * 0.55);
+      d += ` Q ${pt([c1[0] + nx * h * 0.45, c1[1] + ny * h * 0.45])} ${pt(tip)} Q ${pt(c2)} ${pt(a1)}`;
+      if (h > amp * 0.35 && R() < 0.75) {
+        const s0 = [q[0] - nx * 3, q[1] - ny * 3], s1 = [q[0] - nx * h * 1.5 - dx * h * 0.5 * sw, q[1] - ny * h * 1.5 - dy * h * 0.5 * sw];
+        strands += `M ${pt(s0)} Q ${pt([(s0[0] + s1[0]) / 2 + dx * 2, (s0[1] + s1[1]) / 2 + dy * 2])} ${pt(s1)} `;
+      }
+    }
+  }
+  return { d: d + " Z", strands };
 }
-// comic purr lines, shown only while he purrs
+const mirror = (pts) => pts.map(([x, y, w]) => [-x, y, w]);
+
+// a tapered brush mark (tabby stripe, fur clump): base on (x,y), pointing at `ang` degrees
+function mark(x, y, ang, len, w) {
+  const a = ang * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx;
+  const tip = [x + dx * len, y + dy * len];
+  return `M ${pt([x + nx * w / 2, y + ny * w / 2])} Q ${pt([x + dx * len * 0.5 + nx * w * 0.45, y + dy * len * 0.5 + ny * w * 0.45])} ${pt(tip)} Q ${pt([x + dx * len * 0.45 - nx * w * 0.5, y + dy * len * 0.45 - ny * w * 0.5])} ${pt([x - nx * w / 2, y - ny * w / 2])} Z`;
+}
+const marks = (list, col = STRIPE, op = 1) => `<path d="${list.map((m) => mark(...m)).join(" ")}" fill="${col}"${op < 1 ? ` opacity="${op}"` : ""}/>`;
+
+let clipN = 0;
+/* A body. parts: { pts | d, fill, seed, amp, cls, tr, soft, sock, detail, ink:false, vol:false }.
+   Ink first (all parts, one silhouette), then the paint in order. */
+function body(name, parts, before = "", after = "") {
+  let ink = "", paint = "";
+  for (const p of parts) {
+    const wrap = (inner) => {
+      let g = inner;
+      if (p.cls) g = `<g class="${p.cls}">${g}</g>`;
+      if (p.tr) g = `<g transform="${p.tr}">${g}</g>`;
+      return g;
+    };
+    if (p.raw) { ink += wrap(p.raw.ink); paint += wrap(p.raw.paint); continue; }
+    const s = p.d ? { d: p.d, strands: "" } : fur(p.pts, p.seed || 1, p.amp || 9);
+    if (p.ink !== false) ink += wrap(`<path d="${s.d}"/>`);
+    let g = `<path d="${s.d}" fill="${p.fill || FUR}"/>`;
+    if (p.sock) {
+      const id = "cwK" + (++clipN);
+      const r = Array.isArray(p.sock) ? p.sock : [0, p.sock, 900, 120];
+      g += `<clipPath id="${id}"><path d="${s.d}"/></clipPath><g clip-path="url(#${id})">`
+        + `<path d="M ${r[0]} ${r[1] + r[3]} L ${r[0]} ${r[1] + 6} Q ${r[0] + r[2] * .25} ${r[1] - 8} ${r[0] + r[2] * .4} ${r[1] + 2} Q ${r[0] + r[2] * .6} ${r[1] - 10} ${r[0] + r[2] * .75} ${r[1] + 1} Q ${r[0] + r[2] * .9} ${r[1] - 6} ${r[0] + r[2]} ${r[1] + 4} L ${r[0] + r[2]} ${r[1] + r[3]} Z" fill="${p.fill === FUR_S ? WHITE_S : WHT}"/></g>`;
+    }
+    if (p.vol !== false) g += `<path d="${s.d}" fill="url(#cwVol)"/>`;
+    if (p.detail) g += p.detail;
+    if (s.strands) g += `<path d="${s.strands}" fill="none" stroke="${EDGE}" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>`;
+    if (p.soft) g += `<path d="${s.d}" fill="none" stroke="${EDGE}" stroke-width="2.6" opacity=".55"/>`;
+    paint += wrap(g);
+  }
+  return `<g class="cw-pose cw-${name}">${before}<g fill="${INK}" stroke="${INK}" stroke-width="7" transform="translate(.9 1.4)">${ink}</g>${paint}${after}</g>`;
+}
+
+/* ── the face. Her eyes are almonds with a life of their own: each expression is a
+      drawing of its own, and the engine shows one (class x-<kind> on the cat). ── */
+const EYES = {   // the right eye (screen right); the left is its mirror. [p0 c1 p1 c2 p2 c3 p3 c4], pupil [cx cy rx ry]
+  open:    { s: [[24, -10], [34, -30], [52, -28], [68, -24], [72, -12], [66, 4], [48, 6], [30, 4]], p: [48, -11, 6.5, 11] },
+  relaxed: { s: [[24, -8], [36, -20], [52, -19], [66, -17], [72, -11], [66, 4], [48, 5], [30, 4]], p: [48, -8, 6, 9.5] },
+  focused: { s: [[24, -6], [38, -21], [54, -24], [68, -25], [72, -15], [66, 3], [48, 5], [30, 3]], p: [49, -9, 2.8, 12] },
+  scared:  { s: [[24, -10], [27, -35], [48, -35], [70, -33], [72, -12], [70, 9], [48, 10], [26, 9]], p: [48, -12, 4, 4] },
+};
+const eyeD = (s, m) => { const q = s.map(([x, y]) => [x * m, y]);
+  return `M ${pt(q[0])} Q ${pt(q[1])} ${pt(q[2])} Q ${pt(q[3])} ${pt(q[4])} Q ${pt(q[5])} ${pt(q[6])} Q ${pt(q[7])} ${pt(q[0])} Z`; };
+const lidD = (s, m) => { const q = s.map(([x, y]) => [x * m, y]);
+  return `M ${pt([q[0][0] - 2 * m, q[0][1] + 1])} Q ${pt(q[1])} ${pt(q[2])} Q ${pt(q[3])} ${pt([q[4][0] + 3 * m, q[4][1] + 1])}`; };
+function eyeDefs() {
+  let d = "";
+  for (const k of Object.keys(EYES)) for (const [m, sd] of [[1, "R"], [-1, "L"]]) d += `<clipPath id="cwE${k}${sd}"><path d="${eyeD(EYES[k].s, m)}"/></clipPath>`;
+  return d;
+}
+function eye(k, m) {
+  const E = EYES[k], sd = m > 0 ? "R" : "L", [cx, cy, rx, ry] = E.p;
+  const lid = lidD(E.s, m), low = `M ${pt([E.s[4][0] * m, E.s[4][1]])} Q ${pt([E.s[5][0] * m, E.s[5][1]])} ${pt([E.s[6][0] * m, E.s[6][1]])}`;
+  return `<path d="${eyeD(E.s, m)}" fill="url(#cwIris)"/>
+    <g clip-path="url(#cwE${k}${sd})">
+      <path d="M ${pt([E.s[0][0] * m, E.s[0][1] - 20])} L ${pt([E.s[4][0] * m, E.s[4][1] - 20])} L ${pt([E.s[4][0] * m, E.s[4][1] + 4])} Q ${pt([E.s[2][0] * m, E.s[2][1] + 12])} ${pt([E.s[0][0] * m, E.s[0][1] + 4])} Z" fill="#2c4a0e" opacity=".5"/>
+      <ellipse class="cw-pupil" cx="${cx * m}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#130f08"/>
+    </g>
+    <circle cx="${(cx - 6) * m}" cy="${cy - 6}" r="${k === "scared" ? 2.6 : 3.3}" fill="#fff"/><circle cx="${(cx + 5) * m}" cy="${cy + 7}" r="1.5" fill="#fff" opacity=".8"/>
+    ${line(lid, INK, 4.6)}${line(low, INK, 1.6, .75)}
+    ${line(`M ${pt([E.s[4][0] * m + 2 * m, E.s[4][1]])} l ${7 * m} -4`, INK, 2)}`;
+}
+function face(kinds) {
+  const group = (k, inner) => `<g class="cw-x cw-x-${k}">${inner}</g>`;
+  let g = "";
+  for (const k of kinds) {
+    if (EYES[k]) {
+      let brow = "";
+      if (k === "focused") brow = marks([[20, -24, -16, 40, 6], [-20, -24, 196, 40, 6]], EDGE, .9);
+      if (k === "scared") brow = marks([[26, -46, -18, 30, 4], [-26, -46, 198, 30, 4]], EDGE, .6);
+      g += group(k, `<g class="cw-eyeball">${eye(k, 1)}${eye(k, -1)}</g>${brow}`);
+    } else if (k === "happy") {
+      g += group(k, line("M 24 -6 Q 48 -28 72 -8", INK, 5) + line("M -24 -6 Q -48 -28 -72 -8", INK, 5)
+        + `<ellipse cx="62" cy="20" rx="15" ry="7" fill="#f08a8a" opacity=".5"/><ellipse cx="-62" cy="20" rx="15" ry="7" fill="#f08a8a" opacity=".5"/>`);
+    } else if (k === "sleepy") {
+      g += group(k, line("M 24 -12 Q 48 4 72 -12", INK, 4.6) + line("M -24 -12 Q -48 4 -72 -12", INK, 4.6)
+        + line("M 72 -12 l 8 -3 M -72 -12 l -8 -3", INK, 2));
+    }
+  }
+  return g;
+}
+
+/* The head: the same drawing in every pose, in its own frame (centre 0,0, about
+   230 wide). Ears sit behind the head and share its ink, so no line crosses their root. */
+const EAR = [[18, -78], [58, -112], [88, -146, .35], [100, -152], [106, -142], [108, -104], [104, -40]];
+const HEAD = [[0, -92], [40, -88], [76, -66], [100, -34, .9], [110, -4, 1.1], [116, 22, 1], [106, 46, .8], [86, 66], [56, 86],
+  [24, 96], [0, 98], [-24, 96], [-56, 86], [-86, 66, .8], [-106, 46, 1], [-116, 22, 1.1], [-110, -4, .9], [-100, -34], [-76, -66], [-40, -88]];
+const MUZZLE = [[-8, -58], [8, -58], [12, -2], [34, 4, .7], [52, 22, .8], [50, 50], [30, 74], [0, 86], [-30, 74], [-50, 50, -.8], [-52, 22, -.7], [-34, 4], [-12, -2]];
+function head(kinds, mouth = true) {
+  const earR = fur(EAR, 21, 7), earL = fur(mirror(EAR), 22, 7), hd = fur(HEAD, 23, 11), mz = fur(MUZZLE, 24, 7);
+  const earPaint = (e, m) => `<path d="${e.d}" fill="${FUR_H}"/><path d="${e.d}" fill="url(#cwVol)"/>
+      <path d="M ${30 * m} -84 L ${86 * m} -134 Q ${98 * m} -136 ${98 * m} -122 L ${92 * m} -60 Z" fill="#f2b0a2"/>
+      <path d="M ${86 * m} -134 Q ${98 * m} -136 ${98 * m} -122 L ${92 * m} -60 L ${80 * m} -104 Z" fill="#cf7f76" opacity=".6"/>
+      ${line(`M ${48 * m} -86 q ${9 * m} -14 ${8 * m} -28 M ${60 * m} -84 q ${10 * m} -12 ${11 * m} -26 M ${72 * m} -80 q ${9 * m} -10 ${12 * m} -22`, "#fff6e6", 2, .85)}`;
+  const ink = `<g class="cw-earL"><path d="${earL.d}"/></g><g class="cw-earR"><path d="${earR.d}"/></g><path d="${hd.d}"/>`;
+  const paint = `<g class="cw-earL">${earPaint(earL, -1)}</g><g class="cw-earR">${earPaint(earR, 1)}</g>
+    <path d="${hd.d}" fill="${FUR_H}"/><path d="${hd.d}" fill="url(#cwVol)"/>
+    <path d="${hd.strands}" fill="none" stroke="${EDGE}" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
+    ${line("M -88 -44 C -70 -76 -36 -90 -2 -90", LIGHT, 4, .8)}
+    ${marks([[0, -92, 90, 30, 9], [-26, -88, 100, 26, 8], [26, -88, 80, 26, 8], [-114, 2, -8, 26, 8], [-108, 24, -4, 22, 7], [114, 2, 188, 26, 8], [108, 24, 184, 22, 7], [-60, -72, 60, 16, 6], [60, -72, 120, 16, 6]])}
+    <path d="${mz.d}" fill="${WHT_H}"/>
+    <path d="M 22 8 Q 50 22 48 50 Q 40 70 14 84 Q 36 56 22 8 Z" fill="${WHITE_S}" opacity=".7"/>
+    <path d="${mz.strands}" fill="none" stroke="#c9b08c" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>
+    ${face(kinds)}
+    <path d="M -9 16 Q 0 12 9 16 Q 9 21 4 25 L 0 28 L -4 25 Q -9 21 -9 16 Z" fill="${PINK}" stroke="${INK}" stroke-width="2"/>
+    ${line("M -4 17 Q 0 15.6 4 17", "#fff", 1.6, .8)}
+    <g class="cw-mouth-calm">${line("M 0 28 L 0 34 M 0 34 Q -8 42 -17 36 M 0 34 Q 8 42 17 36", INK, 2.4)}</g>
+    ${mouth ? `<g class="cw-mouth-open">
+      <path d="M -16 34 Q -8 31 0 35 Q 8 31 16 34 Q 13 58 0 61 Q -13 58 -16 34 Z" fill="#5e1f2a" stroke="${INK}" stroke-width="2.2"/>
+      <path d="M -9 50 Q 0 45 9 50 Q 7 59 0 60 Q -7 59 -9 50 Z" fill="#e67f88"/>
+      <path d="M -12 35 L -9 45 L -6 36 Z M 12 35 L 9 45 L 6 36 Z" fill="#fff" stroke="${INK}" stroke-width="1" stroke-linejoin="round"/>
+    </g>
+    <path class="cw-tongue" d="M -7 35 Q -8 54 0 56 Q 8 54 7 35 Q 0 39 -7 35 Z" fill="#e67f88" stroke="${INK}" stroke-width="1.8"/>` : ""}
+    <g fill="#b89a7c"><circle cx="-20" cy="36" r="1.8"/><circle cx="-28" cy="31" r="1.8"/><circle cx="-29" cy="41" r="1.8"/><circle cx="20" cy="36" r="1.8"/><circle cx="28" cy="31" r="1.8"/><circle cx="29" cy="41" r="1.8"/></g>
+    <g fill="none" stroke="#fffaf0" stroke-width="1.8" stroke-linecap="round" opacity=".95">
+      <path d="M -34 34 Q -94 24 -150 30 M -34 41 Q -92 44 -142 58 M -32 48 Q -82 60 -122 82"/>
+      <path d="M 34 34 Q 94 24 150 30 M 34 41 Q 92 44 142 58 M 32 48 Q 82 60 122 82"/>
+    </g>`;
+  return { ink, paint };
+}
+const headPart = (tr, kinds, mouth) => ({ tr, cls: "cw-head", raw: (() => { const h = head(kinds, mouth);
+  return { ink: `<g class="cw-headin">${h.ink}</g>`, paint: `<g class="cw-headin">${h.paint}</g>` }; })() });
+
+// comic purr lines, shown only while she purrs
 const purr = (x, y, flip) => `<g class="cw-purr" transform="translate(${x} ${y})${flip ? " scale(-1 1)" : ""}">${line("M 0 0 q -10 10 0 20 M -12 -6 q -14 16 0 32", INK, 2.6, .8)}</g>`;
-// a claw fan for the swiping paw
 const claws = (d) => `<g class="cw-claws">${line(d, INK, 4.4)}${line(d, "#fffaf0", 2.2)}</g>`;
+const toes = (d) => line(d, "#a89274", 1.8, .9);
+const shadow = (cx, rx, op = .24) => `<ellipse class="cw-shadow" cx="${cx}" cy="693" rx="${rx}" ry="12" fill="#000" opacity="${op}"/>`;
+const glow = (d) => `<path class="cw-glow" d="${d}" fill="url(#cwGlow)"/>`;
 
 /* ── the poses. Every pose stands on the same ground (y 690) and faces left;
-      the engine mirrors the whole drawing when he faces right. ── */
-function sitBody(raised) {
-  const tail = "M 606 640 C 640 660 636 700 588 700 L 356 700 C 330 700 322 688 334 682 C 346 676 372 686 410 686 L 570 686 C 596 686 606 670 600 650 Z";
-  const nearLeg = raised
-    ? `<g class="cw-paw">
-        ${inked("M 388 544 C 356 494 326 434 306 376 Q 298 350 316 342 Q 336 336 344 356 C 362 412 394 476 428 518 Z", "url(#cwFur)", 3)}
-        ${fillOnly("M 306 376 Q 298 350 316 342 Q 336 336 344 356 L 348 370 Q 326 380 306 376 Z", "url(#cwWht)")}
-        ${line("M 306 376 Q 298 350 316 342 Q 336 336 344 356 L 348 370", INK, 3)}
-        <g fill="#e99a94"><ellipse cx="322" cy="360" rx="7" ry="6"/><circle cx="308" cy="352" r="3.4"/><circle cx="314" cy="344" r="3.4"/><circle cx="324" cy="342" r="3.4"/></g>
-        ${line("M 372 470 C 356 440 340 408 330 380", "#ffd08f", 3, .6)}
-        ${claws("M 304 350 q -8 -4 -6 -12 M 310 341 q -5 -7 0 -13 M 321 338 q -2 -8 4 -12")}
-      </g>`
-    : leg("M 374 520 C 372 580 372 630 372 668 Q 372 692 400 692 Q 428 692 428 668 C 428 630 428 580 430 520 Z",
-          "M 372 624 L 372 668 Q 372 692 400 692 Q 428 692 428 668 L 428 624 Q 400 632 372 624 Z",
-          "M 373 548 C 372 600 372 640 372 668 Q 372 692 400 692 Q 428 692 428 668 C 428 640 428 600 429 548")
-      + line("M 391 692 v -11 M 409 692 v -11", INK, 1.8) + line("M 382 556 L 381 614", "#ffd08f", 3, .6);
-  return `
-    <ellipse class="cw-shadow" cx="472" cy="692" rx="176" ry="12" fill="#000" opacity=".24"/>
-    <g class="cw-body">
-      ${inked("M 452 458 C 522 418 608 448 622 540 C 634 616 604 684 532 690 L 430 690 Z", "url(#cwFur)")}
-      ${fillOnly("M 600 500 C 626 560 624 640 580 680 C 560 690 540 690 520 690 C 580 660 604 580 600 500 Z", FUR_S, .6)}
-      ${fillOnly("M 452 640 C 520 662 580 662 616 620 C 604 670 574 690 532 690 L 440 690 Z", FUR_S, .5)}
-      <g fill="${STRIPE}"><path d="M 540 448 Q 576 470 590 508 Q 566 484 532 462 Z"/><path d="M 580 472 Q 606 502 612 542 Q 596 514 572 488 Z"/><path d="M 598 556 Q 614 584 608 618 Q 600 588 588 566 Z"/></g>
-      ${line("M 470 452 C 520 430 570 440 600 470", "#ffd08f", 3.4, .7)}
-      <path d="M 516 690 Q 512 666 546 664 Q 592 662 606 676 Q 612 692 594 694 L 520 694 Z" fill="url(#cwWht)" stroke="${INK}" stroke-width="2.8"/>
-      ${line("M 572 694 v -10 M 588 692 v -9", INK, 1.8)}
-      ${inked("M 392 372 C 372 400 356 450 348 520 C 340 580 330 640 338 672 C 344 690 364 694 390 692 L 520 692 C 548 694 566 686 566 660 C 568 610 552 540 530 470 C 514 420 494 390 470 372 Z", "url(#cwFur)")}
-      <path d="M 330 692 Q 322 672 346 668 Q 370 666 380 680 Q 382 694 366 696 L 336 696 Q 326 696 330 692 Z" fill="url(#cwWht)" stroke="${INK}" stroke-width="2.8"/>
-      ${line("M 346 696 v -9 M 360 696 v -9", INK, 1.6)}
-      ${fillOnly("M 506 410 C 536 460 560 560 562 640 C 562 676 552 690 530 692 L 494 692 C 522 620 526 500 506 410 Z", FUR_S, .55)}
-      ${line("M 372 420 C 356 470 350 530 354 590", "#ffd08f", 3.4, .7)}
-      ${line("M 538 490 C 556 550 562 620 556 676", "#ffcf8a", 2.6, .45)}
-      ${line("M 356 470 l 8 4 M 348 520 l 9 3 M 344 580 l 9 2 M 560 600 l -9 2 M 552 520 l -8 3 M 612 520 l -9 4 M 622 590 l -10 2", INK, 1.6, .55)}
-      <g opacity=".16" fill="#fff1c9"><path d="M 364 440 q 10 30 4 70 q -14 -30 -4 -70 Z"/><path d="M 560 470 q 30 14 40 50 q -30 -20 -40 -50 Z"/></g>
-      <g opacity=".12" fill="#7a300c"><path d="M 500 560 q 20 40 10 100 q -24 -40 -10 -100 Z"/><path d="M 560 600 q 30 10 44 40 q -30 -6 -44 -40 Z"/></g>
-      <g fill="${STRIPE}"><path d="M 362 470 Q 380 472 392 488 Q 374 488 360 484 Z"/><path d="M 350 540 Q 370 540 384 554 Q 364 556 349 552 Z"/><path d="M 532 470 Q 512 474 500 490 Q 518 488 534 484 Z"/><path d="M 554 552 Q 532 552 520 566 Q 538 568 554 564 Z"/></g>
-      ${leg("M 430 520 C 430 580 432 630 432 668 Q 432 692 456 692 Q 480 692 480 668 C 480 630 480 580 482 520 Z",
-            "M 432 630 L 432 668 Q 432 692 456 692 Q 480 692 480 668 L 480 630 Q 456 636 432 630 Z",
-            "M 431 552 C 432 600 432 640 432 668 Q 432 692 456 692 Q 480 692 480 668 C 480 640 480 600 481 552", FUR_S, WHITE_S)}
-      ${line("M 449 692 v -10 M 464 692 v -10", INK, 1.8)}
-      ${fillOnly("M 428 590 C 430 630 430 660 431 690 L 433 690 C 433 660 432 620 431 590 Z", INK, .5)}
-      ${nearLeg}
-      ${fillOnly("M 392 378 Q 430 398 468 382 Q 494 450 480 520 Q 474 556 458 576 L 448 560 L 438 578 L 428 560 L 416 576 Q 398 552 390 514 Q 378 450 392 378 Z", "url(#cwWht)")}
-      ${fillOnly("M 440 396 Q 470 392 476 400 Q 490 460 478 522 Q 470 556 458 576 L 448 560 Q 470 500 440 396 Z", WHITE_S, .8)}
-      <path class="cw-glow" d="M 386 372 C 354 420 342 500 348 580 C 352 640 364 676 382 690 L 400 690 C 380 640 372 520 400 380 Z" fill="url(#cwGlow)"/>
-      <g class="cw-tail">${inked(tail, "url(#cwFur)", 3)}
-        <g fill="${STRIPE}"><path d="M 540 686 Q 548 694 544 700 L 530 700 Q 534 694 528 686 Z"/><path d="M 480 686 Q 488 694 484 700 L 470 700 Q 474 694 468 686 Z"/><path d="M 420 686 Q 428 694 424 700 L 410 700 Q 414 694 408 686 Z"/><path d="M 356 700 C 332 700 324 690 334 682 C 344 678 358 684 366 686 Q 360 694 362 700 Z"/></g>
-      </g>
-      ${purr(330, 520, false)}${purr(630, 540, true)}
-    </g>`;
+      the engine mirrors the whole drawing when she faces right. ── */
+function sitParts(raised) {
+  const parts = [
+    { seed: 31, pts: [[600, 646], [628, 668], [626, 694, .5], [596, 704, .6], [520, 706, .6], [440, 704, .6], [372, 702, .5], [336, 698], [324, 686], [340, 678], [372, 686], [430, 690], [500, 690], [566, 688], [590, 676]],
+      cls: "cw-tail", detail: marks([[548, 688, 90, 15, 9], [488, 689, 90, 15, 9], [428, 689, 90, 14, 9], [340, 684, 30, 18, 10]]) },
+    { seed: 32, pts: [[452, 456], [496, 436], [548, 436, .6], [594, 462, .8], [620, 508, .9], [630, 564, .8], [626, 620, .6], [608, 664], [576, 688], [530, 694], [440, 694]],
+      detail: marks([[556, 442, 118, 44, 12], [598, 474, 152, 46, 12], [620, 526, 172, 44, 12], [624, 584, 188, 40, 11]])
+        + line("M 474 460 C 520 442 564 450 592 474", LIGHT, 3.4, .7) },
+    { seed: 33, fill: WHT, pts: [[512, 692], [512, 676], [532, 664], [568, 662], [600, 668], [612, 682], [602, 696], [520, 697]], detail: toes("M 572 696 v -10 M 588 694 v -9") },
+    { seed: 34, pts: [[396, 372], [374, 398], [358, 446, .7], [350, 500, .8], [344, 560, .6], [338, 620], [338, 668], [350, 690], [386, 695], [470, 695], [540, 695], [562, 684], [568, 650], [566, 600], [554, 540, -.5], [536, 478, -.5], [512, 420], [474, 372]],
+      detail: `<ellipse cx="440" cy="386" rx="46" ry="18" fill="#7a300c" opacity=".35"/>`
+        + marks([[352, 470, 8, 30, 10], [346, 536, 4, 30, 10], [540, 490, 176, 30, 10], [556, 556, 178, 30, 10]])
+        + line("M 372 420 C 356 470 350 530 354 590", LIGHT, 3.4, .7) + line("M 538 490 C 556 550 562 620 556 676", "#ffcf8a", 2.6, .45)
+        + glow("M 396 372 C 372 400 350 470 344 560 C 338 620 338 668 350 690 L 372 690 C 362 600 370 480 404 380 Z") },
+    { seed: 37, fill: WHT, ink: false, pts: [[394, 380], [430, 396], [468, 382], [486, 440], [482, 500], [470, 548, .7], [456, 576, .7], [432, 582, .7], [410, 572, .7], [394, 542, .6], [384, 480]],
+    detail: `<path d="M 452 396 Q 474 392 480 404 Q 490 460 480 522 Q 472 556 460 574 Q 474 500 452 396 Z" fill="${WHITE_S}" opacity=".8"/>` },
+    { seed: 35, fill: FUR_S, sock: 632, soft: true, pts: [[430, 520], [482, 520], [481, 600], [480, 668], [472, 690], [456, 695], [440, 690], [432, 668], [431, 600]],
+      detail: toes("M 449 694 v -9 M 463 694 v -9") },
+  ];
+  if (!raised) parts.push({ seed: 36, sock: 626, soft: true, pts: [[372, 520], [430, 520], [429, 600], [428, 668], [420, 690], [400, 696], [380, 690], [372, 668], [372, 600]],
+    detail: line("M 382 556 L 381 614", LIGHT, 3, .6) + toes("M 392 695 v -10 M 408 695 v -10") });
+  return parts;
 }
-
 function poseSit() {
-  return `<g class="cw-pose cw-sit">${sitBody(false)}
-    <g class="cw-head" transform="translate(438 282)"><g class="cw-headin">${head(false)}</g></g></g>`;
+  return body("sit", [...sitParts(false), headPart("translate(438 282)", ["relaxed", "open", "happy"])],
+    shadow(472, 176), purr(330, 520, false) + purr(630, 540, true));
 }
 // sitting up with a paw raised: batting at HELA's Hours, holding the hand to nibble it, grooming
 function poseBat() {
-  return `<g class="cw-pose cw-bat">${sitBody(true)}
-    <g class="cw-head" transform="translate(446 284) rotate(7)"><g class="cw-headin">${head(false)}</g></g></g>`;
+  const paw = { seed: 38, cls: "cw-paw", soft: true, sock: [290, 300, 80, 76],
+    pts: [[364, 508], [344, 466], [324, 420], [308, 380], [300, 356], [312, 342], [330, 340], [344, 356], [358, 392], [382, 434], [408, 474]],
+    detail: `<g fill="#e99a94"><ellipse cx="322" cy="360" rx="7" ry="6"/><circle cx="308" cy="352" r="3.4"/><circle cx="314" cy="344" r="3.4"/><circle cx="324" cy="342" r="3.4"/></g>`
+      + line("M 352 470 C 340 440 330 408 322 380", LIGHT, 3, .6) + claws("M 304 350 q -8 -4 -6 -12 M 310 341 q -5 -7 0 -13 M 321 338 q -2 -8 4 -12") };
+  return body("bat", [...sitParts(true), headPart("translate(446 284) rotate(7)", ["focused", "open", "happy"]), paw],
+    shadow(472, 176));
 }
 
 function poseStand() {
   const legs = {
-    farF: ["M 370 500 C 368 560 374 620 376 668 Q 376 690 396 690 Q 416 690 414 668 C 412 620 414 560 420 500 Z", "M 376 632 L 376 668 Q 376 690 396 690 Q 416 690 414 668 L 413 632 Q 394 638 376 632 Z", "M 372 560 C 374 620 376 640 376 668 Q 376 690 396 690 Q 416 690 414 668 C 412 640 413 600 416 560"],
-    farH: ["M 560 500 C 590 500 606 520 604 556 L 600 668 Q 600 690 580 690 Q 560 690 562 668 L 560 596 C 548 570 546 530 560 500 Z", "M 561 632 L 562 668 Q 560 690 580 690 Q 600 690 600 668 L 601 632 Q 580 638 561 632 Z", "M 604 560 L 600 668 Q 600 690 580 690 Q 560 690 562 668 L 560 600"],
-    nearF: ["M 322 490 C 322 560 328 620 330 666 Q 330 692 354 692 Q 378 692 376 666 C 374 620 376 560 384 490 Z", "M 330 626 L 330 666 Q 330 692 354 692 Q 378 692 376 666 L 375 626 Q 352 632 330 626 Z", "M 324 548 C 326 600 330 630 330 666 Q 330 692 354 692 Q 378 692 376 666 C 374 630 376 590 380 548"],
-    nearH: ["M 604 500 C 648 498 670 526 664 566 L 656 668 Q 658 692 634 692 Q 610 692 612 668 L 610 600 C 594 574 590 530 604 500 Z", "M 611 630 L 612 668 Q 610 692 634 692 Q 658 692 656 668 L 657 630 Q 634 636 611 630 Z", "M 664 562 L 656 668 Q 658 692 634 692 Q 610 692 612 668 L 610 604"],
+    farF: { fill: FUR_S, sock: 634, pts: [[370, 500], [420, 500], [416, 560], [413, 620], [414, 668], [404, 690], [386, 693], [376, 684], [376, 640], [372, 580]], j: [394, 520], s: -1 },
+    farH: { fill: FUR_S, sock: 634, pts: [[560, 500], [596, 504], [606, 540, .6], [602, 600], [600, 668], [590, 690], [572, 693], [562, 680], [561, 610], [552, 560]], j: [590, 520], s: 1 },
+    nearF: { sock: 628, soft: true, pts: [[322, 490], [384, 490], [378, 560], [376, 620], [376, 666], [366, 690], [344, 695], [330, 684], [330, 630], [324, 560]], j: [352, 510], s: 1 },
+    nearH: { sock: 632, soft: true, pts: [[604, 500], [648, 500], [668, 530, .7], [664, 570, .8], [656, 620, .5], [656, 668], [646, 690], [624, 695], [612, 684], [611, 630], [606, 600], [594, 560]], j: [630, 500], s: -1 },
   };
-  const L = (k, far) => leg(legs[k][0], legs[k][1], legs[k][2], far ? FUR_S : "url(#cwFur)", far ? WHITE_S : "url(#cwWht)");
   // a step is the same legs swung about the shoulder and the hip
-  const frame = (cls, a) => ({
-    far: `<g class="cw-frame ${cls}"><g transform="rotate(${-a} 394 520)">${L("farF", 1)}</g><g transform="rotate(${a} 590 520)">${L("farH", 1)}</g></g>`,
-    near: `<g class="cw-frame ${cls}"><g transform="rotate(${a} 352 510)">${L("nearF")}</g><g transform="rotate(${-a} 630 500)">${L("nearH")}</g></g>`,
-  });
-  const fN = frame("cw-fN", 0), fA = frame("cw-fA", 13), fB = frame("cw-fB", -13);
-  const body = "M 330 440 C 340 410 380 400 430 404 C 500 410 560 402 610 406 C 660 410 690 440 684 490 C 680 530 656 552 620 556 C 560 562 480 560 420 560 C 370 560 330 540 318 500 C 312 474 318 454 330 440 Z";
-  const tail = "M 664 432 C 700 420 726 380 724 320 C 722 280 736 250 760 250 C 780 250 792 266 786 282 C 780 294 764 292 760 284 C 752 300 750 330 752 360 C 754 420 720 462 676 472 Z";
-  return `<g class="cw-pose cw-stand">
-    <ellipse class="cw-shadow" cx="490" cy="692" rx="220" ry="12" fill="#000" opacity=".22"/>
-    <g class="cw-walker">
-    <g class="cw-tail">${inked(tail, "url(#cwFur)", 3)}
-      <g fill="${STRIPE}"><path d="M 718 380 Q 734 388 746 386 Q 742 400 724 396 Z"/><path d="M 722 330 Q 738 336 750 332 Q 750 346 732 346 Z"/><path d="M 728 282 Q 740 290 752 286 Q 752 298 736 298 Z"/><path d="M 760 250 C 780 250 792 266 786 282 C 780 294 764 292 760 284 Q 776 272 760 262 Z"/></g>
-      ${line("M 700 420 C 716 400 724 370 724 330", "#ffd08f", 3, .6)}
-    </g>
-    ${fN.far}${fA.far}${fB.far}
-    ${inked(body, "url(#cwFur)")}
-    ${fillOnly("M 318 500 C 330 540 370 560 420 560 C 480 560 560 562 620 556 C 656 552 680 530 684 490 C 670 520 640 530 600 532 C 520 538 420 536 360 526 C 340 520 326 512 318 500 Z", FUR_S, .55)}
-    ${line("M 350 422 C 400 404 520 410 620 408", "#ffd08f", 3.6, .75)}
-    <g opacity=".16" fill="#fff1c9"><path d="M 400 430 q 40 -12 80 4 q -30 18 -80 -4 Z"/><path d="M 540 426 q 30 -8 56 6 q -26 12 -56 -6 Z"/></g>
-    <g opacity=".12" fill="#7a300c"><path d="M 470 520 q 50 -10 90 6 q -40 20 -90 -6 Z"/></g>
-    ${line("M 596 476 C 640 462 680 496 672 546", INK, 2.4, .7)}
-    ${line("M 684 470 C 686 500 676 530 656 548", "#ffcf8a", 2.6, .45)}
-    <g fill="${STRIPE}"><path d="M 452 406 Q 460 432 452 460 Q 442 432 444 406 Z"/><path d="M 502 408 Q 512 434 504 462 Q 494 434 494 408 Z"/><path d="M 552 406 Q 562 432 556 460 Q 546 434 544 406 Z"/><path d="M 604 408 Q 616 432 612 458 Q 600 434 596 410 Z"/><path d="M 648 426 Q 664 446 664 472 Q 650 452 640 432 Z"/></g>
-    ${fillOnly("M 322 446 C 312 478 316 510 330 532 L 340 522 L 348 538 L 358 520 Q 342 490 346 450 Z", "url(#cwWht)")}
-    ${fN.near}${fA.near}${fB.near}
-    <g class="cw-head" transform="translate(300 352) scale(.9)"><g class="cw-headin">${head(false)}</g></g>
-    </g>
-  </g>`;
+  const frames = (keys) => [["cw-fN", 0], ["cw-fA", 13], ["cw-fB", -13]].flatMap(([f, a]) => keys.map((k, i) => ({
+    ...legs[k], seed: 40 + i, cls: "cw-frame " + f, tr: a ? `rotate(${a * legs[k].s} ${legs[k].j[0]} ${legs[k].j[1]})` : undefined })));
+  return body("stand", [
+    { seed: 44, cls: "cw-tail", pts: [[664, 432], [690, 410], [712, 380], [722, 340], [728, 300], [742, 268], [764, 252], [786, 258], [792, 278], [778, 292], [764, 290, .6], [758, 312, .6], [756, 350, .6], [750, 392, .5], [732, 432], [706, 460], [678, 474]],
+      detail: marks([[710, 384, 8, 26, 8], [720, 334, 4, 24, 8], [730, 292, -8, 22, 8]]) + line("M 700 420 C 716 400 724 370 724 330", LIGHT, 3, .6) },
+    ...frames(["farF", "farH"]),
+    { seed: 45, pts: [[330, 440], [352, 414], [396, 404], [450, 407], [510, 409], [566, 405], [614, 407], [656, 421], [682, 450], [688, 490], [674, 528], [642, 552, .7], [600, 561, .8], [530, 563, .8], [460, 563, .8], [410, 561, .7], [368, 552], [334, 532, .6], [318, 500, .6], [320, 466]],
+      detail: marks([[452, 408, 94, 40, 11], [502, 410, 92, 42, 11], [552, 408, 90, 40, 11], [602, 410, 86, 38, 11], [646, 428, 70, 34, 10]])
+        + line("M 356 430 C 410 416 520 420 620 418", LIGHT, 3.6, .75) + line("M 596 476 C 640 462 680 496 672 546", EDGE, 2.4, .55)
+        + `<path d="M 420 540 C 480 552 560 552 640 540 C 620 556 560 562 500 562 C 460 562 430 556 420 540 Z" fill="#fff1d8" opacity=".35"/>` },
+    { seed: 46, fill: WHT, ink: false, vol: false, pts: [[316, 440], [352, 434], [362, 468], [358, 498, .6], [340, 514, .6], [322, 506, .5], [312, 474]] },
+    ...frames(["nearF", "nearH"]),
+    headPart("translate(300 352) scale(.9)", ["open", "relaxed", "scared"]),
+  ], shadow(490, 220, .22));
 }
 
 // low on the desk, weight on the haunches: hunting, or frightened with the ears flat
 function poseCrouch() {
-  return `<g class="cw-pose cw-crouch">
-    <ellipse class="cw-shadow" cx="480" cy="692" rx="250" ry="12" fill="#000" opacity=".24"/>
-    ${inked("M 380 612 C 360 640 334 664 300 670 Q 276 676 278 690 L 336 692 Q 364 690 384 668 C 398 652 408 632 410 616 Z", FUR_S, 3)}
-    <g class="cw-rump">
-      <g class="cw-tail">${inked("M 692 590 C 740 600 790 612 830 606 Q 852 602 852 584 Q 850 570 838 572 Q 830 574 834 586 Q 800 594 760 588 C 730 584 710 578 694 572 Z", "url(#cwFur)", 3)}
-        <g fill="${STRIPE}"><path d="M 740 590 Q 746 596 744 604 L 734 603 Q 736 596 732 588 Z"/><path d="M 790 596 Q 796 602 794 608 L 784 608 Q 786 602 782 596 Z"/></g></g>
-      ${inked("M 296 600 C 300 566 346 548 410 550 C 490 552 560 524 620 516 C 672 510 704 540 700 590 C 696 632 668 652 624 656 L 400 662 C 336 664 294 640 296 600 Z", "url(#cwFur)")}
-      ${fillOnly("M 330 640 C 380 660 470 664 560 654 L 600 652 C 560 640 470 638 400 632 C 370 630 346 630 330 640 Z", "url(#cwWht)")}
-      ${line("M 340 560 C 420 548 540 530 640 518", "#ffd08f", 3.6, .75)}
-      <g fill="${STRIPE}"><path d="M 470 546 Q 478 570 470 594 Q 462 570 462 548 Z"/><path d="M 520 536 Q 530 560 522 586 Q 512 562 512 538 Z"/><path d="M 572 526 Q 582 550 576 576 Q 566 552 564 528 Z"/></g>
-      ${inked("M 560 560 C 610 530 690 548 694 610 C 698 660 670 690 630 690 L 560 690 C 540 690 536 676 552 670 L 600 666 C 580 640 560 610 560 560 Z", "url(#cwFur)")}
-      ${fillOnly("M 552 670 L 600 666 L 604 690 L 560 690 C 540 690 536 676 552 670 Z", "url(#cwWht)")}
-      ${line("M 560 690 C 540 690 536 676 552 670 L 600 666", INK, 2.6)}
-      <g fill="${STRIPE}"><path d="M 630 548 Q 660 566 670 598 Q 650 576 622 560 Z"/><path d="M 652 616 Q 672 630 676 656 Q 660 640 646 628 Z"/></g>
-    </g>
-    ${inked("M 350 610 C 330 640 300 664 262 672 Q 238 678 240 690 L 300 692 Q 330 690 352 668 C 368 650 380 630 384 612 Z", "url(#cwFur)", 3)}
-    ${fillOnly("M 262 672 Q 238 678 240 690 L 294 692 Q 300 680 288 668 Z", "url(#cwWht)")}
-    ${line("M 262 672 Q 238 678 240 690 L 294 692", INK, 2.6)}
-    <g class="cw-head" transform="translate(262 566) scale(.9)"><g class="cw-headin">${head(false)}</g></g>
-  </g>`;
+  return body("crouch", [
+    { seed: 51, fill: FUR_S, sock: [270, 668, 80, 30], pts: [[380, 612], [360, 640], [330, 662], [298, 670], [278, 682], [284, 693], [336, 693], [366, 686], [390, 664], [410, 616]] },
+    { seed: 52, cls: "cw-rump cw-tail", pts: [[692, 590], [740, 600, .4], [790, 610, .4], [830, 606], [850, 596], [853, 580], [842, 571], [832, 579], [834, 588], [800, 594], [760, 588], [726, 582], [694, 572]],
+      detail: marks([[742, 592, 90, 12, 8], [792, 598, 90, 12, 8]]) },
+    { seed: 53, cls: "cw-rump", pts: [[296, 600], [308, 572], [346, 552], [410, 550], [490, 549], [560, 524], [620, 516], [672, 512], [700, 540], [702, 590], [690, 630], [660, 652, .6], [624, 657, .7], [520, 660, .7], [400, 662, .6], [336, 660], [302, 640]],
+      detail: `<path d="M 330 640 C 380 628 470 632 560 646 C 590 650 610 652 624 656 C 520 662 420 664 336 658 Z" fill="${WHT}"/>`
+        + marks([[470, 550, 96, 34, 10], [520, 540, 96, 36, 10], [572, 526, 96, 36, 10], [626, 518, 100, 34, 10]])
+        + line("M 350 566 C 420 558 540 540 636 528", LIGHT, 3.2, .5) },
+    { seed: 54, cls: "cw-rump", soft: true, sock: [530, 664, 80, 32], pts: [[560, 562], [590, 540], [640, 538], [690, 560, .6], [700, 610, .6], [686, 660], [652, 688], [600, 691], [556, 691], [540, 683], [552, 670], [600, 666], [580, 640], [562, 604]],
+      detail: marks([[640, 544, 110, 34, 10], [680, 580, 150, 30, 10]]) },
+    { seed: 55, soft: true, sock: [232, 666, 70, 30], pts: [[350, 610], [330, 640], [300, 662], [262, 672], [240, 682], [242, 693], [300, 693], [330, 688], [352, 668], [372, 648], [384, 612]] },
+    headPart("translate(262 566) scale(.9)", ["focused", "scared"]),
+  ], shadow(480, 250));
 }
 
 // mid-air, reaching for the hand
 function poseLeap() {
-  return `<g class="cw-pose cw-leap">
-    <ellipse class="cw-shadow" cx="470" cy="692" rx="150" ry="10" fill="#000" opacity=".14"/>
-    ${inked("M 312 410 C 286 420 258 430 230 432 Q 206 434 208 420 Q 212 408 232 408 C 258 406 282 398 300 386 Z", FUR_S, 3)}
-    ${inked("M 660 480 C 700 510 736 546 764 580 Q 780 600 766 608 Q 750 612 740 596 C 714 562 684 530 648 500 Z", FUR_S, 3)}
-    <g class="cw-tail">${inked("M 690 494 C 740 500 800 506 860 496 Q 882 494 884 508 Q 882 522 862 524 C 800 532 740 532 684 542 Z", "url(#cwFur)", 3)}
-      <g fill="${STRIPE}"><path d="M 760 504 Q 766 516 762 528 L 752 528 Q 756 516 752 504 Z"/><path d="M 820 500 Q 826 512 822 524 L 812 524 Q 816 512 812 500 Z"/></g></g>
-    ${inked("M 286 398 C 316 356 396 354 468 376 C 556 402 628 438 680 478 C 718 508 712 560 668 566 C 618 572 556 540 478 510 C 402 482 330 468 298 448 C 278 434 276 414 286 398 Z", "url(#cwFur)")}
-    ${fillOnly("M 296 440 C 330 470 420 486 490 512 C 560 540 610 560 650 566 C 600 574 540 548 470 524 C 400 500 330 482 296 440 Z", "url(#cwWht)")}
-    ${line("M 320 374 C 400 360 520 396 640 450", "#ffd08f", 3.6, .75)}
-    <g fill="${STRIPE}"><path d="M 470 378 Q 472 404 460 428 Q 456 402 462 378 Z"/><path d="M 526 394 Q 528 420 516 444 Q 512 418 518 394 Z"/><path d="M 580 416 Q 584 442 572 466 Q 566 440 572 416 Z"/></g>
-    ${inked("M 640 500 C 676 540 700 590 726 636 Q 740 662 722 668 Q 702 672 696 650 C 676 606 648 566 612 532 Z", "url(#cwFur)", 3)}
-    ${fillOnly("M 712 624 Q 736 646 728 664 Q 712 672 700 654 Z", "url(#cwWht)")}
-    ${inked("M 330 430 C 300 452 262 478 222 490 Q 196 496 194 480 Q 194 466 214 462 C 250 454 282 432 306 408 Z", "url(#cwFur)", 3)}
-    ${fillOnly("M 222 490 Q 196 496 194 480 Q 194 466 214 462 L 226 460 Q 234 478 222 490 Z", "url(#cwWht)")}
-    ${claws("M 196 472 q -9 -1 -12 -8 M 195 483 q -9 1 -14 -3 M 204 492 q -6 5 -13 3")}
-    <g class="cw-head" transform="translate(256 366) rotate(-10) scale(.9)"><g class="cw-headin">${head(false)}</g></g>
-  </g>`;
+  return body("leap", [
+    { seed: 61, fill: FUR_S, pts: [[312, 410], [286, 420], [258, 430], [230, 432], [208, 426], [212, 410], [232, 408], [258, 406], [282, 398], [300, 386]] },
+    { seed: 62, fill: FUR_S, pts: [[660, 480], [700, 510], [736, 546], [764, 580], [778, 600], [766, 608], [750, 610], [740, 596], [714, 562], [684, 530], [648, 500]] },
+    { seed: 63, cls: "cw-tail", pts: [[690, 494], [740, 500], [800, 506], [860, 496], [882, 494], [886, 508], [880, 522], [862, 524, .5], [800, 532, .5], [740, 532, .5], [684, 542]],
+      detail: marks([[760, 502, 90, 26, 9], [820, 500, 90, 26, 9]]) },
+    { seed: 64, pts: [[286, 398], [316, 356], [396, 354], [468, 376], [556, 402], [628, 438], [680, 478], [712, 506], [708, 548], [668, 566, .6], [618, 572, .7], [556, 540, .7], [478, 510, .7], [402, 482, .6], [330, 468], [298, 448], [280, 420]],
+      detail: `<path d="M 296 440 C 330 470 420 486 490 512 C 560 540 610 560 650 566 C 600 574 540 548 470 524 C 400 500 330 482 296 440 Z" fill="${WHT}"/>`
+        + marks([[470, 378, 104, 44, 11], [526, 394, 106, 44, 11], [580, 416, 110, 42, 11], [630, 444, 116, 36, 10]])
+        + line("M 324 384 C 400 372 520 404 636 458", LIGHT, 3.6, .75) },
+    { seed: 65, soft: true, sock: [690, 626, 60, 50], pts: [[640, 500], [676, 540], [700, 590], [726, 636], [738, 660], [722, 668], [702, 672], [696, 650], [676, 606], [648, 566], [612, 532]] },
+    { seed: 66, soft: true, sock: [186, 452, 44, 50], pts: [[330, 430], [300, 452], [262, 478], [222, 490], [196, 494], [194, 480], [196, 468], [214, 462], [250, 454], [282, 432], [306, 408]],
+      detail: claws("M 196 472 q -9 -1 -12 -8 M 195 483 q -9 1 -14 -3 M 204 492 q -6 5 -13 3") },
+    headPart("translate(256 366) rotate(-10) scale(.9)", ["focused"]),
+  ], shadow(470, 150, .14));
 }
 
-// asleep on his side, belly to the room, paws curled
+// asleep on her side, belly to the room, paws curled
 function poseSleep() {
-  return `<g class="cw-pose cw-sleep">
-    <ellipse class="cw-shadow" cx="480" cy="694" rx="270" ry="12" fill="#000" opacity=".22"/>
-    <g class="cw-tail">${inked("M 640 640 C 700 626 770 632 820 652 Q 846 664 836 680 Q 824 690 806 680 C 766 660 712 656 660 664 Z", "url(#cwFur)", 3)}
-      <g fill="${STRIPE}"><path d="M 720 640 Q 728 650 724 662 L 712 660 Q 716 650 710 640 Z"/><path d="M 770 646 Q 778 656 772 668 L 762 666 Q 766 656 760 646 Z"/><path d="M 806 680 C 820 688 834 684 836 680 Q 842 668 830 660 Q 830 674 806 680 Z"/></g></g>
-    ${inked("M 330 600 C 300 590 270 590 246 596 Q 228 602 234 614 Q 242 622 258 618 C 282 612 306 614 332 620 Z", FUR_S, 3)}
-    ${inked("M 600 620 C 640 612 690 614 722 624 Q 740 632 732 644 Q 722 652 706 644 C 676 634 636 634 600 640 Z", FUR_S, 3)}
-    <g class="cw-body">
-      ${inked("M 300 620 C 296 570 350 536 440 530 C 530 524 614 540 660 574 C 702 606 694 660 640 678 C 580 696 460 696 380 690 C 330 686 302 660 300 620 Z", "url(#cwFur)")}
-      ${line("M 330 574 C 380 540 480 526 580 540", "#ffd08f", 3.6, .75)}
-      <g fill="${STRIPE}"><path d="M 420 534 Q 426 556 420 576 Q 412 556 412 536 Z"/><path d="M 470 530 Q 478 552 472 574 Q 464 552 462 532 Z"/><path d="M 520 532 Q 530 554 524 576 Q 516 554 512 534 Z"/><path d="M 570 540 Q 580 560 574 580 Q 566 560 562 542 Z"/><path d="M 612 556 Q 624 574 620 594 Q 610 576 604 560 Z"/></g>
-      ${fillOnly("M 340 650 C 380 612 470 600 560 612 C 610 620 634 646 614 668 C 574 690 450 692 380 684 C 350 680 334 668 340 650 Z", "url(#cwWht)")}
-      ${fillOnly("M 360 676 C 440 690 560 686 612 668 C 574 690 450 692 380 684 Z", WHITE_S, .8)}
-      ${inked("M 556 640 C 556 604 604 596 632 612 C 656 628 650 668 620 676 C 590 684 558 672 556 640 Z", "url(#cwFur)", 3)}
-      ${inked("M 580 646 C 626 650 676 664 716 668 Q 742 672 740 688 Q 734 700 712 696 C 668 690 624 684 584 676 Z", "url(#cwFur)", 3)}
-      ${fillOnly("M 708 668 Q 742 672 740 688 Q 734 700 712 696 Q 702 682 708 668 Z", "url(#cwWht)")}
-      ${inked("M 350 624 C 318 626 282 640 258 650 Q 240 658 246 672 Q 256 680 272 674 C 298 664 326 656 356 654 Z", "url(#cwFur)", 3)}
-      ${fillOnly("M 258 650 Q 240 658 246 672 Q 256 680 272 674 L 276 660 Q 268 650 258 650 Z", "url(#cwWht)")}
-      <g fill="#e99a94"><circle cx="252" cy="664" r="3"/><circle cx="258" cy="672" r="3"/></g>
-      <path class="cw-glow" d="M 300 620 C 296 570 350 536 440 530 C 380 550 330 580 322 640 Z" fill="url(#cwGlow)"/>
-      ${purr(700, 560, true)}
-    </g>
-    <g class="cw-head" transform="translate(262 606) rotate(-18) scale(.88)"><g class="cw-headin">${head(true)}</g></g>
-    <g class="cw-zzz" fill="#f6ecd4" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
+  return body("sleep", [
+    { seed: 71, cls: "cw-tail", pts: [[640, 640], [700, 626], [770, 632], [820, 652], [844, 664], [838, 682], [824, 690], [806, 680, .5], [766, 660, .5], [712, 656, .5], [660, 664]],
+      detail: marks([[720, 630, 90, 26, 9], [772, 636, 96, 24, 9], [818, 654, 110, 20, 8]]) },
+    { seed: 72, fill: FUR_S, pts: [[330, 600], [300, 590], [270, 590], [246, 596], [230, 606], [236, 616], [258, 618], [282, 612], [306, 614], [332, 620]] },
+    { seed: 73, fill: FUR_S, pts: [[600, 620], [640, 612], [690, 614], [722, 624], [740, 634], [732, 644], [706, 644], [676, 634], [636, 634], [600, 640]] },
+    { seed: 74, pts: [[300, 620], [310, 582], [350, 548, .3], [440, 530, .3], [530, 526, .3], [614, 540], [662, 574], [690, 610], [684, 650], [640, 678], [580, 694], [460, 696], [380, 690], [330, 680], [304, 656]],
+      detail: marks([[420, 532, 94, 38, 10], [470, 529, 92, 40, 10], [520, 528, 90, 40, 10], [570, 534, 84, 38, 10], [614, 552, 70, 34, 10]])
+        + line("M 336 580 C 384 550 480 538 578 550", LIGHT, 3.6, .75)
+        + `<path d="M 340 650 C 380 612 470 600 560 612 C 610 620 634 646 614 668 C 574 690 450 692 380 684 C 350 680 334 668 340 650 Z" fill="${WHT}"/>`
+        + `<path d="M 360 676 C 440 690 560 686 612 668 C 574 690 450 692 380 684 Z" fill="${WHITE_S}" opacity=".8"/>`
+        + glow("M 300 620 C 296 570 350 536 440 530 C 380 550 330 580 322 640 Z") + purr(700, 560, true) },
+    { seed: 75, soft: true, pts: [[556, 640], [566, 610], [604, 598], [636, 612, .5], [652, 640, .5], [640, 672], [610, 680], [580, 676], [558, 660]] },
+    { seed: 76, soft: true, sock: [700, 660, 50, 44], pts: [[580, 646], [626, 650], [676, 664], [716, 668], [742, 676], [740, 690], [728, 700], [712, 696], [668, 690], [624, 684], [584, 676]] },
+    { seed: 77, soft: true, sock: [236, 640, 34, 44], pts: [[350, 624], [318, 626], [282, 640], [258, 650], [242, 662], [248, 674], [262, 678], [274, 674], [298, 664], [326, 656], [356, 654]],
+      detail: `<g fill="#e99a94"><circle cx="252" cy="664" r="3"/><circle cx="258" cy="672" r="3"/></g>` },
+    headPart("translate(262 606) rotate(-18) scale(.88)", ["sleepy"], false),
+  ], shadow(480, 270, .22), `<g class="cw-zzz" fill="#f6ecd4" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
       <path class="z1" d="M 150 470 h 22 l -16 20 h 18 v 6 h -30 l 16 -20 h -10 Z"/>
-      <path class="z2" d="M 118 424 h 30 l -22 28 h 24 v 8 h -40 l 22 -28 h -14 Z"/>
-    </g>
-  </g>`;
+      <path class="z2" d="M 118 424 h 30 l -22 28 h 24 v 8 h -40 l 22 -28 h -14 Z"/></g>`);
 }
 
 // the croissant: nose under the tail
 function poseCurl() {
-  return `<g class="cw-pose cw-curl">
-    <ellipse class="cw-shadow" cx="460" cy="694" rx="200" ry="11" fill="#000" opacity=".22"/>
-    <g class="cw-body">
-      ${inked("M 310 640 C 294 574 346 516 446 508 C 550 500 620 548 624 612 C 628 664 592 692 520 694 L 380 694 C 338 692 318 672 310 640 Z", "url(#cwFur)")}
-      ${fillOnly("M 320 660 C 400 680 540 680 616 640 C 606 676 574 692 520 694 L 380 694 C 346 692 326 678 320 660 Z", FUR_S, .55)}
-      ${line("M 340 560 C 380 524 460 506 540 518", "#ffd08f", 3.6, .75)}
-      <g fill="${STRIPE}"><path d="M 470 510 Q 480 530 472 552 Q 462 530 462 510 Z"/><path d="M 530 516 Q 546 534 540 556 Q 528 536 522 518 Z"/><path d="M 580 540 Q 598 556 596 578 Q 582 560 572 544 Z"/><path d="M 612 590 Q 626 604 622 626 Q 612 608 604 596 Z"/><path d="M 410 512 Q 416 532 408 552 Q 400 532 402 514 Z"/></g>
-      <path class="cw-glow" d="M 310 640 C 294 574 346 516 446 508 C 380 530 330 580 330 650 Z" fill="url(#cwGlow)"/>
-      ${purr(640, 560, true)}
-    </g>
-    ${fillOnly("M 334 684 Q 332 668 352 666 Q 374 666 376 682 Q 372 694 352 694 Z", "url(#cwWht)")}${line("M 334 684 Q 332 668 352 666 Q 374 666 376 682", INK, 2.6)}
-    ${fillOnly("M 380 688 Q 380 672 400 672 Q 420 672 420 686 Q 416 696 398 696 Z", "url(#cwWht)")}${line("M 380 688 Q 380 672 400 672 Q 420 672 420 686", INK, 2.6)}
-    <g class="cw-head" transform="translate(390 606) rotate(-12) scale(.74)"><g class="cw-headin">${head(true)}</g></g>
-    <g class="cw-tail">${inked("M 618 630 C 630 690 560 704 460 702 C 390 700 330 694 316 676 C 340 684 400 688 460 688 C 548 688 598 672 606 640 Z", "url(#cwFur)", 3)}
-      <g fill="${STRIPE}"><path d="M 560 686 Q 566 694 562 702 L 550 702 Q 554 694 548 686 Z"/><path d="M 500 688 Q 506 696 502 702 L 490 702 Q 494 696 488 688 Z"/><path d="M 440 688 Q 446 696 442 702 L 430 701 Q 434 696 428 688 Z"/><path d="M 316 676 C 330 690 360 696 380 698 Q 374 690 378 686 C 356 684 334 682 316 676 Z"/></g></g>
-  </g>`;
+  return body("curl", [
+    { seed: 81, pts: [[310, 640], [304, 600], [330, 556], [380, 522, .5], [446, 508, .5], [520, 506, .5], [578, 530, .5], [614, 570, .4], [624, 612], [612, 660], [580, 686], [520, 694], [380, 694], [336, 688], [316, 668]],
+      detail: marks([[410, 516, 96, 38, 10], [466, 508, 92, 40, 10], [526, 510, 100, 40, 10], [578, 534, 120, 38, 10], [610, 578, 150, 32, 10]])
+        + line("M 346 566 C 384 534 460 518 540 528", LIGHT, 3.6, .75)
+        + glow("M 310 640 C 294 574 346 516 446 508 C 380 530 330 580 330 650 Z") + purr(640, 560, true) },
+    { seed: 82, fill: WHT, pts: [[334, 684], [336, 668], [354, 664], [374, 670], [378, 684], [366, 694], [344, 694]] },
+    { seed: 83, fill: WHT, pts: [[380, 688], [384, 672], [402, 670], [420, 676], [422, 688], [410, 697], [390, 697]] },
+    headPart("translate(390 606) rotate(-12) scale(.74)", ["sleepy"], false),
+    { seed: 84, cls: "cw-tail", soft: true, pts: [[618, 630], [628, 660], [612, 686, .5], [570, 700, .6], [460, 704, .6], [390, 700, .5], [330, 694], [316, 678], [340, 684], [400, 688], [460, 688], [548, 688], [598, 672], [606, 640]],
+      detail: marks([[560, 700, -90, 14, 9], [500, 702, -90, 14, 9], [440, 702, -90, 14, 9], [330, 690, -30, 16, 9]]) },
+  ], shadow(460, 200, .22));
 }
 
 export function catSVG() {
+  clipN = 0;
   return `
 <svg class="catw-svg" viewBox="0 0 ${VB_W} ${VB_H}" xmlns="${NS}" preserveAspectRatio="xMidYMax meet" stroke-linejoin="round">
 <defs>
@@ -314,16 +365,16 @@ export function catSVG() {
   <linearGradient id="cwFurH" x1="0" y1="0" x2=".2" y2="1"><stop offset="0" stop-color="#f9b868"/><stop offset=".55" stop-color="#ea933f"/><stop offset="1" stop-color="#d27933"/></linearGradient>
   <linearGradient id="cwWht" gradientUnits="userSpaceOnUse" x1="0" y1="330" x2="0" y2="700"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#e9dbbf"/></linearGradient>
   <linearGradient id="cwWhtH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#efe3c9"/></linearGradient>
+  <linearGradient id="cwVol" x1=".15" y1="0" x2=".75" y2="1"><stop offset="0" stop-color="#fff0c8" stop-opacity=".28"/><stop offset=".35" stop-color="#fff0c8" stop-opacity="0"/><stop offset=".62" stop-color="#6e2406" stop-opacity="0"/><stop offset="1" stop-color="#6e2406" stop-opacity=".42"/></linearGradient>
   <linearGradient id="cwGlow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity=".95"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient>
   <radialGradient id="cwIris" cx=".5" cy=".62" r=".7"><stop offset="0" stop-color="#eef59a"/><stop offset=".45" stop-color="#a6d24a"/><stop offset="1" stop-color="#4d7f1c"/></radialGradient>
-  <clipPath id="cwEL"><path d="M -86 -12 Q -68 -40 -36 -34 Q -16 -28 -14 -8 Q -22 16 -50 17 Q -80 15 -86 -12 Z"/></clipPath>
-  <clipPath id="cwER"><path d="M 86 -12 Q 68 -40 36 -34 Q 16 -28 14 -8 Q 22 16 50 17 Q 80 15 86 -12 Z"/></clipPath>
+  ${eyeDefs()}
 </defs>
 ${poseSit()}${poseBat()}${poseStand()}${poseCrouch()}${poseLeap()}${poseSleep()}${poseCurl()}
 </svg>`;
 }
 
-// his bed: a worn velvet cushion (the briefcase's velvet), dented where he sleeps, with his hairs on it
+// her bed: a worn velvet cushion (the briefcase's velvet), dented where she sleeps, with her hairs on it
 function bedSVG() {
   return `<svg viewBox="0 0 420 150" xmlns="${NS}" stroke-linejoin="round">
   <defs><linearGradient id="cbVel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a3342"/><stop offset=".55" stop-color="#65212e"/><stop offset="1" stop-color="#43141d"/></linearGradient></defs>
@@ -340,24 +391,31 @@ function bedSVG() {
 </svg>`;
 }
 
-/* ── the camera plane: he lives in the FIXED fit-scaled plane (2133x1200), so a
+/* ── the camera plane: she lives in the FIXED fit-scaled plane (2133x1200), so a
       unit is 1% of the plane, not of the window ── */
 const UX = 2133 / 100, UY = 1200 / 100;
-const W_UNITS = 26;                        // his box is 26 plane units wide
+const W_UNITS = 26;                        // her box is 26 plane units wide
 const BOX_W = W_UNITS * UX, BOX_H = BOX_W * VB_H / VB_W;
 
-/* His places on the paperwork desk (plane units, feet point). The desk strip is
-   left of the plane's origin; HELA's core owns its left half, the cabinet its top. */
+/* Her places (plane units, feet point). The paperwork desk is left of the plane's
+   origin: HELA's core owns its left half and the cabinet its top, so she keeps to the
+   strip on their right. One place lies under the briefcase, on the seam between the
+   two desks, so now and then the player finds her asleep beside the machine too.
+   `sit` says whether she may sit up there without covering a drawer or the case. */
 const PLACES = {
-  bed:   { x: -7.5, y: 95.5, lie: true },   // his cushion, the desk's bottom right corner
-  shelf: { x: -13, y: 57, lie: true },      // the floor under the cabinet
-  core:  { x: -19.5, y: 78, lie: false },   // beside HELA's core, where her light is warm
+  bed:   { x: -7.5, y: 95.5, lie: true, sit: true },    // her cushion, the desk's bottom right corner
+  core:  { x: -11, y: 80, lie: false, sit: true },      // beside HELA's core, where her light is warm
+  ledge: { x: -6, y: 57, lie: true, sit: false },       // the floor under the cabinet, where she hides
+  case:  { x: 2.5, y: 64, lie: true, sit: false },      // under the briefcase, on the seam of the two desks
 };
 const BED = { x: -7.5, y: 96.6 };
-const ROAM = { x0: -21, x1: -6 };          // how far a leap may carry him
+const ROAM = { x0: -14, x1: 6 };           // how far a leap may carry her (never into her core)
 
 const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat",
-  walk: "stand", crouch: "crouch", scared: "crouch", pounce: "leap", sleep: "sleep", curl: "curl" };
+  walk: "stand", flee: "stand", crouch: "crouch", scared: "crouch", pounce: "leap", sleep: "sleep", curl: "curl" };
+// her face in each state: relaxed at rest, curious when she watches, focused on the hunt
+const EXPR = { sit: "relaxed", watch: "open", walk: "open", flee: "scared", pet: "happy", groom: "happy",
+  bat: "focused", bite: "focused", crouch: "focused", pounce: "focused", scared: "scared", sleep: "sleepy", curl: "sleepy" };
 const WALK_SPEED = 5.2;                   // plane units per second, an unhurried stroll
 
 export class CatEngine {
@@ -423,12 +481,12 @@ export class CatEngine {
 
   /* ── public API ── */
   pet() {
-    // a click on him: he leans into it wherever he is
+    // a click on her: she leans into it wherever she is
     if (!this.root) return;
     this._petStart(2600);
   }
   // The one truth of "on the cat": the DRAWN pose's rect (hidden poses have none),
-  // inset so the whole cursor ring must be over him.
+  // inset so the whole cursor ring must be over her.
   hitTest(x, y) {
     const r = this._poseRect(); if (!r) return false;
     const IN = 16;
@@ -441,13 +499,13 @@ export class CatEngine {
     this.root.classList.add("jolt");
     this._later(() => this.root && this.root.classList.remove("jolt"), 420);
     if (this.onMeow && Math.random() < 0.5) this.onMeow();
-    this._later(() => this._goTo("shelf", 1.8), 700);
+    this._later(() => this._goTo("ledge", 1.8), 700);
   }
   setMood(m) {
     if (m === this.mood) return;
     this.mood = m;
     if (this.root) this.root.classList.toggle("mood-afraid", m === "afraid");
-    if (m === "afraid" && this.place !== "shelf") this._later(() => this._goTo("shelf", 1.5), 400);
+    if (m === "afraid" && this.place !== "ledge") this._later(() => this._goTo("ledge", 1.5), 400);
   }
 
   /* ── states ── */
@@ -460,12 +518,12 @@ export class CatEngine {
   _applyPose(state) {
     if (!this.root) return;
     const pose = POSE_OF[state] || "sit";
-    const extra = { walk: "walking", pet: "petted purring", groom: "grooming", crouch: "hunting pupils-wide",
-      scared: "ears-back pupils-wide", pounce: "pupils-wide", bite: "biting pupils-wide", bat: "batting pupils-wide",
-      watch: "pupils-wide", sleep: "sleeping", curl: "sleeping" }[state] || "";
+    const extra = { walk: "walking", flee: "walking ears-back", pet: "petted purring", groom: "grooming", crouch: "hunting",
+      scared: "ears-back", bite: "biting", bat: "batting", watch: "pupils-wide", sleep: "sleeping", curl: "sleeping" }[state] || "";
     const keep = ["mood-afraid", "by-core", "offstage", "face-right", "petted", "purring", "jolt"].filter((c) => this.root.classList.contains(c)
       && (c !== "petted" && c !== "purring" || state === "pet" || this._petting));
-    this.root.className = ["cat-being", "pose-" + pose, extra, ...keep].filter(Boolean).join(" ");
+    const x = "x-" + (this.mood === "afraid" && pose === "crouch" ? "scared" : (EXPR[state] || "relaxed"));
+    this.root.className = ["cat-being", "pose-" + pose, x, extra, ...keep].filter(Boolean).join(" ");
     if (this._pose && this._pose !== pose) {
       // a new drawing lands with a little squash (the class goes, or it would hold every other loop)
       void this.root.offsetWidth;
@@ -477,7 +535,7 @@ export class CatEngine {
     this._rect = null;
     if (state !== "pet" && !this._petting) this._setPurr(false);
   }
-  // after anything, he goes back to being a cat in his place
+  // after anything, she goes back to being a cat in her place
   _settle() {
     if (this.mood === "afraid") { this._enter("scared", 0); return; }
     const p = PLACES[this.place];
@@ -502,21 +560,21 @@ export class CatEngine {
     if (!this._running || !this.root) return;
     const busy = ["walk", "crouch", "pounce", "bite", "bat", "pet", "scared"].includes(this.state);
     if (busy || this._petting) { this._think(6); return; }
-    if (!this._seen) { this._think(20 + Math.random() * 20); return; }   // nobody is watching: he naps on
+    if (!this._seen) { this._think(20 + Math.random() * 20); return; }   // nobody is watching: she naps on
     if (this.mood === "afraid") { this._think(12); return; }
     const r = Math.random();
     const lying = this.state === "sleep" || this.state === "curl";
     if (lying) {
-      // mostly he sleeps on; now and then he gets up and sits a while
+      // mostly she sleeps on; now and then she gets up and sits a while
       if (r < 0.7) { this._think(24 + Math.random() * 24); return; }
+      if (!PLACES[this.place].sit) { this._goTo(this._otherPlace()); return; }
       this._enter("sit", 0); this._flick();
       this._think(8 + Math.random() * 8);
       return;
     }
     if (r < 0.35) {
-      // a stroll to another of his places
-      const others = Object.keys(PLACES).filter((k) => k !== this.place);
-      this._goTo(others[Math.floor(Math.random() * others.length)]);
+      // a stroll to another of her places
+      this._goTo(this._otherPlace());
     } else if (r < 0.55) {
       this._enter("groom", 3.2 + Math.random() * 2.5);
     } else if (r < 0.8 && PLACES[this.place] && PLACES[this.place].lie) {
@@ -527,6 +585,10 @@ export class CatEngine {
       this._think(10 + Math.random() * 10);
     }
   }
+  _otherPlace() {
+    const others = Object.keys(PLACES).filter((k) => k !== this.place);
+    return others[Math.floor(Math.random() * others.length)];
+  }
   _flick() {
     if (!this.root) return;
     this.root.classList.remove("flick"); void this.root.offsetWidth;
@@ -534,7 +596,7 @@ export class CatEngine {
     this._later(() => this.root && this.root.classList.remove("flick"), 950);
   }
 
-  /* ── moving: a CSS transition carries him, the timer tells him he arrived ── */
+  /* ── moving: a CSS transition carries her, the timer tells her she arrived ── */
   _goTo(name, speedMul = 1) {
     const p = PLACES[name]; if (!p || !this.root) return;
     this._cancelMove();
@@ -543,12 +605,13 @@ export class CatEngine {
     this.root.classList.toggle("by-core", name === "core");
     if (dist < 0.4) { this._settle(); return; }
     if (Math.abs(dx) > 0.3) this.face = dx > 0 ? 1 : -1;
-    this._enter(this.state === "scared" ? "scared" : "walk", 0);
+    this._enter(this.state === "scared" || this.mood === "afraid" ? "flee" : "walk", 0);
     const secs = dist / (WALK_SPEED * speedMul);
     this.pos = { x: p.x, y: p.y };
     this._place(secs);
     this._moveT = this._later(() => {
       this._moveT = null;
+      if (this._updSeen) this._updSeen();
       if (name === "core" && Math.random() < 0.6) { this._enter("sit", 0); this._faceCore(); this._think(8 + Math.random() * 10); }
       else this._settle();
     }, secs * 1000 + 60);
@@ -556,7 +619,7 @@ export class CatEngine {
   _cancelMove() {
     if (this._moveT) { clearTimeout(this._moveT); this._timers.delete(this._moveT); this._moveT = null; }
     if (this.root && this.root.style.transitionDuration !== "0s") {
-      // freeze where he is now: read the live position once and pin it
+      // freeze where she is now: read the live position once and pin it
       const m = new DOMMatrixReadOnly(getComputedStyle(this.root).transform);
       this.pos = { x: (m.m41 + BOX_W / 2) / UX, y: (m.m42 + BOX_H) / UY };
       this._place(0);
@@ -578,13 +641,13 @@ export class CatEngine {
     if (want !== this.face) { this.face = want; this._place(0); }
   }
 
-  /* ── the scene: he acts only while the paperwork desk is in view ── */
+  /* ── the scene: she acts only while the paperwork desk is in view ── */
   _watchScene() {
     const cam = document.getElementById("cam");
-    const upd = () => {
+    const upd = this._updSeen = () => {
       const g = window.__game;
       const scene = (g && g.camera && g.camera.scene) || (cam && cam.dataset.scene) || "main";
-      const seen = scene === "drawer";
+      const seen = scene === "drawer" || (scene === "main" && this.pos.x > -4);
       if (seen === this._seen) return;
       this._seen = seen;
       this._rect = null;
@@ -618,7 +681,7 @@ export class CatEngine {
     const dx = m.x - cx, dy = m.y - cy, dist = Math.hypot(dx, dy);
     this._gaze(dx, dy, dist);
 
-    // petting: a slow hand on him
+    // petting: a slow hand on her
     const on = this.hitTest(m.x, m.y);
     if (on && m.v < 0.9 && !["pounce", "bite", "crouch", "scared", "walk"].includes(this.state)) {
       this._petMs += Math.min(dt, 80);
@@ -628,7 +691,7 @@ export class CatEngine {
     }
     if (!on) this._petMs = Math.max(0, this._petMs - dt);
 
-    // the hunt: the hand darts past him while he is up, and he has not played lately
+    // the hunt: the hand darts past her while she is up, and she has not played lately
     const awake = ["sit", "watch", "groom"].includes(this.state);
     if (awake && m.v > 1.4 && dist < r.width * 1.6 && dist > r.width * 0.4 && now > this._huntCool && this.mood !== "afraid") {
       this._huntCool = now + 70000 + Math.random() * 60000;
@@ -636,9 +699,9 @@ export class CatEngine {
     }
   }
   _gaze(dx, dy) {
-    if (!["sit", "watch", "pet", "bat", "crouch", "scared", "groom"].includes(this.state)) return;
-    if (this.face > 0) dx = -dx;               // the drawing is mirrored when he faces right
-    const px = Math.round(Math.max(-12, Math.min(12, dx * 0.03))), py = Math.round(Math.max(-5, Math.min(7, dy * 0.03)));
+    if (!["sit", "watch", "bat", "crouch", "scared"].includes(this.state)) return;
+    if (this.face > 0) dx = -dx;               // the drawing is mirrored when she faces right
+    const px = Math.round(Math.max(-5, Math.min(5, dx * 0.015))), py = Math.round(Math.max(-3, Math.min(4, dy * 0.015)));
     if (px !== this._px) { this._px = px; this.root.style.setProperty("--px", px + "px"); }
     if (py !== this._py) { this._py = py; this.root.style.setProperty("--py", py + "px"); }
   }
@@ -648,7 +711,7 @@ export class CatEngine {
     const lying = this.state === "sleep" || this.state === "curl";
     if (!lying && this.state !== "pet") { this._cancelMove(); this._enter("pet", 0); }
     this.root.classList.add("petted");
-    document.body.classList.add("cat-petting");     // the hand strokes him (app.css armPet)
+    document.body.classList.add("cat-petting");     // the hand strokes her (app.css armPet)
     this._setPurr(true);
     clearTimeout(this._petT);
     this._petT = this._later(() => this._petEnd(), ms);
@@ -689,7 +752,7 @@ export class CatEngine {
           try { window.__handNibble && window.__handNibble(this._mouse.x, this._mouse.y); } catch (err) {}
           if (this.onMeow) this.onMeow();
         }
-        // then he sits a moment, pleased with himself, and strolls back to his place
+        // then she sits a moment, pleased with herself, and strolls back to her place
         this._later(() => {
           if (this.state !== "bite" && this.state !== "pounce") return;
           this._enter("sit", 0); this._flick();
@@ -699,7 +762,7 @@ export class CatEngine {
     }, 1300);
   }
 
-  /* ── HELA's core: he watches her spin and bats at the Hours; she is never touched ── */
+  /* ── HELA's core: she watches her spin and bats at the Hours; she is never touched ── */
   _watchCore() {
     const bind = () => {
       const core = document.getElementById("hela-brain-full");
@@ -714,7 +777,7 @@ export class CatEngine {
     if (["walk", "crouch", "pounce", "bite", "scared"].includes(this.state)) return;
     const lying = this.state === "sleep" || this.state === "curl";
     if (lying) {
-      // one ear turns to her; he does not get up for it every time
+      // one ear turns to her; she does not get up for it every time
       this.root.classList.add("ear-flick");
       this._later(() => this.root && this.root.classList.remove("ear-flick"), 900);
       if (Math.random() < 0.7 || now < this._batCool) return;

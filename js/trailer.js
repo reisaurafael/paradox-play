@@ -35,7 +35,7 @@
    Costs: transforms and opacities only, no filters; one panel in the page at a
    time (two during a wipe); every timer and sound is dropped on each turn.
    ========================================================================= */
-import { audio } from "./audio.js?202609270943";
+import { audio } from "./audio.js?202609271103";
 
 // THE SCRIPT: the owner's panels go here, in order.
 const PANELS = [];
@@ -174,7 +174,8 @@ class Trailer {
     this.root.classList.toggle("calm", this.calm);
     this.pips.innerHTML = PANELS.map((p, i) =>
       `<button class="tr-pip" type="button" data-i="${i}" aria-label="Page ${i + 1} of ${PANELS.length}"></button>`).join("");
-    this.hint.textContent = this.calm ? "Click or Space: next page" : "Click or Space: next page · Esc: skip";
+    const touch = !!(window.matchMedia && window.matchMedia("(hover: none)").matches);
+    this.hint.textContent = touch ? "Tap: next page" : this.calm ? "Click or Space: next page" : "Click or Space: next page \u00b7 Esc: skip";
     this.root.hidden = false;
     void this.root.offsetWidth;
     this.root.classList.add("on");

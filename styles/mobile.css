@@ -1,0 +1,194 @@
+/* =========================================================================
+   mobile.css, THE TABLE ON A PHONE OR A TABLET (phase 1)
+   Every rule hangs off html.pdx-touch, which only js/touch.js sets, and only
+   on a device whose primary pointer is coarse and cannot hover, or off an
+   element only touch.js creates there. A desktop never matches a single
+   selector in this file.
+   Sizes here are real screen px, never the table's fit scale: a thumb is the
+   same size on every phone.
+   ========================================================================= */
+
+/* ── the comic paper and ink of the Learn to Play panel ── */
+html.pdx-touch {
+  --tx-ink: var(--cx-ink, #15100a);
+  --tx-paper: var(--cx-paper, #f4e6b0);
+  --tx-you: var(--hela-seat, #f2a93b);
+  --tx-sa-t: env(safe-area-inset-top, 0px);
+  --tx-sa-r: env(safe-area-inset-right, 0px);
+  --tx-sa-b: env(safe-area-inset-bottom, 0px);
+  --tx-sa-l: env(safe-area-inset-left, 0px);
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+}
+
+/* ── the page never scrolls or bounces under a finger, and the screen is the dynamic
+      viewport (the browser's bars come and go) ── */
+html.pdx-touch, html.pdx-touch body { overscroll-behavior: none; }
+html.pdx-touch body { min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
+/* a long look is a hover (touch.js), never the loupe, a text selection or a callout */
+html.pdx-touch body.cabin-on, html.pdx-touch body.cabin-on * {
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+html.pdx-touch body.cabin-on input, html.pdx-touch body.cabin-on textarea { -webkit-user-select: text; user-select: text; }
+/* double-tap zoom off (it waits 300ms on every tap); pinch zoom stays, a player may need it */
+html.pdx-touch body { touch-action: manipulation; }
+/* what a finger drags must not pan or zoom the page while it drags */
+html.pdx-touch .die[draggable="true"],
+html.pdx-touch #players-zone .pcard.cfolio,
+html.pdx-touch #market-zone .card,
+html.pdx-touch #hela-brain-full { touch-action: none; -webkit-user-drag: none; }
+
+/* ── no mouse, no pointer art: HELA's reticle and the gloved hand are a mouse's cursor ── */
+html.pdx-touch #cursor-plane #hela-radar,
+html.pdx-touch #cursor-plane #hand-right,
+html.pdx-touch #menu-cursor { display: none !important; }
+/* on the Merchant and records scenes the arm is lifted into the cursor plane to be the
+   pointer (cabin.js armHome): a finger has no pointer, so it stays out of sight there */
+html.pdx-touch #cursor-plane #hull-manopla { display: none !important; }
+
+/* ── weak GPUs: no live blur behind anything, no full-screen grain, a still world.
+      (main.js also starts phones on Low graphics and tablets on Medium.) ── */
+html.pdx-touch *, html.pdx-touch *::before, html.pdx-touch *::after {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.pdx-touch .grain { display: none; }
+html.pdx-touch .world-bg { animation: none; }
+
+/* ══ THE FULL-SCREEN CARD and THE HOME-SCREEN GUIDE ══════════════════════ */
+.tx-cover { position: fixed; inset: 0; z-index: 2147483100; display: flex; align-items: center; justify-content: center;
+  padding: max(16px, var(--tx-sa-t)) max(16px, var(--tx-sa-r)) max(16px, var(--tx-sa-b)) max(16px, var(--tx-sa-l));
+  background: rgba(19, 16, 12, .94); opacity: 0; transition: opacity .28s ease; overflow-y: auto; }
+.tx-cover[hidden] { display: none; }
+.tx-cover.on { opacity: 1; }
+.tx-card { position: relative; width: min(440px, 100%); margin: auto; box-sizing: border-box;
+  display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: center;
+  padding: 18px 20px 16px; background: var(--tx-paper); color: var(--tx-ink);
+  border: 3px solid var(--tx-ink); border-radius: 6px; box-shadow: 7px 7px 0 var(--tx-ink);
+  transform: rotate(-.6deg) translateY(10px); transition: transform .32s cubic-bezier(.2, .9, .3, 1.2); }
+.tx-cover.on .tx-card { transform: rotate(-.6deg) translateY(0); }
+.tx-eye { grid-row: span 2; width: 74px; height: 74px; display: block; }
+.tx-eye svg { width: 100%; height: 100%; overflow: visible; }
+.tx-burst { fill: var(--tx-you); stroke: var(--tx-ink); stroke-width: 4; stroke-linejoin: round; }
+.tx-lid { fill: #fffbe8; stroke: var(--tx-ink); stroke-width: 4.5; stroke-linejoin: round; }
+.tx-iris { fill: var(--tx-you); stroke: var(--tx-ink); stroke-width: 3.5; }
+.tx-pupil { fill: var(--tx-ink); }
+.tx-glint { fill: #fffbe8; }
+.tx-title { margin: 0; font: 700 1.55rem/1.05 var(--f-display, "Oswald", sans-serif); letter-spacing: .03em; text-transform: uppercase; }
+.tx-line { margin: 0; font: 500 .98rem/1.35 var(--f-body, "Inter", sans-serif); }
+.tx-go { grid-column: 1 / -1; margin-top: 12px; min-height: 58px; display: flex; align-items: center; justify-content: center; gap: 12px;
+  border: 3px solid var(--tx-ink); border-radius: 6px; background: var(--tx-ink); color: var(--tx-paper);
+  font: 700 1.25rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; text-transform: uppercase;
+  box-shadow: 4px 4px 0 var(--tx-you); cursor: pointer; }
+.tx-go svg { width: 28px; height: 28px; color: var(--tx-you); }
+.tx-go:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--tx-you); }
+.tx-later { grid-column: 1 / -1; justify-self: center; min-height: 44px; padding: 0 14px; border: 0; background: none;
+  color: var(--tx-ink); font: 600 .95rem/1 var(--f-body, "Inter", sans-serif); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.tx-ok { min-width: 160px; margin-top: 8px; border: 3px solid var(--tx-ink); border-radius: 6px; text-decoration: none;
+  font: 700 1.05rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--tx-ink); }
+.tx-steps { grid-column: 1 / -1; margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: tx; }
+.tx-steps li { display: grid; grid-template-columns: 26px 38px 1fr; gap: 10px; align-items: center; counter-increment: tx;
+  font: 500 .98rem/1.3 var(--f-body, "Inter", sans-serif); }
+.tx-steps li::before { content: counter(tx); width: 26px; height: 26px; border-radius: 50%; background: var(--tx-ink); color: var(--tx-paper);
+  display: grid; place-items: center; font: 700 .9rem/1 var(--f-display, "Oswald", sans-serif); }
+.tx-ico { width: 38px; height: 38px; display: grid; place-items: center; border: 2px solid var(--tx-ink); border-radius: 8px; background: #fffbe8; color: #1a73e8; }
+.tx-ico svg { width: 24px; height: 24px; }
+.tx-ico-app { color: inherit; padding: 0; overflow: hidden; }
+.tx-ico-app img { width: 100%; height: 100%; display: block; }
+/* a short landscape phone: the card lies on its side, eye and words left, actions right */
+@media (orientation: landscape) and (max-height: 500px) {
+  .tx-card { width: min(640px, 100%); grid-template-columns: auto 1fr 1fr; padding: 14px 18px; }
+  .tx-eye { width: 64px; height: 64px; }
+  .tx-go { grid-column: 3; grid-row: 1 / span 2; margin: 0; }
+  .tx-later { grid-column: 3; }
+  #pdx-fs-offer .tx-later { grid-column: 3; grid-row: 3; }
+  .tx-steps { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+  .tx-steps li { grid-template-columns: 26px 38px 1fr; font-size: .9rem; }
+  #pdx-ios-guide .tx-ok { grid-column: 1 / -1; }
+}
+
+/* "Add to Home Screen" on the full-screen card (a quiet third choice) */
+.tx-install { grid-column: 1 / -1; justify-self: center; min-height: 44px; padding: 0 14px; display: flex; align-items: center; gap: 8px;
+  border: 2px dashed var(--tx-ink); border-radius: 6px; background: transparent; color: var(--tx-ink);
+  font: 700 .9rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.tx-install[hidden] { display: none; }
+.tx-install svg { width: 20px; height: 20px; }
+@media (orientation: landscape) and (max-height: 500px) {
+  #pdx-fs-offer .tx-install { grid-column: 1 / 3; grid-row: 3; justify-self: start; }
+}
+
+/* the menu's "Add to Home Screen" key, under the full-screen key */
+#pdx-home-key { position: fixed; z-index: 2147483000; right: max(8px, var(--tx-sa-r)); bottom: max(10px, var(--tx-sa-b));
+  min-height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px;
+  border: 2px solid var(--tx-ink); border-radius: 6px; background: var(--tx-paper); color: var(--tx-ink);
+  font: 700 .82rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--tx-ink); cursor: pointer; }
+#pdx-home-key[hidden] { display: none; }
+#pdx-home-key svg { width: 20px; height: 20px; }
+
+/* the corner key that brings full screen back */
+#pdx-fs-pill { position: fixed; z-index: 2147483000; top: max(8px, var(--tx-sa-t)); right: max(8px, var(--tx-sa-r));
+  min-height: 44px; min-width: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px;
+  border: 2px solid var(--tx-ink); border-radius: 6px; background: var(--tx-paper); color: var(--tx-ink);
+  font: 700 .82rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--tx-ink); cursor: pointer; }
+#pdx-fs-pill[hidden] { display: none; }
+#pdx-fs-pill svg { width: 20px; height: 20px; }
+/* in a match only the icon: the table is already short of room */
+html.pdx-phone.pdx-in-match #pdx-fs-pill span { display: none; }
+html.pdx-in-match #pdx-fs-pill { top: auto; bottom: max(8px, var(--tx-sa-b)); right: max(8px, var(--tx-sa-r)); opacity: .85; }
+
+/* ══ TURN YOUR PHONE SIDEWAYS (a phone held upright during a match) ══════ */
+#pdx-rotate { display: none; }
+html.pdx-phone.pdx-portrait.pdx-in-match #pdx-rotate {
+  position: fixed; inset: 0; z-index: 2147483200; display: flex; align-items: center; justify-content: center;
+  padding: max(24px, var(--tx-sa-t)) 24px max(24px, var(--tx-sa-b)); background: #13100c; color: var(--tx-paper); text-align: center; }
+.tx-rot-box { display: grid; justify-items: center; gap: 10px; }
+.tx-phone { width: 120px; height: 120px; fill: none; stroke: var(--tx-paper); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+  animation: txTurn 2.4s cubic-bezier(.6, 0, .3, 1) infinite; transform-origin: 32px 28px; }
+.tx-phone circle { fill: var(--tx-paper); stroke: none; }
+.tx-phone .tx-arc, .tx-phone .tx-arc-tip { stroke: var(--tx-you); }
+@keyframes txTurn { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { .tx-phone { animation: none; transform: rotate(-90deg); } }
+.tx-rot-title { margin: 0; font: 700 1.6rem/1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .04em; text-transform: uppercase; }
+.tx-rot-line { margin: 0; font: 500 1rem/1.35 var(--f-body, "Inter", sans-serif); opacity: .8; }
+
+/* ══ THE SCENE KEYS: W the Merchant, S the desk, A the records ═══════════ */
+#pdx-scenes { position: fixed; z-index: 60300; right: max(6px, var(--tx-sa-r)); top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 8px; }
+#pdx-scenes[hidden] { display: none; }
+#pdx-scenes button { width: 60px; min-height: 56px; padding: 5px 2px 6px; display: grid; justify-items: center; gap: 3px;
+  border: 2px solid var(--tx-ink); border-radius: 6px; background: rgba(244, 230, 176, .9); color: var(--tx-ink);
+  box-shadow: 2px 2px 0 var(--tx-ink); cursor: pointer; }
+#pdx-scenes button kbd { font: 700 1.05rem/1 var(--f-mono, "JetBrains Mono", monospace); padding: 2px 6px;
+  border: 1.5px solid var(--tx-ink); border-radius: 3px; background: #fffbe8; }
+#pdx-scenes button span { font: 700 .64rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; text-transform: uppercase; }
+#pdx-scenes button.is-on { background: var(--tx-ink); color: var(--tx-paper); box-shadow: 2px 2px 0 var(--tx-you); }
+#pdx-scenes button.beckon { animation: txBeckon 1.1s ease-in-out infinite; background: var(--tx-you); }
+@keyframes txBeckon { 0%, 100% { box-shadow: 2px 2px 0 var(--tx-ink), 0 0 0 0 var(--tx-you); } 50% { box-shadow: 2px 2px 0 var(--tx-ink), 0 0 0 7px rgba(242, 169, 59, .35); } }
+@media (prefers-reduced-motion: reduce) { #pdx-scenes button.beckon { animation: none; } }
+#pdx-scenes button.is-on kbd { background: var(--tx-you); color: var(--tx-ink); border-color: var(--tx-paper); }
+/* the tablet has room under the table: the keys sit in a row at the bottom right */
+html.pdx-tablet #pdx-scenes { top: auto; bottom: max(10px, var(--tx-sa-b)); transform: none; flex-direction: row; }
+html.pdx-tablet #pdx-scenes button { width: 72px; min-height: 60px; }
+
+/* ══ THE "?" KEY (help.js #pdx-tabkey): tap = tips, press and hold = the reference ══ */
+html.pdx-touch #pdx-tabkey { left: max(8px, var(--tx-sa-l)); min-width: 48px; min-height: 48px;
+  justify-content: center; -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
+html.pdx-touch #pdx-tabkey kbd { font-size: 0; padding: .1rem .5rem; }
+html.pdx-touch #pdx-tabkey kbd::before { content: "?"; font-size: 1.25rem; line-height: 1; }
+html.pdx-phone #pdx-tabkey > span { display: none; }
+html.pdx-phone #pdx-tabkey .pk-notes { font-size: .72rem; }
+/* a phone's margin beside the table is narrow: smaller keys, a little see-through */
+html.pdx-phone #pdx-scenes { gap: 6px; }
+html.pdx-phone #pdx-scenes button { width: 58px; min-height: 48px; padding: 4px 2px 5px; }
+html.pdx-phone #pdx-scenes button:not(.is-on):not(.beckon) { background: rgba(244, 230, 176, .78); }
+
+/* ══ WORDS FOR A FINGER ══ */
+html.pdx-touch #tut-callout .tc-hint { font-size: 0; }
+html.pdx-touch #tut-callout .tc-hint::after { content: "tap anywhere \25B8"; font-size: .82rem; }
+html.pdx-touch .pdx-ack { font-size: 0 !important; }
+html.pdx-touch .pdx-ack::after { content: "Tap anywhere to go on"; font-size: .88rem; }
+
+/* ══ A LONG LOOK AT SOMETHING WITH ONLY A TITLE ══ */
+#pdx-touch-tip { position: fixed; z-index: 2147483050; padding: 8px 11px; pointer-events: none;
+  background: var(--tx-paper, #f4e6b0); color: var(--tx-ink, #15100a); border: 2px solid var(--tx-ink, #15100a); border-radius: 5px;
+  box-shadow: 3px 3px 0 var(--tx-ink, #15100a); font: 600 .9rem/1.3 var(--f-body, "Inter", sans-serif); opacity: 0; transition: opacity .14s; }
+#pdx-touch-tip[hidden] { display: none; }
+#pdx-touch-tip.on { opacity: 1; }

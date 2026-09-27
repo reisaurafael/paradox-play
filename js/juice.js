@@ -7,7 +7,7 @@
    micro-feedback (a sound + a lift on every interactive element). Mirrors the
    `audio` singleton; holds no game state; honours prefers-reduced-motion.
    ========================================================================= */
-import { audio } from "./audio.js?202609270943";
+import { audio } from "./audio.js?202609271103";
 
 const FLASH = {
   white:   "#fdf6e6",

@@ -28,8 +28,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609270943";
-import { mend } from "./mend.js?202609270943";
+import { roman } from "./util.js?202609271103";
+import { mend } from "./mend.js?202609271103";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -816,11 +816,15 @@ class Comic {
         const parts = [{ b: "A paradox tears at the timeline. " }];
         hits.forEach((h, i) => { parts.push(i ? ", " : "", N(h.seat)); });
         try {
+          // a tear runs only from a traveler whose die REACHED that victim (game._paradoxPairs,
+          // by position), never from everyone who fed the pool
           const tv = (s2) => ((this.game.view && this.game.view.travelers) || []).find((t) => t.name === s2);
-          const causers = (this.game._paradoxCausers && this.game._paradoxCausers(p.module)) || [];
-          for (const c of causers.slice(0, 3)) {
+          const pairs = (this.game._paradoxPairs && this.game._paradoxPairs(p)) || [];
+          const by = new Map();
+          for (const q of pairs) if (q.causer) { if (!by.has(q.causer)) by.set(q.causer, []); by.get(q.causer).push(q.victim); }
+          for (const [c, victims] of [...by].slice(0, 3)) {
             const ct = tv(c); if (!ct) continue;
-            const tgt = hits.filter((h) => h.seat !== c).map((h) => tv(h.seat)).filter(Boolean).map((t) => t.century);
+            const tgt = victims.map(tv).filter(Boolean).map((t) => t.century);
             if (tgt.length) mend.tear(ct.century, tgt, this._col(c));
           }
         } catch (e) {}
@@ -919,15 +923,11 @@ class Comic {
     document.body.classList.add("cx-your-move");
     document.body.dataset.cxMove = req.kind;
     this._lastKind = req.kind;
-    // a voyage (or the Merchant's harbour) is asked by HELA's own bar on the chart itself
-    // (board_*.js commandText: the course, what is free and what costs); when the chart is
-    // elsewhere her eye's arrow points to it. A YOUR MOVE box too would say it twice.
-    if ((req.kind === "travel" || req.kind === "merchant_century") && document.body.classList.contains("cabin-on")) {
-      const s = this.slots.turn;
-      if (s && s.classList.contains("on")) this.hide("turn");
-      return;
-    }
     let head = m[0];
+    // the voyage's reach is part of the instruction (the machine's screen shows only the
+    // legend of the chart: what is free, what costs, where he holds; cabin.js mirrorCommand)
+    if (req.kind === "travel" && req.options && req.options.max)
+      head = `Plot your voyage: up to ${req.options.max} ${req.options.max === 1 ? "century" : "centuries"}`;
     if (req.kind === "allocate") {
       const n = ((req.private && req.private.dice) || (req.options && req.options.dice) || []).length;
       if (n) head = `Place your ${n} dice on the machine`;

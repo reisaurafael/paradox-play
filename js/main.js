@@ -1,20 +1,20 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609270943";
-import { hydrateIcons, icon } from "./icons.js?202609270943";
-import { seatColor, initials, el } from "./util.js?202609270943";
-import { Game } from "./game.js?202609270943";
-import { audio } from "./audio.js?202609270943";
-import { tutorials } from "./tutorial.js?202609270943";
-import { profile } from "./profile.js?202609270943";
-import { access } from "./access.js?202609270943";
+import { api, Connection } from "./net.js?202609271103";
+import { hydrateIcons, icon } from "./icons.js?202609271103";
+import { seatColor, initials, el } from "./util.js?202609271103";
+import { Game } from "./game.js?202609271103";
+import { audio } from "./audio.js?202609271103";
+import { tutorials } from "./tutorial.js?202609271103";
+import { profile } from "./profile.js?202609271103";
+import { access } from "./access.js?202609271103";
 import "./menu-cursor.js";
 import "./help.js";
-import "./chronicle.js";
-import { launchTutorial } from "./tutorial-drive.js?202609270943";
-import { PadCursor } from "./controle.js?202609270943";
-import { fx, PACES, LEVELS } from "./fx.js?202609270943";
+import { colourPicker, colourWish } from "./chronicle.js?202609271103";
+import { launchTutorial } from "./tutorial-drive.js?202609271103";
+import { PadCursor } from "./controle.js?202609271103";
+import { fx, PACES, LEVELS } from "./fx.js?202609271103";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -143,7 +143,9 @@ function syncPaceUI(sp) {
   const GECKO = !!(window.CSS && CSS.supports && CSS.supports("-moz-appearance", "none"));
   document.documentElement.classList.toggle("pdx-gecko", GECKO);
   function applyGfx() {
-    const q = ["high", "medium", "low"].includes(lsGet(GFX_KEY)) ? lsGet(GFX_KEY) : (GECKO ? "medium" : "high");
+    // a phone with no saved choice starts on Low and a tablet on Medium (js/touch.js)
+    const TOUCH_Q = window.__pdxTouch && window.__pdxTouch.gfxDefault;
+    const q = ["high", "medium", "low"].includes(lsGet(GFX_KEY)) ? lsGet(GFX_KEY) : (TOUCH_Q || (GECKO ? "medium" : "high"));
     // Medium stills the chart's ambient loops too: measured on an awake table they cost about
     // a quarter of the frame rate (their layers and overlaps), the biggest single item left
     // the accessible interface rests the ambient loops too (calm motion, js/access.js)
@@ -271,32 +273,16 @@ async function busy(fn) {
 }
 
 /* ── THE PROFILE: fixed name, colour and service record, kept on this machine ── */
-const PALETTE_HEX = ["#f2a93b", "#2fa3a3", "#8f6fd6",
-                     "#6fae6a", "#c2693f", "#5b8fd6"];
-// the colour is never told by colour alone: every swatch has its name
-const PALETTE_NAME = ["Amber", "Teal", "Violet", "Green", "Rust", "Blue"];
 
 function renderProfile() {
   const p = profile.get();
   const st = profile.stats();
   if (p.name && !inpName.value) inpName.value = p.name;
 
-  const sw = document.getElementById("prof-swatches");
-  sw.innerHTML = "";
-  PALETTE_HEX.forEach((hex, i) => {
-    const on = i === p.colour;
-    const b = el("button", "prof-sw" + (on ? " is-on" : ""));
-    b.type = "button";
-    b.style.background = hex;
-    b.title = PALETTE_NAME[i];
-    b.setAttribute("role", "radio");
-    b.setAttribute("aria-checked", on ? "true" : "false");
-    b.setAttribute("aria-label", PALETTE_NAME[i]);
-    b.addEventListener("click", () => { profile.setColour(i); renderProfile(); audio.play("click"); });
-    sw.appendChild(b);
-  });
-  const cn = document.getElementById("colour-name");
-  if (cn) cn.textContent = PALETTE_NAME[p.colour] || "";
+  // the colours you can wear: green and blue to start, the rest are Chronicle
+  // quests (chronicle.js draws the picker, theme.js puts the colour on)
+  colourPicker(document.getElementById("prof-swatches"), document.getElementById("colour-name"),
+    () => { renderProfile(); audio.play("click"); });
 
   const stats = document.getElementById("prof-stats");
   stats.innerHTML = "";
@@ -337,14 +323,14 @@ renderProfile();
 // PLAY VS AI: a match setup where every other seat is an AI opponent.
 document.getElementById("btn-solo").addEventListener("click", () => busy(async () => {
   const name = playerName();
-  const r = await api.createRoom(name, nPlayers(), "classic", profile.get().colour);
+  const r = await api.createRoom(name, nPlayers(), "classic", colourWish());
   enterRoom(r.seat, r.code, r.seat, r.room, { solo: true });
 }));
 
 // HOST A ROOM (desktop): the same setup, with a room code for friends.
 document.getElementById("btn-create").addEventListener("click", () => busy(async () => {
   const name = playerName();
-  const r = await api.createRoom(name, nPlayers(), "classic", profile.get().colour);
+  const r = await api.createRoom(name, nPlayers(), "classic", colourWish());
   enterRoom(r.seat, r.code, r.seat, r.room, { solo: false });
 }));
 
@@ -372,7 +358,7 @@ document.getElementById("btn-tutorial").addEventListener("click", () => {
 
 document.getElementById("btn-testroom").addEventListener("click", () => busy(async () => {
   const name = playerName();
-  const r = await api.createRoom(name, nPlayers(), "leilao", profile.get().colour);
+  const r = await api.createRoom(name, nPlayers(), "leilao", colourWish());
   enterRoom(r.seat, r.code, r.seat, r.room, { solo: false });
 }));
 
@@ -380,7 +366,7 @@ document.getElementById("btn-join").addEventListener("click", () => busy(async (
   const code = inpCode.value.trim().toUpperCase();
   if (code.length < 4) { inpCode.focus(); throw new Error("Type the 4-character room code your friend gave you."); }
   const name = playerName();
-  const r = await api.joinRoom(code, name, profile.get().colour);
+  const r = await api.joinRoom(code, name, colourWish());
   enterRoom(r.seat, code, r.seat, r.room, { solo: false });
 }));
 

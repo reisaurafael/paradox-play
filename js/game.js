@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609270943";
-import { audio } from "./audio.js?202609270943";
+import { icon } from "./icons.js?202609271103";
+import { audio } from "./audio.js?202609271103";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609270943";
-import { comic } from "./comic.js?202609270943";
-import { fx } from "./fx.js?202609270943";
-import { CatEngine } from "./cat.js?202609270943";
-import { tutorials } from "./tutorial.js?202609270943";
-import { profile } from "./profile.js?202609270943";
-import { Camera } from "./camera.js?202609270943";
+import { juice } from "./juice.js?202609271103";
+import { comic } from "./comic.js?202609271103";
+import { fx } from "./fx.js?202609271103";
+import { CatEngine } from "./cat.js?202609271103";
+import { tutorials } from "./tutorial.js?202609271103";
+import { profile } from "./profile.js?202609271103";
+import { Camera } from "./camera.js?202609271103";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609270943";
+} from "./util.js?202609271103";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -370,6 +370,7 @@ export class Game {
     // The colour is the player's own pick. The lobby carries the colour each player
     // chose in the profile (the server settles clashes), so the whole table sees the
     // same person in the same colour. With no pick, it falls back to seat order.
+    if (name === this.seat && window.__pdxThemeColour) { const tc = window.__pdxThemeColour(); if (tc) return tc; }   // MY colour theme (theme.js), on my screen
     const picked = this._seatColours && this._seatColours[name];
     if (picked != null) return seatColor(picked);
     if (!(name in this.seatIndex)) this.seatIndex[name] = Object.keys(this.seatIndex).length;
@@ -4315,6 +4316,20 @@ export class Game {
     return out;
   }
 
+  // WHO REALLY HIT WHOM in one paradox module: the pairs fx.js rebuilds from position (the
+  // traveler fed that module AND his die could reach the victim: ahead, same century or
+  // behind when the dice were set; Window of Time and Spear of Destiny counted). Feeding
+  // the pool is not enough: a die that reached no one blamed no one. Nearest pair first;
+  // a hit no pair explains has causer null.
+  _paradoxPairs(p) {
+    try { return (fx._paradoxPairs(p) || []).flat(); } catch (e) { return []; }
+  }
+  // the traveler whose die reached this victim (the nearest one), or null
+  _paradoxCauserOf(pairs, victim) {
+    const q = pairs.find((x) => x.victim === victim && x.causer);
+    return q ? q.causer : null;
+  }
+
   async playEvent(msg) {
     const { kind, payload } = msg;
     this.logEvent(kind, payload);
@@ -4418,8 +4433,10 @@ export class Game {
           tutorials.show("paradox");
         }
         if (hits.length) audio.play("paradox");
-        const causers = this._paradoxCausers(payload.module);
-        if (hits.some((h) => h.damage)) fx.beat("paradox_cast", { causers });   // ZAP at whoever fed the pool
+        // by POSITION: only a traveler whose die reached someone caused this paradox
+        const pairs = this._paradoxPairs(payload);
+        const causers = [...new Set(pairs.map((q) => q.causer).filter(Boolean))];
+        if (hits.some((h) => h.damage)) fx.beat("paradox_cast", { causers });   // ZAP at whoever really cast it
         const cab3 = document.body.classList.contains("cabin-on");
         if (!cab3 || this.speed === "fast" || !hits.length) {
           hits.forEach((h) => {
@@ -4433,13 +4450,17 @@ export class Game {
         document.body.classList.add("rt-stage");
         try {
           for (const h of hits) {   // IN ORDER, each victim is a little pip-boy strike
-            const causer = causers.find((c2) => c2 !== h.seat) || causers[0] || null;
+            const causer = this._paradoxCauserOf(pairs, h.seat);
             const col = causer ? this.colorOf(causer) : "#b48ce8";
             if (h.seat === this.seat) {
-              const idx = (payload.module || 4) - 4;
-              const cell = document.querySelector(`#hull-console .matrix-wrap .cell[data-r="1"][data-c="${idx}"]`);
-              if (cell) { cell.classList.add("rt-causer"); cell.style.setProperty("--causer", col);
-                setTimeout(() => { cell.classList.remove("rt-causer"); cell.style.removeProperty("--causer"); }, 2600); }
+              // his own Paradox cell lights only when HIS die reached someone in this pool
+              // (never in a rival's colour: that read as "your die did this")
+              if (causers.includes(this.seat)) {
+                const idx = (payload.module || 4) - 4;
+                const cell = document.querySelector(`#hull-console .matrix-wrap .cell[data-r="1"][data-c="${idx}"]`);
+                if (cell) { cell.classList.add("rt-causer"); cell.style.setProperty("--causer", this.colorOf(this.seat));
+                  setTimeout(() => { cell.classList.remove("rt-causer"); cell.style.removeProperty("--causer"); }, 2600); }
+              }
               juice.hitPause(80);
             } else {
               const pc = document.querySelector(`.pcard[data-seat="${CSS.escape(h.seat)}"]`);

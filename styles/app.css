@@ -3165,8 +3165,14 @@ body.vz-crit #hull .vz-ph.on::after { background:#ff8a72 !important; box-shadow:
 :is(#hull, #cursor-plane) .hull-manopla > .mano-svg { pointer-events: none; }
 :is(#hull, #cursor-plane) #hexcore { animation: hexPulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes hexPulse { 0%,100% { opacity: .55; } 50% { opacity: .95; } }
-:is(#hull, #cursor-plane) .mano-gem { transition: opacity .18s ease; }
-:is(#hull, #cursor-plane) .mano-gem.gem-lit { filter: drop-shadow(0 0 4px currentColor); }
+/* the traveller's persona (cabin.js persona): the hands and sleeve of the chosen build */
+html[data-arm-build="f"] .pb-m { display: none; }
+html[data-arm-build="f"] .pb-f { display: inline; }
+/* the ERA SEALS on the glove: a mended period fills with enamel */
+:is(#hull, #cursor-plane) .mano-seal .ms-enamel { transition: opacity .6s ease; }
+:is(#hull, #cursor-plane) .mano-seal.mended .ms-enamel { opacity: 1; }
+:is(#hull, #cursor-plane) .mano-seal.mended path.ms-enamel { opacity: .55; }
+:is(#hull, #cursor-plane) .mano-seal.mended .ms-glyph { fill: #fff4dc; }
 :is(#hull, #cursor-plane) #mano-screen { transition: filter .3s ease; }
 /* The screen glow is a box-shadow, not a filter. A `filter` on an SVG part makes
    the browser raster that part and then process the raster, and this glow stays on
@@ -3511,7 +3517,7 @@ body.cabin-on #hull-console .dice-actions .btn:active { transform: translateY(1p
 /* subtle carbon-copy header underline */
 .panel-detail.dossier .do-caseno { color: #8a2a14; letter-spacing: .1em; }
 
-:is(#hull, #cursor-plane) #mano-screen, :is(#hull, #cursor-plane) #mano-vent, :is(#hull, #cursor-plane) #mano-boomg, :is(#hull, #cursor-plane) #hexcore, :is(#hull, #cursor-plane) #tray-slot { cursor: help; }
+:is(#hull, #cursor-plane) #mano-screen, :is(#hull, #cursor-plane) #mano-vent, :is(#hull, #cursor-plane) #mano-boomg, :is(#hull, #cursor-plane) #hexcore, :is(#hull, #cursor-plane) #mano-seals, :is(#hull, #cursor-plane) #tray-slot { cursor: help; }
 /* CLEAN MOMENT: no question-mark cursor while allocating, the legend is on TAB */
 body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-screen, body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-vent,
 body.cabin-on.allocating :is(#hull, #cursor-plane) #mano-boomg, body.cabin-on.allocating :is(#hull, #cursor-plane) #hexcore,
@@ -3599,15 +3605,11 @@ body.cabin-on.allocating #hull-console .matrix-wrap .cell.dragover {
 @media (prefers-reduced-motion: reduce) { body.cabin-on.allocating #hull-console .matrix-wrap .cell.legal { animation: none; } }
 
 
-/* ── THE SNAP: sealing the hour (CONFIRM) is the Thanos beat, gems flash-lock,
-      the device recoils, the screen whites out for a frame ── */
-:is(#hull, #cursor-plane).clench .mano-gem.gem-lit { animation: gemSnap .55s ease-out; }
-@keyframes gemSnap { 0% { filter: drop-shadow(0 0 14px currentColor) brightness(2.4); }
-  40% { filter: drop-shadow(0 0 8px currentColor) brightness(1.6); } 100% { filter: none; } }
+/* ── THE SNAP: sealing the hour (CONFIRM), the device recoils, the screen whites out for a frame ── */
 :is(#hull, #cursor-plane).clench .mano-svg { animation: deviceRecoil .32s ease-out; }
 @keyframes deviceRecoil { 28% { transform: translateY(3px) scale(.994); } 60% { transform: translateY(-1px); } }
 :is(#hull, #cursor-plane).clench #hexcore { animation: none; opacity: 1 !important; filter: drop-shadow(0 0 10px #7fd8ff); }
-@media (prefers-reduced-motion: reduce) { :is(#hull, #cursor-plane).clench .mano-gem.gem-lit, :is(#hull, #cursor-plane).clench .mano-svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { :is(#hull, #cursor-plane).clench .mano-svg { animation: none; } }
 
 /* the revealed allocation reads bigger (the showdown "hand") */
 .bd-seals { gap: 4px !important; }
@@ -4312,12 +4314,10 @@ body.cabin-on .cb-grid .pcard.cfolio.pcard-choose { z-index: 45 !important; }
 
 /* the arm-cursor flies LIGHT: child filters + pulses pause while tracking */
 :is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] #hexcore { animation: none; }
-:is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] .mano-gem.gem-lit { filter: none; }
 :is(#hull, #cursor-plane) .hull-manopla[data-pose="cursor"] #mano-boomg .bseg.on { filter: none; }
 /* snappier interaction transitions (Balatro law: feedback < 100ms) */
 body.cabin-on #hull-console .matrix-wrap .cell { transition: border-color .06s, background .06s, box-shadow .06s; }
 :is(#hull, #cursor-plane) .mkey .mkey-cap, :is(#hull, #cursor-plane) .mkey .mkey-txt { transition: opacity .12s, filter .12s; }
-:is(#hull, #cursor-plane) .mano-gem { transition: opacity .1s; }
 
 /* ══ THE BIT SWARM (Matrix): a lifted generator decompiles into orbiting bits ══ */
 .bit-swarm { position: fixed; inset: 0; pointer-events: none; z-index: 700; }
@@ -4573,9 +4573,9 @@ body.cam-on #market-zone .market-title .market-sign span { font-size: .74rem; }
 body.cam-on #market-zone > .secret-curtain.open .sc-crest { opacity: 0; }
 body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 
-/* ═══════════════════ THE CAT (cat.js): his drawing, his poses, his places ═══════════════════
-   His position is one transform, written by the engine and carried by a transition while
-   he walks. Every small life effect uses the separate `scale`/`translate`/`rotate`
+/* ═══════════════════ THE CAT (cat.js): her drawing, her poses, her places ═══════════════════
+   Her position is one transform, written by the engine and carried by a transition while
+   she walks. Every small life effect uses the separate `scale`/`translate`/`rotate`
    properties so nothing fights that transform. Loops run only in the state that needs
    them, on his own layer, and pause while the paperwork desk is off screen. */
 #cat-bed { position: absolute; left: 0; top: 0; z-index: 7; pointer-events: none; }
@@ -4592,15 +4592,16 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being.pose-crouch .cw-crouch, .cat-being.pose-leap .cw-leap,
 .cat-being.pose-sleep .cw-sleep, .cat-being.pose-curl .cw-curl { display: inline; }
 
-/* the face */
-.cat-being .cw-lid, .cat-being .cw-mouth-open, .cat-being .cw-tongue, .cat-being .cw-blush,
+/* the face: one expression drawing at a time (the engine sets x-open, x-relaxed, ...) */
+.cat-being .cw-x, .cat-being .cw-mouth-open, .cat-being .cw-tongue,
 .cat-being .cw-purr, .cat-being .cw-claws { display: none; }
+.cat-being.x-open .cw-x-open, .cat-being.x-relaxed .cw-x-relaxed, .cat-being.x-focused .cw-x-focused,
+.cat-being.x-scared .cw-x-scared, .cat-being.x-happy .cw-x-happy, .cat-being.x-sleepy .cw-x-sleepy { display: inline; }
+.cat-being.petted .cw-x { display: none; }
+.cat-being.petted .cw-x-happy, .cat-being.petted.sleeping .cw-x-sleepy { display: inline; }
 .cat-being .cw-pupil { translate: var(--px, 0px) var(--py, 0px); transform-box: fill-box; transform-origin: center;
   transition: scale .25s ease; }
-.cat-being.pupils-wide .cw-pupil { scale: 1.75 1.12; }
-.cat-being.petted .cw-eyeball, .cat-being.grooming .cw-eyeball { display: none; }
-.cat-being.petted .cw-lid, .cat-being.grooming .cw-lid { display: inline; }
-.cat-being.petted .cw-blush { display: inline; opacity: .45; }
+.cat-being.pupils-wide .cw-x-open .cw-pupil { scale: 1.45 1.05; }
 .cat-being.biting .cw-mouth-open, .cat-being.grooming .cw-tongue { display: inline; }
 .cat-being.biting .cw-mouth-calm, .cat-being.grooming .cw-mouth-calm { display: none; }
 .cat-being.batting .cw-claws, .cat-being.biting .cw-claws, .cat-being.pose-leap .cw-claws { display: inline; }
@@ -4608,15 +4609,15 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 
 /* HELA's light on the side of him that faces her core */
 .cat-being .cw-glow { opacity: 0; transition: opacity 1.4s ease; }
-.cat-being.by-core .cw-glow { opacity: .3; }
+.cat-being.by-core .cw-glow { opacity: .42; }
 
 /* the parts that move, each about its own joint */
 .cat-being .cw-earL, .cat-being .cw-earR, .cat-being .cw-headin, .cat-being .cw-tail,
 .cat-being .cw-paw, .cat-being .cw-rump, .cat-being .cw-zzz path { transform-box: fill-box; }
 .cat-being .cw-earL { transform-origin: 70% 92%; transition: rotate .3s ease, translate .3s ease; }
 .cat-being .cw-earR { transform-origin: 30% 92%; transition: rotate .3s ease, translate .3s ease; }
-.cat-being.ears-back .cw-earL, .cat-being.mood-afraid .cw-earL { rotate: -28deg; translate: 0 10px; }
-.cat-being.ears-back .cw-earR, .cat-being.mood-afraid .cw-earR { rotate: 28deg; translate: 0 10px; }
+.cat-being.ears-back .cw-earL, .cat-being.mood-afraid .cw-earL { rotate: -42deg; translate: 6px 22px; }
+.cat-being.ears-back .cw-earR, .cat-being.mood-afraid .cw-earR { rotate: 42deg; translate: -6px 22px; }
 .cat-being.ear-flick .cw-earR { animation: cwEarFlick .5s ease-in-out 1; }
 @keyframes cwEarFlick { 40% { rotate: 20deg; } }
 .cat-being .cw-headin { transform-origin: 50% 85%; transition: rotate .45s ease, translate .45s ease; }
@@ -4630,8 +4631,8 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being.flick .cw-tail { animation: cwFlick .9s ease-in-out 1; }
 @keyframes cwFlick { 30% { rotate: -5deg; } 65% { rotate: 3deg; } }
 .cat-being .cw-paw { transform-origin: 100% 100%; transition: rotate .35s ease; }
-.cat-being.grooming .cw-paw { rotate: 30deg; }
-.cat-being.biting .cw-paw { rotate: 14deg; }
+.cat-being.grooming .cw-paw { rotate: 24deg; }
+.cat-being.biting .cw-paw { rotate: -18deg; }
 .cat-being.batting .cw-paw { animation: cwSwipe .6s ease-in-out 3; }
 @keyframes cwSwipe { 0%,100% { rotate: 0deg; } 35% { rotate: -16deg; } 70% { rotate: 12deg; } }
 
@@ -5025,6 +5026,8 @@ body.cam-on #market-zone .market-secret .card .card-name { font-size: .8rem; lin
   min-height: 2.2em; padding-left: 24px; }
 body.cam-on #market-zone .market-row .card .card-type,
 body.cam-on #market-zone .market-secret .card .card-type { font-size: .58rem; margin-top: 4px; }
+/* a LARGE relic's tag keeps its corner: the name wraps before it */
+body.cam-on #market-zone .card-large-tag + .card-name { padding-right: 34px; }
 /* closed: the cards stay readable; the CLOSED plank and the cooled arch say "not now" */
 body.cam-on #market-zone.closed .market-row .card { opacity: .8; filter: none; }
 
@@ -5046,7 +5049,8 @@ body.cam-on #market-zone .secret-stage { position: absolute; left: 0; right: 0; 
   display: flex; justify-content: center; align-items: flex-end; }
 body.cam-on #market-zone .market-secret .card { width: 164px; max-width: 164px; min-height: 136px;
   margin: 0 auto; padding: 7px 8px 6px; }
-body.cam-on #market-zone .secret-bay { height: 150px; width: 100%; }
+body.cam-on #market-zone .secret-bay { height: 150px; width: 100%; padding: 0 0 10px;
+  flex-direction: column; align-items: center; justify-content: flex-end; }
 /* "Sold out": chalk on the sill in the market's cream, not the old violet */
 body.cam-on #market-zone .secret-bay .bay-text, body.cam-on #market-zone .secret-bay.open .bay-text {
   font: 800 .78rem/1 var(--f-display); letter-spacing: .12em; text-transform: uppercase;
@@ -8031,3 +8035,14 @@ html body #menu-cursor .mc-hand { width: 240px; height: 212.8px; margin: -65.7px
 #hela-brain-full .ledger .market-merchant-label { font-size: .84rem !important; letter-spacing: .08em; }
 #hela-brain-full .ledger .ledger-row, #hela-brain-full .ledger .ledger-empty, #hela-brain-full .ledger .ledger-row .ldg-h { font-size: .84rem; }
 #hela-brain-full .ledger .ledger-list { max-height: 11rem !important; }
+.he-window.he-news .hb-newsread .bn-extra { font-size: .84rem; }
+/* the machine's screen during a voyage: only the chart's legend, one line each, at HELA's
+   reading size (it was .5rem); the screen grows downward over the idle tray if it must */
+body.cabin-on #hull-console .mano-cmd { font: 700 .84rem/1.3 var(--f-mono, monospace); letter-spacing: .03em;
+  height: auto; min-height: 148px; max-height: 320px; gap: 6px; justify-content: center; }
+body.cabin-on #hull-console .mano-cmd .mc-l { display: block; margin: 0; }
+body.cabin-on #hull-console .mano-cmd .mc-l:is(.cg, .cgo) { color: #7fe0a8; }
+body.cabin-on #hull-console .mano-cmd .mc-l:is(.cc, .cm, .ccost) { color: #ffcf7a; }
+body.cabin-on #hull-console .mano-cmd .mc-l.cn { color: #ffb4a0; }
+body.cabin-on #hull-console .mano-cmd .mc-l.sea-anchor { font-size: inherit; margin-top: 0; }
+body.cabin-on #hull-console .mano-cmd .mc-l.sea-anchor svg { width: 13px; height: 14px; }

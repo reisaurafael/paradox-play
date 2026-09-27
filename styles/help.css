@@ -88,6 +88,7 @@ body.pdx-help-hold #pdx-tabkey, body.pdx-tips-on #pdx-tabkey { box-shadow: 0 0 0
 
 /* HELA's overload window (help.js overload, through window.__helaEye.manifest) */
 .he-window.he-ovl .he-pane { max-width: 30rem; padding: .7rem .9rem .6rem; color: #eaf6f0;
+  background: linear-gradient(168deg, #0a1c18, #06110e); backdrop-filter: none;
   font: 400 .92rem/1.35 var(--f-display, "Oswald", sans-serif); letter-spacing: .02em; }
 .he-window.he-ovl .he-pane::before { content: "\25C9  HELA \00B7  OVERLOAD"; display: block; margin-bottom: .45rem;
   font: 700 .84rem/1 var(--f-mono, monospace); letter-spacing: .1em; color: #ffcf6a; }

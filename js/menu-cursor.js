@@ -85,5 +85,7 @@ window.addEventListener("pointerup", () => {
   const h = box.querySelector(".mc-hand"); if (h) h.dataset.grab = "0";
 }, true);
 document.addEventListener("mouseleave", () => { x = y = -999; soon(); });
+// a new persona (menu-persona.js) redraws the hand at once: the live preview
+window.addEventListener("pdx:persona", () => { if (filled) { filled = false; box.innerHTML = ""; } soon(); });
 // the screens change without a mouse move (a match starts, Back to menu)
 new MutationObserver(soon).observe(document.body, { attributes: true, attributeFilter: ["class"] });

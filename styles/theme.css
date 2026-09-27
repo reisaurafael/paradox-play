@@ -1,0 +1,162 @@
+/* =========================================================================
+   theme.css, THE COLOURS A PLAYER WEARS (js/theme.js) and HELA in each one
+
+   The menu's colour picker, then HELA's interface per kind of colour:
+     pdx-th-single      nothing here: the palette colour drives her tokens
+     pdx-th-pair        the eye and frame in the first colour (her tokens), her
+                        balloons, highlights and the Tab panels inked in the second
+                        (--th-b, --th-b-hot)
+     pdx-th-rainbow     one slow hue turn on the 60 px eye; a static spectrum on
+                        the balloon edges and the Tab panel ring
+     pdx-th-wanted      the bounty poster: a brass sheriff's star for an eye, the
+                        balloons on kraft in woodtype, red and black frames. The
+                        same eye whenever you are actually Wanted (body.vz-wanted).
+     pdx-th-terminated  the void: a hollow cracked eye with an ember iris, stitched
+                        dashed frames. The same eye while you are terminated
+                        (body.vz-paradix, cabin.js helaConditions).
+   Readability first: text on the kraft is ink, text on the dark glass is a pale
+   tint. Costs: no filter on any large area; the only loops are the rainbow eye's
+   hue and the void eye's slow flicker (a 60 px element each, paused by the nap).
+   ========================================================================= */
+
+/* ═════════════════════════ THE PICKER (menu, You) ═════════════════════════ */
+#prof-swatches.chr-picker { display: flex; flex-direction: column; gap: 7px; flex-wrap: nowrap; }
+.chp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.chp-lbl { flex: 0 0 100%; margin-top: 2px; font: 600 .6rem/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--text-mute); }
+.chp-sw { position: relative; flex: none; width: 30px; height: 30px; padding: 0; display: grid; place-items: center;
+  border: 2px solid rgba(0,0,0,.6); border-radius: 4px; cursor: pointer; background: var(--a);
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.08); transition: transform .12s ease; }
+.chp-sw:hover { transform: translateY(-2px); }
+.chp-sw:focus-visible { outline: 3px solid #fff4c6; outline-offset: 2px; }
+.chp-pair { background: linear-gradient(135deg, var(--a) 0 50%, var(--b) 50% 100%); }
+.chp-rainbow { background: conic-gradient(from 200deg, #ff5a5a, #ffb13b, #ffe45a, #5fe07a, #4fd6ff, #6a7bff, #c46bff, #ff5a5a); }
+.chp-wanted { background: repeating-linear-gradient(135deg, #b02a1c 0 5px, #1a0d08 5px 10px); }
+.chp-terminated { background: radial-gradient(circle at 50% 50%, #030405 0 30%, #ff6a3a 33% 40%, #2a3236 44% 100%); }
+.chp-tier-epic { border-color: #7b4fc9; }
+.chp-tier-legendary { border-color: #b8862a; }
+/* the one you wear: a ring AND a check, never told by colour alone */
+.chp-sw.is-on { outline: 2.5px solid #fff4c6; outline-offset: 2px; }
+.chp-sw.is-on::after { content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 12px; margin: -8px 0 0 -4px;
+  border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg); filter: drop-shadow(0 0 1.5px #000) drop-shadow(0 0 1px #000); }
+.chp-sw.is-locked { filter: saturate(.5) brightness(.72); opacity: .9; }
+.chp-sw.is-locked:hover { transform: none; }
+.chp-lock { position: absolute; right: -5px; bottom: -5px; width: 15px; height: 15px; padding: 2px; border-radius: 50%;
+  color: #f4e6b0; background: #15100a; }
+.chp-star { width: 20px; height: 20px; }
+.chp-why { margin: 7px 0 0; min-height: 2.5em; font-size: .78rem; line-height: 1.4; color: var(--text-soft); }
+.chp-why.is-locked { color: var(--amber-300); }
+/* the same swatches on the Chronicle page */
+.chc-sw { width: 2.6rem; height: 2.6rem; cursor: inherit; }
+.chc-sw .chp-star { width: 1.7rem; height: 1.7rem; }
+
+/* ═════════════════════════ PAIRS: the eye in one, the ink in the other ═════════════════════════ */
+/* her balloon: the paper tinted by the second colour, ringed in it; the speaker mark
+   (her eye) keeps the first colour. The words stay ink on pale paper. */
+body.cx-on.pdx-th-pair #hela-eye .he-chip {
+  background: repeating-linear-gradient(0deg, rgb(var(--th-b-rgb) / .1) 0 1px, transparent 1px 4px),
+    radial-gradient(circle, rgb(var(--th-b-rgb) / .26) 1px, transparent 1.4px) 0 0 / 5px 5px, var(--th-b-hot);
+  box-shadow: 0 0 0 3px var(--th-b), 4px 4px 0 3px var(--cx-ink), 0 0 20px rgb(var(--th-b-rgb) / .4); }
+body.cx-on.pdx-th-pair #hela-eye .he-chip.flip-x { box-shadow: 0 0 0 3px var(--th-b), -4px 4px 0 3px var(--cx-ink), 0 0 20px rgb(var(--th-b-rgb) / .4); }
+body.cx-on.pdx-th-pair #hela-eye .he-chip::after { background: var(--th-b-hot); }
+body.pdx-th-pair #hela-eye .he-dchip kbd, body.pdx-th-pair #hela-eye .he-dchip svg { color: var(--th-b); }
+body.pdx-th-pair .he-window .he-pane { border-color: color-mix(in srgb, var(--th-b) 75%, transparent);
+  box-shadow: 0 8px 30px rgba(0,0,0,.5), inset 0 0 22px rgba(0,0,0,.4), 0 0 14px color-mix(in srgb, var(--th-b) 24%, transparent); }
+body.pdx-th-pair .ph-panel { box-shadow: 4px 4px 0 var(--cx-ink, #15100a), 0 0 0 5px var(--th-b); }
+body.pdx-th-pair .ph-tag { background: var(--th-b); }
+body.pdx-th-pair #hull .vz-ph.on::after { background: var(--th-b); box-shadow: 0 0 10px var(--th-b); }
+body.pdx-th-pair .decision-beacon { border-color: var(--th-b); }
+
+/* ═════════════════════════ RAINBOW: a spectrum that turns on the eye alone ═════════════════════════ */
+@keyframes thHue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+body.pdx-th-rainbow #hela-eye .he-svg, body.pdx-th-rainbow .he-copy .he-svg { animation: thHue 36s linear infinite; }
+body.cx-on.pdx-th-rainbow #hela-eye .he-chip, body.cx-on.pdx-th-rainbow #hela-eye .he-chip.flip-x {
+  box-shadow: 0 0 0 1px #ff6464, 0 0 0 2px #ffc049, 0 0 0 3px #7de37f, 0 0 0 4px #52d3ff, 0 0 0 5px #b07dff,
+    4px 4px 0 5px var(--cx-ink); }
+body.pdx-th-rainbow .he-window .he-pane { border: 1.5px solid transparent;
+  background: linear-gradient(168deg, rgba(7,16,20,.9), rgba(4,10,14,.86)) padding-box,
+    linear-gradient(100deg, #ff6464, #ffc049, #7de37f, #52d3ff, #8a7dff, #d47bff) border-box; }
+body.pdx-th-rainbow .ph-panel { box-shadow: 4px 4px 0 var(--cx-ink, #15100a),
+  0 0 0 1px #ff6464, 0 0 0 2px #ffc049, 0 0 0 3px #ffe45a, 0 0 0 4px #7de37f, 0 0 0 5px #52d3ff, 0 0 0 6px #8a7dff, 0 0 0 7px #d47bff; }
+body.pdx-th-rainbow .ph-tag { background: linear-gradient(90deg, #ffc049, #7de37f, #52d3ff); }
+@media (prefers-reduced-motion: reduce) { body.pdx-th-rainbow #hela-eye .he-svg, body.pdx-th-rainbow .he-copy .he-svg { animation: none; } }
+html.pdx-a11y body.pdx-th-rainbow #hela-eye .he-svg { animation: none; }
+
+/* ═════════════════════════ WANTED: the sheriff's star ═════════════════════════
+   An inked, weathered brass six-point star behind her eye, rivets on the tips and a
+   glint; the eye stays the SAME element, size and anchor, so her balloons attach as
+   always. Worn by the legendary theme and whenever you carry a warrant. */
+:is(body.pdx-th-wanted, body.vz-wanted) #hela-eye::before,
+:is(body.pdx-th-wanted, body.vz-wanted) .he-copy::before {
+  content: ""; position: absolute; inset: -9px; z-index: -1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffe29a'/%3E%3Cstop offset='.45' stop-color='%23d9a441'/%3E%3Cstop offset='1' stop-color='%238a5a17'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0-46 11.5-20 40-23 23 0 40 23 11.5 20 0 46-11.5 20-40 23-23 0-40-23-11.5-20Z' fill='%232a1606' transform='translate(2.5 3)'/%3E%3Cpath d='M0-46 11.5-20 40-23 23 0 40 23 11.5 20 0 46-11.5 20-40 23-23 0-40-23-11.5-20Z' fill='url(%23b)' stroke='%232a1606' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M0-37 9-16 32-18.5 18 0 32 18.5 9 16 0 37-9 16-32 18.5-18 0-32-18.5-9-16Z' fill='none' stroke='%237a4c10' stroke-width='1.2' stroke-dasharray='2 2.5' opacity='.8'/%3E%3Ccircle r='21' fill='%23f3dfae' stroke='%232a1606' stroke-width='2.2'/%3E%3Ccircle r='17.5' fill='none' stroke='%23a8741f' stroke-width='1'/%3E%3Cg fill='%23fff3c8' stroke='%232a1606' stroke-width='1.6'%3E%3Ccircle cx='0' cy='-44' r='3.6'/%3E%3Ccircle cx='38' cy='-22' r='3.6'/%3E%3Ccircle cx='38' cy='22' r='3.6'/%3E%3Ccircle cx='0' cy='44' r='3.6'/%3E%3Ccircle cx='-38' cy='22' r='3.6'/%3E%3Ccircle cx='-38' cy='-22' r='3.6'/%3E%3C/g%3E%3Cg fill='%235a3a0c' opacity='.45'%3E%3Ccircle cx='26' cy='6' r='1.3'/%3E%3Ccircle cx='-18' cy='-27' r='1'/%3E%3Ccircle cx='-27' cy='10' r='1.5'/%3E%3Ccircle cx='8' cy='31' r='1.1'/%3E%3C/g%3E%3Cpath d='M-24-30 -20-33 -17-30 -20-27Z M-29-16 -27.5-17.5 -26-16 -27.5-14.5Z' fill='%23fffbe8'/%3E%3C/svg%3E") center / contain no-repeat; }
+:is(body.pdx-th-wanted, body.vz-wanted) #hela-eye .he-svg,
+:is(body.pdx-th-wanted, body.vz-wanted) .he-copy .he-svg { color: #2a1606; transform: scale(.78); }
+html body:is(.pdx-th-wanted, .vz-wanted) #hela-eye .he-spin .he-star,
+html body:is(.pdx-th-wanted, .vz-wanted) .he-copy .he-spin .he-star,
+body:is(.pdx-th-wanted, .vz-wanted) #hela-eye .he-halo, body:is(.pdx-th-wanted, .vz-wanted) .he-copy .he-halo { display: none !important; }
+:is(body.pdx-th-wanted, body.vz-wanted) #hela-eye .he-lid path,
+:is(body.pdx-th-wanted, body.vz-wanted) .he-copy .he-lid path { fill: #fffaf0; fill-opacity: 1; stroke: #2a1606; }
+:is(body.pdx-th-wanted, body.vz-wanted) #hela-eye .he-iris circle { stroke: #2a1606; opacity: 1; }
+:is(body.pdx-th-wanted, body.vz-wanted) #hela-eye .he-pupil { fill: #a3241a; fill-opacity: 1; }
+/* the bounty poster: her captions on kraft, in woodtype, ink and red */
+:is(body.pdx-th-wanted, body.vz-wanted) #hela-eye .he-chip, body.cx-on:is(.pdx-th-wanted, .vz-wanted) #hela-eye .he-chip {
+  color: #1f1208; text-shadow: none; border-radius: 4px;
+  background: radial-gradient(circle, rgba(90,56,18,.16) 1px, transparent 1.5px) 0 0 / 5px 5px, #ecd6a2;
+  box-shadow: 0 0 0 3px #a3241a, 4px 4px 0 3px #1f1208;
+  font-family: Georgia, "Times New Roman", serif; font-style: normal; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+body.cx-on:is(.pdx-th-wanted, .vz-wanted) #hela-eye .he-chip.flip-x { box-shadow: 0 0 0 3px #a3241a, -4px 4px 0 3px #1f1208; }
+body.cx-on:is(.pdx-th-wanted, .vz-wanted) #hela-eye .he-chip::after { background: #ecd6a2; }
+:is(body.pdx-th-wanted, body.vz-wanted) #hela-eye .he-chip b { color: #a3241a; }
+/* the speaker mark is the star too */
+body.cx-on:is(.pdx-th-wanted, .vz-wanted) #hela-eye .he-chip::before { background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M0-10 2.9-5 8.7-5 5.8 0 8.7 5 2.9 5 0 10-2.9 5-8.7 5-5.8 0-8.7-5-2.9-5Z' fill='%23d9a441' stroke='%23140d06' stroke-width='1.4'/%3E%3Ccircle r='2.6' fill='%23140d06'/%3E%3C/svg%3E") center / 20px no-repeat, #ecd6a2; }
+:is(body.pdx-th-wanted, body.vz-wanted) .he-window .he-pane { border: 2px solid #a3241a; outline: 1px solid #1f1208; outline-offset: 2px;
+  box-shadow: 4px 4px 0 #1f1208, 0 8px 30px rgba(0,0,0,.5); }
+body.pdx-th-wanted .ph-panel { box-shadow: 4px 4px 0 var(--cx-ink, #15100a), 0 0 0 5px #a3241a; }
+body.pdx-th-wanted .ph-tag { background: #a3241a; color: #f4e6b0; }
+body.pdx-th-wanted #hull .vz-ph.on::after { background: #e0503a; box-shadow: 0 0 10px #e0503a; }
+
+/* ═════════════════════════ TERMINATED: the void eye ═════════════════════════
+   A hollow black lens, cracked and stitched, a thin ember iris; it flickers slowly
+   (opacity only). Worn by the legendary theme and while you are terminated. */
+@keyframes thVoid { 0%, 44%, 52%, 100% { opacity: 1; } 47% { opacity: .55; } 49% { opacity: .9; } 76% { opacity: .82; } }
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye::before,
+:is(body.pdx-th-terminated, body.vz-paradix) .he-copy::before {
+  content: ""; position: absolute; inset: -10px; z-index: -1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Cdefs%3E%3CradialGradient id='v'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='.62' stop-color='%23050709'/%3E%3Cstop offset='.8' stop-color='%23161c20'/%3E%3Cstop offset='1' stop-color='%23161c20' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle r='47' fill='url(%23v)'/%3E%3Ccircle r='36' fill='none' stroke='%23ff6a3a' stroke-width='.8' stroke-opacity='.45'/%3E%3Cg fill='none' stroke='%23c9d6db' stroke-width='1.1' stroke-linecap='round' stroke-opacity='.75'%3E%3Cpath d='M-6-35 -2-24 -9-15 -3-6'/%3E%3Cpath d='M-2-24 7-29 12-38'/%3E%3Cpath d='M30 12 20 9 14 16 6 13'/%3E%3Cpath d='M20 9 24 0'/%3E%3Cpath d='M-31 18-21 14-18 22'/%3E%3C/g%3E%3Cg stroke='%23ff6a3a' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M-7-31-1-29M-8-27-2-25M-9-22-3-20'/%3E%3Cpath d='M25 8 27 14M20 7 21 13'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  animation: thVoid 7s linear infinite; }
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye { filter: drop-shadow(0 0 6px rgba(255,90,40,.5)) drop-shadow(0 0 2px #000); }
+@media (prefers-reduced-motion: reduce) { :is(body.pdx-th-terminated, body.vz-paradix) #hela-eye::before { animation: none; } }
+html.pdx-a11y :is(body.pdx-th-terminated, body.vz-paradix) #hela-eye::before { animation: none; }
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye .he-halo,
+:is(body.pdx-th-terminated, body.vz-paradix) .he-copy .he-halo { display: none; }
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye .he-lid path,
+:is(body.pdx-th-terminated, body.vz-paradix) .he-copy .he-lid path { stroke: #c9d6db; stroke-width: 1.8; fill: #000; fill-opacity: .6; }
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye .he-iris circle,
+:is(body.pdx-th-terminated, body.vz-paradix) .he-copy .he-iris circle { stroke: #ff6a3a; opacity: 1; stroke-width: 1.4; }
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye .he-pupil,
+:is(body.pdx-th-terminated, body.vz-paradix) .he-copy .he-pupil { fill: #000; fill-opacity: 1; stroke: #ff8a5a; stroke-width: 1.2; }
+/* her words: pale on the void, stitched with ember */
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye .he-chip, body.cx-on:is(.pdx-th-terminated, .vz-paradix) #hela-eye .he-chip {
+  color: #e3ecef; text-shadow: 0 1px 2px #000; background: rgba(5,6,8,.93); border: 2px dashed #ff6a3a;
+  box-shadow: 0 0 0 2px #000, 4px 4px 0 2px #000, 0 0 18px rgba(255,106,58,.28); }
+body.cx-on:is(.pdx-th-terminated, .vz-paradix) #hela-eye .he-chip.flip-x { box-shadow: 0 0 0 2px #000, -4px 4px 0 2px #000, 0 0 18px rgba(255,106,58,.28); }
+body.cx-on:is(.pdx-th-terminated, .vz-paradix) #hela-eye .he-chip::after { background: rgba(5,6,8,.98); border-color: #ff6a3a; }
+body.cx-on:is(.pdx-th-terminated, .vz-paradix) #hela-eye .he-chip::before { background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Ccircle r='11' fill='%23000'/%3E%3Cpath d='M-8 0 Q0 -6 8 0 Q0 6 -8 0 Z' fill='none' stroke='%23c9d6db' stroke-width='1.3'/%3E%3Ccircle r='2.8' fill='none' stroke='%23ff6a3a' stroke-width='1.3'/%3E%3Cpath d='M-3-10-1-6-4-3' fill='none' stroke='%23c9d6db' stroke-width='.9'/%3E%3C/svg%3E") center / 20px no-repeat, #000;
+  border-color: #ff6a3a; }
+:is(body.pdx-th-terminated, body.vz-paradix) #hela-eye .he-chip b { color: #ff8a5a; }
+:is(body.pdx-th-terminated, body.vz-paradix) .he-window .he-pane { border: 1.5px dashed color-mix(in srgb, #ff6a3a 80%, transparent);
+  background: linear-gradient(168deg, rgba(5,6,8,.9), rgba(2,3,4,.86)); }
+body.pdx-th-terminated .ph-panel { box-shadow: 4px 4px 0 var(--cx-ink, #15100a); outline: 2.5px dashed #ff6a3a; outline-offset: 3px; }
+body.pdx-th-terminated .ph-tag { background: #15100a; color: #ff8a5a; }
+body.pdx-th-terminated #hull .vz-ph.on::after { background: #ff6a3a; box-shadow: 0 0 10px #ff6a3a; }
+
+/* ═════════════════════════ THE BROKEN GLASS, reduced ═════════════════════════
+   The owner: "reduce the broken glass effect". While terminated the visor keeps a
+   few fine cracks at the right edge and the top, faint, clear of the machine
+   (bottom left), the case, the text in the corners and the middle of the table. */
+body.vz-paradix::before, body.cabin-on.vz-paradix::before {
+  opacity: .5 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.5' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M1920 430 1872 452 1846 441 1808 470M1872 452 1880 488 1861 522M1846 441 1838 410'/%3E%3Cpath d='M1920 700 1884 712 1870 748M1884 712 1850 706'/%3E%3Cpath d='M1430 0 1438 22 1424 40M1438 22 1462 30'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-opacity='.3' stroke-width='1.4'%3E%3Cpath d='M1920 431.5 1872 453.5 1846 442.5 1808 471.5M1920 701.5 1884 713.5 1870 749.5'/%3E%3C/g%3E%3C/svg%3E") !important;
+  background-size: 100% 100% !important; }

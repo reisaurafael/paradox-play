@@ -56,7 +56,11 @@
   background: var(--you); color: var(--ink); border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
   font: 700 .72rem/1 var(--f-mono); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
 /* HELA's eye on the burst */
-.hl-eye { width: 6.2rem; height: 6.2rem; display: block; }
+.hl-eye { width: min(6.2rem, 17cqi); height: min(6.2rem, 17cqi); display: block; }
+/* the hero measures its column: with Large or Extra large text in a narrow
+   column the go disc steps aside and the lettering keeps to one line */
+.landing-main { container-type: inline-size; }
+@container (max-width: 30rem) { .hl-go { display: none; } }
 .hl-eye svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .hl-burst { fill: var(--you); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
 .hl-lid { fill: #fffbe8; stroke: var(--ink); stroke-width: 4.5; stroke-linejoin: round; }
@@ -68,7 +72,7 @@
 @keyframes hlBlink { 0%, 94%, 100% { transform: scaleY(1); } 96.5% { transform: scaleY(.08); } }
 /* the words: the title, what it is, and the plain facts */
 .hl-words { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
-.hl-title { font: 700 2.7rem/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase;
+.hl-title { font: 700 min(2.7rem, 9cqi)/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase;
   color: var(--ink); text-shadow: 3px 3px 0 var(--you); }
 .hl-line { font: 500 1.12rem/1.3 var(--f-display); letter-spacing: .02em; color: #2a1d0c; }
 .hl-meta { font: 700 .72rem/1.3 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: #6b5226; }
@@ -95,25 +99,25 @@
 .btn-ink:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--cx-ink, #15100a), 0 0 0 1px var(--amber-300); }
 .btn-ink:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
 
-/* NEWS and COMMUNITY entries (index.html #menu-extras): two small inked cards
-   under the play actions, each opening its panel (js/menu-panels.js). Dark ink
-   with a paper line, so they never outshine the paper hero above them. */
-.menu-extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 14px; }
-.menu-extras:not(:has(> :not([hidden]))) { display: none; }
-.extra-entry { position: relative; display: flex; flex-direction: column; gap: .2rem; min-width: 0;
-  padding: .95rem 1rem .75rem; text-align: left; cursor: pointer; color: var(--cx-paper, #f4e6b0);
-  font-family: var(--f-display);
+/* NEWS and COMMUNITY entries (index.html #menu-extras): two small inked tabs
+   in the header, after Settings, each opening its panel (js/menu-panels.js).
+   Dark ink with a paper line, so they never outshine the paper hero. */
+.menu-extras { display: flex; gap: 8px; align-items: flex-end; }
+.extra-entry { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: .12rem;
+  padding: .32rem .7rem .38rem; text-align: left; cursor: pointer; color: var(--cx-paper, #f4e6b0);
+  font-family: var(--f-display); white-space: nowrap;
   background: radial-gradient(circle, rgba(244,230,176,.07) 1px, transparent 1.5px) 0 0 / 6px 6px, #17130d;
-  border: 2px solid rgba(244,230,176,.55); border-radius: 4px; box-shadow: 4px 4px 0 #000;
+  border: 2px solid rgba(244,230,176,.6); border-radius: 4px; box-shadow: 3px 3px 0 #000;
   transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
-.extra-entry:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 #000; border-color: var(--cx-paper, #f4e6b0); }
-.extra-entry:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
-.extra-entry:focus-visible { outline: 3px solid #fff4c6; outline-offset: 4px; }
-.xe-tag { position: absolute; left: 10px; top: -11px; padding: .18rem .45rem; transform: rotate(-1.5deg);
-  background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a); border: 2px solid var(--cx-ink, #15100a);
-  font: 700 .64rem/1 var(--f-mono); letter-spacing: .18em; text-transform: uppercase; }
-.xe-title { font: 600 1.06rem/1.15 var(--f-display); letter-spacing: .03em; }
-.xe-line { font-size: .8rem; line-height: 1.35; color: var(--text-soft); font-family: var(--f-body); }
+.extra-entry:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #000; border-color: var(--cx-paper, #f4e6b0); }
+.extra-entry:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+.extra-entry:focus-visible { outline: 3px solid #fff4c6; outline-offset: 3px; }
+.xe-tag { padding: .1rem .35rem; background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a);
+  font: 700 .6rem/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; }
+.news-entry .xe-tag { background: var(--hela-seat, #f2a93b); }
+.xe-title { font: 600 .84rem/1.1 var(--f-display); letter-spacing: .04em; }
+/* THE CHRONICLE's place (chronicle.js fills it): its block joins the column */
+.chronicle-slot { display: contents; }
 @media (prefers-reduced-motion: reduce) { .extra-entry, .btn-ink { transition: none; }
   .extra-entry:hover, .extra-entry:active, .btn-ink:hover, .btn-ink:active { transform: none; } }
 
@@ -202,6 +206,28 @@ html.pdx-a11y .menu-sheet .btn-ghost { color: var(--ink); border-color: var(--in
   border: solid #fff8ea; border-width: 0 3px 3px 0; transform: translate(-50%, -50%) rotate(45deg);
   filter: drop-shadow(0 1px 1px rgba(0,0,0,.7)); }
 .colour-note { font-size: .8rem; }
+.you-block .field:has(+ .field[hidden]) { margin-bottom: 0; }
+
+/* PERSONA (menu-persona.js): the arm's build as two inked symbols, then the
+   skin tones; every button carries its name, the chosen one a tick */
+.persona-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; margin-top: 2px; }
+.persona-builds, .persona-skins { display: flex; gap: 8px; flex-wrap: wrap; }
+.persona-skins[hidden] { display: none; }
+.persona-build { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; padding: 0; cursor: pointer;
+  color: var(--cx-ink, #15100a); background: rgba(244,230,176,.78); border: 2px solid var(--cx-ink, #15100a);
+  border-radius: 4px; box-shadow: 2px 2px 0 #000; transition: transform .12s ease, box-shadow .12s ease; }
+.persona-build svg { width: 1.45rem; height: 1.45rem; fill: none; stroke: currentColor; stroke-width: 2.6;
+  stroke-linecap: round; stroke-linejoin: round; }
+.persona-build:hover { background: var(--cx-paper, #f4e6b0); }
+.persona-build.is-on { background: var(--hela-seat, #f2a93b); box-shadow: 2px 2px 0 #000, 0 0 0 2px var(--cx-paper, #f4e6b0); }
+.persona-skin { width: 32px; height: 32px; position: relative; padding: 0; cursor: pointer; border-radius: 50%;
+  border: 2px solid var(--cx-ink, #15100a); box-shadow: 2px 2px 0 #000; }
+.persona-skin.is-on { box-shadow: 2px 2px 0 #000, 0 0 0 3px var(--cx-paper, #f4e6b0); }
+.persona-skin.is-on::after { content: ""; position: absolute; left: 50%; top: 45%; width: 6px; height: 12px;
+  border: solid #fff8ea; border-width: 0 3px 3px 0; transform: translate(-50%, -50%) rotate(45deg);
+  filter: drop-shadow(0 0 1.5px rgba(0,0,0,.9)); }
+.persona-build:focus-visible, .persona-skin:focus-visible { outline: 3px solid #fff4c6; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .persona-build { transition: none; } }
 
 /* SERVICE RECORD, readable at a glance */
 .record-block .prof-stats { grid-template-columns: repeat(4, auto); justify-content: start; gap: 4px 18px; margin-top: 6px; }
@@ -228,7 +254,7 @@ body.menu-busy #screen-landing .btn { cursor: progress; }
   .play-row .btn-ink { width: 100%; justify-content: center; }
   .hero-learn { grid-template-columns: minmax(0, 1fr); padding-right: 1rem; }
   .hl-eye { position: absolute; right: -8px; top: -26px; width: 3.8rem; height: 3.8rem; }
-  .hl-title { font-size: 1.85rem; }
+  .hl-title { font-size: min(1.85rem, 10cqi); }
 }
 
 /* ============================ LOBBY (match setup) ====================== */
