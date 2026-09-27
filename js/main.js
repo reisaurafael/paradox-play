@@ -1,18 +1,18 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609270047";
-import { hydrateIcons, icon } from "./icons.js?202609270047";
-import { seatColor, initials, el } from "./util.js?202609270047";
-import { Game } from "./game.js?202609270047";
-import { audio } from "./audio.js?202609270047";
-import { tutorials } from "./tutorial.js?202609270047";
-import { profile } from "./profile.js?202609270047";
-import { access } from "./access.js?202609270047";
+import { api, Connection } from "./net.js?202609270104";
+import { hydrateIcons, icon } from "./icons.js?202609270104";
+import { seatColor, initials, el } from "./util.js?202609270104";
+import { Game } from "./game.js?202609270104";
+import { audio } from "./audio.js?202609270104";
+import { tutorials } from "./tutorial.js?202609270104";
+import { profile } from "./profile.js?202609270104";
+import { access } from "./access.js?202609270104";
 import "./menu-cursor.js";
-import { launchTutorial } from "./tutorial-drive.js?202609270047";
-import { PadCursor } from "./controle.js?202609270047";
-import { fx, PACES, LEVELS } from "./fx.js?202609270047";
+import { launchTutorial } from "./tutorial-drive.js?202609270104";
+import { PadCursor } from "./controle.js?202609270104";
+import { fx, PACES, LEVELS } from "./fx.js?202609270104";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live

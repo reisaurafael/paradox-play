@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609270047";
-import { Game } from "./game.js?202609270047";
-import { icon } from "./icons.js?202609270047";
-import { roman } from "./util.js?202609270047";
-import { profile } from "./profile.js?202609270047";
+import { api, Connection } from "./net.js?202609270104";
+import { Game } from "./game.js?202609270104";
+import { icon } from "./icons.js?202609270104";
+import { roman } from "./util.js?202609270104";
+import { profile } from "./profile.js?202609270104";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -304,6 +304,9 @@ class Stage {
 
   layout(force) {
     if (!this._phasesFixed) this._fixPhases();
+    // the bar belongs to the desk: at the wagon or the cabinet it steps out of the way
+    try { const sc = this.coach && this.coach.game && this.coach.game.camera && this.coach.game.camera.scene;
+      this.track.classList.toggle("away", !!sc && sc !== "main"); } catch (e) {}
     if (!force && !this.callout.classList.contains("on") && !this.rings.length) return;
     // rings
     this.rings.forEach((at, i) => {

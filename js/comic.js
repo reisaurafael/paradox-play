@@ -26,8 +26,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609270047";
-import { mend } from "./mend.js?202609270047";
+import { roman } from "./util.js?202609270104";
+import { mend } from "./mend.js?202609270104";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -349,9 +349,9 @@ class Comic {
     }[kind] || { word: "POW!", c: "#fff1c2", ink: "#15100a" };
     const gfx = this._gfx(), reduced = this._reduced();
     let x = innerWidth / 2, y = innerHeight * 0.42;
-    if (at && at.width != null) { x = at.left + at.width / 2; y = at.top + at.height / 2; }
-    else if (at && at.x != null) { x = at.x; y = at.y; }
     const mx = opts.big ? 240 : 150, my = opts.big ? 140 : 110;   // the whole word stays on screen
+    if (at && at.width != null) { const q = this._beside(at, mx, my); x = q.x; y = q.y; }
+    else if (at && at.x != null) { x = at.x; y = at.y; }
     x = Math.max(mx, Math.min(innerWidth - mx, x));
     y = Math.max(my, Math.min(innerHeight - my, y));
     if (this.hitEl) { this.hitEl.remove(); this.hitEl = null; }
@@ -399,6 +399,35 @@ class Comic {
       ], fin);
     }
     setTimeout(() => { h.remove(); if (this.hitEl === h) this.hitEl = null; }, dur + 80);
+  }
+
+  /* the panel lands BESIDE its subject (the side toward open table first), never over
+     a case file's numbers, the machine, the dice, Confirm or her words: the first
+     clear spot wins, else the one that covers least. hx, hy: the panel's half size. */
+  _beside(r, hx, hy) {
+    const Z = [];
+    for (const el of document.querySelectorAll(".pcard.cfolio, #hull-console, .dice-pool, #confirm-alloc, #hela-eye.he-says .he-chip")) {
+      const b = el.getBoundingClientRect();
+      if (b.width > 4 && b.height > 4 && b.bottom > 0 && b.top < innerHeight) Z.push([b.left, b.top, b.right, b.bottom, 1]);
+    }
+    Z.push([r.left, r.top, r.left + r.width, r.top + r.height, 4]);   // its subject most of all
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, g = 14;
+    const toC = cx < innerWidth / 2 ? 1 : -1, toM = cy < innerHeight / 2 ? 1 : -1;
+    const side = (s) => [cx + s * (r.width / 2 + g + hx), cy];
+    const vert = (s) => [cx, cy + s * (r.height / 2 + g + hy)];
+    const diag = (s, t) => [cx + s * (r.width / 2 + g + hx * .6), cy + t * (r.height / 2 + g + hy * .6)];
+    const C = [side(toC), diag(toC, toM), vert(toM), diag(toC, -toM), side(-toC), vert(-toM), diag(-toC, toM), diag(-toC, -toM)];
+    let best = null, bs = 1e18;
+    for (let [x, y] of C) {
+      x = Math.max(hx, Math.min(innerWidth - hx, x)); y = Math.max(hy, Math.min(innerHeight - hy, y));
+      const b = [x - hx * .8, y - hy * .8, x + hx * .8, y + hy * .8];   // the burst's body, not its speed lines
+      let sc = 0;
+      for (const z of Z) { const w = Math.min(b[2], z[2]) - Math.max(b[0], z[0]), h = Math.min(b[3], z[3]) - Math.max(b[1], z[1]);
+        if (w > 0 && h > 0) sc += w * h * z[4]; }
+      if (sc === 0) return { x, y };
+      if (sc < bs) { bs = sc; best = { x, y }; }
+    }
+    return best || { x: cx, y: cy };
   }
 
   /* ---- MEANWHILE...: the simultaneous reveal as a comic grid. One panel per

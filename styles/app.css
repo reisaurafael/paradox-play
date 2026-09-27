@@ -7878,3 +7878,5 @@ body.cx-on #hela-eye .he-chip.he-under::after { top: -9px; bottom: auto;
   border-left: 2.5px solid var(--cx-ink); border-top: 2.5px solid var(--cx-ink); }
 body.cx-on #hela-eye .he-chip.he-over::after { top: auto; bottom: -9px;
   border-right: 2.5px solid var(--cx-ink); border-bottom: 2.5px solid var(--cx-ink); }
+/* her boxes under her words: the column turns over so YOUR MOVE stays nearest to her */
+#hela-eye .he-caps.he-below { flex-direction: column-reverse; }

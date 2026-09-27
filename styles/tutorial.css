@@ -179,3 +179,7 @@ body.tut-phases #vz-phases { animation: tutBorn 1.2s ease-out; }
 .tut-hl { outline: 2px solid #ffd98a !important; outline-offset: 3px !important; border-radius: 6px;
   box-shadow: 0 0 14px 4px rgba(255,200,110,.6) !important; animation: tutHl 1.3s ease-in-out infinite; }
 @keyframes tutHl { 0%, 100% { outline-color: #ffd98a; } 50% { outline-color: rgba(255,217,138,.45); } }
+
+/* the learning bar steps aside while the camera faces the wagon or the cabinet */
+#tut-track.away { opacity: 0 !important; pointer-events: none !important; }
+@media (max-width: 1500px) { #tut-callout { max-width: min(400px, 31vw); } }

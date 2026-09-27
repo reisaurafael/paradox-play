@@ -1974,7 +1974,7 @@
   function follow(t){
     // a frame after a pause (the table's nap, a busy moment) counts as one ordinary frame: no leap
     let dt = lastF ? (t - lastF) / 1000 : .016; lastF = t;
-    if (dt > .05 || dt <= 0) dt = .016; else if (dt > .034) dt = .034;
+    if (dt > .05 || dt <= 0) dt = .016; else if (dt > .02) dt = .02;   // a held frame is not made up in one step
     refreshZones(t);
     if (parked){
       const r = machineRegion(); if (r) regionR = r;
@@ -2107,12 +2107,15 @@
       const v = sy === 1 ? ["b", "a"] : ["a", "b"];
       return [[v[0], L[v[0]]], [away + "d", L[away + "d"]], [away + "u", L[away + "u"]], [o + "d", L[o + "d"]], [o + "u", L[o + "u"]], [v[1], L[v[1]]]];
     }
-    // her boxes: over her, and over her words when those are over her too
-    const top = chipB && chipB[3] <= y ? Math.min(y - 38, chipB[1] - 8) : y - 38;
-    L.ca = [cx, top - H, cx + W, top];
+    // her boxes stack on her words, on the side away from the hand (under them while
+    // she stands under the hand, over them while she stands above it): never near the pointer
+    const below = chipB ? (chipB[1] >= y ? true : chipB[3] <= y ? false : sy === 1) : sy === 1;
+    const tB = Math.max(y + 44, chipB ? chipB[3] + 8 : 0), tA = Math.min(y - 44, chipB ? chipB[1] - 8 : 1e9) - H;
+    L.cb = [cx, tB, cx + W, tB + H]; L.ca = [cx, tA, cx + W, tA + H];
     L.ra = [x + 10, y - 38 - H, x + 10 + W, y - 38]; L.la = [x - 10 - W, y - 38 - H, x - 10, y - 38];
     L.rb = [x + 10, y + 40, x + 10 + W, y + 40 + H]; L.lb = [x - 10 - W, y + 40, x - 10, y + 40 + H];
-    return [["ca", L.ca], [away + "a", L[away + "a"]], [o + "a", L[o + "a"]], [away + "b", L[away + "b"]], [o + "b", L[o + "b"]]];
+    const v = below ? ["cb", "ca"] : ["ca", "cb"];
+    return [[v[0], L[v[0]]], [away + "a", L[away + "a"]], [o + "a", L[o + "a"]], [away + "b", L[away + "b"]], [o + "b", L[o + "b"]], [v[1], L[v[1]]]];
   }
   function nearestFree(x, y, W, H, extra){
     for (const rad of [110, 160, 220, 300, 390, 500]){
@@ -2165,6 +2168,7 @@
       el2.classList.toggle("flip-y", !isCaps && (mode === "ru" || mode === "lu" || (mode === "free" && b[3] < y)));
       el2.classList.toggle("far", mode === "free");
       el2.classList.toggle("he-under", mode === "b"); el2.classList.toggle("he-over", mode === "a");
+      if (isCaps) el2.classList.toggle("he-below", mode === "cb" || mode === "rb" || mode === "lb");   // YOUR MOVE stays nearest her
     }
   }
   // on screen a balloon moves with the eye AND its own slide; together they stay under
