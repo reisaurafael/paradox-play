@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609270852";
-import { roman } from "./util.js?202609270852";
+import { audio } from "./audio.js?202609270943";
+import { roman } from "./util.js?202609270943";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -114,10 +114,13 @@ class Fx {
       window.__fxMerchantLanded = (p) => this.merchantLanded(p);        // the Merchant drops anchor
     } catch (e) {}
     this._markLevel();
-    // MY CROSSING INTO ANOTHER PERIOD: the chart skins swap behind their iris shutter
-    // (board_origins.js / board_singularity.js playWarp); as it opens, the new era's
+    // MY CROSSING INTO ANOTHER PERIOD: the chart turns like a comic page (board_draft.js
+    // __pdxChartTurn); the moment the new chart is fully in (detail.landMs), the new era's
     // page turns in with its name
-    window.addEventListener("paradoxo:skinwarp", () => setTimeout(() => this._eraPage(), 560));
+    window.addEventListener("paradoxo:skinwarp", (e) => {
+      const d = e && e.detail, ms = d && typeof d.landMs === "number" ? d.landMs : 560;
+      setTimeout(() => this._eraPage(), Math.max(0, ms));
+    });
   }
 
   /* ---- THE PACE ---- */

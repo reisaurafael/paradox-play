@@ -2,9 +2,11 @@
    menu.css, the MAIN MENU, the MATCH SETUP (lobby), LEAVE and the END SCREEN
 
    Loaded after app.css. The menu keeps its dossier look (panel, brass brackets,
-   amber primary, teal ghost) and gains a clear order: Play first, Learn to Play
-   right under it, friends only on the desktop build, and You (name, colour,
-   record) on the side. Everything is in rem so the Text size option carries it.
+   amber primary, teal ghost) and a clear order: Learn to Play first, the hero,
+   an inked comic panel (most people start there); Play vs AI right under it;
+   friends only on the desktop build; a reserved row for News and Community
+   (empty and hidden for now); and You (name, colour, record) on the side.
+   Everything is in rem so the Text size option carries it.
    ========================================================================= */
 
 /* Every screen scrolls when it is taller than the window (a small laptop, or
@@ -29,14 +31,156 @@
 .menu-lede { color: var(--text-soft); font-size: .92rem; margin-bottom: 12px; }
 .menu-note { color: var(--text-mute); font-size: .8rem; line-height: 1.45; }
 
-/* PLAY: the one primary action */
-.play-block { border-color: rgba(242,169,59,.42); box-shadow: inset 0 0 0 1px rgba(242,169,59,.08); }
-.players-pick { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 14px; }
+/* LEARN TO PLAY, the hero. The comic layer's look (app.css COMIC LAYER): cream
+   paper with a halftone, a thick ink line, the hard ink shadow, lettering in
+   ink with an offset in the player's colour, and HELA's eye on a burst of that
+   colour. The whole panel is one button, so the whole panel takes the click. */
+.hero-learn { --ink: var(--cx-ink, #15100a); --paper: var(--cx-paper, #f4e6b0); --you: var(--hela-seat, #f2a93b);
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+  gap: 4px 20px; width: 100%; margin: 12px 0 8px; padding: 1.35rem 1.5rem 1.2rem 1.1rem;
+  text-align: left; color: var(--ink); font-family: var(--f-display); cursor: pointer;
+  background:
+    radial-gradient(circle, rgba(120,84,20,.15) 1px, transparent 1.5px) 0 0 / 6px 6px,
+    radial-gradient(ellipse 60% 120% at 0% 50%, color-mix(in srgb, var(--you) 30%, transparent), transparent 70%),
+    var(--paper);
+  border: 3px solid var(--ink); border-radius: 4px;
+  box-shadow: 6px 6px 0 var(--ink), 0 0 0 4px var(--you), 6px 6px 0 4px var(--ink), 0 18px 40px rgba(0,0,0,.45);
+  transition: transform .16s ease, box-shadow .16s ease; }
+.hero-learn:hover { transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--ink), 0 0 0 4px var(--you), 8px 8px 0 4px var(--ink), 0 22px 46px rgba(0,0,0,.5); }
+.hero-learn:active { transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 var(--ink), 0 0 0 4px var(--you), 3px 3px 0 4px var(--ink), 0 10px 24px rgba(0,0,0,.4); }
+.hero-learn:focus-visible { outline: 3px solid #fff4c6; outline-offset: 8px; }
+/* the narrator's tab on the panel's edge */
+.hl-tag { position: absolute; left: 14px; top: -15px; padding: .28rem .6rem .24rem; transform: rotate(-2deg);
+  background: var(--you); color: var(--ink); border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+  font: 700 .72rem/1 var(--f-mono); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+/* HELA's eye on the burst */
+.hl-eye { width: 6.2rem; height: 6.2rem; display: block; }
+.hl-eye svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.hl-burst { fill: var(--you); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
+.hl-lid { fill: #fffbe8; stroke: var(--ink); stroke-width: 4.5; stroke-linejoin: round; }
+.hl-iris { fill: var(--you); stroke: var(--ink); stroke-width: 3.5; }
+.hl-pupil { fill: var(--ink); }
+.hl-glint { fill: #fffbe8; }
+.hl-look { transform: translate(var(--hl-x, 0px), var(--hl-y, 0px)); transition: transform .25s ease-out; }
+.hl-blink { transform-origin: 0 0; animation: hlBlink 7s ease-in-out infinite; }
+@keyframes hlBlink { 0%, 94%, 100% { transform: scaleY(1); } 96.5% { transform: scaleY(.08); } }
+/* the words: the title, what it is, and the plain facts */
+.hl-words { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.hl-title { font: 700 2.7rem/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink); text-shadow: 3px 3px 0 var(--you); }
+.hl-line { font: 500 1.12rem/1.3 var(--f-display); letter-spacing: .02em; color: #2a1d0c; }
+.hl-meta { font: 700 .72rem/1.3 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: #6b5226; }
+/* the go disc */
+.hl-go { width: 3.6rem; height: 3.6rem; display: grid; place-items: center; border-radius: 50%;
+  background: var(--ink); box-shadow: 3px 3px 0 rgba(21,16,10,.35); transition: transform .16s ease; }
+.hl-go svg { width: 1.7rem; height: 1.7rem; margin-left: .2rem; fill: var(--you); }
+.hero-learn:hover .hl-go, .hero-learn:focus-visible .hl-go { transform: translateX(4px) scale(1.06); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-learn, .hl-go, .hl-look { transition: none; }
+  .hl-blink { animation: none; }
+  .hero-learn:hover, .hero-learn:active { transform: none; } }
+
+/* PLAY VS AI, the second action: the table size and the button on one row */
+.play-block { border-color: rgba(242,169,59,.3); }
+.play-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px 18px; }
+.players-pick { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
 .players-pick .lbl { margin: 0; flex-basis: 100%; }
 .players-note { font-size: .86rem; color: var(--text-soft); }
 .btn-lg { font-size: 1.12rem; padding: .78em 1.2em; }
-.learn-row { margin-top: 12px; display: grid; grid-template-columns: minmax(10em, auto) minmax(0, 1fr); gap: 6px 14px; align-items: center; }
-.learn-row .btn { width: auto; }
+/* the inked button: the same ink line and hard shadow as the hero, smaller */
+.btn-ink { font-size: 1.02rem; padding: .7em 1.5em; border: 2px solid var(--cx-ink, #15100a); border-radius: 4px;
+  box-shadow: 4px 4px 0 var(--cx-ink, #15100a); transition: transform .14s ease, box-shadow .14s ease; }
+.btn-ink:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--cx-ink, #15100a), 0 0 0 1px var(--amber-300); }
+.btn-ink:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
+
+/* NEWS and COMMUNITY entries (index.html #menu-extras): two small inked cards
+   under the play actions, each opening its panel (js/menu-panels.js). Dark ink
+   with a paper line, so they never outshine the paper hero above them. */
+.menu-extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 14px; }
+.menu-extras:not(:has(> :not([hidden]))) { display: none; }
+.extra-entry { position: relative; display: flex; flex-direction: column; gap: .2rem; min-width: 0;
+  padding: .95rem 1rem .75rem; text-align: left; cursor: pointer; color: var(--cx-paper, #f4e6b0);
+  font-family: var(--f-display);
+  background: radial-gradient(circle, rgba(244,230,176,.07) 1px, transparent 1.5px) 0 0 / 6px 6px, #17130d;
+  border: 2px solid rgba(244,230,176,.55); border-radius: 4px; box-shadow: 4px 4px 0 #000;
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
+.extra-entry:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 #000; border-color: var(--cx-paper, #f4e6b0); }
+.extra-entry:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+.extra-entry:focus-visible { outline: 3px solid #fff4c6; outline-offset: 4px; }
+.xe-tag { position: absolute; left: 10px; top: -11px; padding: .18rem .45rem; transform: rotate(-1.5deg);
+  background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a); border: 2px solid var(--cx-ink, #15100a);
+  font: 700 .64rem/1 var(--f-mono); letter-spacing: .18em; text-transform: uppercase; }
+.xe-title { font: 600 1.06rem/1.15 var(--f-display); letter-spacing: .03em; }
+.xe-line { font-size: .8rem; line-height: 1.35; color: var(--text-soft); font-family: var(--f-body); }
+@media (prefers-reduced-motion: reduce) { .extra-entry, .btn-ink { transition: none; }
+  .extra-entry:hover, .extra-entry:active, .btn-ink:hover, .btn-ink:active { transform: none; } }
+
+/* ============================ NEWS and COMMUNITY PANELS ================= */
+/* The Learn to Play panel's paper, ink and hard shadow, over a dim menu. */
+.menu-sheet-back { position: fixed; inset: 0; z-index: 950; display: grid; place-items: center;
+  padding: 24px 16px; overflow-y: auto; overscroll-behavior: contain;
+  background: rgba(8,7,5,.72); animation: pdxScreenIn .25s ease both; }
+.menu-sheet-back[hidden] { display: none !important; }
+.menu-sheet { --ink: var(--cx-ink, #15100a); --you: var(--hela-seat, #f2a93b);
+  position: relative; width: min(40rem, 100%); margin: auto; padding: 1.9rem 1.8rem 1.4rem;
+  color: #1d1409; font-family: var(--f-display);
+  background: radial-gradient(circle, rgba(120,84,20,.13) 1px, transparent 1.5px) 0 0 / 6px 6px, var(--cx-paper, #f4e6b0);
+  border: 3px solid var(--ink); border-radius: 4px;
+  box-shadow: 7px 7px 0 var(--ink), 0 0 0 4px var(--you), 7px 7px 0 4px var(--ink), 0 24px 60px rgba(0,0,0,.55); }
+.menu-sheet:focus { outline: none; }
+.menu-sheet:focus-visible { outline: 3px solid #fff4c6; outline-offset: 8px; }
+.ms-tag { position: absolute; left: 16px; top: -16px; padding: .3rem .65rem .26rem; transform: rotate(-2deg);
+  background: var(--you); color: var(--ink); border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+  font: 700 .74rem/1 var(--f-mono); letter-spacing: .2em; text-transform: uppercase; }
+.ms-x { position: absolute; right: 10px; top: 10px; width: 2.3rem; height: 2.3rem; display: grid; place-items: center;
+  background: var(--ink); color: var(--cx-paper, #f4e6b0); border: 0; border-radius: 50%; cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(21,16,10,.35); }
+.ms-x span { width: 1.1rem; height: 1.1rem; display: inline-flex; }
+.ms-x svg { width: 100%; height: 100%; }
+.ms-x:hover { background: #3a2a12; }
+.ms-kicker { font: 700 .76rem/1 var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: #7a4a0c; margin: .2rem 0 .45rem; }
+.ms-title { font: 700 2.1rem/1.05 var(--f-display); letter-spacing: .04em; text-transform: uppercase; color: var(--ink);
+  text-shadow: 3px 3px 0 var(--you); margin: 0 2.4rem .6rem 0; }
+.ms-lede { font: 500 1.18rem/1.35 var(--f-display); letter-spacing: .02em; color: #2a1d0c; margin: 0 0 .7rem; }
+.ms-text { font: 400 1rem/1.5 var(--f-body); color: #2a1d0c; margin: 0 0 .7rem; }
+.ms-note { font: 400 .82rem/1.4 var(--f-body); color: #5a4420; margin: .8rem 0 0; }
+.ms-actions { display: flex; flex-wrap: wrap; gap: 10px 12px; margin-top: 1.1rem; padding-top: 1rem;
+  border-top: 2px dashed rgba(21,16,10,.35); }
+.menu-sheet .btn-ghost { color: var(--ink); border: 2px solid var(--ink); background: rgba(255,251,232,.5); }
+.menu-sheet .btn-ghost:hover { background: rgba(255,251,232,.9); }
+html.pdx-a11y .menu-sheet .btn-ghost { color: var(--ink); border-color: var(--ink); }
+
+/* the trailer's place, at the top of News: empty until the trailer is there */
+.news-trailer { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.news-trailer:not(:has(#pdx-trailer:not(:empty))):not(:has(#btn-trailer:not([hidden]))) { display: none; }
+.news-trailer:has(#btn-trailer:not([hidden])), .news-trailer:has(#pdx-trailer:not(:empty)) { margin: 0 0 1.1rem; }
+#pdx-trailer:empty { display: none; }
+#pdx-trailer { width: 100%; }
+
+/* COMMUNITY: one inked row per way in */
+.cm-list { list-style: none; margin: .3rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cm-link { display: flex; align-items: center; gap: 14px; padding: .75rem .9rem; text-decoration: none; color: var(--cx-ink, #15100a);
+  background: rgba(255,251,232,.72); border: 2px solid var(--cx-ink, #15100a); border-radius: 3px;
+  box-shadow: 3px 3px 0 var(--cx-ink, #15100a); transition: transform .12s ease, box-shadow .12s ease; }
+.cm-link:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--cx-ink, #15100a), inset 6px 0 0 var(--hela-seat, #f2a93b); }
+.cm-link:focus-visible { outline: 3px solid var(--cx-ink, #15100a); outline-offset: 3px; }
+.cm-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .12rem; }
+.cm-title { font: 700 1.08rem/1.15 var(--f-display); letter-spacing: .04em; text-transform: uppercase; }
+.cm-line { font: 400 .92rem/1.35 var(--f-body); color: #2a1d0c; }
+.cm-need { align-self: flex-start; margin-top: .2rem; padding: .12rem .4rem; border: 1.5px solid var(--cx-ink, #15100a);
+  font: 700 .66rem/1.3 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #3a2a12; }
+.cm-out { flex: none; width: 1.3rem; height: 1.3rem; }
+.cm-out svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.cm-link .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .cm-link { transition: none; } .cm-link:hover { transform: none; }
+  .menu-sheet-back { animation-duration: .01s; } }
+@media (max-width: 560px) {
+  .menu-sheet { padding: 1.7rem 1.1rem 1.1rem; }
+  .ms-title { font-size: 1.6rem; }
+  .ms-actions .btn { flex: 1 1 100%; justify-content: center; }
+}
 
 /* PLAY WITH FRIENDS (desktop only) */
 .friends-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
@@ -74,6 +218,17 @@ body.menu-busy #screen-landing .btn { cursor: progress; }
 @media (max-width: 900px) {
   .landing-body { grid-template-columns: minmax(0, 1fr); }
   .friends-grid { grid-template-columns: minmax(0, 1fr); }
+}
+/* a phone: the hero keeps its eye and its words, the go disc steps aside */
+@media (max-width: 560px) {
+  .hero-learn { gap: 4px 12px; padding: 1.4rem 1rem 1rem; }
+  .hl-line { font-size: 1rem; }
+  .hl-go { display: none; }
+  .play-row { grid-template-columns: minmax(0, 1fr); }
+  .play-row .btn-ink { width: 100%; justify-content: center; }
+  .hero-learn { grid-template-columns: minmax(0, 1fr); padding-right: 1rem; }
+  .hl-eye { position: absolute; right: -8px; top: -26px; width: 3.8rem; height: 3.8rem; }
+  .hl-title { font-size: 1.85rem; }
 }
 
 /* ============================ LOBBY (match setup) ====================== */
@@ -173,3 +328,4 @@ body.menu-hand, body.menu-hand * { cursor: none !important; }
 #menu-cursor .mc-hand[data-grab="1"] .rh-grab { display: block; }
 @media (prefers-reduced-motion: reduce) {
   #menu-cursor .mc-radar .hr-a, #menu-cursor .mc-radar .hr-b, #menu-cursor .mc-radar .hr-core { animation: none; } }
+.menu-sheet [hidden] { display: none !important; }

@@ -40,11 +40,33 @@ function fill(on) {
   document.body.classList.toggle("menu-hand", on);
 }
 
+/* HELA's eye on the Learn to Play panel looks at the hand: the pupil leans a
+   few units toward the pointer. Calm motion keeps it still, looking ahead. */
+let eyeX = 0, eyeY = 0;
+function look() {
+  const eye = document.querySelector("#btn-tutorial .hl-eye");
+  if (!eye) return;
+  let dx = 0, dy = 0;
+  const calm = window.__pdxCalm || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if (mouse && x > -999 && !calm && eye.offsetWidth) {
+    const r = eye.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const ax = x - cx, ay = y - cy, d = Math.hypot(ax, ay) || 1;
+    const k = Math.min(1, d / 260);          // near the eye it leans less
+    dx = (ax / d) * 13 * k; dy = (ay / d) * 7 * k;
+  }
+  if (Math.abs(dx - eyeX) < 0.3 && Math.abs(dy - eyeY) < 0.3) return;
+  eyeX = dx; eyeY = dy;
+  eye.style.setProperty("--hl-x", dx.toFixed(1) + "px");
+  eye.style.setProperty("--hl-y", dy.toFixed(1) + "px");
+}
+
 function draw() {
   raf = 0;
   const on = wanted();
   fill(on);
   if (!on) return;
+  look();
   // the same size the pointer will have on the table (the plane's fit scale)
   const f = window.__pdxFit || 1;
   box.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${f.toFixed(4)})`;

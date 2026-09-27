@@ -20,7 +20,7 @@
    window.__pdxHelp = { isHeld, onHold, hold, isOpen, onOpen, open, close,
      toggle, note, overload } (the tutorial teaches Tab through it).
    ========================================================================= */
-import { FUNCTIONS } from "./util.js?202609270852";
+import { FUNCTIONS } from "./util.js?202609270943";
 
 const HOLD_MS = 250;        // a press held this long is a hold; shorter is a tap
 const NOTES_MAX = 6;        // HELA's notes shown on the hold view, newest first
@@ -175,7 +175,7 @@ function modulesPanel(g) {
   const el = document.createElement("section");
   el.className = "ph-panel ph-mods";
   el.style.setProperty("--ph-cols", cols);
-  el.innerHTML = `<header><span class="ph-tag">THE TIME MACHINE</span><span class="ph-sub">laid out like the screen below</span></header>`
+  el.innerHTML = `<header><span class="ph-tag">THE TIME MACHINE</span></header>`
     + `<div class="ph-grid">${rows}</div>`
     + `<p class="ph-rule">One die value per function, filled left to right. Three dice in one function <b>overload</b> it: shut for the next Hour. Modules resolve 1 to 9, for everyone at once.</p>`
     + `<p class="ph-valve"><b>ESCAPE VALVE</b> Takes one spare die. While a function is shut it <b>drains energy, your life</b>, equal to that die; otherwise it charges, and every 10 points buy a permanent +1 on a module.${charge}</p>`;
@@ -185,7 +185,7 @@ function phasesPanel() {
   const cur = document.body.dataset.phase;
   const el = document.createElement("section");
   el.className = "ph-panel ph-phases";
-  el.innerHTML = `<header><span class="ph-tag">THE HOUR</span><span class="ph-sub">four phases, in this order</span></header>`
+  el.innerHTML = `<header><span class="ph-tag">THE HOUR</span></header>`
     + PHASES.map(([k, name, what], i) => `<p class="ph-phase${k === cur ? " ph-now" : ""}"><b>${i + 1}. ${name}</b>${k === cur ? `<i>NOW</i>` : ""}<span>${what}</span></p>`).join("");
   return el;
 }
@@ -195,7 +195,7 @@ function merchantPanel(g) {
   if (!rule) return null;
   const el = document.createElement("section");
   el.className = "ph-panel ph-merch";
-  el.innerHTML = `<header><span class="ph-tag">THE MERCHANT</span><span class="ph-sub">${esc(rule.short)}</span></header>`
+  el.innerHTML = `<header><span class="ph-tag">THE MERCHANT</span></header>`
     + `<dl><dt>WHEN</dt><dd>${esc(rule.when)}</dd><dt>WHY</dt><dd>${esc(rule.why)}</dd>`
     + `<dt>HOW</dt><dd>${esc(rule.how)}</dd><dt>WHERE</dt><dd>${esc(rule.where)}${rule.last ? " " + esc(rule.last) : ""}</dd></dl>`;
   return el;
@@ -204,8 +204,9 @@ function notesPanel() {
   const el = document.createElement("section");
   el.className = "ph-panel ph-notes";
   const list = notes.slice(0, NOTES_MAX);
-  el.innerHTML = `<header><span class="ph-tag">HELA'S NOTES</span><span class="ph-sub">${list.length ? "newest first" : "nothing to add yet"}</span></header>`
-    + list.map((n) => `<p class="ph-note">${n.hour != null ? `<i>HOUR ${n.hour}</i>` : ""}<span>${n.html}</span></p>`).join("");
+  el.innerHTML = `<header><span class="ph-tag">HELA'S NOTES</span></header>`
+    + (list.length ? "" : `<p class="ph-note"><span>Nothing to add yet.</span></p>`)
+    + list.map((n) => `<p class="ph-note">${n.hour != null ? `<b class="ph-hr">Hour ${n.hour}:</b> ` : ""}<span>${n.html}</span></p>`).join("");
   return el;
 }
 function buildHold() {
@@ -274,7 +275,7 @@ function open() {
   tipsEl = document.createElement("section");
   tipsEl.id = "pdx-tips"; tipsEl.className = "ph-panel";
   tipsEl.setAttribute("role", "dialog"); tipsEl.setAttribute("aria-label", "Tips and questions");
-  tipsEl.innerHTML = `<header><span class="ph-tag">TIPS AND QUESTIONS</span><span class="ph-sub">HELA answers</span></header>`
+  tipsEl.innerHTML = `<header><span class="ph-tag">TIPS AND QUESTIONS</span></header>`
     + TIPS.map(([q, a]) => `<p class="pt-qa"><b>${q}</b><span>${a}</span></p>`).join("")
     + `<p class="pt-foot"><kbd>TAB</kbd> or <kbd>ESC</kbd> closes this. <b>Hold</b> <kbd>TAB</kbd> to see every module, the phases, the Merchant's rule and HELA's notes.</p>`;
   document.body.appendChild(tipsEl);

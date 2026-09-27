@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="play-shim.js?202609270852"></script>
+  <script src="play-shim.js?202609270943"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Paradox: The Last Timeline</title>
   <meta name="description" content="Paradox: The Last Timeline. After the Incursion shattered time, one timeline is left, and it is sacred. A competitive time-travel board game by Rafael Reis Garcia." />
   <!-- Identity type: Oswald (institutional display), JetBrains Mono (terminal data),
        Inter (humanist body). Self-host these for the offline Tauri build later. -->
-  <link href="fonts/fonts.css?202609270852" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/app.css?202609270852" />
-  <link rel="stylesheet" href="styles/tutorial.css?202609270852" />
-  <link rel="stylesheet" href="styles/menu.css?202609270852" />
-  <link rel="stylesheet" href="styles/access.css?202609270852" />
-  <link rel="stylesheet" href="styles/fx.css?202609270852" />
-  <link rel="stylesheet" href="styles/help.css?202609270852" />
+  <link href="fonts/fonts.css?202609270943" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css?202609270943" />
+  <link rel="stylesheet" href="styles/tutorial.css?202609270943" />
+  <link rel="stylesheet" href="styles/menu.css?202609270943" />
+  <link rel="stylesheet" href="styles/access.css?202609270943" />
+  <link rel="stylesheet" href="styles/fx.css?202609270943" />
+  <link rel="stylesheet" href="styles/help.css?202609270943" />
+  <link rel="stylesheet" href="styles/chronicle.css?202609270943" />
+  <link rel="stylesheet" href="styles/trailer.css?202609270943" />
+  <script type="module" src="js/trailer.js?202609270943"></script>
   <!-- TEXT SIZE and the ACCESSIBLE INTERFACE apply before the first paint, so the
        menu never flashes at the wrong size (main.js wires the controls). -->
   <script>
@@ -55,8 +58,9 @@
   <div class="vignette" aria-hidden="true"></div>
 
   <!-- ============================ LANDING ============================ -->
-  <!-- THE MAIN MENU. One primary action (Play vs AI), Learn to Play right under
-       it, and on the desktop build the friends block (host or join a room). The
+  <!-- THE MAIN MENU. Learn to Play is the hero (most people start there), Play
+       vs AI the second action right under it, and on the desktop build the
+       friends block (host or join a room). The
        browser demo hides every .desktop-only control (tools/play/play-shim.js),
        so no text here promises friends or a room code the demo does not have. -->
   <section id="screen-landing" class="screen is-active">
@@ -66,9 +70,19 @@
         <div class="landing-titles">
           <h1 class="wordmark">PARADOX</h1>
           <p class="overline wordmark-sub">The Last Timeline</p>
-          <p class="overline">Corporação C.R.O.N.O.S. · Temporal Operations Division</p>
         </div>
         <div class="landing-tools">
+          <!-- NEWS and COMMUNITY: each opens its own panel (js/menu-panels.js). -->
+          <nav class="menu-extras" id="menu-extras" aria-label="News and community">
+            <button class="extra-entry news-entry" id="btn-news" type="button" aria-haspopup="dialog" aria-controls="panel-news">
+              <span class="xe-tag">News</span>
+              <span class="xe-title">Coming next year</span>
+            </button>
+            <button class="extra-entry community-entry" id="btn-community" type="button" aria-haspopup="dialog" aria-controls="panel-community">
+              <span class="xe-tag">Community</span>
+              <span class="xe-title">Bugs, ideas, support</span>
+            </button>
+          </nav>
           <div class="ts-pick" role="group" aria-label="Text size">
             <span class="lbl">Text size</span>
             <div class="seg ts-seg" data-ts-seg>
@@ -85,26 +99,50 @@
 
       <div class="landing-body">
         <div class="landing-main">
-          <section class="menu-block play-block">
-            <h2 class="form-title">Play</h2>
+          <!-- LEARN TO PLAY, the hero: most people start here. One big inked comic
+               panel (the paper, the ink and the hard shadow of the case files and
+               the captions), HELA's eye on a burst in the player's colour, and the
+               line that says what it is. The whole panel is the button. -->
+          <button id="btn-tutorial" class="hero-learn" type="button"
+                  aria-labelledby="hl-title" aria-describedby="hl-line hl-meta">
+            <span class="hl-tag" aria-hidden="true">Start here</span>
+            <span class="hl-eye" aria-hidden="true">
+              <svg viewBox="-60 -60 120 120" fill="none">
+                <path class="hl-burst" d="M0 -56 L12 -30 L40 -44 L32 -16 L58 -8 L34 8 L48 34 L18 28 L8 56 L-6 30 L-34 48 L-28 18 L-58 10 L-34 -8 L-46 -36 L-16 -28 Z"/>
+                <g class="hl-blink">
+                  <path class="hl-lid" d="M -36 0 Q 0 -27 36 0 Q 0 27 -36 0 Z"/>
+                  <g class="hl-look"><circle class="hl-iris" r="13"/><circle class="hl-pupil" r="6"/>
+                    <circle class="hl-glint" cx="-4" cy="-4" r="2.4"/></g>
+                </g>
+              </svg>
+            </span>
+            <span class="hl-words">
+              <span class="hl-title" id="hl-title">Learn to Play</span>
+              <span class="hl-line" id="hl-line">HELA wakes you and teaches the game by playing it with you.</span>
+              <span class="hl-meta" id="hl-meta">A guided match against two AI opponents</span>
+            </span>
+            <span class="hl-go" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+            </span>
+          </button>
+
+          <!-- PLAY VS AI, the second action: the table size and the button on one row. -->
+          <section class="menu-block play-block" aria-labelledby="play-title">
+            <h2 class="form-title" id="play-title">Already know the rules?</h2>
             <p class="menu-lede" id="play-lede">A match against AI opponents, on this computer.</p>
-            <div class="players-pick">
-              <span class="lbl" id="lbl-players">Players at the table</span>
-              <div class="stepper" id="players-stepper" role="group" aria-labelledby="lbl-players">
-                <button class="step-btn" data-step="-1" type="button" aria-label="One player fewer">-</button>
-                <output id="out-players" class="step-val" aria-live="polite">3</output>
-                <button class="step-btn" data-step="1" type="button" aria-label="One player more">+</button>
+            <div class="play-row">
+              <div class="players-pick">
+                <span class="lbl" id="lbl-players">Players at the table</span>
+                <div class="stepper" id="players-stepper" role="group" aria-labelledby="lbl-players">
+                  <button class="step-btn" data-step="-1" type="button" aria-label="One player fewer">-</button>
+                  <output id="out-players" class="step-val" aria-live="polite">3</output>
+                  <button class="step-btn" data-step="1" type="button" aria-label="One player more">+</button>
+                </div>
+                <span class="players-note" id="players-note">You and 2 AI opponents</span>
               </div>
-              <span class="players-note" id="players-note">You and 2 AI opponents</span>
-            </div>
-            <button id="btn-solo" class="btn btn-primary btn-lg block" type="button">
-              <span class="btn-ico" data-icon="play"></span> Play vs AI
-            </button>
-            <div class="learn-row">
-              <button id="btn-tutorial" class="btn btn-ghost block" type="button">
-                <span class="btn-ico" data-icon="machine"></span> Learn to Play
+              <button id="btn-solo" class="btn btn-primary btn-ink" type="button">
+                <span class="btn-ico" data-icon="play"></span> Play vs AI
               </button>
-              <p class="menu-note">New here? Start with this: a guided match against two AI opponents, where HELA shows you each rule as it comes up.</p>
             </div>
           </section>
 
@@ -139,6 +177,16 @@
               </button>
             </div>
           </section>
+
+          <!-- The service record, kept on this machine (main.js fills it). -->
+          <section class="menu-block record-block profile-card" id="profile-card">
+            <h2 class="form-title">Service record</h2>
+            <div class="prof-stats" id="prof-stats"></div>
+            <ul class="prof-log" id="prof-log"></ul>
+            <button class="btn btn-ghost btn-sm" id="btn-clear-history" type="button">
+              Clear record
+            </button>
+          </section>
           <p id="landing-error" class="error-line" role="alert"></p>
         </div>
 
@@ -157,14 +205,8 @@
               <p class="menu-note colour-note">Your piece on the map, your case file and HELA, your guide, all wear it.<span class="desktop-only"> If two players pick the same colour, a draw decides.</span></p>
             </div>
           </section>
-          <section class="menu-block record-block profile-card" id="profile-card">
-            <h2 class="form-title">Service record</h2>
-            <div class="prof-stats" id="prof-stats"></div>
-            <ul class="prof-log" id="prof-log"></ul>
-            <button class="btn btn-ghost btn-sm" id="btn-clear-history" type="button">
-              Clear record
-            </button>
-          </section>
+          <!-- THE CHRONICLE's place (js/chronicle.js fills it: rank, today's orders). -->
+          <div id="chronicle-slot" class="chronicle-slot"></div>
         </aside>
       </div>
 
@@ -296,6 +338,55 @@
     <div class="cam-veil" aria-hidden="true"></div>
     </div>
   </section>
+
+  <!-- ============================ NEWS and COMMUNITY ======================= -->
+  <!-- Two panels from the main menu (js/menu-panels.js): the inked comic paper of
+       the Learn to Play panel. Esc, the X and Back to menu all close them. Every
+       Community entry is a plain link that opens in a new tab only when clicked;
+       the page itself sends nothing. -->
+  <div class="menu-sheet-back" id="panel-news" role="dialog" aria-modal="true" aria-labelledby="news-title" hidden>
+    <div class="menu-sheet" tabindex="-1">
+      <span class="ms-tag" aria-hidden="true">News</span>
+      <button class="ms-x" type="button" data-sheet-close aria-label="Close"><span data-icon="close"></span></button>
+      <!-- the comic-book trailer mounts in #pdx-trailer; its button shows once
+           window.__pdxTrailer exists -->
+      <div class="news-trailer">
+        <div id="pdx-trailer"></div>
+        <button class="btn btn-primary btn-ink" id="btn-trailer" type="button" hidden>
+          <span class="btn-ico" data-icon="play"></span> Watch the trailer
+        </button>
+      </div>
+      <p class="ms-kicker">Coming next year</p>
+      <h2 class="ms-title" id="news-title">Paradox: Timeline Incursion</h2>
+      <p class="ms-lede">An ambitious roguelike, hero-builder autobattler.</p>
+      <p class="ms-text">The Last Timeline, the game you are playing now, is its prelude: an introduction to the world and the lore of the Paradox universe.</p>
+      <p class="ms-text">You can help it happen: support it financially, collaborate, send suggestions, or just a kind word.</p>
+      <div class="ms-actions">
+        <button class="btn btn-primary btn-ink" type="button" data-open-community>
+          <span class="btn-ico" data-icon="hand"></span> Go to Community
+        </button>
+        <button class="btn btn-ghost" type="button" data-sheet-close>
+          <span class="btn-ico" data-icon="past"></span> Back to menu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-sheet-back" id="panel-community" role="dialog" aria-modal="true" aria-labelledby="community-title" hidden>
+    <div class="menu-sheet" tabindex="-1">
+      <span class="ms-tag" aria-hidden="true">Community</span>
+      <button class="ms-x" type="button" data-sheet-close aria-label="Close"><span data-icon="close"></span></button>
+      <h2 class="ms-title" id="community-title">Bugs, ideas and support</h2>
+      <p class="ms-lede">Paradox is made by one person. Bugs, critiques, ideas and a kind word all help.</p>
+      <ul class="cm-list" id="community-list"></ul>
+      <p class="ms-note">Each one opens in a new tab. Nothing is sent from the game itself.</p>
+      <div class="ms-actions">
+        <button class="btn btn-ghost" type="button" data-sheet-close>
+          <span class="btn-ico" data-icon="past"></span> Back to menu
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Settings panel (audio + presentation) -->
   <div id="settings-backdrop" class="settings-backdrop" hidden>
@@ -494,7 +585,8 @@
     };
   })();
   </script>
-  <script type="module" src="js/main.js?202609270852"></script>
+  <script type="module" src="js/menu-panels.js?202609270943"></script>
+  <script type="module" src="js/main.js?202609270943"></script>
 <div id="build-stamp" style="position:fixed;left:8px;top:calc(100vh - 16px);z-index:9999;font:10px/1.2 monospace;color:#8a8578;opacity:.45;pointer-events:none">BUILD v197</div>
 <div id="stale-banner" style="display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;background:#7a1c10;color:#ffe9b0;font:bold 12px/1 monospace;padding:9px 16px;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.5)">NEW BUILD ON THE SERVER: PRESS F5 (Ctrl+Shift+R)</div>
 <script>
@@ -512,10 +604,10 @@
   check(); setInterval(check, 45000);
 })();
 </script>
-<script src="js/board_draft.js?202609270852"></script>
-<script src="js/leilao_fase.js?202609270852"></script>
-<script src="js/board_singularity.js?202609270852"></script>
-<script src="js/board_origins.js?202609270852"></script>
-    <script src="js/cabin.js?202609270852"></script>
+<script src="js/board_draft.js?202609270943"></script>
+<script src="js/leilao_fase.js?202609270943"></script>
+<script src="js/board_singularity.js?202609270943"></script>
+<script src="js/board_origins.js?202609270943"></script>
+    <script src="js/cabin.js?202609270943"></script>
 </body>
 </html>

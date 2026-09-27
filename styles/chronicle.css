@@ -1,0 +1,231 @@
+/* =========================================================================
+   chronicle.css, THE CHRONICLE (js/chronicle.js): the menu block, the page,
+   the stamp pressed in a match, the lines on the results card, the badge on
+   your case and the Herald print styles. The comic layer's look (cream paper,
+   halftone, thick ink, the hard ink shadow) on the menu's dossier. rem sizes
+   so the Text size option carries it. No loops: every animation is one-shot.
+   ========================================================================= */
+.chr-page, .chronicle-block, .chr-stamp, .chr-result { --ink: var(--cx-ink, #15100a); --paper: var(--cx-paper, #f4e6b0); }
+.chr-page .sr-only, .chronicle-block .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ── THE RUBBER STAMP: a case file stamp, worn ink, pressed at an angle ── */
+.chr-inkstamp { --st: #1d1a16; display: inline-block; padding: .28em .7em .24em; transform: rotate(-6deg);
+  font: 700 .82rem/1 var(--f-display); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap;
+  color: var(--st); border: 3px solid var(--st); outline: 1.5px solid var(--st); outline-offset: -7px; border-radius: 3px;
+  padding: .5em .95em .46em; opacity: .9; }
+.chr-ink-ink { --st: #1d1a16; } .chr-ink-teal { --st: #11706d; } .chr-ink-violet { --st: #5a3aa8; }
+.chr-ink-red { --st: #a3241a; } .chr-ink-gold { --st: #9a6a12; }
+/* on dark glass the ink needs a paper patch to read on */
+.chr-result .chr-inkstamp, .chr-head .chr-inkstamp, .chr-cos-item .chr-inkstamp { background: rgba(244,230,176,.92); }
+
+/* ═════════════════════════ THE MENU BLOCK ═════════════════════════ */
+.chronicle-block { position: relative; }
+.chb-top { display: grid; grid-template-columns: 3.6rem minmax(0, 1fr); gap: 12px; align-items: center; margin-bottom: 10px; }
+.chb-badge { width: 3.6rem; height: 3.6rem; display: block; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.55)); }
+.chb-who .form-title { margin: 0; }
+.chb-rank { margin: 2px 0 6px; font-family: var(--f-display); letter-spacing: .05em; color: var(--amber-300); font-size: 1rem; }
+.chb-rank span { color: var(--text-mute); font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; margin-left: 6px; }
+.chb-bar { height: 7px; border: 1.5px solid var(--ink); background: var(--ink-700); border-radius: 2px; overflow: hidden; }
+.chb-bar i { display: block; height: 100%; background: var(--hela-seat, var(--amber-400)); }
+.chb-lede { display: flex; justify-content: space-between; align-items: baseline; margin: 2px 0 6px;
+  font: 600 .74rem/1.2 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-soft); }
+.chb-lede span { color: var(--text-mute); letter-spacing: .06em; }
+.chb-missions { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.chb-missions li { display: grid; grid-template-columns: 1.15rem minmax(0, 1fr); gap: 8px; align-items: start;
+  font-size: .8rem; line-height: 1.35; color: var(--text-mute); }
+.chb-missions li b { color: var(--text); font-weight: 600; margin-right: 3px; }
+.chb-box { width: 1.05rem; height: 1.05rem; margin-top: 1px; border: 2px solid var(--brass); border-radius: 2px;
+  display: grid; place-items: center; font-size: .78rem; font-weight: 700; color: var(--ink); line-height: 1; }
+.chb-missions li.is-done .chb-box { background: var(--amber-300); border-color: var(--amber-300); }
+.chb-missions li.is-done b { text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: var(--amber-400); }
+.chronicle-block .chr-open { display: inline-flex; align-items: center; gap: 6px; }
+.chronicle-block .chr-open .btn-ico svg { width: 1.05rem; height: 1.05rem; display: block; }
+
+/* ═════════════════════════ THE STAMP IN A MATCH ═════════════════════════
+   Pressed at the top of the screen, clear of the machine, the dice and the
+   case files; above the table and the Herald, under the pointer (which lives
+   in the top layer). Never takes a click. */
+.chr-stamp { position: fixed; left: 50%; top: 13vh; z-index: 60000; pointer-events: none; opacity: 0;
+  display: flex; flex-direction: column; align-items: stretch; min-width: 17rem; max-width: 30rem;
+  transform: translateX(-50%) rotate(-4deg);
+  border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink), 0 14px 40px rgba(0,0,0,.45);
+  background: radial-gradient(circle, rgba(120,84,20,.16) 1px, transparent 1.5px) 0 0 / 6px 6px, var(--paper);
+  border-left: 12px solid var(--hela-seat, #f2a93b); }
+.chr-stamp .cs-word { align-self: flex-start; margin: -14px 0 0 12px; padding: .22rem .6rem .18rem; transform: rotate(-2deg);
+  background: var(--ink); color: var(--paper); font: 700 .78rem/1 var(--f-mono); letter-spacing: .22em; }
+.chr-stamp .cs-title { padding: .5rem 1.1rem .15rem .9rem; font: italic 700 1.9rem/1.05 var(--f-display); letter-spacing: .03em;
+  color: var(--ink); text-transform: uppercase; }
+.chr-stamp .cs-sub { padding: 0 1.1rem .6rem .9rem; font: 600 .74rem/1.2 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #4a3a20; }
+.chr-stamp-quest { border-left-color: #8f6fd6; }
+.chr-stamp-quest .cs-word { background: #3a2470; }
+
+/* ═════════════════════════ THE RESULTS CARD ═════════════════════════ */
+.chr-result { margin: 18px 0 4px; padding: 12px 14px 12px; text-align: left; border-top: 1px dashed rgba(201,164,92,.45); }
+.cr-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.cr-kick { font: 700 .7rem/1 var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--amber-300); }
+.cr-rank { font-family: var(--f-display); letter-spacing: .06em; font-size: .95rem; color: var(--text); }
+.cr-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .82rem; line-height: 1.35; color: var(--text-soft); }
+.cr-list b { display: inline-block; min-width: 6.4rem; font: 700 .66rem/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--amber-300); }
+.cr-list .cr-mis b { color: #9fe8d8; } .cr-list .cr-qst b { color: #c9b2ff; }
+.cr-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* ═════════════════════════ THE CHRONICLE PAGE ═════════════════════════ */
+.chr-page { position: fixed; inset: 0; z-index: 70000; display: flex; align-items: flex-start; justify-content: center;
+  padding: 3vh 16px; overflow-y: auto; overscroll-behavior: contain; background: rgba(4,6,8,.86);
+  animation: chrIn .22s ease-out both; }
+@keyframes chrIn { from { opacity: 0; } to { opacity: 1; } }
+.chr-sheet { width: min(1180px, 100%); flex: none; background: var(--ink-850); border: 1px solid var(--line); border-radius: var(--r-md);
+  box-shadow: var(--shadow-3); color: var(--text); }
+/* the file's cover band: comic paper with the name inked on it */
+.chr-head { position: relative; display: grid; grid-template-columns: 5.4rem minmax(0, 1fr) auto auto; gap: 18px; align-items: center;
+  padding: 1.3rem 1.4rem 1.2rem; color: var(--ink); border-bottom: 3px solid var(--ink);
+  background:
+    radial-gradient(circle, rgba(120,84,20,.15) 1px, transparent 1.5px) 0 0 / 6px 6px,
+    linear-gradient(100deg, transparent 62%, rgba(255,251,232,.5) 62% 64%, transparent 64% 67%, rgba(255,251,232,.35) 67% 68%, transparent 68%),
+    var(--paper);
+  border-radius: var(--r-md) var(--r-md) 0 0; }
+.chr-head-badge { width: 5.4rem; height: 5.4rem; display: block; filter: drop-shadow(4px 4px 0 var(--ink)); }
+.chr-head .overline { color: #5a4526; margin: 0 0 2px; }
+.chr-name { margin: 0; font: italic 700 2.6rem/1 var(--f-display); letter-spacing: .03em; text-transform: uppercase; color: var(--paper);
+  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--hela-seat, #f2a93b), 5px 5px 0 var(--ink);
+  overflow-wrap: anywhere; }
+.chr-rankline { margin: 8px 0 0; font: 600 .8rem/1.3 var(--f-mono); letter-spacing: .06em; color: #3a2c16; }
+.chr-rankline b { font-family: var(--f-display); font-size: 1.05rem; letter-spacing: .06em; color: var(--ink); }
+.chr-head-stamp { font-size: 1.05rem; }
+.chr-close { align-self: start; color: var(--ink); border-color: var(--ink); background: rgba(255,251,232,.6); }
+.chr-close:hover { background: #fff6d6; }
+
+.chr-body { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 18px; padding: 18px; }
+.chr-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.chr-block { background: var(--ink-800); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px 16px; }
+.chr-block h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 10px;
+  font: 600 1.15rem/1.1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--amber-300); }
+.chr-block h3 span { font: 500 .72rem/1.2 var(--f-mono); letter-spacing: .06em; text-transform: none; color: var(--text-mute); }
+.chr-note { margin: 0 0 10px; font-size: .8rem; line-height: 1.45; color: var(--text-mute); }
+
+/* today's orders */
+.chr-missions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.chr-missions li { display: grid; grid-template-columns: 1.4rem minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  padding: 9px 12px; border: 2px solid var(--ink); border-radius: 3px; color: var(--ink); box-shadow: 3px 3px 0 var(--ink);
+  background: radial-gradient(circle, rgba(120,84,20,.13) 1px, transparent 1.5px) 0 0 / 6px 6px, var(--paper); }
+.chm-box { width: 1.3rem; height: 1.3rem; border: 2.5px solid var(--ink); border-radius: 2px; display: grid; place-items: center;
+  font-weight: 700; font-size: .95rem; line-height: 1; background: #fffbe8; }
+.chr-missions li.is-done .chm-box { background: var(--hela-seat, #f2a93b); }
+.chm-words { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.chm-words b { font: italic 700 1.05rem/1.1 var(--f-display); letter-spacing: .03em; text-transform: uppercase; }
+.chm-words span { font-size: .8rem; line-height: 1.3; color: #3a2c16; }
+.chm-state { font: 700 .7rem/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #4a3a20; white-space: nowrap; }
+.chr-missions li.is-done .chm-state { color: var(--ink); background: var(--hela-seat, #f2a93b); padding: .3em .5em; border: 2px solid var(--ink); transform: rotate(-3deg); }
+
+/* records */
+.chr-recs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); gap: 10px; }
+.chr-rec { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 10px 16px; color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 3px; box-shadow: 3px 3px 0 var(--ink);
+  background: radial-gradient(circle, rgba(120,84,20,.12) 1px, transparent 1.5px) 0 0 / 6px 6px, #fbeec4; }
+.chr-rec::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--hela-seat, #f2a93b); border-right: 2px solid var(--ink); }
+.chr-rec-name { font: 700 .66rem/1.2 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; }
+.chr-rec-val { font: italic 700 1.9rem/1.05 var(--f-display); letter-spacing: .02em; }
+.chr-rec-val small { font: 600 .8rem/1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: #4a3a20; font-style: normal; }
+.chr-rec-what { font-size: .74rem; line-height: 1.3; color: #3a2c16; }
+.chr-rec-when { font: 500 .62rem/1.2 var(--f-mono); letter-spacing: .06em; color: #5a4526; margin-top: 2px; }
+.chr-rec.is-empty { background: radial-gradient(circle, rgba(120,84,20,.1) 1px, transparent 1.5px) 0 0 / 6px 6px, #d9ccaa; }
+.chr-rec.is-empty .chr-rec-val { color: #7a6a4a; }
+.chr-tables { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin: 12px 0 8px; }
+.chr-tables-lbl { align-self: center; font: 700 .68rem/1.2 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-soft); margin-right: 4px; }
+.chr-table { display: flex; flex-direction: column; align-items: center; min-width: 3.6rem; padding: 5px 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--ink-750); }
+.chr-table b { font: 600 1.3rem/1 var(--f-display); color: var(--amber-300); }
+.chr-table small { font: 500 .62rem/1.3 var(--f-mono); color: var(--text-mute); white-space: nowrap; }
+.chr-streak b { color: #9fe8d8; }
+.chr-totals { margin: 0; font: 500 .74rem/1.5 var(--f-mono); color: var(--text-mute); }
+
+/* the record card */
+.chr-card-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.chr-card-row [hidden] { display: none !important; }
+.chr-card-msg { min-height: 1.2em; margin: 8px 0 6px; font-size: .8rem; color: var(--text-soft); }
+.chr-card-img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 3px; box-shadow: var(--shadow-2); }
+
+/* quests */
+.chr-tier + .chr-tier { margin-top: 12px; }
+.chr-tier h4 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0 0 6px;
+  font: 600 .95rem/1.2 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--text); }
+.chr-tier h4 small { font: 500 .66rem/1 var(--f-mono); letter-spacing: .06em; text-transform: none; color: var(--text-mute); }
+.chr-quests { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.chr-quests li { display: grid; grid-template-columns: 1.2rem minmax(0, 1fr) auto; gap: 9px; align-items: start; padding: 6px 8px;
+  border: 1px solid var(--line-soft); border-radius: 3px; background: var(--ink-750); color: var(--text-mute); }
+.chq-mark { width: 1.1rem; height: 1.1rem; margin-top: 1px; border: 2px solid var(--line); border-radius: 50%;
+  display: grid; place-items: center; font-size: .7rem; font-weight: 700; color: var(--ink); }
+.chq-words { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-size: .78rem; line-height: 1.35; }
+.chq-words b { color: var(--text-soft); font-weight: 600; font-size: .86rem; }
+.chq-words em { font-style: normal; font: 500 .66rem/1.3 var(--f-mono); color: #c9b2ff; }
+.chq-when { font: 500 .62rem/1.2 var(--f-mono); color: var(--text-dim); white-space: nowrap; margin-top: 3px; }
+.chr-quests li.is-done { border-color: rgba(247,193,104,.45); background: linear-gradient(90deg, rgba(247,193,104,.12), transparent 70%), var(--ink-750); }
+.chr-quests li.is-done .chq-mark { background: var(--amber-300); border-color: var(--amber-300); }
+.chr-quests li.is-done .chq-words b { color: var(--amber-300); }
+.chr-quests li.is-done .chq-words span { color: var(--text-soft); }
+
+/* cosmetics */
+.chr-cos + .chr-cos { margin-top: 14px; }
+.chr-cos h4 { margin: 0 0 8px; font: 600 .95rem/1.2 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--text); }
+.chr-cos h4 small { display: block; margin-top: 2px; font: 500 .7rem/1.35 var(--f-body); letter-spacing: 0; text-transform: none; color: var(--text-mute); }
+.chr-cos-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.4rem, 1fr)); gap: 8px; }
+.chr-cos-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px 7px; min-height: 7.2rem;
+  border: 1px solid var(--line); border-radius: 4px; background: var(--ink-750); color: var(--text-soft); cursor: pointer; text-align: center;
+  transition: transform .12s ease, border-color .12s ease; }
+.chr-cos-item:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--brass); }
+.chr-cos-item:focus-visible { outline: 3px solid #fff4c6; outline-offset: 2px; }
+.chr-cos-item.is-on { border: 2px solid var(--amber-300); background: linear-gradient(180deg, rgba(247,193,104,.16), transparent 80%), var(--ink-750); }
+.chr-cos-item.is-locked { cursor: default; opacity: .62; }
+.chc-face { flex: 1; display: grid; place-items: center; min-height: 3.4rem; width: 100%; }
+.chc-art { width: 3.2rem; height: 3.2rem; display: block; }
+.chr-cos-item.is-locked .chc-art { filter: grayscale(1); }
+.chc-face .chr-inkstamp { max-width: 100%; font-size: .5rem; letter-spacing: .06em; white-space: normal; text-align: center; line-height: 1.15; transform: rotate(-6deg); }
+.chc-name { font: 600 .74rem/1.2 var(--f-display); letter-spacing: .04em; color: var(--text); }
+.chc-why { font: 500 .6rem/1.25 var(--f-mono); color: var(--text-mute); }
+.chr-cos-item.is-on .chc-why { color: var(--amber-300); }
+.chc-herald { display: block; width: 100%; padding: 4px 4px 3px; border: 1px solid #241c10; font-family: Georgia, "Times New Roman", serif;
+  background: repeating-linear-gradient(0deg, rgba(90,69,38,.05) 0 2px, transparent 2px 4px), #efe4c4; color: #201a0e; }
+.chc-herald .bn-mast { font-size: .82rem; border-bottom: 3px double #241c10; padding: 2px 0 1px; }
+
+.chr-foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 0 2px; }
+.chr-foot .chr-note { margin: 0; }
+.chr-clear-confirm { display: none; align-items: center; gap: 6px; font-size: .8rem; color: var(--text); }
+.chr-clearbox.is-asking .chr-clear-ask { display: none; }
+.chr-clearbox.is-asking .chr-clear-confirm { display: inline-flex; }
+
+@media (max-width: 900px) {
+  .chr-body { grid-template-columns: minmax(0, 1fr); }
+  .chr-head { grid-template-columns: 4rem minmax(0, 1fr) auto; }
+  .chr-head-badge { width: 4rem; height: 4rem; }
+  .chr-head-stamp { display: none; }
+  .chr-name { font-size: 1.9rem; }
+}
+
+/* ═════════════════════════ YOUR BADGE, PINNED ON YOUR CASE ═════════════════════════ */
+#chr-pin { position: absolute; right: 16px; top: 10px; width: 46px; height: 46px; z-index: 6; pointer-events: none;
+  transform: rotate(-8deg); filter: drop-shadow(2px 3px 0 rgba(0,0,0,.55)); }
+#chr-pin svg { width: 100%; height: 100%; display: block; }
+
+/* ═════════════════════════ THE HERALD PRINT STYLES ═════════════════════════
+   Worn on every edition you read (body.chr-hs-*), and on the samples in the
+   Chronicle (.chc-herald.chr-hs-*). The Wanted bill keeps its own woodtype. */
+body.chr-hs-gold .bn-paper:not(.bn-wanted) .bn-mast, .chc-herald.chr-hs-gold .bn-mast {
+  background: linear-gradient(180deg, #fff1b8 0%, #e2b34a 38%, #9a6a12 60%, #f5d37a 82%, #b8860b 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: .5px #5a3d06; }
+body.chr-hs-gold .bn-paper:not(.bn-wanted) .bn-extra { background: linear-gradient(180deg, #f5d37a, #9a6a12); color: #241c10; }
+body.chr-hs-red_extra .bn-paper:not(.bn-wanted) .bn-head, .chc-herald.chr-hs-red_extra .bn-mast { color: #9c1c10; }
+body.chr-hs-red_extra .bn-paper:not(.bn-wanted) .bn-extra { background: #b3190c; font-size: 13px; padding: 3px 16px; transform: translateX(-50%) rotate(-5deg); }
+body.chr-hs-red_extra .bn-paper:not(.bn-wanted) .bn-mast { border-bottom-color: #9c1c10; }
+body.chr-hs-night .bn-paper:not(.bn-wanted), body.chr-hs-night .hh-clip .bn-paper:not(.bn-wanted), .chc-herald.chr-hs-night {
+  background: repeating-linear-gradient(0deg, rgba(239,228,196,.04) 0 2px, transparent 2px 4px), #17161d; color: #efe4c4; border-color: #efe4c4; }
+body.chr-hs-night .bn-paper:not(.bn-wanted) :is(.bn-kick, .bn-deck, .bn-story, .bn-submast, .bn-foot, .bn-ear, .bn-cutcap) { color: #d8ccaa; }
+body.chr-hs-night .bn-paper:not(.bn-wanted) :is(.bn-mast, .bn-submast, .bn-foot, .bn-deck) { border-color: #efe4c4; }
+.chc-herald.chr-hs-night .bn-mast { border-bottom-color: #efe4c4; }
+body.chr-hs-night .bn-paper:not(.bn-wanted) .bn-cut svg { background: rgba(239,228,196,.85); }
+body.chr-hs-blue .bn-paper:not(.bn-wanted), .chc-herald.chr-hs-blue { color: #1b2f5a; border-color: #1b2f5a; }
+body.chr-hs-blue .bn-paper:not(.bn-wanted) :is(.bn-mast, .bn-submast, .bn-foot, .bn-deck) { border-color: #1b2f5a; }
+body.chr-hs-blue .bn-paper:not(.bn-wanted) :is(.bn-kick, .bn-deck, .bn-story, .bn-submast, .bn-foot, .bn-ear) { color: #2b4478; }
+body.chr-hs-blue .bn-paper:not(.bn-wanted) .bn-extra { background: #1b2f5a; }
+.chc-herald.chr-hs-blue .bn-mast { border-bottom-color: #1b2f5a; }
+
+/* calm motion: the page fades, the stamp only fades (js/chronicle.js) */
+html.pdx-a11y .chr-page { animation: none; }

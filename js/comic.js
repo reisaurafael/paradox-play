@@ -28,8 +28,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609270852";
-import { mend } from "./mend.js?202609270852";
+import { roman } from "./util.js?202609270943";
+import { mend } from "./mend.js?202609270943";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -48,7 +48,7 @@ const MOVE = {
   target: ["Choose a target", "", ""],
   destroy_target: ["Choose a card to destroy", "", ""],
   steal_target: ["Choose a card to steal", "", ""],
-  matrix_buff: ["Choose a module to buff", "", ""],
+  matrix_buff: ["Choose a module to buff", "+1 forever, click the module", ""],
   recycle: ["Recycle for energy", "or skip", ""],
   capacity: ["No room in the pack", "keep or recycle", ""],
   secret_deal: ["A secret deal", "take it or pass", "P = pass"],
@@ -919,25 +919,53 @@ class Comic {
     document.body.classList.add("cx-your-move");
     document.body.dataset.cxMove = req.kind;
     this._lastKind = req.kind;
+    // a voyage (or the Merchant's harbour) is asked by HELA's own bar on the chart itself
+    // (board_*.js commandText: the course, what is free and what costs); when the chart is
+    // elsewhere her eye's arrow points to it. A YOUR MOVE box too would say it twice.
+    if ((req.kind === "travel" || req.kind === "merchant_century") && document.body.classList.contains("cabin-on")) {
+      const s = this.slots.turn;
+      if (s && s.classList.contains("on")) this.hide("turn");
+      return;
+    }
     let head = m[0];
     if (req.kind === "allocate") {
       const n = ((req.private && req.private.dice) || (req.options && req.options.dice) || []).length;
       if (n) head = `Place your ${n} dice on the machine`;
     }
+    // a target's own words from the server (e.g. who the item can reach) say the how;
+    // the docket at the place only names the item, so the instruction is said once
+    let how = m[1];
+    const o = req.options || {};
+    if (/target$/.test(req.kind) && typeof o.prompt === "string" && o.prompt) how = o.prompt;
     const parts = [{ b: head }];
-    if (m[1]) parts.push(", " + m[1]);
+    if (how) parts.push(", " + how);
     if (m[2]) parts.push("  ", { key: m[2] });
-    // not in view? say where it is and which key takes me there
+    // not in view? say where it is and which key takes me there, unless HELA's eye
+    // already points there with its arrow and key (game.showBeacon): one instruction
     try {
       const g = this.game, cam = g.camera;
       const target = cam && cam.sceneForDecision(req.kind, req.options || req);
-      if (target && target !== cam.scene) {
+      const eyeDirects = document.body.classList.contains("cabin-on") && cam && cam._engaged
+        && !!(window.__helaEye && window.__helaEye.direct);
+      if (target && target !== cam.scene && !eyeDirects) {
         const where = { market: "the Merchant", drawer: "your records", main: "the desk", timeline: "the chart" }[target];
         const key = g._keyToward(cam.scene, target);
         if (where) parts.push("  ", key ? { key: key + ": " + where } : "(" + where + ")");
       }
     } catch (e) {}
-    this.caption("turn", parts, { tag: "YOUR MOVE", tone: "you", sticky: true, now: true });
+    // the game draws the decision right after this call: if it opened HELA's own decision
+    // window, that window is the instruction and the box never appears (yieldTurn)
+    setTimeout(() => {
+      const g = this.game;
+      if (!g || g.pendingReq !== req || document.getElementById("active-prompt")) return;
+      this.caption("turn", parts, { tag: "YOUR MOVE", tone: "you", sticky: true, now: true });
+    }, 0);
+  }
+  // a decision window of HELA's own (game.showPrompt) is the instruction: the YOUR MOVE box
+  // would repeat it, so it steps aside until the next decision
+  yieldTurn() {
+    const s = this.slots.turn;
+    if (s && s.classList.contains("cx-you")) this.hide("turn");
   }
   onRespond() {
     this.clearPreview();

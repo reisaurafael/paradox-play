@@ -59,7 +59,7 @@
      1190; every length scales with the pace. Light comic effects keep the wipe alone, shorter; Off, a skip or calm motion
      swap at once. Only transform and opacity animate, on static layers (app.css
      .chart-turn). paradoxo:skinwarp fires at the start with detail.landMs, the moment the
-     new chart is fully in (fx.js turns the era's page in then). swap() runs under the
+     panel border lifts off the new chart (fx.js turns the era's page in then). swap() runs under the
      ink, done() when it is over. A second chart that re-skins during a turn (Origins to
      Singularity in one voyage) swaps under the same ink. */
   let turning = null;   // the turn on screen: its swaps, whether they ran, its dones
@@ -85,20 +85,24 @@
     t.innerHTML = `<i class="ct-ink"></i>${full ? `<i class="ct-frame"></i>` : ""}`;
     rail.appendChild(t);
     const tr = turning = { swaps: [swap], swapped: false, dones: done ? [done] : [] };
-    fire(RUN);
+    // the era's page (fx.js) lands as the panel border lifts, after the turn, never under it
+    const FR = P(420), at = RUN - P(60);
+    fire(full ? Math.round(at + FR * .5) : RUN);
+    // the slab is 160% of the sheet wide and starts 30% left of it: at 94% of its own width
+    // (plus the gutter and the skew) it sits just off the sheet, so the ink is on screen
+    // from the first frame of the turn instead of spending half its run out of sight
     const dir = back ? 1 : -1, X = (v) => `translateX(${v}%) skewX(${-9 * dir}deg)`;
     try {
       t.firstChild.animate([
-        { transform: X(-106 * dir), easing: "cubic-bezier(.62,0,.86,.5)" },
+        { transform: X(-94 * dir), easing: "cubic-bezier(.5,0,.75,.4)" },
         { transform: X(0), offset: IN / RUN },
-        { transform: X(0), offset: (IN + HOLD) / RUN, easing: "cubic-bezier(.16,.56,.3,1)" },
-        { transform: X(106 * dir) }], { duration: RUN, fill: "both" });
+        { transform: X(0), offset: (IN + HOLD) / RUN, easing: "cubic-bezier(.2,.5,.35,1)" },
+        { transform: X(94 * dir) }], { duration: RUN, fill: "both" });
     } catch (e) {}
     chartTurnSound(IN, RUN, full);
     setTimeout(() => { tr.swapped = true; for (const f of tr.swaps) try { f(); } catch (e) {} }, IN);
     let end = RUN;
     if (full) {
-      const FR = P(420), at = RUN - P(60);
       end = at + FR;
       try {
         t.lastChild.animate([

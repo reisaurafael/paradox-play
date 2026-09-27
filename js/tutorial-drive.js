@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609270852";
-import { Game } from "./game.js?202609270852";
-import { icon } from "./icons.js?202609270852";
-import { roman } from "./util.js?202609270852";
-import { profile } from "./profile.js?202609270852";
+import { api, Connection } from "./net.js?202609270943";
+import { Game } from "./game.js?202609270943";
+import { icon } from "./icons.js?202609270943";
+import { roman } from "./util.js?202609270943";
+import { profile } from "./profile.js?202609270943";
 
 const R = (v) => roman(v);
 const FN = ["Recharge", "Paradox", "Travel"];
@@ -767,25 +767,51 @@ class Coach {
     } else if (k === "heated") {
       if (p.seat === self) { mine(2, 0); text = `Heat ${p.booms}/12: your <b>first Travel die</b> only heats the motor. It moves you nothing.`; key = "heat"; }
       else rival(p.seat, 2, 0);
-    } else if (k === "paradox_resolved" && typeof p.module === "number") {
+    } else if (k === "paradox_resolved" && typeof p.module === "number" && p.module >= 4 && p.module <= 6) {
+      // WHOSE PARADOX: a die reaches only where its module points from its owner's century
+      // (ahead, the same century, behind), so every hit is billed to the dice that could
+      // make it. He hears "your paradox" only when his own die reached someone.
       const col = p.module - 4;
-      const hits = p.hits || [];
+      const hits = (p.hits || []).filter((h) => h.damage);
       const causers = Object.keys(allocs).filter((seat) => { const mm = theirs(seat); return mm && mm[1] && mm[1][col]; });
-      causers.forEach((seat) => { if (seat === self) mine(1, col); else rival(seat, 1, col); });
+      const reach = (from, to) => this.paradoxReaches(from, to, col);
       const onMe = hits.find((h) => h.seat === self);
-      const others = hits.filter((h) => h.seat !== self);
-      const dir = ["ahead of", "in the same century as", "behind"][col];
+      const mineHit = causers.includes(self) ? hits.filter((h) => h.seat !== self && reach(self, h.seat)) : [];
+      const byMe = onMe ? causers.filter((x) => x !== self && reach(x, self)) : [];
+      const reachers = causers.filter((x) => hits.some((h) => h.seat !== x && reach(x, h.seat)));
+      reachers.forEach((seat) => { if (seat === self) mine(1, col); else rival(seat, 1, col); });
+      const nm = `<b>Paradox ${col + 1}</b>`;
+      const parts = [];
       if (onMe) {
-        const who = causers.filter((x) => x !== self).join(" and ") || "A rival";
-        text = `-${onMe.damage} energy: ${who}'s <b>Paradox ${col + 1}</b> die struck everyone ${dir} them. That was you.`;
+        const dir = ["ahead of", "in the same century as", "behind"][col];
+        const holds = (n, card) => { const t = ((this.game.view || {}).travelers || []).find((x) => x.name === n) || {};
+          return (t.hand || t.equipment || []).some((c) => c && c.name === card); };
+        const sword = mineHit.map((h) => h.seat).find((n) => holds(n, "Laser Sword"));
+        if (byMe.length) parts.push(`-${onMe.damage} energy for you: ${byMe.join(" and ")}'s ${nm} ${byMe.length > 1 ? "dice" : "die"} hit you. You stood ${dir} them.`);
+        else if (sword) parts.push(`-${onMe.damage} energy for you: ${sword}'s Laser Sword threw your paradox back at you.`);
+        else parts.push(`-${onMe.damage} energy for you from this paradox.`);
         key = "hit";
-      } else if (others.length && causers.includes(self)) {
+      }
+      if (mineHit.length) {
         const pos = this._posAtAlloc || {}, mc = pos[self];
-        const names = others.map((h) => h.seat).join(" and ");
-        const where = col === 1 && mc ? `in ${R(mc)}, your own century` : col === 0 ? "ahead of you, in a later century" : "behind you, in an earlier century";
-        text = `Your paradox landed. ${names} stood ${where}, so your <b>Paradox ${col + 1}</b> die cost ${others.length > 1 ? "each of them" : "them"} ${others[0].damage} energy.`;
+        const names = mineHit.map((h) => h.seat).join(" and ");
+        const where = col === 1 ? (mc ? `in ${R(mc)}, your own century` : "in your own century")
+          : col === 0 ? "ahead of you, in a later century" : "behind you, in an earlier century";
+        parts.unshift(`Your paradox landed: ${names} stood ${where}, so your ${nm} die hit them.`);
         key = "p" + col;
       }
+      if (!parts.length && hits.length && this.scripted && this.once("rival-paradox")) {
+        // the rivals' own paradoxes, once, so the zaps on the table are never read as his
+        const names = reachers.filter((x) => x !== self);
+        const mineIdle = causers.includes(self);
+        parts.push(`${names.length ? names.join(" and ") + "'s" : "A rival's"} ${nm} hit ${hits.map((h) => h.seat).join(" and ")}. Not yours: `
+          + (mineIdle ? `your ${nm} die reached no one.` : this.machine && !this.machine.functions.includes(1) ? "you have no Paradox yet." : "you had no die there."));
+        key = "rivals";
+      }
+      text = parts.join(" ");
+      // a line about an earlier paradox never lingers over one that is not about him
+      if (!text && this._causeText && this.stage && this.stage.callout.classList.contains("on") && !this.stage._next
+        && this.stage.callout.querySelector(".tc-text").innerHTML === this._causeText) this.stage.hide();
     } else if (k === "traveled") {
       if (p.seat === self && p.from !== p.to) {
         const col = this._travelCol || 1;
@@ -798,8 +824,21 @@ class Coach {
     }
     if (!cells.length && !text) return null;
     cells.forEach((n) => n.classList.add("tut-cause"));
-    if (text) this.toast(null, text);
+    if (text) { this.toast(null, text); this._causeText = text; }
     return { cells, text, key };
+  }
+  // whether `from`'s paradox die in this column reaches `to` (positions as the dice were
+  // set: paradoxes resolve before anyone travels), with the cards that bend it
+  paradoxReaches(from, to, col) {
+    const v = this.game.view || {}, pos = this._posAtAlloc || {};
+    const tv = (n) => (v.travelers || []).find((t) => t.name === n) || {};
+    const at = (n) => (pos[n] != null ? pos[n] : tv(n).century);
+    const a = at(from), b = at(to);
+    if (a == null || b == null || from === to) return false;
+    const holds = (n, card) => (tv(n).hand || tv(n).equipment || []).some((c) => c && c.name === card);
+    if (col === 0) return b > a || (holds(from, "Spear of Destiny") && b < a);
+    if (col === 1) return b === a || holds(from, "Window of Time");
+    return b < a;
   }
   async causeDone(w) {
     if (w.key === "hit" && this.once("why-hit")) await this.say(null, L.paradoxHit, { sub: w.text });
@@ -831,8 +870,7 @@ class Coach {
     const k = msg.kind, p = msg.payload || {};
     const self = this.seat;
     if (k === "merchant_moved" && this.done.has("merchant") && this.once("merchant-first-move")) {
-      await this.say(merchantOnMap, "He moved because the Market phase ended: he always does, toward the richest traveller he is not with.",
-        { sub: `He rolls the dice shown on his sign and goes up to that far. Now he is at ${R(p.to)}. Make gold and he comes your way; spend it and he turns away.` });
+      await this.say(merchantOnMap, `He moved because the Market phase ended: he always does, toward the richest traveller he is not with. Now he is at ${R(p.to)}.`);
     }
     if (k === "allocations_revealed" && this.once("reveal")) {
       this.toast(null, "Everyone's dice are revealed at once, then the modules resolve from 1 to 9.", { ms: 4200 });
@@ -840,6 +878,8 @@ class Coach {
     if (k === "overloaded" && p.seat === self && this.once("overloaded")) {
       this.learn("overload");
       const fn = (p.functions || [p.function])[0];
+      // the moment speaks alone: an earlier line (the heat, a recharge) never stays beside it
+      if (!this.stage._next) this.stage.hide();
       // the game's own explained overload moment (help.js), the same one every match shows
       const H = window.__pdxHelp;
       let shown = false;
@@ -862,11 +902,9 @@ class Coach {
     }
     if (k === "terminated") {
       if (p.seat === self && this.once("dead")) {
-        await this.say(".vital-ekg", "<b>You were terminated</b> at 0 energy. Next Hour you return at XXX with 12 energy plus your items' recycle value.",
-          { sub: "You keep your gold and heat. Whoever did it scores a point and becomes Wanted." });
+        await this.say(".vital-ekg", "<b>You were terminated</b> at 0 energy. Next Hour you return at XXX with 12 energy plus your items' recycle value.");
       } else if (p.by === self && this.once("killer")) {
-        await this.say("#players-zone .pcard", `<b>You terminated ${p.seat}.</b> +1 contract point, and you are now Wanted: a 4 gold bounty on you.`,
-          { sub: "Pay 4 gold with Declare at a Market to clear it." });
+        await this.say("#players-zone .pcard", `<b>You terminated ${p.seat}.</b> +1 contract point, and you are now Wanted: a 4 gold bounty on you. Pay 4 gold with Declare at a Market to clear it.`);
       }
     }
     if (k === "milestone" && p.seat === self && this.once("milestone-" + p.century)) {
@@ -888,8 +926,8 @@ class Coach {
       this.explained = null;
       if (!followed && this.once("reward-" + this.hour() + "-" + p.category)) {
         this.learn("contract");
-        await this.say(null, `<b>${p.category}, rolled ${R(p.roll || 1)}:</b> ${txt || "done"}.`,
-          { sub: p.category === "Time" ? "Tickets wait in your case: drag one onto the machine's slot when you want it." : "" });
+        await this.say(null, `<b>${p.category}, rolled ${R(p.roll || 1)}:</b> ${txt || "done"}.`
+          + (p.category === "Time" ? " The ticket waits in your case: drag it onto the machine's slot when you want it." : ""));
       }
       // the story goes on: an overload and the escape valve come next, then the end
     }
@@ -909,12 +947,10 @@ class Coach {
       this.fog.lift(p.key);
       if (p.key === "Ascension") {
         await this.say(() => this.fog.starOf(15),
-          "<b>Ascension, centuries XI to XIX.</b> The Secret Market waits at XI.",
-          { sub: "It opens once someone ends an Hour there." });
+          "<b>Ascension, centuries XI to XIX.</b> The Secret Market waits at XI and opens once someone ends an Hour there.");
       } else {
         await this.say(() => this.fog.starOf(6),
-          "<b>Origins, centuries I to X.</b> Down here every century into the past costs 2 energy.",
-          { sub: "Year Zero, past century I, ends the game." });
+          "<b>Origins, centuries I to X.</b> Down here every century into the past costs 2 energy, and Year Zero, past century I, ends the game.");
       }
     }
   }
@@ -977,7 +1013,10 @@ class Coach {
     await this.say(machineCell(fn, 0), `<b>${name} is shut this Hour.</b> It overloaded last Hour: three dice in one function. No die can go there until this Hour is over.`,
       { rings: row, avoid: MACHINE });
     if (h && h.lesson === "valve" && h.matrix && h.matrix[2] && h.matrix[2][0] === 3 && h.matrix[2][1] === 3) {
-      await this.say(machineCell(2, 0), "No rival stands ahead of you or in your century, so Paradox would hit no one. Your pair of <b>III</b> goes to <b>Travel</b>.",
+      const r = this.reach(), ahead = r.ahead.map((t) => t.name).join(" and ");
+      await this.say(machineCell(2, 0), ahead
+        ? `${ahead} ${r.ahead.length > 1 ? "stand" : "stands"} ahead of you: a <b>II</b> in Paradox 1 reaches them this Hour. Your pair of <b>III</b> goes to <b>Travel</b>, toward them.`
+        : "No rival stands ahead of you or in your century, so Paradox would hit no one. Your pair of <b>III</b> goes to <b>Travel</b>.",
         { rings: [machineCell(2, 0), machineCell(2, 1)], avoid: MACHINE });
     }
   }
@@ -1119,8 +1158,7 @@ class Coach {
     if (k === "merchant_century" && this.once("d-merch")) {
       this.explained = this.lastReward;
       const mine = () => { const me = this.me(); return (me && this.fog.starOf(me.century)) || document.querySelector(ANY_GLOW); };
-      return this.atScene("main", () => this.guide(mine, "<b>Move the Merchant:</b> click any lit century to send him there.",
-        { sub: "Bring him to you to shop, or away from a rival." }));
+      return this.atScene("main", () => this.guide(mine, "<b>Move the Merchant:</b> click any lit century to send him there."));
     }
     if (k === "matrix_buff" && this.once("d-buff")) {
       this.explained = this.lastReward;
@@ -1148,18 +1186,18 @@ class Coach {
     const inMarket = cands.some((c) => c.zone === "market");
     const cls = mode === "steal" ? ".can-steal" : ".can-destroy";
     const line = mode === "steal" ? "<b>Steal a card:</b> click the one you want, it goes into your case."
+      + (inMarket ? " Taking one from the Merchant makes you Wanted." : "")
       : "<b>Destroy a card:</b> click the one you want gone.";
-    const sub = mode === "steal" && inMarket ? "Taking from the Merchant makes you Wanted." : "";
     const picker = "#active-prompt .card.is-actionable";
     const inPlace = `#market-zone .card${cls}, #players-zone .card${cls}`;
     setTimeout(() => {
       if (!this.req || this.req !== req) return;
       if (document.querySelector(picker)) {
-        this.guide(picker, line, { sub, rings: [picker] });
+        this.guide(picker, line, { rings: [picker] });
       } else if (inMarket) {
-        this.atScene("market", () => this.guide(inPlace, line, { sub, rings: [inPlace] }),
+        this.atScene("market", () => this.guide(inPlace, line, { rings: [inPlace] }),
           "Press <kbd>W</kbd> to face the Merchant's shelf.");
-      } else this.guide(inPlace, line, { sub, rings: [inPlace] });
+      } else this.guide(inPlace, line, { rings: [inPlace] });
     }, 500);
   }
 
@@ -1206,8 +1244,7 @@ class Coach {
     }
     this.plan = null;
     if (this.once("free-alloc")) {
-      this.toast("#machine-body .matrix-wrap", "Your dice are yours now. Place all four, then Confirm.",
-        { sub: "Press <kbd>T</kbd> for the machine reference at any time.", ms: 7000 });
+      this.toast("#machine-body .matrix-wrap", "Your dice are yours now. Place all four, then Confirm.", { ms: 7000 });
     }
     void g;
   }
@@ -1258,36 +1295,40 @@ class Coach {
         text = [`Drag a ${R(v)} onto <b>Recharge 1</b>: +${v} energy.`,
           `Drag a ${R(v)} onto <b>Recharge 2</b>: +${v} gold.`,
           `Drag a ${R(v)} onto <b>Recharge 3</b>: +${v} energy and gold.`][s.c];
-        if (s.c === 0 && first) sub = "Energy is your life. Click a die, then a module, or drag it.";
-        if (s.c === 1 && first) sub = "A function holds one value only, so both dice here are the same.";
-        if (s.c === 1 && !first) sub = "Gold buys the Merchant's cards.";
+        if (s.c === 0 && first) sub = "Energy is your life.";
+        if (s.c === 1) sub = "Gold buys the Merchant's cards.";
         if (s.c === 2) { sub = "A third die in one function OVERLOADS it: it pays now, and shuts for the next Hour."; this.markTrack("overload"); }
       } else if (s.r === 1) {
         text = [`Drag a ${R(v)} onto <b>Paradox 1</b>: everyone ahead of you loses ${v} energy.`,
           `Drag a ${R(v)} onto <b>Paradox 2</b>: everyone in your own century loses ${v}.`,
           `Drag a ${R(v)} onto <b>Paradox 3</b>: everyone behind you loses ${v}.`][s.c];
-        if (s.c === 0) sub = "Ahead means a higher century. Your paradox never hurts you.";
-        if (lesson === "strike") {
-          const r = this.reach(), who = s.c === 1 ? r.here : r.ahead.length ? r.ahead : r.here;
+        if (s.c === 0) sub = "Ahead means a higher century.";
+        if (s.c === 0 && lesson === "valve" && !this.reach().ahead.length) sub = `No one stands ahead of you, so it hits no one: it goes here because ${FN[((this.me() || {}).overloaded_functions || [0])[0]] || "Recharge"} is shut and Travel holds the pair.`;
+        if (lesson === "strike" && s.c < 2) {
+          // only the ones this module really reaches: ahead for the first, beside him for the second
+          const r = this.reach(), who = s.c === 1 ? r.here : r.ahead;
           if (who && who.length) sub = `${who.map((t) => t.name).join(" and ")} ${who.length > 1 ? "stand" : "stands"} in ${R(who[0].century)}${s.c === 1 ? ", with you" : ""}. It lands this Hour, before anyone travels.`;
+          else if (s.c === 0 && P[1][1]) sub = "No one stands ahead of you, so this die hits no one. It opens the way to the second module: they fill left to right.";
         }
         this.markTrack("paradox");
       } else {
         text = [`Drag a ${R(v)} onto <b>Travel 1</b>: +${v} heat.`,
           `Drag a ${R(v)} onto <b>Travel 2</b>: move up to ${v} ${v === 1 ? "century" : "centuries"}.`,
           `Drag a ${R(v)} onto <b>Travel 3</b>: move up to ${v * 2} more.`][s.c];
-        if (s.c === 0) sub = first ? "Modules fill left to right: Travel must heat before it moves." : "12 heat makes your motor explode.";
-        if (s.c === 1 && first) sub = "All four dice must be placed before you can confirm.";
-        if (s.c === 2) { sub = "Three dice in one function overload it: more power now, but it shuts next Hour."; this.markTrack("overload"); }
+        if (s.c === 0) sub = first ? "Travel must heat before it moves." : "12 heat makes your motor explode.";
+        if (s.c === 2) { sub = "A third die in one function OVERLOADS it: it pays now, and shuts for the next Hour."; this.markTrack("overload"); }
         if (s.c === 1 && !first && P[2][2]) sub = "";
       }
       if (lesson === "travel" && s.r === 2 && s.c === 0 && this.plan.goal != null) {
         sub = `This Hour's dice are for the trip to ${R(this.plan.goal)}.` + (sub ? " " + sub : "");
       }
-      // his words open the small machine's hours; the step rides underneath
+      // one line at one size: the step, then why it matters
+      text = sub ? `${text} ${sub}` : text;
+      sub = "";
+      // his words open the small machine's hours; the step follows at the same size
       const placed = this.game.alloc ? this.game.alloc.matrix.flat().filter((x) => x).length : 0;
       if (placed === 0 && (h === 1 || h === 2)) {
-        sub = (h === 1 ? L.reduced + " " : "") + text.replace(/<[^>]+>/g, "") + (h === 1 ? " Keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> pick up a die of that value." : "");
+        sub = (h === 1 ? L.reduced + " " : "") + text;
         text = h === 1 ? L.t1prompt : L.prompt;
       }
       void fn; void n;
@@ -1298,13 +1339,12 @@ class Coach {
       const sealed = (this.game.alloc && [...this.game.alloc.unavailable]) || [];
       const what = sealed.length ? FN[sealed[0]] : "A function";
       this.guide("#dice-body .escape-drop",
-        `${what} is shut this Hour, so this ${R(s.v)} fits nowhere. Drop it in the <b>escape valve</b>.`,
-        { sub: `While a function is shut, the valve drains life: this die costs you ${s.v} energy.`,
-          rings: ["#dice-body .escape-drop", die(s.v)], avoid: MACHINE });
+        `${what} is shut this Hour, so this ${R(s.v)} fits nowhere. Drop it in the <b>escape valve</b>. While a function is shut, the valve drains life: this die costs you ${s.v} energy.`,
+        { rings: ["#dice-body .escape-drop", die(s.v)], avoid: MACHINE });
       return;
     }
-    this.guide("#confirm-alloc", "All your dice are placed. Click <b>Confirm</b>.",
-      { sub: first ? "Everyone chose in secret. Now the machines resolve." : "", avoid: MACHINE });
+    this.guide("#confirm-alloc", "All your dice are placed. Click <b>Confirm</b>." + (first ? " Everyone chooses in secret, then the machines resolve." : ""),
+      { avoid: MACHINE });
   }
 
   /* ── Travel ── */
@@ -1318,25 +1358,29 @@ class Coach {
     this._travelCol = col;
     // never plot into centuries he cannot see: if his reach goes past the roll, it comes off
     if (!this._mapOpen && from - max < this.cut) this.unrollMap();
-    const fromDie = `This move comes from your ${col === 1 ? "second" : "third"} Travel die.`;
     if (this.hour() <= 5 || this.scripted) { const cell = this.causeCell(2, col); if (cell) cell.classList.add("tut-cause"); }
     if (!this.scripted || goal == null) {
       if (this.once("free-travel")) {
-        this.toast(ANY_CMD, `Click a lit century to travel up to ${max}, or HOLD to stay.`,
-          { sub: "Into the past costs energy; into the future is free." });
+        this.toast(ANY_CMD, `Click a lit century to travel up to ${max}, or HOLD to stay. Into the past costs energy; into the future is free.`);
       }
       return;
     }
     const dir = goal > from ? 1 : -1;
     const dist = Math.min(max, Math.abs(goal - from));
     const land = from + dir * dist;
-    const toMerchant = !(this.me() && (this.me().hand || []).length);
-    const why = land === goal
-      ? (toMerchant ? "to reach the Merchant" : "to reach the century where your card is delivered")
-      : (toMerchant ? "toward the Merchant" : `toward ${R(goal)}, where your card is delivered`);
-    let sub = fromDie;
-    if (this.once("travel-cost")) sub += " Going into the past costs 1 energy per century. Going into the future is free.";
-    else if (dir > 0 && this.once("travel-free")) sub += " Forward in time is free.";
+    const me = this.me() || {};
+    const toMerchant = !(me.hand || []).length;
+    // the valve Hour's trip walks toward a rival, so his paradox reaches them next Hour
+    const rivals = this._valveHour && this._valveHour === this.hour()
+      ? ((this.game.view && this.game.view.travelers) || []).filter((t) => !t.is_self && t.century === goal).map((t) => t.name) : [];
+    const why = rivals.length
+      ? `${land === goal ? "to stand with" : "toward"} ${rivals.join(" and ")}, so your paradox reaches them next Hour`
+      : land === goal
+        ? (toMerchant ? "to reach the Merchant" : "to reach the century where your card is delivered")
+        : (toMerchant ? "toward the Merchant" : `toward ${R(goal)}, where your card is delivered`);
+    let sub = "";
+    if (this.once("travel-cost")) sub = " Going into the past costs 1 energy per century. Going into the future is free.";
+    else if (dir > 0 && this.once("travel-free")) sub = " Forward in time is free.";
     this.pointing = true;
     this.atScene("main", () => this.travelGuide(from, dist, land, why, sub));
     this.learn("travel");
@@ -1344,10 +1388,10 @@ class Coach {
   travelGuide(from, dist, land, why, sub) {
     if (!this.req || this.req.kind !== "travel") return;
     if (dist === 0) {
-      this.guide(ANY_ANCHOR, `You are where you need to be. Click <b>HOLD</b> to stay.`, { sub });
+      this.guide(ANY_ANCHOR, `You are where you need to be. Click <b>HOLD</b> to stay.${sub}`);
     } else {
-      this.guide(() => this.fog.starOf(land), `Click <b>${R(land)}</b> to move ${dist} ${dist === 1 ? "century" : "centuries"} ${why}.`,
-        { sub, place: "auto" });
+      this.guide(() => this.fog.starOf(land), `Click <b>${R(land)}</b> to move ${dist} ${dist === 1 ? "century" : "centuries"} ${why}.${sub}`,
+        { place: "auto" });
     }
   }
 
@@ -1363,8 +1407,8 @@ class Coach {
       this.blockPass = false;
       if (bought && this.scripted && this.once("m-pass")) {
         this.pointing = true;
-        this.guide(passSign, "<b>His shelf refilled:</b> the Merchant always shows four cards.",
-          { sub: "Buy again, or click <b>Pass</b> to leave the Market.", avoid: SHELF });
+        this.guide(passSign, "<b>His shelf refilled:</b> the Merchant always shows four cards. Buy again, or click <b>Pass</b> to leave the Market.",
+          { avoid: SHELF });
       } else if (this.once("m-free")) {
         this.toast(null, "The Market is open. Press <kbd>W</kbd> to face the Merchant: buy, renew his shelf, or pass.");
       }
@@ -1379,8 +1423,8 @@ class Coach {
         return;
       }
       const sel = `#market-zone .card.can-buy[data-name="${cssq(card.name)}"]`;
-      this.guide(sel, `Buy <b>${cardName(card)}</b>: drag it into your case, or click it.`,
-        { sub: `${card.gold_cost} gold. Deliver it at ${R(card.delivery_century)} for 1 contract point.`, avoid: SHELF });
+      this.guide(sel, `Buy <b>${cardName(card)}</b> for ${card.gold_cost} gold: drag it into your case, or click it. Deliver it at ${R(card.delivery_century)} for 1 contract point.`,
+        { avoid: SHELF });
     };
     this.atScene("market", buyStep, "You stand with the Merchant. Press <kbd>W</kbd> to face his wagon.");
   }
@@ -1400,7 +1444,7 @@ class Coach {
       const step = () => {
         if (!this.req || this.req.kind !== "deliver") return;
         if (open()) {
-          this.guide(open, "Click the glowing drawer to open it.", { sub: `It holds your records for ${R(o.century)}.` });
+          this.guide(open, "Click the glowing drawer to open it.");
           setTimeout(step, 400);
           return;
         }
@@ -1411,7 +1455,7 @@ class Coach {
         }
         const cardSel = card ? `#rucksack-zone .card[data-name="${cssq(card.name)}"]` : "#rucksack-zone .card";
         this.guide(cardSel, `Drag <b>${cardName(card)}</b> from your case into the open drawer.`,
-          { sub: "Delivered items stay in your records until the end.", rings: [cardSel, "#drawer-zone .drw-folder.here"] });
+          { rings: [cardSel, "#drawer-zone .drw-folder.here"] });
         setTimeout(step, 400);
       };
       step();
@@ -1442,8 +1486,8 @@ class Coach {
           return;
         }
         // his first real choice: no ring, pointer or aim on any one paper
-        this.guide(null, "Three kinds of contract. <b>Chaos</b> hurts rivals, <b>Time</b> gives you extra turns, <b>Resource</b> pays you. Your choice.",
-          { sub: "A die then decides which of its three results you get. Not the same kind twice in a row.", rings: [] });
+        this.guide(null, "Three kinds of contract. <b>Chaos</b> hurts rivals, <b>Time</b> gives you extra turns, <b>Resource</b> pays you. Your choice. A die then picks one of its three results, and never the same kind twice in a row.",
+          { rings: [] });
         setTimeout(step, 400);
       };
       step();
@@ -1485,8 +1529,8 @@ class Coach {
       }
     });
     const none = !rings.length;
-    this.guide(none ? "#mala-lock" : rings[0], `<b>Activation.</b> ${lines.join(" ")}`,
-      { sub: none ? "Pass with the <b>lock</b> on your case." : "Or click the lock to pass.", rings: none ? ["#mala-lock"] : rings.concat(["#mala-lock"]) });
+    this.guide(none ? "#mala-lock" : rings[0], `<b>Activation.</b> ${lines.join(" ")} ${none ? "Pass with the <b>lock</b> on your case." : "Or click the lock to pass."}`,
+      { rings: none ? ["#mala-lock"] : rings.concat(["#mala-lock"]) });
   }
 
   /* ── scene waits ── */
@@ -1526,7 +1570,7 @@ class Coach {
       { sub: "+1 per relic returned, +1 per termination, +1 the first time you end an Hour on XX and on X, +1 for being alive at the end.", rings: [".vital-chip.vc-cp"] });
     await this.phasesRecap();
     await this.tabLesson();
-    await this.say(null, L.gradEnd, { sub: "Press <kbd>T</kbd> for the machine reference." });
+    await this.say(null, L.gradEnd);
     this.learn("win");
     this.quiet = true;
     this.scripted = false;
@@ -1588,6 +1632,9 @@ class Coach {
     if (!this._heraldDue || this._heraldDone) return;
     this._heraldDue = false; this._heraldDone = true;
     await this.say(".he-window.he-news, .hb-newsread", L.herald, {});
+    // read, then put away: the edition lies over her memory, which is shown next
+    try { window.__heraldSkip && window.__heraldSkip(); } catch (e) {}
+    await new Promise((r) => setTimeout(r, 600));
     await this.brainLesson();
   }
   async brainLesson() {

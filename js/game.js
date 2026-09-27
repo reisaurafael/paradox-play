@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609270852";
-import { audio } from "./audio.js?202609270852";
+import { icon } from "./icons.js?202609270943";
+import { audio } from "./audio.js?202609270943";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609270852";
-import { comic } from "./comic.js?202609270852";
-import { fx } from "./fx.js?202609270852";
-import { CatEngine } from "./cat.js?202609270852";
-import { tutorials } from "./tutorial.js?202609270852";
-import { profile } from "./profile.js?202609270852";
-import { Camera } from "./camera.js?202609270852";
+import { juice } from "./juice.js?202609270943";
+import { comic } from "./comic.js?202609270943";
+import { fx } from "./fx.js?202609270943";
+import { CatEngine } from "./cat.js?202609270943";
+import { tutorials } from "./tutorial.js?202609270943";
+import { profile } from "./profile.js?202609270943";
+import { Camera } from "./camera.js?202609270943";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609270852";
+} from "./util.js?202609270943";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -1586,11 +1586,9 @@ export class Game {
         left.appendChild(this._sideSign(`Renew (${o.renew_cost}g)`, "", () => { this.marketMode = "renew"; this.renderMarket(); }));
       if (o.can_declare)
         left.appendChild(this._sideSign("Declare (4g)", "", () => this.marketAct({ action: "declare" })));
-      const passSign = this._sideSign("Pass", "", () => this.marketAct({ action: "pass" }));
-      // COVE-ONLY: no Merchant window, but the Cove is yours, the PASS sign still
-      // ends the phase, so mark it in the Cove's violet.
-      if (!access && this.secretDeal) passSign.classList.add("sign-cove-pass");
-      left.appendChild(passSign);
+      // PASS ends the phase, also when only the Secret Market is yours; it keeps the
+      // wagon's wood like every other sign in the market (no violet variant).
+      left.appendChild(this._sideSign("Pass", "", () => this.marketAct({ action: "pass" })));
     }
     if (left.children.length) zone.appendChild(left);
   }
@@ -1602,8 +1600,8 @@ export class Game {
     const current = v.secret_market_current;
     const me = (v.travelers || []).find((t) => t.is_self) || {};
     const sec = el("div", "market-secret");
-    sec.appendChild(el("div", "market-secret-label",
-      `The sealed vault · ${open ? "OPEN" : "SEALED"}${open ? ` · ${v.secret_market_card_count} relics` : ""}`));
+    // (No caption over the window: the curtain itself says sealed or open, and the
+    // purple "The sealed vault" line was noise the owner asked to remove.)
     // The Secret Market lives behind a velvet curtain: it stays CLOSED while the market
     // is Hidden (and while the discovery is still calculating), then draws OPEN and
     // stays open once it's Discovered. The bay/card is built into a "stage" the
@@ -1637,8 +1635,8 @@ export class Game {
       wrap.appendChild(ctl);
       stage.appendChild(wrap);
     } else if (open && this._secretRevealing) {
+      // the reveal FX tells this moment; the window stays quiet while the card forms
       const bay = el("div", "secret-bay open materializing");
-      bay.innerHTML = `<div class="bay-text">Materializing...</div>`;
       stage.appendChild(bay);
     } else if (open && current) {
       const wrap = el("div", "secret-card-wrap");
@@ -1666,9 +1664,9 @@ export class Game {
       stage.appendChild(wrap);
     } else {
       const bay = el("div", "secret-bay" + (open ? " open" : ""));
-      bay.innerHTML = open
-        ? `<div class="bay-text">The vault is empty</div>`
-        : `<div class="bay-text">Sealed behind the curtain</div>`;
+      // Hidden: the curtain covers it, nothing to write. Discovered and sold out:
+      // one chalk line on the sill, because an empty window alone could read as a bug.
+      if (open) bay.innerHTML = `<div class="bay-text">Sold out</div>`;
       stage.appendChild(bay);
     }
     // The curtain overlay: a gilded rod, two velvet panels, and a lock crest shown while
@@ -1692,14 +1690,16 @@ export class Game {
       curt.classList.toggle("opening", !!(open && this._secretOpening));
     }
     sec.appendChild(stage);
-    // The Temporal Briefcase upgrade is a Secret-Market perk, a purple hanging sign
-    // (like the wagon's action signs) that overlaps the Secret Market's top edge. Shown
-    // only while you have Secret Market access (§24).
+    // The Temporal Briefcase upgrade is a Secret-Market perk: a wooden arrow plank in
+    // the SAME wood as the wagon's action signs (Renew, Declare, Pass), hung under the
+    // Secret Market's counter. Shown only while you have Secret Market access (§24).
+    // Layers instead of CSS filters: a cast shadow, the dark routed edge, the lit face.
     if (shopping && req && req.options.briefcase) {
       sec.classList.add("has-brief");
       const bc = el("button", "secret-brief-sign");
       bc.setAttribute("aria-pressed", "false");
-      bc.innerHTML = `${icon("briefcase")}<span>Briefcase · ${req.options.briefcase.cost}g</span>`;
+      bc.innerHTML = `<span class="bs-shadow" aria-hidden="true"></span><span class="bs-plank" aria-hidden="true"></span>`
+        + `<span class="bs-label">${icon("briefcase")}<span>Briefcase ${req.options.briefcase.cost}g</span></span>`;
       bc.title = "Temporal Briefcase, buy a permanent +1 equipment slot (once per traveler)";
       bc.addEventListener("click", (e) => { audio.play("click"); this.marketAct({ action: "briefcase" }); });
       sec.appendChild(bc);
@@ -2180,7 +2180,8 @@ export class Game {
     const pool = el("div", "dice-pool" + (this.alloc.pool.length ? "" : " empty"));
     pool.dataset.drop = "pool";
     this.alloc.pool.forEach((v, i) => pool.appendChild(this.dieEl(v, { idx: i })));
-    if (!this.alloc.pool.length) pool.appendChild(el("div", "muted small", "All placed, confirm."));
+    // an empty tray says nothing: the lit CONFIRM key (and the tutorial's arrow) is
+    // the one instruction; a second one written in the tray read as clutter
     this.wirePool(pool);
     genCol.appendChild(pool);
     if (this._rollFx) { this._rollFx = false; this._animateRoll(pool); }
@@ -3228,6 +3229,8 @@ export class Game {
       row.appendChild(b);
     });
     p.appendChild(row);
+    // HELA's decision window says the move itself: her YOUR MOVE box steps aside (one instruction)
+    try { comic.yieldTurn(); } catch (e) {}
     // CABIN: the prompt is not a widget, the EYE manifests it. It unfolds from her
     // and folds back into her when the decision resolves (clearPrompt).
     if (document.body.classList.contains("cabin-on") && window.__helaEye && window.__helaEye.manifest) {
@@ -3600,8 +3603,7 @@ export class Game {
     const chosen = new Set();
     const dock = el("div", "drw-deliver rck-activate");
     dock.appendChild(el("div", "dd-head",
-      `<span class="vz-sigil dd-sigil">${icon("hela")}</span><span class="dd-title">ITEM ACTIVATION</span>` +
-      `<span class="dd-sub">${actives.length ? "each item may act once this phase" : "no activatable items"}</span>`));
+      `<span class="vz-sigil dd-sigil">${icon("hela")}</span><span class="dd-title">${actives.length ? "ITEM ACTIVATION" : "NO ITEM CAN ACT"}</span>`));   // the how is HELA's YOUR MOVE box
     if (actives.length) {
       const rack = el("div", "dd-rack");
       actives.forEach((c) => {
@@ -3653,8 +3655,7 @@ export class Game {
     zone.querySelectorAll(".drw-deliver").forEach((n) => n.remove());
     const strip = el("div", "drw-deliver ply-target");
     strip.appendChild(el("div", "dd-head",
-      `<span class="vz-sigil dd-sigil">${icon("hela")}</span><span class="dd-title">${(o.card_display || o.card || "TARGET").toUpperCase()}</span>` +
-      `<span class="dd-sub">${o.prompt || "choose a traveler's sheet"}</span>`));
+      `<span class="vz-sigil dd-sigil">${icon("hela")}</span><span class="dd-title">${(o.card_display || o.card || "TARGET").toUpperCase()}</span>`));   // the how rides YOUR MOVE (comic.js)
     zone.appendChild(strip);
     zone.classList.add("target-live");
     this._sheetsReq = req;   // the sheets own this decision (re-armed after a render)
@@ -3721,8 +3722,7 @@ export class Game {
     zone.querySelectorAll(".mch-travel").forEach((n) => n.remove());
     const dock = el("div", "mch-travel mch-buff");
     dock.appendChild(el("div", "dd-head",
-      `<span class="vz-sigil dd-sigil">${icon("hela")}</span><span class="dd-title">MATRIX BUFF</span>` +
-      `<span class="dd-sub">permanently +1 one module, touch the cell</span>`));
+      `<span class="vz-sigil dd-sigil">${icon("hela")}</span><span class="dd-title">MATRIX BUFF</span>`));   // the how rides YOUR MOVE (comic.js)
     zone.appendChild(dock);
     zone.classList.add("travel-live");
     document.body.classList.add("buffing");          // the pip-boy wakes for the choice
@@ -3998,7 +3998,8 @@ export class Game {
       });
       body.appendChild(grid);
     }
-    this.showPrompt({ title: `${cardName}, Target`, sub: o.prompt || "Choose a target.", body, actions: [] });
+    // HELA's YOUR MOVE box already says the how (comic.js), unless the tutorial muted it
+    this.showPrompt({ title: `${cardName}, Target`, sub: window.__helaMute ? (o.prompt || "Choose a target.") : "", body, actions: [] });
   }
 
   promptRecycle(req) {
@@ -4319,6 +4320,7 @@ export class Game {
     this.logEvent(kind, payload);
     try { comic.onEvent(kind, payload); } catch (e) {}
     try { fx.event(kind, payload); } catch (e) {}   // the comic effect of this rules action
+    try { window.__pdxChronicle && window.__pdxChronicle.event(kind, payload, this); } catch (e) {}   // records, daily missions, quests (chronicle.js)
     // the auction phase watches its own events so the hall can play out the
     // resolution (who took what) before the window tunes back
     if (kind.startsWith("leilao_") || kind.startsWith("piece_")) {
