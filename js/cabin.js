@@ -1939,23 +1939,51 @@
   const OMEGA = 10, ZETA = .7, VMAX_EYE = 470;       // the eye's spring (rad/s), damping, top speed (px/s)
   const OMEGA_W = 9, VMAX_WORDS = 250;               // her words' spring around her, their top speed
   let ex2 = -1, ey2 = -1, evx = 0, evy = 0, lastF = 0, ancX = -1, ancY = -1, flipAt = 0, changes = 0, switches = 0;
-  let parked = null, regionR = null, parkedPlaced = false, needXT = 0, needYT = 0;
+  let parked = null, regionR = null, parkedPlaced = false, needXT = 0, needYT = 0, deskT = 0;
   function machineRegion(){
     const el2 = document.getElementById("hull-console");
     const r = el2 && el2.getBoundingClientRect();
     return r && r.width > 20 && r.bottom > 0 && r.top < innerHeight ? r : null;
   }
   function inRect(r, pad){ return r && mx >= r.left - pad && mx <= r.right + pad && my >= r.top - pad && my <= r.bottom + pad; }
+  // the case files' column, the union of the visible files (measured with the zones)
+  let colR = null;
+  function fileRegion(){ return colR; }
+  function colPoint(r){
+    const w = chipBox ? chipBox[0] : 300, half = w / 2 + 16;
+    const right = innerWidth - r.right, left = r.left;
+    const x = right >= left ? Math.min(innerWidth - half, r.right + half) : Math.max(half, r.left - half);
+    return { x, y: Math.max(160, Math.min(innerHeight - 118 - (capsBox ? capsBox[1] + 8 : 0), my)) };
+  }
+  // what her eye, her words and her boxes would cover standing at (x, y), words under her
+  // (b2 = 1) or over her (-1); critical zones weigh most, and the screen's edge counts too
+  function footCost(x, y, b2){
+    const W = chipBox ? chipBox[0] : 300, H = chipBox ? chipBox[1] : 56, cx = midX(x, W);
+    const cw = b2 === 1 ? [cx, y + 44, cx + W, y + 44 + H] : [cx, y - 44 - H, cx + W, y - 44];
+    const boxes = [[x - 30, y - 30, x + 30, y + 30, 6], [...cw, 1]];
+    if (capsBox){ const k = midX(x, capsBox[0]), t0 = b2 === 1 ? cw[3] + 8 : cw[1] - 8 - capsBox[1]; boxes.push([k, t0, k + capsBox[0], t0 + capsBox[1], 1]); }
+    let c = 0;
+    for (const b of boxes){
+      if (b[1] < 6 || b[3] > innerHeight - 6) c += (b[2] - b[0]) * 40;
+      for (const z of zones){ const w = Math.min(b[2], z[2]) - Math.max(b[0], z[0]), h = Math.min(b[3], z[3]) - Math.max(b[1], z[1]);
+        if (w > 0 && h > 0) c += w * h * b[4] * (z[4] ? 4 : 1); }
+    }
+    return c;
+  }
   function checkpoint(r){
-    const up = 44 + 64 + 40;   // her eye, and her words under it, clear of the machine
+    // her eye, her words under it and her boxes under those, all clear of the machine
+    const up = 44 + (chipBox ? chipBox[1] : 64) + (capsBox ? capsBox[1] + 8 : 0) + 30;
+    const hw = (chipBox ? chipBox[0] : 300) / 2 + 8;
     const c = [[r.left + r.width * .5, r.top - up], [r.left + r.width * .2, r.top - up], [r.left + r.width * .8, r.top - up],
+      [r.left + hw, r.top - up], [r.right - hw, r.top - up],
       [r.right + 70, r.top + r.height * .25], [r.left - 70, r.top + r.height * .25]];
     let best = null, bd = 1e9;
     for (const [x, y] of c){
       if (x < 40 || x > innerWidth - 40 || y < 160 || y > innerHeight - 40) continue;
       const bx = [x - 30, y - 30, x + 30, y + 30];
       if (zones.some((z) => z[4] && overl(bx, z))) continue;
-      const d = Math.hypot(x - (ex2 < 0 ? mx : ex2), y - (ey2 < 0 ? my : ey2));
+      // least covered first (her words over a case file count), then the nearest
+      const d = footCost(x, y, 1) * 10 + Math.hypot(x - (ex2 < 0 ? mx : ex2), y - (ey2 < 0 ? my : ey2));
       if (d < bd){ bd = d; best = { x, y }; }
     }
     return best || { x: r.left + r.width * .5, y: Math.max(160, r.top - up) };
@@ -1977,11 +2005,12 @@
     if (dt > .05 || dt <= 0) dt = .016; else if (dt > .02) dt = .02;   // a held frame is not made up in one step
     refreshZones(t);
     if (parked){
-      const r = machineRegion(); if (r) regionR = r;
+      const r = parked.col ? fileRegion() : machineRegion(); if (r) regionR = r;
       if (!inRect(regionR, 70)){ parked = null; changes++; ancX = -1; }
     } else {
-      const r = machineRegion();
+      const r = machineRegion(), c = fileRegion();
       if (r && inRect(r, 12)){ regionR = r; parked = checkpoint(r); parkedPlaced = false; changes++; }
+      else if (c && inRect(c, 12)){ regionR = c; parked = colPoint(c); parked.col = true; parkedPlaced = false; changes++; }
     }
     let tx, ty;
     if (parked){ tx = parked.x; ty = parked.y; }
@@ -1990,8 +2019,7 @@
       // she changes side only at an edge, where she or her words would leave the screen;
       // anywhere else she keeps the side she has (her words sit under her, so they need no flip)
       const f0 = Math.max(.6, Math.min(1.25, fit())), gx = GAP_X * f0;
-      const onZone = (a, b2) => { const q = post3(ancX, ancY, a, b2); const bx = [q.x - 30, q.y - 30, q.x + 30, q.y + 30];
-        for (const z of zones) if (z[4] && overl(bx, z)) return true; return false; };
+      const cost = (a, b2) => { const q = post3(ancX, ancY, a, b2); return footCost(q.x, q.y, b2); };
       // and only once the need has lasted a moment: a hand passing by the edge changes nothing
       let nx = sx, ny = sy;
       const needX = sx === 1 ? ancX + gx + 40 > innerWidth : ancX - gx - 40 < 0;
@@ -1999,9 +2027,19 @@
       needXT = needX ? (needXT || t) : 0; needYT = needY ? (needYT || t) : 0;
       if (needXT && t - needXT > 700) nx = -sx;
       if (needYT && t - needYT > 700) ny = -sy;
-      if (onZone(nx, ny)){
-        for (const [a, b2] of [[nx, -ny], [-nx, ny], [-nx, -ny]]) if (!onZone(a, b2)){ nx = a; ny = b2; break; }
+      // on the side with free desk: another diagonal wins only when it covers far less, for a moment
+      const c0 = cost(nx, ny);
+      let alt = null;
+      if (c0 > 900){
+        let bc = c0 * .5;
+        for (const [a, b2] of [[nx, -ny], [-nx, ny], [-nx, -ny]]){
+          if ((a === 1 && ancX + gx + 40 > innerWidth) || (a === -1 && ancX - gx - 40 < 0)) continue;
+          if ((b2 === 1 && my > innerHeight - 150) || (b2 === -1 && my < 200)) continue;
+          const c = cost(a, b2); if (c < bc){ bc = c; alt = [a, b2]; }
+        }
       }
+      deskT = alt ? (deskT || t) : 0;
+      if (alt && t - deskT > 600){ nx = alt[0]; ny = alt[1]; }
       if ((nx !== sx || ny !== sy) && t - flipAt > FLIP_GAP){ sx = nx; sy = ny; flipAt = t; changes++; }
       const q = post3(ancX, ancY, sx, sy); tx = q.x; ty = q.y;
     }
@@ -2062,7 +2100,7 @@
   let zones = [], zonesT = 0, chipBox = null, capsBox = null, chipMode = "", capsMode = "";
   const ZONE_CRIT = "#hull-console .dice-pool, #hull-console .matrix-wrap, #confirm-alloc, #hull-console .dice-actions,"
     + " .dice-pool, .he-ring, .tut-ring, #tut-callout.on";
-  const ZONE_SOFT = ".pcard.cfolio, .cx-preview, #vz-holo, #timeline-rail [data-seat], #tl-gauge";
+  const ZONE_SOFT = ".pcard.cfolio, .cx-preview, #vz-holo, #timeline-rail [data-seat], #tl-gauge, #rucksack-zone .card, #market-zone .card, #drawer-zone .card";
   let zMx = -9, zMy = -9;
   function refreshZones(t){
     if (t - zonesT < 450) return;
@@ -2080,6 +2118,12 @@
       }
     }
     if (avoidR) zones.push([avoidR.left, avoidR.top, avoidR.right, avoidR.bottom, true]);
+    colR = null;
+    for (const el2 of document.querySelectorAll(".pcard.cfolio")){
+      const r = el2.getBoundingClientRect(); if (r.width < 20 || r.bottom < 0 || r.top > innerHeight) continue;
+      colR = colR ? { left: Math.min(colR.left, r.left), top: Math.min(colR.top, r.top), right: Math.max(colR.right, r.right), bottom: Math.max(colR.bottom, r.bottom) }
+        : { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+    }
     if (!chipEl && eye) chipEl = eye.querySelector(".he-chip");
     if (!capsEl && eye) capsEl = eye.querySelector(".he-caps");
     chipBox = chipEl ? [chipEl.offsetWidth || 300, chipEl.offsetHeight || 60] : [300, 60];
@@ -2087,10 +2131,10 @@
   }
   function overl(b, z){ return b[0] < z[2] && b[2] > z[0] && b[1] < z[3] && b[3] > z[1]; }
   // free of critical zones (and, when strict, of every zone), and on screen
-  function freeBox(b, extra, strict){
+  function freeBox(b, extra, strict, noHand){
     if (b[0] < 6 || b[1] < 6 || b[2] > innerWidth - 6 || b[3] > innerHeight - 6) return false;
-    // the pointer's own spot; while she is parked by the machine the hand works there and she keeps still
-    const hand = mx >= 0 && !parked ? [mx - 22, my - 22, mx + 34, my + 44] : null;
+    // the pointer's own spot; while she is parked the hand works there and she keeps still
+    const hand = mx >= 0 && !parked && !noHand ? [mx - 22, my - 22, mx + 34, my + 44] : null;
     if (hand && overl(b, hand)) return false;
     for (const z of zones) if ((strict || z[4]) && overl(b, z)) return false;
     for (const z of extra || []) if (overl(b, z)) return false;
@@ -2104,12 +2148,12 @@
       L.rd = [x + 34, y - 33, x + 34 + W, y - 33 + H]; L.ru = [x + 34, y + 33 - H, x + 34 + W, y + 33];
       L.ld = [x - 34 - W, y - 33, x - 34, y - 33 + H]; L.lu = [x - 34 - W, y + 33 - H, x - 34, y + 33];
       L.b = [cx, y + 44, cx + W, y + 44 + H]; L.a = [cx, y - 44 - H, cx + W, y - 44];
-      const v = sy === 1 ? ["b", "a"] : ["a", "b"];
+      const v = sy === 1 || parked ? ["b", "a"] : ["a", "b"];   // parked, she stands above the work: words under her
       return [[v[0], L[v[0]]], [away + "d", L[away + "d"]], [away + "u", L[away + "u"]], [o + "d", L[o + "d"]], [o + "u", L[o + "u"]], [v[1], L[v[1]]]];
     }
     // her boxes stack on her words, on the side away from the hand (under them while
     // she stands under the hand, over them while she stands above it): never near the pointer
-    const below = chipB ? (chipB[1] >= y ? true : chipB[3] <= y ? false : sy === 1) : sy === 1;
+    const below = chipB ? (chipB[1] >= y ? true : chipB[3] <= y ? false : sy === 1 || !!parked) : sy === 1 || !!parked;
     const tB = Math.max(y + 44, chipB ? chipB[3] + 8 : 0), tA = Math.min(y - 44, chipB ? chipB[1] - 8 : 1e9) - H;
     L.cb = [cx, tB, cx + W, tB + H]; L.ca = [cx, tA, cx + W, tA + H];
     L.ra = [x + 10, y - 38 - H, x + 10 + W, y - 38]; L.la = [x - 10 - W, y - 38 - H, x - 10, y - 38];
@@ -2142,15 +2186,26 @@
     if (cur && cur !== "free") curC = list.find((q) => q[0] === cur) || null;
     else if (cur === "free" && curRel) curC = ["free", [x + curRel[0], y + curRel[1], x + curRel[0] + W, y + curRel[1] + H]];
     if (curC){
-      if (freeBox(curC[1], extra, false)){ blockedSince[who] = 0; return curC; }
+      // while she travels her words ride along: the hand crossing them is no reason to move
+      // them (she is on her way to a spot away from it), only a critical zone is
+      if (Math.hypot(evx, evy) > 80 && freeBox(curC[1], extra, false, true)){ blockedSince[who] = 0; return curC; }
+      const crit = freeBox(curC[1], extra, false), clear = crit && freeBox(curC[1], extra, true);
+      if (clear){ blockedSince[who] = 0; return curC; }
+      if (crit){   // only files or cards under them: they wait longer, and move only to a clear spot
+        if (Math.hypot(evx, evy) > 80){ blockedSince[who] = 0; return curC; }   // and only once she has settled
+        if (!blockedSince[who]) blockedSince[who] = now;
+        if (now - blockedSince[who] < 1400 || now - changedAt[who] < 3000) return curC;
+        const c2 = list.find((c) => c[0] !== curC[0] && freeBox(c[1], extra, true));
+        if (!c2) return curC;
+        blockedSince[who] = 0; changedAt[who] = now; whyMoved = "soft"; return c2;
+      }
       if (!blockedSince[who]) blockedSince[who] = now;
       if (now - blockedSince[who] < 700 || now - changedAt[who] < 2500) return curC;
     }
     blockedSince[who] = 0; changedAt[who] = now;
     if (curC) whyMoved = why(curC[1], extra);
-    // a clear spot is sought only on first placement; after that a file partly under
-    // her words is no reason to move them
-    if (!curC) for (const c of list) if (freeBox(c[1], extra, true)) return c;
+    // moving anyway: a spot clear of files and cards first, then one clear of the critical zones
+    for (const c of list) if (freeBox(c[1], extra, true)) return c;
     for (const c of list) if (freeBox(c[1], extra, false)) return c;
     const f = nearestFree(x, y, W, H, extra);
     return f ? ["free", f] : (curC || list[0]);
@@ -2214,7 +2269,6 @@
       else if (el2._goneAt){ if (now0 - el2._goneAt > 700) el2._ox = null; el2._goneAt = 0; }
     }
     if (!saying && !capsOn){ chipSide = ""; return; }
-    if (parked && parkedPlaced && chipSide === "x") return;   // parked: her words stay put
     const t = performance.now();
     if (chipSide === "") zonesT = 0;
     chipSide = "x";
@@ -2732,9 +2786,22 @@
     if (!autoWin || document.hidden || window.__helaMute) return null;
     return new Promise((r) => heraldWaiters.push(r));
   };
+  // ONE edition at a time: the others that print meanwhile wait behind it, counted on
+  // it ("+2 more"), and the next opens when it is put away
+  const heraldQ = [];
+  function heraldMore(){
+    for (const w of openNews.values()){
+      const pane = w && (w.pane || w.el); if (!pane) continue;
+      let tag = pane.querySelector(".hb-newsmore");
+      if (!heraldQ.length){ if (tag) tag.remove(); continue; }
+      if (!tag){ tag = document.createElement("div"); tag.className = "hb-newsmore"; pane.appendChild(tag); }
+      tag.textContent = "+" + heraldQ.length + " more";
+    }
+  }
   function newsBloom(i, auto){
     const it = disp[i]; if (!it || !window.__helaEye) return;
     if (openNews.has(i)) return;                     // SAME journal already on the table
+    if (auto && openNews.size){ if (!heraldQ.includes(i)) heraldQ.push(i); heraldMore(); return; }
     const E = window.__helaEye;
     const node = document.createElement("div");
     node.className = "hb-newsread"; node.innerHTML = it.html || "";
@@ -2742,13 +2809,24 @@
     hint.textContent = "Click the paper to put it away";
     node.appendChild(hint);
     const others = openNews.size;                    // a DIFFERENT journal? sit beside it
+    // it lies over the field case (top-left), clear of the files, the machine and the dice;
+    // with the case out of view (another scene) it takes the table's middle
+    const rz = document.getElementById("rucksack-zone"), rr = rz && rz.getBoundingClientRect();
+    const onCase = !!(rr && rr.width > 120 && rr.right > 60 && rr.left < innerWidth - 60 && rr.bottom > 60 && rr.top < innerHeight - 60);
+    let x = onCase ? rr.left + rr.width / 2 : innerWidth * .56, y = onCase ? rr.top + rr.height / 2 : innerHeight * .42;
+    x = Math.max(236, Math.min(innerWidth - 236, x + others * 60)); y += others * 40;
     let win = null;
-    win = E.manifest({
-      x: Math.max(280, Math.min(innerWidth - 280, innerWidth * .56 + others * 60)),
-      y: Math.max(240, Math.min(innerHeight - 250, innerHeight * .42 + others * 40)),
-      node, cls: "he-news", wire: true,
-      onClose: () => { openNews.delete(i); if (autoWin && autoWin === win) heraldDone(); } });
+    win = E.manifest({ x, y, node, cls: "he-news" + (onCase ? " he-news-case" : ""), wire: true,
+      onClose: () => { openNews.delete(i); if (autoWin && autoWin === win) heraldDone();
+        heraldMore();
+        if (heraldQ.length && !openNews.size){ const n = heraldQ.shift(); setTimeout(() => newsBloom(n, true), 380); } } });
     openNews.set(i, win);
+    // the whole paper stays on screen (its laid-out height, measured once before it shows)
+    if (win && win.el && win.pane){
+      const h = win.pane.offsetHeight || 300, m = 12;
+      win.el.style.top = Math.max(h / 2 + m, Math.min(innerHeight - h / 2 - m, y)) + "px";
+    }
+    heraldMore();
     // the replay waits behind the FIRST edition of the match only (the shock of first
     // appearance); later ones stay until clicked while the table plays on
     if (auto && win && heraldFirst && !window.__helaMute){ if (autoWin) heraldDone(); autoWin = win; }

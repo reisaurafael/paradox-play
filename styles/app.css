@@ -7880,3 +7880,21 @@ body.cx-on #hela-eye .he-chip.he-over::after { top: auto; bottom: -9px;
   border-right: 2.5px solid var(--cx-ink); border-bottom: 2.5px solid var(--cx-ink); }
 /* her boxes under her words: the column turns over so YOUR MOVE stays nearest to her */
 #hela-eye .he-caps.he-below { flex-direction: column-reverse; }
+/* small screens (1366x768 and the like): the desk has little free wood, so her words
+   and boxes run narrower and wrap to more lines; the type stays above the readable
+   floor, and a larger text setting (data-ts) keeps its own size */
+@media (max-width: 1500px), (max-height: 860px) {
+  html:not([data-ts="2"]):not([data-ts="3"]):not(.pdx-a11y) body.cx-on #hela-eye .he-chip { max-width: 250px; font-size: .78rem; padding: 5px 11px 6px 34px; }
+  html body #hela-eye .he-caps, html body #hela-eye .he-caps .cx-cap { max-width: 290px !important; }
+}
+/* the Temporal Herald, one edition at a time: over the field case it runs a little
+   narrower, and the editions waiting behind it are counted in its corner */
+.he-window.he-news.he-news-case .he-pane { max-width: 420px; }
+.he-window.he-news.he-news-case .hb-newsread { max-height: 46vh; }
+.hb-newsmore { position: absolute; right: 10px; top: 8px; padding: 3px 8px 2px; border-radius: 3px;
+  font: 700 .66rem/1.2 var(--f-mono, monospace); letter-spacing: .1em; color: #120c06;
+  background: var(--hela-hot, #eafff8); box-shadow: 0 0 0 2px var(--vz, #6fe8c8); pointer-events: none; }
+/* the cat never sits over HELA's brain: the desk quarter that holds it stands above
+   her, and lets every click that is not on the brain (or the ledger) through to her */
+body.cabin-on #log-zone { z-index: 9; pointer-events: none; }
+body.cabin-on #log-zone #hela-brain-full, body.cabin-on #log-zone .ledger { pointer-events: auto; }

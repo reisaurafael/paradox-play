@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609270104";
-import { audio } from "./audio.js?202609270104";
+import { icon } from "./icons.js?202609270121";
+import { audio } from "./audio.js?202609270121";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609270104";
-import { comic } from "./comic.js?202609270104";
-import { fx } from "./fx.js?202609270104";
-import { CatEngine } from "./cat.js?202609270104";
-import { tutorials } from "./tutorial.js?202609270104";
-import { profile } from "./profile.js?202609270104";
-import { Camera } from "./camera.js?202609270104";
+import { juice } from "./juice.js?202609270121";
+import { comic } from "./comic.js?202609270121";
+import { fx } from "./fx.js?202609270121";
+import { CatEngine } from "./cat.js?202609270121";
+import { tutorials } from "./tutorial.js?202609270121";
+import { profile } from "./profile.js?202609270121";
+import { Camera } from "./camera.js?202609270121";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609270104";
+} from "./util.js?202609270121";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -695,6 +695,9 @@ export class Game {
     this._cat.onMeow = () => audio.play("meow");
     this._cat.start();
     document.addEventListener("click", (e) => {
+      // a click meant for something you can use (HELA's Hours, a paper, a button) is never the cat's
+      const t = e.target;
+      if (t && t.closest && !t.closest("#cat") && t.closest("#hela-brain-full, #hela-eye, .he-window, button, a, input, select, [role=button], .card, .pcard, .ctd-doc, .doc-inplace")) return;
       if (this._cat && this._cat.hitTest && this._cat.hitTest(e.clientX, e.clientY)) this.petCat();
     });
   }
