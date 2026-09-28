@@ -169,13 +169,46 @@
     return `M ${f(x+nx*w/2)} ${f(y+ny*w/2)} Q ${f(x+dx*len*.5+nx*w*.45)} ${f(y+dy*len*.5+ny*w*.45)} ${f(x+dx*len)} ${f(y+dy*len)} `
       +`Q ${f(x+dx*len*.45-nx*w*.5)} ${f(y+dy*len*.45-ny*w*.5)} ${f(x-nx*w/2)} ${f(y-ny*w/2)} Z`;
   }
+  /* The thumb in two bones: the proximal phalanx out of the hand, the interphalangeal
+     joint (a slight bend, a knuckle bulge on the outer side of the bend), and the
+     distal phalanx with its rounded pad. B base, J joint, T tip centre; w half-widths. */
+  function thumbGeo(B, J, T, w0, w1, w2){
+    const u=(a,b)=>{ const dx=b[0]-a[0], dy=b[1]-a[1], l=Math.hypot(dx,dy); return [dx/l, dy/l]; };
+    const d1=u(B,J), d2=u(J,T), n=(d)=>[-d[1], d[0]];
+    const n1=n(d1), n2=n(d2), nj=u([0,0],[n1[0]+n2[0], n1[1]+n2[1]]);
+    const out=(d1[0]*d2[1]-d1[1]*d2[0])<0 ? 1 : -1;          // the outer side of the bend
+    const P=(o,v,k)=>[o[0]+v[0]*k, o[1]+v[1]*k], add=(a,b,k)=>[a[0]+b[0]*k, a[1]+b[1]*k];
+    const jo=P(J,nj,out*(w1+2.4)), ji=P(J,nj,-out*w1*.9);    // the knuckle bulge, the crease notch
+    const pts=[
+      P(B,n1,-out*w0), P(P(B,d1,20),n1,-out*(w0*.97+w1*.03)), ji, P(P(J,d2,12),n2,-out*w2*1.02),
+      add(P(T,n2,-out*w2*.92),d2,2), add(P(T,n2,-out*w2*.45),d2,w2*.85), add(T,d2,w2*1.02), add(P(T,n2,out*w2*.5),d2,w2*.8), add(P(T,n2,out*w2*.98),d2,1),
+      P(P(J,d2,13),n2,out*w2*1.04), jo, P(P(J,d1,-14),n1,out*(w1+.5)), P(B,n1,out*w0)];
+    // a closed Catmull-Rom curve through the points
+    const f=(v)=>v.toFixed(1), N=pts.length; let d=`M ${f(pts[0][0])} ${f(pts[0][1])}`;
+    for(let i=0;i<N;i++){ const p0=pts[(i-1+N)%N], p1=pts[i], p2=pts[(i+1)%N], p3=pts[(i+2)%N];
+      d+=` C ${f(p1[0]+(p2[0]-p0[0])/6)} ${f(p1[1]+(p2[1]-p0[1])/6)} ${f(p2[0]-(p3[0]-p1[0])/6)} ${f(p2[1]-(p3[1]-p1[1])/6)} ${f(p2[0])} ${f(p2[1])}`; }
+    const L=(a,b)=>`M ${f(a[0])} ${f(a[1])} L ${f(b[0])} ${f(b[1])}`;
+    return { d: d+" Z", out, d1, d2, n1, n2, nj, J, T, w1, w2,
+      joint: `M ${f(ji[0])} ${f(ji[1])} Q ${f(J[0]+d2[0]*2)} ${f(J[1]+d2[1]*2)} ${f(P(J,nj,out*w1*.35)[0])} ${f(P(J,nj,out*w1*.35)[1])}`,
+      wrinkle: L(P(P(J,d1,-4),nj,-out*w1*.7), P(P(J,d1,-3),nj,-out*w1*.1)),
+      knuckle: `M ${f(P(P(J,d1,-9),n1,out*w1*.9)[0])} ${f(P(P(J,d1,-9),n1,out*w1*.9)[1])} Q ${f(jo[0])} ${f(jo[1])} ${f(P(P(J,d2,9),n2,out*w2*.95)[0])} ${f(P(P(J,d2,9),n2,out*w2*.95)[1])}`,
+      pad: P(P(T,d2,-2),n2,out*w2*.2), mid1: P(B,d1,24), mid2: P(J,d2,15),
+      shadeD: (()=>{ const a1=P(B,n1,out*w0*.3), a2=P(J,nj,out*w1*.35), a3=P(P(T,d2,4),n2,out*w2*.3), far=(q,nn)=>P(q,nn,out*40);
+        return `M ${f(a1[0])} ${f(a1[1])} Q ${f(a2[0])} ${f(a2[1])} ${f(a3[0])} ${f(a3[1])} L ${f(far(a3,n2)[0])} ${f(far(a3,n2)[1])} L ${f(far(a1,n1)[0])} ${f(far(a1,n1)[1])} Z`; })(),
+      hatch: (seg)=>{ const [o,dd,nn,w,k0,k1]= seg===1?[B,d1,n1,w1,20,32]:[J,d2,n2,w2,6,24]; let h="";
+        for(let k=k0;k<=k1;k+=6){ const a=P(P(o,dd,k),nn,out*w*.95), b=P(P(o,dd,k+3),nn,out*w*.45); h+=` M ${f(a[0])} ${f(a[1])} L ${f(b[0])} ${f(b[1])}`; } return h; } };
+  }
+  // the four fingertips' nails (the feminine hand): [x, y, angle, length, width]
+  const FINGER_NAILS=[[704,266.5,8,12,8.5],[728,296.5,16,12.5,9],[734,324,12,12.5,9],[723,342.5,4,12,8.5]];
+  const THUMB=thumbGeo([612,340],[638,367],[667,380],15.5,14.5,13);
+  const FIST_THUMB=thumbGeo([612,306],[640,318],[668,332],14,13.5,12.5);
   const HAND_PATHS={
     wrist: "M 530 250 Q 556 252 566 256 Q 574 260 574 270 L 575 332 Q 574 342 566 344 Q 552 348 530 350 Z",
     fingers: "M 660 252 Q 692 246 710 258 Q 717 263 715 271 Q 713 276 707 277 Q 726 280 735 290 Q 741 295 738 301 Q 736 305 731 306 Q 742 311 745 319 Q 748 325 743 330 Q 740 334 735 334 Q 738 341 731 347 Q 724 352 715 349 Q 690 345 664 340 Q 656 298 660 252 Z",
     back: "M 572 254 Q 610 244 660 252 L 664 340 Q 620 352 574 344 Z",
-    thumb: "M 598 336 Q 592 326 600 318 Q 610 310 624 318 Q 648 330 660 348 Q 668 360 658 368 Q 646 376 630 368 Q 610 358 600 346 Z",
+    thumb: THUMB.d,
     fist: "M 604 296 Q 600 258 620 246 Q 648 232 686 242 Q 718 250 728 276 Q 736 300 730 322 Q 722 346 694 352 Q 656 358 628 348 Q 606 338 604 296 Z",
-    fistThumb: "M 612 316 Q 606 304 616 297 Q 628 290 642 298 Q 664 310 674 326 Q 680 338 672 346 Q 662 354 646 348 Q 624 340 614 328 Z",
+    fistThumb: FIST_THUMB.d,
     glove: "M 580 250 Q 604 244 622 246 Q 646 248 660 256 Q 668 262 670 278 Q 673 300 670 322 Q 668 336 658 342 Q 640 350 616 348 Q 594 346 584 340 Q 578 336 578 326 L 576 262 Q 576 252 580 250 Z",
     cuff: "M 570 252 L 586 249 Q 594 248 595 256 L 597 336 Q 597 345 588 345 L 574 344 Q 566 343 566 334 L 564 260 Q 564 253 570 252 Z",
   };
@@ -195,13 +228,37 @@
     // nothing anywhere lighter than the base tone
     const warm=(d,o)=>`<path d="${d}" style="fill:${sk(6)}" opacity="${o}"/>`;
     const pores=(pts)=>`<g style="fill:${sk(3)}" opacity=".45">${pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r=".9"/>`).join("")}</g>`;
+    // the feminine skin is clean: no hatching, pores or short strokes; a soft shadow
+    // shape on the shadow side instead (the masculine keeps its light hatching)
+    const skinHatch=(d)=>m ? hatch(d) : "", skinPores=(pts)=>m ? pores(pts) : "", fine=(d,w,o)=>m ? contour(d,w,o) : "";
+    const soft=(d)=>m ? "" : `<path d="${d}" style="fill:${sk(3)}" opacity=".32"/>`;
     const contour=(d,w=1.2,o=.55)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
+    // painted nails (the feminine hand): the player's colour, matte, a thin ink edge
+    const nail=([x,y,a,l,w])=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M ${-l/2} ${-w/2} L ${l*.18} ${-w/2} Q ${l/2} ${-w/2} ${l/2} 0 Q ${l/2} ${w/2} ${l*.18} ${w/2} L ${-l/2} ${w/2} Q ${-l/2-1.6} 0 ${-l/2} ${-w/2} Z" style="fill:var(--hela-seat,#6fae6a)" stroke="${LINE}" stroke-width="1.3" stroke-linejoin="round"/><path d="M ${-l/2+1.2} ${-w/2+1.4} Q ${-l/2-.4} 0 ${-l/2+1.2} ${w/2-1.4}" fill="none" style="stroke:${sk(3)}" stroke-width="1.2" stroke-linecap="round"/></g>`;
+    const nails=(list)=>`<g pointer-events="none">${list.map(nail).join("")}</g>`;
+    const thumbArt=(G,n)=>{
+      const f=(v)=>v.toFixed(1), ang=Math.atan2(G.d2[1],G.d2[0])*180/Math.PI;
+      const pad=G.pad, tipNail=[G.T[0]+G.d2[0]*2-G.n2[0]*G.out*G.w2*.18, G.T[1]+G.d2[1]*2-G.n2[1]*G.out*G.w2*.18, ang, G.w2*1.25, G.w2*1.05];
+      return `${flat(G.d)}
+      ${inClip(n, `
+        ${warm(`M ${f(pad[0]-8)} ${f(pad[1])} a 8 7 0 1 0 16 0 a 8 7 0 1 0 -16 0`,.32)}
+        ${warm(`M ${f(G.J[0]+G.nj[0]*G.out*G.w1*.5-7)} ${f(G.J[1]+G.nj[1]*G.out*G.w1*.5)} a 7 6 0 1 0 14 0 a 7 6 0 1 0 -14 0`,.28)}
+        ${skinHatch(G.hatch(1)+G.hatch(2))}
+        ${soft(G.shadeD)}
+        ${skinPores([G.mid1, G.mid2])}`)}
+      <g pointer-events="none">
+        <path d="${G.joint}" fill="none" stroke="${LINE}" stroke-width="2.2" stroke-linecap="round"/>
+        ${fine(G.wrinkle,1.3,.6)}
+        ${contour(G.knuckle,1.3,.55)}
+      </g>
+      ${m ? "" : nails([tipNail])}`;
+    };
     const open=`<g class="${cls}-open">
       ${clip("f",H.fingers)}${clip("t",H.thumb)}${clip("w",H.wrist)}
       ${ink(H.wrist,H.back,H.fingers,H.thumb)}
       ${flat(H.wrist)}${flat(H.back)}${flat(H.fingers)}
       ${inClip("w", `${warm("M 520 250 L 580 250 L 580 350 L 520 350 Z",.25)}
-        ${hatch("M 540 346 l 6 -8 M 548 347 l 6 -8 M 556 346 l 6 -8 M 564 344 l 5 -7")}`)}
+        ${skinHatch("M 540 346 l 6 -8 M 548 347 l 6 -8 M 556 346 l 6 -8 M 564 344 l 5 -7")}${soft("M 520 334 Q 550 330 580 328 L 580 352 L 520 352 Z")}`)}
       ${inClip("f", `
         <!-- warmth at the knuckle ends and the fingertips -->
         ${warm("M 700 266 a 11 8 0 1 0 22 0 a 11 8 0 1 0 -22 0 M 722 293 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 726 320 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 714 342 a 11 7 0 1 0 22 0 a 11 7 0 1 0 -22 0",.3)}
@@ -210,33 +267,28 @@
         ${tick("M 709 278 Q 688 276 666 277 M 733 307 Q 704 302 666 301 M 737 335 Q 704 330 664 325",2,3.4)}
         <path d="M 709 276 Q 688 273 664 274 M 733 305 Q 704 300 664 298 M 737 333 Q 704 327 662 322" fill="none" stroke="${LINE}" stroke-width="1.9" stroke-linecap="round"/>
         <!-- the finger joints and the knuckles on the top contour -->
-        ${contour("M 690 258 q 3 5 1 10 M 704 283 q 3 6 1 12 M 708 308 q 3 6 1 12 M 702 333 q 3 5 1 9",1.4,.75)}
-        ${contour("M 668 253 q 6 -4 12 -1 M 672 279 q 6 -3 11 0 M 672 303 q 6 -3 11 0 M 670 327 q 6 -3 11 0",1.3,.6)}
+        ${fine("M 690 258 q 3 5 1 10 M 704 283 q 3 6 1 12 M 708 308 q 3 6 1 12 M 702 333 q 3 5 1 9",1.4,.75)}
+        ${fine("M 668 253 q 6 -4 12 -1 M 672 279 q 6 -3 11 0 M 672 303 q 6 -3 11 0 M 670 327 q 6 -3 11 0",1.3,.6)}
         <!-- shadow side: ink hatching along the underside of each finger -->
-        ${hatch("M 670 345 l 5 -6 M 680 346 l 5 -6 M 690 347 l 5 -6 M 700 347 l 5 -6")}
-        ${pores([[680,262],[696,266],[688,290],[716,294],[700,314],[722,318],[690,338],[712,342],[676,312]])}`)}
+        ${skinHatch("M 670 345 l 5 -6 M 680 346 l 5 -6 M 690 347 l 5 -6 M 700 347 l 5 -6")}
+        ${soft("M 662 338 Q 690 344 716 346 Q 730 346 744 340 L 746 360 L 660 360 Z")}
+        ${skinPores([[680,262],[696,266],[688,290],[716,294],[700,314],[722,318],[690,338],[712,342],[676,312]])}`)}
       ${ring}
-      ${flat(H.thumb)}
-      ${inClip("t", `
-        ${warm("M 644 356 a 10 8 0 1 0 20 0 a 10 8 0 1 0 -20 0",.3)}
-        ${contour("M 606 330 Q 624 328 646 342",1.2,.5)}
-        ${hatch("M 616 356 l 5 -6 M 626 361 l 5 -6 M 636 364 l 5 -6 M 646 366 l 5 -6")}
-        ${pores([[616,334],[630,342],[644,352]])}`)}
-      ${contour("M 600 322 Q 614 313 630 319",1.6,.8)}
+      ${thumbArt(THUMB,"t")}
+      ${m ? "" : nails(FINGER_NAILS)}
     </g>`;
     const grab=`<g class="${cls}-grab"${hide}>
       ${clip("k",H.fist)}${clip("kt",H.fistThumb)}${clip("w2",H.wrist)}
       ${ink(H.wrist,H.fist,H.fistThumb)}
       ${flat(H.wrist)}${flat(H.fist)}
-      ${inClip("w2", `${warm("M 520 250 L 580 250 L 580 350 L 520 350 Z",.25)}${hatch("M 540 346 l 6 -8 M 548 347 l 6 -8 M 556 346 l 6 -8")}`)}
+      ${inClip("w2", `${warm("M 520 250 L 580 250 L 580 350 L 520 350 Z",.25)}${skinHatch("M 540 346 l 6 -8 M 548 347 l 6 -8 M 556 346 l 6 -8")}${soft("M 520 334 Q 550 330 580 328 L 580 352 L 520 352 Z")}`)}
       ${inClip("k", `${warm("M 700 244 Q 736 262 734 330 L 712 330 Z",.3)}
         ${tick("M 726 286 Q 700 296 670 295 M 728 310 Q 702 320 668 317 M 720 332 Q 696 342 666 338",2,3.2)}
         <path d="M 726 284 Q 700 294 670 293 M 728 308 Q 702 318 668 315 M 720 330 Q 696 340 666 336" fill="none" stroke="${LINE}" stroke-width="1.9" stroke-linecap="round"/>
-        ${hatch("M 640 344 l 6 -8 M 650 347 l 6 -8 M 660 349 l 6 -8 M 670 350 l 6 -8 M 680 350 l 6 -8 M 690 349 l 6 -8 M 700 346 l 6 -8")}
-        ${hatch("M 690 348 l 6 -7 M 698 347 l 6 -7 M 706 345 l 6 -7")}`)}
-      ${flat(H.fistThumb)}
-      ${inClip("kt", hatch("M 622 336 l 5 -6 M 631 340 l 5 -6 M 640 343 l 5 -6 M 649 345 l 5 -6 M 658 345 l 5 -6"))}
-      ${contour("M 616 300 Q 632 292 648 302",1.6,.8)}
+        ${skinHatch("M 640 344 l 6 -8 M 650 347 l 6 -8 M 660 349 l 6 -8 M 670 350 l 6 -8 M 680 350 l 6 -8 M 690 349 l 6 -8 M 700 346 l 6 -8")}
+        ${skinHatch("M 690 348 l 6 -7 M 698 347 l 6 -7 M 706 345 l 6 -7")}
+        ${soft("M 610 336 Q 660 348 736 322 L 740 364 L 606 364 Z")}`)}
+      ${thumbArt(FIST_THUMB,"kt")}
     </g>`;
     // the glove: matte, worn leather in the player's colour, stitched, a few scuffs;
     // its cuff in the second colour with a brass snap
@@ -333,11 +385,11 @@
            shadow side told with ink hatching and a contour stroke, a few faint pores -->
       <path d="M -60 ${y1-18} C 60 ${y1-14} 180 ${y1-18} 310 ${y1-20} L 310 ${y1+10} L -60 ${y1+10} Z" fill="#6a5a78" opacity=".12"/>
       <path d="M 140 ${y0-4} L 320 ${y0-4} L 320 ${y1+4} L 140 ${y1+4} Z" style="fill:${sk(6)}" opacity=".18"/>
-      ${hatch(Array.from({ length: 10 }, (_, i) => `M ${112 + i * 14} ${y1 - 2} l 6 -${m ? 10 : 7}`).join(" "))}
+      ${m ? hatch(Array.from({ length: 10 }, (_, i) => `M ${112 + i * 14} ${y1 - 2} l 6 -10`).join(" ")) : `<path d="M -60 ${y1-14} C 60 ${y1-10} 180 ${y1-13} 310 ${y1-15} L 310 ${y1+10} L -60 ${y1+10} Z" style="fill:${sk(3)}" opacity=".3"/>`}
       <path d="M 110 ${y1-(m?22:16)} C 150 ${y1-(m?18:13)} 200 ${y1-(m?20:15)} 240 ${y1-(m?24:18)}" fill="none" stroke="${LINE}" stroke-width="1.2" stroke-linecap="round" opacity=".45"/>
-      <g style="fill:${sk(3)}" opacity=".4">${[[128,.42],[162,.58],[196,.36],[146,.7],[182,.5]].map(([x,f])=>`<circle cx="${x}" cy="${(y0+(y1-y0)*f).toFixed(1)}" r=".9"/>`).join("")}</g>
+      ${m ? `<g style="fill:${sk(3)}" opacity=".4">${[[128,.42],[162,.58],[196,.36],[146,.7],[182,.5]].map(([x,f])=>`<circle cx="${x}" cy="${(y0+(y1-y0)*f).toFixed(1)}" r=".9"/>`).join("")}</g>` : ""}
       <g transform="translate(${dx} 0)"><path d="M -60 ${y0} C -24 ${y0+10} -6 ${mid} -14 ${y1} L -60 ${y1} Z" style="fill:${sk(3)}"/>
-      ${hatch(`M -8 ${y1-6} l 7 -9 M 2 ${y1-4} l 7 -9 M 12 ${y1-3} l 7 -9`)}</g>
+      ${m ? hatch(`M -8 ${y1-6} l 7 -9 M 2 ${y1-4} l 7 -9 M 12 ${y1-3} l 7 -9`) : ""}</g>
       ${m ? `<path d="M 126 ${y0+18} l 6 -3 M 140 ${y0+28} l 6 -3 M 152 ${y0+16} l 6 -3" fill="none" style="stroke:${sk(3)}" stroke-width="1.3" stroke-linecap="round"/>` : ""}`)}
     ${m ? "" : `<path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="${LINE}" stroke-width="6" stroke-linecap="round" pointer-events="none"/>
     <path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="#e0b44e" stroke-width="3" stroke-linecap="round" pointer-events="none"/>`}

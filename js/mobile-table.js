@@ -215,6 +215,10 @@ function paceMs() {
 }
 const calm = () => !!(window.__pdxCalm || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches));
 function frame(v, animate) {
+  // THE PAGE IS SHOWN BEFORE IT IS MEASURED: its own scene element is displayed (html
+  // [data-pdx-view], mobile.css) before its box is read. Measured while still hidden, the chart
+  // and the records fell back to guessed boxes and came up black or shifted until a second tap.
+  D.dataset.pdxView = v;
   const f = frameRect(v);
   S = Math.min(stage.w / f.w, stage.h / f.h);
   O.x = stage.x + (stage.w - f.w * S) / 2 - f.x * S;
@@ -232,7 +236,21 @@ function frame(v, animate) {
   D.style.setProperty("--pdx-s", S.toFixed(5));
   D.style.setProperty("--pdx-ox", O.x.toFixed(2) + "px");
   D.style.setProperty("--pdx-oy", O.y.toFixed(2) + "px");
-  D.dataset.pdxView = v;
+  frameSig = v + ":" + [f.x, f.y, f.w, f.h].map((n) => Math.round(n)).join(",");
+}
+// a page whose own drawing settles a beat later (fonts, the phone chart's relayout, a resize)
+// is framed again as soon as it changes: checked for the first half second, then on resize
+let frameSig = "", reframeT = 0;
+function reframeSoon() {
+  clearTimeout(reframeT);
+  let n = 0;
+  const tick = () => {
+    if (!on()) return;
+    const f = frameRect(view), sig = view + ":" + [f.x, f.y, f.w, f.h].map((x) => Math.round(x)).join(",");
+    if (sig !== frameSig) { layout(); frame(view, false); }
+    if (++n < 8) reframeT = setTimeout(tick, 60);
+  };
+  reframeT = setTimeout(tick, 0);
 }
 
 /* ── turning the head: the view changes, the real camera follows its scene ── */
@@ -301,6 +319,7 @@ function land(v) {
   closeFiles();
   if (pingView === v) pingView = null;
   frame(v, false);
+  reframeSoon();
   paintRail();
   requestAnimationFrame(pile);
 }
@@ -750,7 +769,10 @@ function start() {
   const sg = document.getElementById("screen-game");
   if (sg) obs.observe(sg, { attributes: true, attributeFilter: ["class"] });
   const cam = document.getElementById("cam");
-  addEventListener("resize", () => { if (on()) { layout(); frame(view, false); pile(); } });
+  const onResize = () => { if (on()) { layout(); frame(view, false); pile(); reframeSoon(); } };
+  addEventListener("resize", onResize);
+  if (window.visualViewport) visualViewport.addEventListener("resize", onResize);
+  addEventListener("orientationchange", () => setTimeout(onResize, 60));
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
   const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintCol(); paintAction(); paintLife(); paintTutLink(); } }); };

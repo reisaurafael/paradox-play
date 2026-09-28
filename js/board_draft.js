@@ -97,26 +97,34 @@
     // turning it visible, or the phone's page re-framing it (mobile-table.js --pdx-s), did
     // not lay them out again. On a phone, whenever the chart on show or its framing
     // changes, the visible chart is laid out once more (display off and on, one frame).
-    let relT = null;
+    // It runs SYNCHRONOUSLY, from the observers' microtask, so the words are laid out before
+    // the next frame is painted (a page is never revealed with the stale text first).
     function relayout() {
-      clearTimeout(relT);
-      relT = setTimeout(() => {
-        const rail = document.getElementById("timeline-rail"); if (!rail || !on()) return;
-        const cp = rail.querySelector(rail.classList.contains("skin-sing") ? ":scope > .cplot-sing" : rail.classList.contains("skin-ori") ? ":scope > .cplot-ori" : ":scope > .cplot");
-        const svg = cp && cp.querySelector(":scope > svg"); if (!svg) return;
-        svg.style.display = "none"; void svg.getBoundingClientRect(); svg.style.display = "";
-      }, 80);
+      const rail = document.getElementById("timeline-rail"); if (!rail || !on()) return;
+      const cp = rail.querySelector(rail.classList.contains("skin-sing") ? ":scope > .cplot-sing" : rail.classList.contains("skin-ori") ? ":scope > .cplot-ori" : ":scope > .cplot");
+      const svg = cp && cp.querySelector(":scope > svg"); if (!svg) return;
+      svg.style.display = "none"; void svg.getBoundingClientRect(); svg.style.display = "";
     }
+    // a board that re-composed its chart (its shape follows the stage) tells the page to frame
+    // it again: mobile-table.js reframes on resize, the boards find nothing to redo
+    let kickT = null;
+    function remounted() { relayout(); clearTimeout(kickT); kickT = setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (e) {} }, 0); }
     function watch() {
       const rail = document.getElementById("timeline-rail"); if (!rail || !on()) return false;
       new MutationObserver(relayout).observe(rail, { attributes: true, attributeFilter: ["class"] });
-      let lastS = "";
-      new MutationObserver(() => { const s2 = D.style.getPropertyValue("--pdx-s"); if (s2 !== lastS) { lastS = s2; relayout(); } })
-        .observe(D, { attributes: true, attributeFilter: ["style"] });
+      let lastS = "", lastCols = "";
+      new MutationObserver(() => {
+        const s2 = D.style.getPropertyValue("--pdx-s");
+        if (s2 !== lastS) { lastS = s2; relayout(); }
+        // HELA's column or the rail changed width: the chart page changed shape, so the
+        // boards re-compose to it (their resize handlers compare the shape and redo it)
+        const cols = D.style.getPropertyValue("--pdx-colw") + "|" + D.style.getPropertyValue("--pdx-railw");
+        if (cols !== lastCols) { const first = !lastCols; lastCols = cols; if (!first) { clearTimeout(kickT); kickT = setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (e) {} }, 0); } }
+      }).observe(D, { attributes: true, attributeFilter: ["style"] });
       return true;
     }
     if (!watch()) document.addEventListener("DOMContentLoaded", watch, { once: true });
-    return { on, dims, layout, relayout, H: HP };
+    return { on, dims, layout, relayout, remounted, H: HP };
   })();
 
   /* ── THE SHEET RUNS ON (shared by all three charts; app.css THE CHART SHEET GROWS) ──
@@ -405,6 +413,38 @@
       }
       if (box) for (const p of pts) if (!p.fixed) { p.x = cl(p.x, box[0] + p.r, box[2] - p.r); p.y = cl(p.y, box[1] + p.r, box[3] - p.r); }
       if (!moved) break;
+    }
+    return pts;
+  };
+
+  /* ── THE NUMERALS STAY READABLE UNDER THE PIECES (shared by all three charts) ──
+     At a match's start every piece stands on XXX, in the chart's top corner: the frame
+     clamped the berths down and their name tags hung over XXX's numeral, and pushed aside
+     they landed on XXIX's. After the fan, each piece keeps its berth if its body and tag
+     (below = how far the tag hangs under the berth) touch no century's plate and no piece
+     already placed; otherwise it takes the nearest free spot on rings round its own
+     century (its leash still ties it home). plates = [[x0, y0, x1, y1], ...]; fixed points
+     (the Merchant) are obstacles too. */
+  window.__pdxPlacePieces = window.__pdxPlacePieces || function (pts, node, plates, box, below) {
+    const pad = 3, placed = [];
+    const rectOf = (x, y, r) => [x - r, y - r, x + r, y + below];
+    const clash = (q) => plates.some((P) => q[0] < P[2] + pad && q[2] > P[0] - pad && q[1] < P[3] + pad && q[3] > P[1] - pad)
+      || placed.some((P) => q[0] < P[2] + 2 && q[2] > P[0] - 2 && q[1] < P[3] + 2 && q[3] > P[1] - 2);
+    const inBox = (x, y, r) => !box || (x - r >= box[0] && x + r <= box[2] && y - r >= box[1] && y + below <= box[3] + 12);
+    for (const p of pts) if (p.fixed) placed.push([p.x - p.r, p.y - p.r, p.x + p.r, p.y + p.r]);
+    for (const p of pts) {
+      if (p.fixed) continue;
+      let best = null;
+      if (inBox(p.x, p.y, p.r) && !clash(rectOf(p.x, p.y, p.r))) best = [p.x, p.y];
+      for (let R = 26; !best && R <= 150; R += 8) {
+        for (let k = 0; k < 24 && !best; k++) {
+          const a = -Math.PI / 2 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.PI / 12;   // above first, then round both ways
+          const x = node[0] + Math.cos(a) * R, y = node[1] + Math.sin(a) * R * .8;
+          if (inBox(x, y, p.r) && !clash(rectOf(x, y, p.r))) best = [x, y];
+        }
+      }
+      if (best) { p.x = best[0]; p.y = best[1]; }
+      placed.push(rectOf(p.x, p.y, p.r));
     }
     return pts;
   };
@@ -752,27 +792,57 @@
       POS[c] = [x, Math.round(SEAMS[st.seam](x))]; META[c] = BANDS[st.seam]; LBL[c] = POS[c];
     }
   }
+  // a tab rides its sheet's top tear: clear of the straits on that tear (they sit ON it),
+  // between the islands of the two seas it parts, off the top-right corner where the
+  // voyages start (XXX), and (live, phoneTabsDodge) clear of the Merchant and cost tags
+  function tabBestX(i, hw, obst) {
+    const yOf = (x2) => (i === 0 ? 22 : BANDS[i].top(x2) + 1);
+    let x = Math.round(W / 2), best = -1e9;
+    tabBestX.score = -1e9;
+    for (let x2 = hw + 16; x2 <= W - hw - 16; x2 += 6) {
+      let sc = 200;
+      for (let c = 1; c <= 30; c++) {
+        const k = PL.rowOf[c], dx = Math.abs(x2 - POS[c][0]);
+        if (k === i - .5) sc = Math.min(sc, dx - hw - 52);
+        else if (k === i || k === i - 1) sc = Math.min(sc, (dx - hw - 14) * .5 + 30);
+      }
+      if (i <= 1) sc = Math.min(sc, Math.abs(x2 - POS[30][0]) - hw - 70);
+      if (obst) { const y2 = yOf(x2); for (const o of obst) if (y2 + 13 > o[1] && y2 - 13 < o[3]) sc = Math.min(sc, Math.max(o[0] - (x2 + hw), (x2 - hw) - o[2]) - 10); }
+      sc -= x2 * .002;
+      if (sc > best) { best = sc; x = x2; }
+    }
+    tabBestX.score = best;
+    return x;
+  }
+  let LIVEOBST = [];
+  // on a phone the sea tabs step aside, along their tear, from the Merchant and from a
+  // voyage's cost tags (the tabs are base art; they move by an offset on their wrapper)
+  function phoneTabsDodge() {
+    if (!PHONE() || !PL) return;
+    BANDS.forEach((m, i) => {
+      const el = document.querySelector(`#timeline-rail .cplot .sea-tab[data-band="${m.id}"]`); if (!el) return;
+      const T = ANCH.tab[m.id]; if (!T) return;
+      const [x, y] = T.spot, hw = T.hw;
+      const hit = LIVEOBST.some(o => x + hw + 10 > o[0] && x - hw - 10 < o[2] && y + 13 > o[1] && y - 13 < o[3]);
+      let dx = 0, dy = 0, dim = false;
+      if (hit) {
+        const nx = tabBestX(i, hw, LIVEOBST);
+        // a clear spot along the tear: step there; none (the tear is crowded, every stretch
+        // would cover an island or a tag): stay put and fade under what is on top of it
+        if (tabBestX.score >= 0) { dx = nx - x; dy = Math.round(i === 0 ? 22 : m.top(nx) + 1) - y; } else dim = true;
+      }
+      const tr = dx || dy ? `translate(${dx} ${dy})` : "";
+      if ((el.getAttribute("transform") || "") !== tr) { if (tr) el.setAttribute("transform", tr); else el.removeAttribute("transform"); }
+      el.style.opacity = dim ? ".3" : "";
+    });
+  }
   function phoneAnchors() {
     ANCH.taken.length = 0; ANCH.obst.length = 0;
     ANCH.key = [W - 196, 24];
     ANCH.tab = {};
     BANDS.forEach((m, i) => {
       const label = PSHORT[m.id], hw = label.length * 5.2 + 10;
-      // a tab rides its sheet's top tear: clear of the straits on that tear (they sit ON it),
-      // between the islands of the two seas it parts, and off the top-right corner where
-      // the voyages start (XXX)
-      let x = Math.round(W / 2), best = -1e9;
-      for (let x2 = hw + 16; x2 <= W - hw - 16; x2 += 6) {
-        let sc = 200;
-        for (let c = 1; c <= 30; c++) {
-          const k = PL.rowOf[c], dx = Math.abs(x2 - POS[c][0]);
-          if (k === i - .5) sc = Math.min(sc, dx - hw - 52);
-          else if (k === i || k === i - 1) sc = Math.min(sc, (dx - hw - 14) * .5 + 30);
-        }
-        if (i <= 1) sc = Math.min(sc, Math.abs(x2 - POS[30][0]) - hw - 70);
-        sc -= x2 * .002;
-        if (sc > best) { best = sc; x = x2; }
-      }
+      const x = tabBestX(i, hw, null);
       const y = Math.round(i === 0 ? 22 : m.top(x) + 1);
       ANCH.tab[m.id] = { spot: [x, y], label, hw };
       addObst(x - hw - 8, y - 12, hw * 2 + 16, 24);
@@ -1317,10 +1387,10 @@
     BANDS.forEach((m, i) => {
       const { spot: [x, y], label, hw } = ANCH.tab[m.id];
       const tilt = ((rnd(i, 5) - .5) * 2.4).toFixed(1);
-      g += `<g transform="translate(${x} ${y}) rotate(${tilt})">
+      g += `<g class="sea-tab" data-band="${m.id}"><g transform="translate(${x} ${y}) rotate(${tilt})">
         <rect x="${-hw - 8}" y="-11" width="${hw * 2 + 16}" height="22" fill="${m.paper[0]}" stroke="${m.ink}" stroke-width="1.2" opacity=".96"/>
         <rect x="${-hw - 5}" y="-8" width="${hw * 2 + 10}" height="16" fill="none" stroke="${m.ink}" stroke-width=".5" opacity=".5"/>
-        <text y="${PHONE() ? 5 : 4}" text-anchor="middle" font-family="${m.font}" font-weight="bold" font-size="${PHONE() ? 14 : 11}" letter-spacing="${PHONE() ? .6 : 1.2}" fill="${m.ink}">${label}</text></g>`;
+        <text y="${PHONE() ? 5 : 4}" text-anchor="middle" font-family="${m.font}" font-weight="bold" font-size="${PHONE() ? 14 : 11}" letter-spacing="${PHONE() ? .6 : 1.2}" fill="${m.ink}">${label}</text></g></g>`;
     });
     return g;
   }
@@ -1535,6 +1605,7 @@
 
   /* ═══ LIVE LAYER ═══ */
   function liveLayer() {
+    LIVEOBST = [];
     if (!app || !app.view) return "";
     const view = app.view, self = selfT(), h = view.hour;
     let g = "";
@@ -1650,6 +1721,23 @@
       const mcNow = R.merchantShown != null ? R.merchantShown : view.merchant_century;
       const obst = POS[mcNow] ? [{ x: POS[mcNow][0], y: POS[mcNow][1] - 47 + 10, r: 28, fixed: true }] : [];
       window.__pdxFan(berth.concat(obst), 5, [30, 40, W - 34, H - 26]);   // clear of the torn frame and of the Merchant
+      {   // ...and clear of every island's numeral (the pieces' tags hang ~37 under the berth)
+        const plates = [];
+        for (let c2 = 1; c2 <= 30; c2++) {
+          if (!POS[c2] || Math.hypot(POS[c2][0] - x, POS[c2][1] - y) > 190) continue;
+          const fs = PHONE() ? (rom(c2).length <= 2 ? 22 : rom(c2).length <= 4 ? 19 : 16.5) : rom(c2).length <= 2 ? 18 : rom(c2).length <= 4 ? 14 : 11.5;
+          const hw = rom(c2).length * fs * .34 + 3, ny = POS[c2][1] + fs * .36;
+          plates.push([POS[c2][0] - hw, ny - fs * .82, POS[c2][0] + hw, ny + 3]);
+        }
+        if (mode && mode.kind === "travel") for (let c2 = 1; c2 <= 30; c2++) {   // and off a voyage's cost tags
+          const d = Math.abs(c2 - mode.self); if (d === 0 || d > mode.max || !POS[c2]) continue;
+          const k = PHONE() ? 1.5 : 1, ix = POS[c2][0], iy = POS[c2][1]; let ty = iy - islR(c2) * .74 - 24;
+          if (PHONE() && ty < 30) ty = iy + islR(c2) * .74 + 26;
+          plates.push([ix - 24 * k, ty - 12 * k, ix + 24 * k, ty + 8 * k]);
+        }
+        if (PHONE()) for (const id in ANCH.tab) { const T = ANCH.tab[id]; plates.push([T.spot[0] - T.hw - 8, T.spot[1] - 11, T.spot[0] + T.hw + 8, T.spot[1] + 11]); }
+        window.__pdxPlacePieces(berth.concat(obst), [x, y], plates, [30, 40, W - 34, H - 26], 37);
+      }
       const pcPos = R.pcPos || (R.pcPos = {});
       const chase = view.merchant_plan && view.merchant_plan.target_seat;
       ts.forEach((t, i) => {
@@ -1751,6 +1839,7 @@
     const mc = R.merchantShown != null ? R.merchantShown : view.merchant_century;
     if (POS[mc]) {
       const [x, y] = POS[mc];
+      if (PHONE()) LIVEOBST.push([x - 36, y - 80, x + 36, y - 12]);   // his hull and his MERCHANT tag
       const dice = view.merchant_movement_dice || 1;
       const dir = R.merchantLast ? Math.sign((R.merchantLast.to || mc) - (R.merchantLast.from || mc)) || 1 : 1;
       // the sail wears one RED STRIPE per movement die (1..3), speed you can read
@@ -1879,6 +1968,7 @@
     const col = kind === "free" ? "#1d6b52" : kind === "risk" ? "#c0392b" : "#8a6215";
     const label = kind === "free" ? "free" : String(cost) + (kind === "risk" ? "!" : "");
     const w2 = label.length * 6.8 + (kind === "free" ? 14 : 26);
+    if (PHONE()) LIVEOBST.push([x - w2 * .75, ty - 16, x + w2 * .75, ty + 12]);
     return `<g class="sea-cost"${PHONE() ? ` transform="translate(${x} ${ty}) scale(1.5) translate(${-x} ${-ty})"` : ""}>
       <rect x="${x - w2 / 2}" y="${ty - 11}" width="${w2}" height="18" rx="3" fill="rgba(255,246,220,.95)" stroke="${col}" stroke-width="1.4"/>
       ${kind === "free" ? "" : `<path d="${BOLT}" transform="translate(${x - w2 / 2 + 9} ${ty - 7})" fill="${col}"/>`}
@@ -2389,7 +2479,7 @@
     // and tile raster of the chart three times a second on a table where nothing moved.
     const liveHTML = liveLayer() + highlights();
     const liveSame = !force && liveG.__pdxHTML === liveHTML;
-    if (!liveSame) { liveG.innerHTML = liveHTML; liveG.__pdxHTML = liveHTML; }
+    if (!liveSame) { liveG.innerHTML = liveHTML; liveG.__pdxHTML = liveHTML; phoneTabsDodge(); }
     if (!liveSame && R.ordFlip && R.ordFlip.prev && !REDUCED) {   // the slate re-orders with a slide
       const { prev, next } = R.ordFlip;
       liveG.querySelectorAll("[data-ordrow]").forEach(row => {
@@ -2446,7 +2536,7 @@
       // the chart FILLS its frame: derive W from the rail's real aspect (no side void)
       const rb = rail.getBoundingClientRect();
       const bw = rb.width - 6, bh = rb.height - 74;   // .cplot insets (74px top, 6px left)
-      if (bw < 60 || bh < 60) return false;            // rail not laid out yet, retry
+      if (!PHONE() && (bw < 60 || bh < 60)) return false;   // rail not laid out yet, retry (a phone composes from the stage, built ahead while its page is hidden)
       if (PHONE()) { const d = PH.dims(); W = d.W; H = d.H; } else W = Math.max(700, Math.min(1200, Math.round(H * bw / bh)));
       baseCache = baseMap();
       if (baseCache.violations.length) console.warn("SEA AUDIT VIOLATIONS:", baseCache.violations);
@@ -2602,7 +2692,7 @@
       const want = PHONE() ? PH.dims().W : Math.max(700, Math.min(1200, Math.round(H * box.width / box.height)));
       if (Math.abs(want - W) < 12) return;   // the chart must FILL its frame, tiny drifts only
       cp.remove(); baseCache = null; liveG = null;
-      if (mount()) { rehome(); renderNow(); }
+      if (mount()) { rehome(); renderNow(); if (PHONE()) PH.remounted(); }
     }, 350);
   };
   window.addEventListener("resize", seaRelayout);

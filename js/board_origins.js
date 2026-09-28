@@ -393,10 +393,10 @@
      his fire on the sacred cross, and the three receptor-churches in the kingdoms they
      serve. Bigger castles and plates for a finger, fewer ornaments (no rose, no title
      cartouche, no rubrics), the same vellum, ink and gold. */
-  let PL=null; const PHB={};
+  let PL=null; const PHB={}; let PLNAMES=[];   // the kingdoms' name plates (the pieces keep off them)
   const PNAME={tim:"LAST DAWN",con:"CROWNLANDS",mod:"CHARTERED MARCHES",lma:"ABBEYLANDS",hma:"HIGH MARCHES",ant:"DRAGON WASTES"};
   function phoneLayout(){
-    PL=PH.layout(W,H,{yzX:.745,yzDy:-2});
+    PL=PH.layout(W,H,{yzX:.745,yzDy:-2}); PLNAMES=[];
     for(const era in CONSTS){ for(const c in CONSTS[era].stars){ META[+c]=era; } }
     for(let c=1;c<=30;c++) POS[c]=PL.pos[c];
     SUN=PL.yz; LIGHT=[Math.round(W/2),22];
@@ -414,6 +414,7 @@
     const b=PL.band(r), col=HUE[era], txt=PNAME[era], w=txt.length*10.6+26;
     const gs=PL.gaps(r,30,"top"), g=gs.find(q=>q[1]-q[0]>=w)||gs[0]||[20,20+w];
     const x=Math.round(Math.max(26, Math.min(W-26-w, Math.max(g[0], Math.min(g[1]-w, (g[0]+g[1])/2-w/2))))), y=Math.round(b.top+6);
+    PLNAMES.push([x-4, y-9, x-4+w, y+10]);
     // (inside a positioned group: bare absolutely placed text in the base layer was left unpainted by Chromium after a re-raster)
     return `<g data-tip="${esc(CONSTS[era].mean)}" transform="translate(${x} ${y})"><rect x="-4" y="-9" width="${w.toFixed(0)}" height="19" rx="3" fill="#efe3c2" stroke="${shd(col,0.6)}" stroke-width="1.1" opacity=".96"/><g class="cm-pennant" transform="translate(3 7)"><path d="M 0 0 v-13 l9 3.2 l-9 3.2" fill="${col}" stroke="#3a2c12" stroke-width=".8"/></g><text x="15" y="5.5" font-family="Georgia,serif" font-weight="bold" font-size="13.5" letter-spacing=".8" fill="${shd(col,0.55)}">${txt}</text></g>`;
   }
@@ -593,7 +594,9 @@
       // FANNED until the pieces clear each other, inside the chart.
       const PR=t=>(t.is_self?15:12); ts.sort((a,b)=>(a.is_self?1:0)-(b.is_self?1:0));   // mine is drawn last, on top
       const berth=ts.map((t,i)=>{ const [dx,dy]=SLOTS[i%SLOTS.length]; return { x:x+dx*(R0*0.40+10), y:y+dy*(R0*0.40+10), r:PR(t)+4 }; });
-      if(window.__pdxFan) window.__pdxFan(R.mAnchor?berth.concat([{x:R.mAnchor[0],y:R.mAnchor[1],r:24,fixed:true}]):berth,5,[24,34,W-24,H-24]);   // the Merchant is a fixed obstacle
+      const FANS=R.mAnchor?berth.concat([{x:R.mAnchor[0],y:R.mAnchor[1],r:24,fixed:true}]):berth;
+      if(window.__pdxFan) window.__pdxFan(FANS,5,[24,34,W-24,H-24]);   // the Merchant is a fixed obstacle
+      { const PLR=(c2)=>{ const [px,py]=POS[c2], mile=(c2===10||c2===20), SC=(mile?1.28:DUAL[c2]?1.1:1)*(PHONE()?1.2:1.05), L=rom(c2).length; return PHONE()?[px-(L*6.6+5), py+14*SC, px+(L*6.6+5), py+14*SC+21]:[px-(L*4.4+4), py+17*SC, px+(L*4.4+4), py+17*SC+13.5]; }; const plates=[]; for(let c2=1;c2<=30;c2++){ if(POS[c2]&&Math.hypot(POS[c2][0]-x,POS[c2][1]-y)<=190) plates.push(PLR(c2)); } for(const q of (PLNAMES||[])) plates.push(q); { const cand=mode&&mode.kind==="travel"?travelCandidates():null; if(cand) for(const c2 of cand){ if(c2===mode.self||!POS[c2]) continue; const [qx,qy]=POS[c2], k=PHONE()?1.55:1; let ty=qy-(worldR(c2)+16); if(PHONE()&&ty<30) ty=qy+worldR(c2)+34; plates.push([qx-24*k, ty-11*k, qx+24*k, ty+8*k]); } }   /* and off a voyage's cost tags */ if(window.__pdxPlacePieces) window.__pdxPlacePieces(FANS,[x,y],plates,[24,34,W-24,H-24],34); }   // every century's numeral stays readable
       const chase=view.merchant_plan&&view.merchant_plan.target_seat;
       ts.forEach((t,i)=>{ const col=seatColor(t.name); const bx=Math.round(berth[i].x), by=Math.round(berth[i].y); const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=chase===t.name&&view.merchant_century!==t.century;
         const pr=PR(t), pcy=-1; R.pcPos[t.name]=[bx,by+pcy];
@@ -888,7 +891,7 @@
   function mount(){
     const rail=document.getElementById("timeline-rail"); if(!rail) return false;
     if(rail.querySelector(".cplot-ori")) return true;
-    const rb=rail.getBoundingClientRect(); const bw=rb.width-6, bh=rb.height-74; if(bw<60||bh<60) return false;   // the cplot is inset 74px top + 6px left, derive W from the REAL content box so the chart fills it
+    const rb=rail.getBoundingClientRect(); const bw=rb.width-6, bh=rb.height-74; if(!PHONE()&&(bw<60||bh<60)) return false;   /* a phone's chart page keeps the rail display:none until it is shown (mobile.css): its chart is composed from the stage's shape, not the rail's, so it is built ahead, never on the first show */   // the cplot is inset 74px top + 6px left, derive W from the REAL content box so the chart fills it
     if(PHONE()){ const d=PH.dims(); W=d.W; H=d.H; } else W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
     const base=baseMap();
     rail.insertAdjacentHTML("beforeend",`<div class="cplot-ori"><svg class="pc-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cm-base">${base.out}</g><g class="cm-live"></g><g class="cm-fx"></g><g class="cm-top"></g></svg><div class="cm-cmd"></div><div class="cm-legend pdx-ref">${legendHTML()}</div><div class="cm-tip"></div></div>`);
@@ -942,7 +945,7 @@
       <div class="cm-legfoot">- the muster-roll rides at left · hover a station to read it -</div></div>`;
   }
   let rzT=null;
-  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-ori"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()) renderNow(); },350); };
+  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-ori"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()){ renderNow(); if(PHONE()) PH.remounted(); } },350); };
   window.addEventListener("resize",railRelayout);
   if(window.ResizeObserver){ const railEl=document.getElementById("timeline-rail"); if(railEl) new ResizeObserver(railRelayout).observe(railEl); }
 
