@@ -464,9 +464,9 @@
   function phonePlate(c){ const [px,py]=POS[c], SC=((c===10||c===20)?1.28:DUAL[c]?1.1:1)*1.2, L=rom(c).length; return [px-(L*6.6+5), py+14*SC, px+(L*6.6+5), py+14*SC+21]; }
   function phoneBerths(byC,view,mc){
     const nodes={}, obst=[], groups=[];
-    for(let c=1;c<=30;c++) if(POS[c]){ nodes[c]=POS[c]; obst.push(phonePlate(c).concat([undefined,15])); }
+    for(let c=1;c<=30;c++) if(POS[c]){ nodes[c]=POS[c]; obst.push(phonePlate(c).concat([undefined,15,"plate"])); }
     if(SUN){ nodes[0]=SUN; obst.push([SUN[0]-50,SUN[1]-26,SUN[0]+50,SUN[1]+42]); }
-    for(const q of (PLNAMES||[])) obst.push([q[0],q[1],q[2],q[3],undefined,8]);   // a name steps aside (__pdxPhoneNameDodge): covering its resting spot costs little
+    for(const q of (PLNAMES||[])) obst.push([q[0],q[1],q[2],q[3],undefined,12]);   // a name steps aside (__pdxPhoneNameDodge): covering its resting spot costs little
     for(const k in PHB){ const P=PHB[k]; if(P) obst.push([P[0]-16,P[1]-22,P[0]+16,P[1]+14]); }   // the receptor-churches
     if(POS[11]) obst.push([POS[11][0]+11,POS[11][1]-36,POS[11][0]+49,POS[11][1]+4,11]);   // the hidden hospice (its own century may stand on it)
     for(const t of view.travelers){ let k2=0; for(const card of (t.is_self?(t.hand||[]):(t.equipment||[]))){ const c=card.delivery_century; if(c==null||!POS[c]) continue; const [fx,fy]=t.is_self?[POS[c][0],POS[c][1]-worldR(c)*.5]:[POS[c][0]+worldR(c)*.5+(k2++)*5,POS[c][1]-worldR(c)*.4]; obst.push([fx-8,fy-5,fx+8,fy+6,undefined,6]); } }   // the delivery flags: a stack steps aside rather than hide one, if it can
@@ -480,11 +480,11 @@
     // the Merchant stands with his century's group (window.__pdxPhonePlace o.merch): his usual
     // spot beside it first, then the other side, above, and a little smaller beside or above
     let merch=null; if(POS[mc]){ const sd=POS[mc][0]>W*0.82?-1:1, [ux,uy]=haulerAt2(mc), ux0=ux-POS[mc][0], uy0=uy-POS[mc][1];
-      const bK=k=>[-34,(k===1?-28:-(15*k+12))-8,34,17*k], nb=phonePlate(mc)[3]-POS[mc][1]+3, under=k=>nb-bK(k)[1];   /* right under the numeral plate */
-      merch={c:mc,boxK:bK,cands:[[ux0,uy0,1],[ux0,uy0-7,1],[-ux0,uy0,1],[0,-52,1],[sd*50,4,.8],[-sd*50,4,.8],[sd*42,-40,.8],[-sd*42,-40,.8],[0,-46,.8],[sd*54,10,.7],[-sd*54,10,.7],[0,under(.8),.8],[0,under(1),1],[0,under(.7),.7]]}; }
+      const bK=(k,t)=>[Math.min(-22*k,-34+(t||0)),(k===1?-28:-(15*k+12))-8,Math.max(22*k,34+(t||0)),17*k], nb=phonePlate(mc)[3]-POS[mc][1]+3, under=k=>nb-bK(k)[1];   /* right under the numeral plate */
+      merch={c:mc,boxK:bK,partsK:(k,t)=>[[(t||0)-34,(k===1?-28:-(15*k+12))-8,(t||0)+34,(k===1?-28:-(15*k+12))+8],[-22*k,-16*k,22*k,17*k]],cands:[[ux0,uy0,1],[ux0,uy0-7,1],[-ux0,uy0,1],[0,-52,1],[sd*50,4,.8],[-sd*50,4,.8],[sd*42,-40,.8],[-sd*42,-40,.8],[0,-46,.8],[sd*54,10,.7],[-sd*54,10,.7],[0,under(.8),.8],[0,under(1),1],[0,under(.7),.7]]}; }
     const out=window.__pdxPhonePlace({groups,nodes,obst,box:[14,5,W-14,H-12],below:6,merch});
     // what the kingdoms' names step aside from (phoneNames: after the render); what they keep clear of
-    R.phLive=tags.concat(window.__pdxPhoneFootprints(groups,out)); if(out.merch&&merch){ const b=merch.boxK(out.merch[2]); R.phLive.push([out.merch[0]+b[0],out.merch[1]+b[1],out.merch[0]+b[2],out.merch[1]+b[3]]); }
+    R.phLive=tags.concat(window.__pdxPhoneFootprints(groups,out)); if(out.merch&&merch){ const b=merch.boxK(out.merch[2],out.merch[3]); R.phLive.push([out.merch[0]+b[0],out.merch[1]+b[1],out.merch[0]+b[2],out.merch[1]+b[3]]); }
     R.phFixed=obst.filter(q=>q[5]==null||q[5]===15).concat(Object.values(nodes).map(([x,y])=>[x-30,y-60,x+30,y+12]));   /* a name keeps 30 off every century below it, as at rest (PL.gaps) */
     return out;
   }
@@ -584,7 +584,7 @@
     if(POS[mc]){ const [x,y]=POS[mc]; const dice=view.merchant_movement_dice||1; const side=x>W*0.82?-1:1;
       const cargo=(view.market_revealed||[]).slice(0,5).map(c2=>`  ${(c2.display_name||c2.name)}, ${c2.gold_cost!=null?c2.gold_cost+"g":"--"}`).join("\n");
       const tip=`THE PEDDLER'S WAGON: halted at ${rom(mc)}\nwanders ${dice}d3 · barter when near\n${cargo?"WARES FOR SALE:\n"+cargo:"the cart stands bare"}`;
-      const [hx,hy]=PHT0&&PHT0.merch?PHT0.merch:haulerAt2(mc), mk=PHT0&&PHT0.merch?PHT0.merch[2]:1; R.mAnchor=[hx,hy];
+      const [hx,hy]=PHT0&&PHT0.merch?PHT0.merch:haulerAt2(mc), mk=PHT0&&PHT0.merch?PHT0.merch[2]:1, mt=PHT0&&PHT0.merch?PHT0.merch[3]||0:0; R.mAnchor=[hx,hy];
       g+=(window.__pdxPieceDefs?window.__pdxPieceDefs("cm",false):"");
       g+=`<g class="cm-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:40*mk,base:16*mk,dark:false}):""}<g transform="scale(${(side<0?-1.1:1.1)*mk} ${1.1*mk}) translate(-5 -1)"><g class="cm-bob">${window.__pdxOutline(`
         <circle cx="-7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="7" cy="7" r="4" fill="#4a3620" stroke="#241810" stroke-width="1.1"/><circle cx="-7" cy="7" r="1" fill="#241810"/><circle cx="7" cy="7" r="1" fill="#241810"/>
@@ -593,7 +593,7 @@
         <path d="M-6 -9.6 V-1 M0 -11 V-1 M6 -9.6 V-1" stroke="#ecd6a6" stroke-width="1.3" opacity=".85"/>
         <path d="M11 3 q8 -1 10 -7 q1 -3 -2.5 -3 q-1 3.5 -4.5 3.5 q-3 2 -3 6.5 z" fill="#5a4028" stroke="#241810" stroke-width=".8"/><circle cx="18" cy="-4" r=".9" fill="#241810"/>
         ${Array.from({length:Math.min(3,dice)},(_,i)=>`<rect x="${-5+i*4}" y="10.5" width="3.2" height="4" rx="1" fill="#8a6a3a" stroke="#241810" stroke-width=".5"/>`).join("")}
-      `,{gold:true})}</g></g>${window.__pdxMerchTag?window.__pdxMerchTag(mk===1?-28:-Math.round(15*mk+12)):""}</g>`; }
+      `,{gold:true})}</g></g>${window.__pdxMerchTag?(mt?`<g transform="translate(${mt} 0)">`:"")+window.__pdxMerchTag(mk===1?-28:-Math.round(15*mk+12))+(mt?"</g>":""):""}</g>`; }
     // milestone beacons X / XX
     for(const c of [10,20]){ if(!POS[c]) continue; const [x,y]=POS[c]; const claim=view.travelers.filter(t=>c===10?t.scored_century_x:t.scored_century_xx); g+=`<g class="cm-beacon" data-tip="${esc(`the waymark cross at ${rom(c)}, ${claim.length?"claimed by "+claim.map(t=>t.name).join(", "):"unclaimed"} · end an Hour here for +1 CP`)}" transform="translate(${(x-worldR(c)*0.5).toFixed(0)} ${(y+worldR(c)*0.2).toFixed(0)})"><path d="M-3 6 L0 -8 L3 6 Z" fill="#c9a45c" stroke="#e8c05a" stroke-width=".7"/><circle cx="0" cy="-8" r="2.2" fill="#ffe9b0" class="cm-beam"/>${claim.map((t,i)=>`<circle cx="${-3+i*3}" cy="9" r="1.3" fill="${seatColor(t.name)}"/>`).join("")}</g>`; }
     // the Grail Chapel of Corbenic (secret market, XI)
