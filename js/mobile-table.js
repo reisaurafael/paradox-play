@@ -77,6 +77,7 @@ const ICON = {
   machine: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="4" width="22" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="9" y="8" width="14" height="10" rx="1.5" fill="currentColor" opacity=".35"/><rect x="9" y="21" width="4" height="4" rx="1" fill="currentColor"/><rect x="15" y="21" width="4" height="4" rx="1" fill="currentColor"/></svg>`,
   chart: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7l7-3 8 3 7-3v21l-7 3-8-3-7 3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="13" r="2" fill="currentColor"/><circle cx="20" cy="19" r="2" fill="currentColor"/><path d="M12 13l8 6" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2"/></svg>`,
   merchant: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 12l3-6h18l3 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M4 12q3 3 6 0q3 3 6 0q3 3 6 0q3 3 6 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 14v12h18V14" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="13" y="18" width="6" height="8" fill="currentColor" opacity=".4"/></svg>`,
+  secret: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 5h24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M6 5v22c3 0 5-2 6-6 1 4 2 6 4 6s3-2 4-6c1 4 3 6 6 6V5" fill="currentColor" opacity=".3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M16 5v22" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="15" r="4.6" fill="#1a1024" stroke="currentColor" stroke-width="2"/><path d="M16 13.6v3.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
   case: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="10" width="26" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.3"/><path d="M11 10V7h10v3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3 17h26" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="15" width="5" height="4" rx="1" fill="currentColor"/></svg>`,
   records: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="4" width="22" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M5 12h22M5 20h22" stroke="currentColor" stroke-width="2"/><rect x="13" y="7" width="6" height="2.4" rx="1" fill="currentColor"/><rect x="13" y="15" width="6" height="2.4" rx="1" fill="currentColor"/><rect x="13" y="23" width="6" height="2.4" rx="1" fill="currentColor"/></svg>`,
 };
@@ -606,7 +607,10 @@ function roman(n) {
 function actOf(node) {
   if (!node.classList.contains("is-actionable")) return null;
   const c = node.classList;
-  if (c.contains("can-buy")) { const d = cardData(node.dataset.name); return "Buy" + (d && d.gold_cost != null ? ` · ${d.gold_cost} gold` : ""); }
+  if (c.contains("can-buy")) {
+    const d = cardData(node.dataset.name), g = game(), me = g && g._self ? g._self() : null;
+    return "Buy" + (d && d.gold_cost != null ? ` · ${d.gold_cost} gold` : "") + (me ? ` (you have ${me.gold})` : "");
+  }
   if (c.contains("can-renew")) return "Renew this card";
   if (c.contains("can-steal") || document.querySelector("#market-zone.sel-steal")) return "Steal (Wanted)";
   if (document.querySelector("#market-zone.sel-destroy")) return "Destroy";
@@ -761,9 +765,11 @@ function wireRailCapture() {
     if (!on()) return;
     const b = e.target && e.target.closest && e.target.closest("#pdx-mrail button[data-view]");
     if (!b) return;
-    if (b.dataset.view === "merchant" && view === "merchant") return;   // the Secret Market's key (wireSecretKey)
     e.stopPropagation(); e.preventDefault();
     manualAt = performance.now();
+    // the SECOND tap on the Merchant's key, once his page is up, opens the Secret Market (and
+    // back): decided here, in the one handler, from the page already on screen
+    if (b.dataset.view === "merchant" && view === "merchant" && !swapping) { secretOn = !secretOn; if (calm()) land("merchant"); else swapTo("merchant"); return; }
     go(b.dataset.view);
   }, true);
 }
@@ -932,26 +938,25 @@ function paintTicketSlot() {
 /* ══ THE SECRET MARKET: in the Merchant's page his key turns into the Secret Market's; a tap
    frames the curtain (and its card), another tap the shelf again ══ */
 let secretOn = false;
-function wireSecretKey() {
-  window.addEventListener("click", (e) => {
-    if (!on() || view !== "merchant") return;
-    const b = e.target.closest && e.target.closest('#pdx-mrail button[data-view="merchant"]');
-    if (!b) return;
-    e.preventDefault(); e.stopPropagation();
-    secretOn = !secretOn; manualAt = performance.now();
-    swapTo("merchant");
-  }, true);
-}
+function wireSecretKey() {}   // (the Secret Market's key is decided in wireRailCapture)
 function paintSecretKey() {
   if (!rail) return;
   const b = rail.querySelector('button[data-view="merchant"]');
   if (!b) return;
   const inM = view === "merchant";
   if (!inM) secretOn = false;
-  const label = inM ? (secretOn ? "Shelf" : "Secret") : "Merchant";
-  const sp = b.querySelector("span");
-  if (sp && sp.textContent !== label) sp.textContent = label;
-  b.classList.toggle("mr-secret", inM && !secretOn);
+  // in the Merchant's page his key shows the SECRET MARKET's own icon (the curtain and its
+  // lock): a second tap there opens it; inside it, the key shows the Merchant again (the shelf)
+  const mode = !inM ? "merchant" : secretOn ? "shelf" : "secret";
+  if (b.dataset.mode === mode) return;
+  b.dataset.mode = mode;
+  const icon = mode === "secret" ? ICON.secret : ICON.merchant;
+  const label = { merchant: "Merchant", secret: "Secret", shelf: "Shelf" }[mode];
+  const badge = b.querySelector(".mr-ping");
+  b.innerHTML = icon + `<span>${label}</span>`;
+  if (badge) b.appendChild(badge);
+  b.classList.toggle("mr-secret", mode === "secret");
+  b.setAttribute("aria-label", mode === "secret" ? "Open the Secret Market" : mode === "shelf" ? "Back to the Merchant's shelf" : "The Merchant");
 }
 
 /* ══ GOLD at the Merchant ══ */

@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609280601";
-import { roman } from "./util.js?202609280601";
+import { audio } from "./audio.js?202609280610";
+import { roman } from "./util.js?202609280610";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";

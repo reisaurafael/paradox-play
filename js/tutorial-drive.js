@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609280601";
-import { Game } from "./game.js?202609280601";
-import { icon } from "./icons.js?202609280601";
-import { roman } from "./util.js?202609280601";
-import { profile } from "./profile.js?202609280601";
+import { api, Connection } from "./net.js?202609280610";
+import { Game } from "./game.js?202609280610";
+import { icon } from "./icons.js?202609280610";
+import { roman } from "./util.js?202609280610";
+import { profile } from "./profile.js?202609280610";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
