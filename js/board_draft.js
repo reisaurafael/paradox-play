@@ -465,107 +465,69 @@
     // o = { groups: [{ c, node: [x, y], toks: [{ r, self }], spots: [[dx, dy, back]] }],
     //       nodes: { c: [x, y] } (every century and Year Zero), obst: [[x0, y0, x1, y1, c?, cost?]]
     //       (an obstacle tagged with a century does not count for that century's own stack;
-    //       cost: how much covering it weighs, 10 by default, less for small marks; a 7th
-    //       field "tag" or "plate" tells the Merchant it can step aside or must stay read),
-    //       box: [x0, y0, x1, y1], below: how far a token's ribbon hangs under its centre,
-    //       merch: { c, boxK: (k, t) => [x0, y0, x1, y1] (his ship or wagon at size k and his tag,
-    //       which keeps its size, round his anchor), cands: [[dx, dy, k]] (anchors round his
-    //       century, his usual one first) } }
+    //       cost: how much covering it weighs, 10 by default, less for small marks, 100 for
+    //       the Merchant, who is never covered), box: [x0, y0, x1, y1], below: how far a
+    //       token's ribbon hangs under its centre }
     // returns { c: [[x, y, top], ...] } in the order given (top: a back-row token whose
-    // ribbon rides above it, its lower edge being behind the front row), and merch: [x, y, k, t]
-    // (t: how far his tag is pushed sideways, outward, off the stack)
-    // THE MERCHANT IS ONE OF THE GROUP (the owner, 28/09: "the Merchant is being hidden by
-    // the travellers' icons when sharing the same century"): his century's stack and he are
-    // placed together, every one of his spots against every spot of the tokens (slid away
-    // from him), so that no token ever covers him or his tag.
-    const out = {}, placed = [], below = o.below == null ? 6 : o.below, M = o.merch;
+    // ribbon rides above it, its lower edge being behind the front row)
+    const out = {}, placed = [], below = o.below == null ? 6 : o.below;
     const hit = (a, b, pad) => a[0] < b[2] + pad && a[2] > b[0] - pad && a[1] < b[3] + pad && a[3] > b[1] - pad;
     const foot = (x, y, t, top) => { const e = t.self ? 6 : 2.5; return [x - t.r - e, y - t.r - (top ? 9 : e), x + t.r + e, y + t.r + (top ? e : Math.max(e, below))]; };
-    // leaving the chart costs more the further it goes (a few units over the frame is a small fault)
-    const outBox = (f) => { if (!o.box) return 0; const v = Math.max(0, o.box[0] - f[0], f[2] - o.box[2], o.box[1] - f[1], f[3] - o.box[3]); return v > 0 ? 30 + v * 3 : 0; };
-    const nearOther = (c, x, y, nx, ny) => { const dOwn = Math.hypot(x - nx, y - ny); let p = 0; for (const k in o.nodes) { if (+k === c) continue; const P = o.nodes[k]; if (Math.hypot(x - P[0], y - P[1]) < dOwn + 14) p += 30; } return p; };
     // a row's places, the middle one last (mine is last: in the middle, in front)
     const rowOff = (k) => { const a = Array.from({ length: k }, (_, i) => i - (k - 1) / 2); return a.sort((p, q) => Math.abs(q) - Math.abs(p) || p - q); };
     const REAR = [-.5, .5, -1.5, 1.5];   // the back row stands in the front row's gaps
-    const groups = o.groups.slice();
-    if (M && o.nodes[M.c] && !groups.some((G) => G.c === M.c)) groups.push({ c: M.c, node: o.nodes[M.c], toks: [], spots: [[0, 0, -1]] });
-    const size = (G) => G.toks.length + (M && G.c === M.c ? .5 : 0);
-    groups.sort((a, b) => size(b) - size(a));
+    const groups = o.groups.slice().sort((a, b) => b.toks.length - a.toks.length);
     for (const G of groups) {
-      const [nx, ny] = G.node, n = G.toks.length, rM = n ? Math.max(...G.toks.map((t) => t.r)) : 0;
-      const withM = !!(M && G.c === M.c);
-      // (sharing with him, a stack may also stand in two narrower rows, to leave him room)
-      const shapes = withM && n > 1 ? [...new Set([n, 3, 2, 1].filter((k) => k <= n))] : n > 3 ? [3, n] : [n];
-      // his possible spots (none: one empty choice), each with its own cost
-      // (each spot beside his century is also tried with his tag pushed sideways, off the stack)
-      const mC = withM ? M.cands.flatMap((q) => (q[0] && q[3] == null ? [q].concat([18, 30, -18, -30].map((v) => [q[0], q[1], q[2], Math.sign(q[0]) * v])) : [q])) : [];
-      const mOpts = withM ? mC.map(([dx, dy, k, t], mi) => {
-        // his parts (his tag, his ship or wagon) are judged apart: the corner between them is free
-        const ax = nx + dx, ay = ny + dy, bx = M.boxK ? M.boxK(k, t || 0) : M.box.map((v) => v * k), f = [ax + bx[0], ay + bx[1], ax + bx[2], ay + bx[3]];
-        const fs = M.partsK ? M.partsK(k, t || 0).map((r) => [ax + r[0], ay + r[1], ax + r[2], ay + r[3]]) : [f];
-        // he belongs to the century he stands nearest (his box's nearest point, a smaller margin:
-        // right under the numeral he reads as its own)
-        const dBox = (P) => Math.hypot(Math.max(f[0] - P[0], 0, P[0] - f[2]), Math.max(f[1] - P[1], 0, P[1] - f[3]));
-        let pen = mi * .3 + outBox(f), dOwn = dBox([nx, ny]);
-        for (const k2 in o.nodes) if (+k2 !== G.c && dBox(o.nodes[k2]) < dOwn + 8) pen += 30;
-        // (for him, covering less of a thing costs less: a price tag half under him can still
-        // step aside, one right under him cannot)
-        const part = (q, f2) => { const w = Math.min(f2[2], q[2]) - Math.max(f2[0], q[0]), h = Math.min(f2[3], q[3]) - Math.max(f2[1], q[1]); return w > 0 && h > 0 ? w * h / Math.max(1, Math.min((f2[2] - f2[0]) * (f2[3] - f2[1]), (q[2] - q[0]) * (q[3] - q[1]))) : 0; };
-        // (a price that can step aside weighs little for him, a numeral a lot: q[6] "tag" / "plate")
-        const wM = (q) => (q[6] === "tag" ? 6 : q[6] === "plate" ? 30 : q[5] || 10);
-        for (const q of o.obst) if (q[4] !== G.c && fs.some((f2) => hit(f2, q, 1.5))) pen += wM(q) * (.4 + .6 * Math.min(1, Math.max(...fs.map((f2) => part(q, f2)))));
-        for (const q of placed) if (fs.some((f2) => hit(f2, q, 1))) pen += 12;
-        return { at: [ax, ay, k, t || 0], f, fs, pen, dx };
-      }) : [null];
-      let best = null, bestPen = 1e9, bestM = null;
-      const dbg = withM && window.__pdxPlaceDbg ? (window.__pdxPlaceDbg[G.c] = []) : null;
-      for (const mo of mOpts) {
-        const pen0 = bestPen;
-        if (mo && mo.pen >= bestPen) continue;
-        if (!n) { if (mo.pen < bestPen) { bestPen = mo.pen; bestM = mo; best = []; } continue; }
-        // with him beside them, the tokens may also slide away from his side
-        const shifts = mo ? [0, 16, 32, 48].map((v) => (mo.dx > 0 ? -v : mo.dx < 0 ? v : 0)).concat(mo.dx === 0 ? [-24, 24] : []) : [0];
-        G.spots.forEach(([dx0, dy, back], si) => shifts.forEach((sx, shi) => shapes.forEach((perRow, hi) => {
-          const dx = dx0 + sx;
-          // the front row holds the last pieces (mine is last, in its middle); the rest stand
-          // one row behind, drawn first, in its gaps, higher (back -1) or lower (back 1)
-          const front = Math.min(perRow, n), rear = n - front, pos = [];
-          const step = rM * (front > 3 ? 1.3 : 1.7), fo = rowOff(front);
-          for (let i = 0; i < rear; i++) pos.push([nx + dx + REAR[i] * step, ny + dy + (back || -1) * rM * .8, (back || -1) < 0]);
-          for (let i = 0; i < front; i++) pos.push([nx + dx + fo[i] * step, ny + dy, false]);
-          if (o.box) {   // a row that would run off the chart's side slides back in (a short way only)
-            let lo = 1e9, hi2 = -1e9; pos.forEach(([x], i) => { const e = G.toks[i].r + (G.toks[i].self ? 6 : 2.5); lo = Math.min(lo, x - e); hi2 = Math.max(hi2, x + e); });
-            const sh = lo < o.box[0] ? o.box[0] - lo : hi2 > o.box[2] ? o.box[2] - hi2 : 0;
-            if (sh && Math.abs(sh) <= step * 1.6) pos.forEach((p) => { p[0] += sh; });
-          }
-          let pen = (mo ? mo.pen : 0) + si * .02 + shi * .05 + hi * .5;
-          pos.forEach(([x, y, top], i) => {
-            const t = G.toks[i], f = foot(x, y, t, top);
-            pen += outBox(f);
-            for (const q of o.obst) if (q[4] !== G.c && hit(f, q, 1.5)) pen += q[5] || 10;
-            for (const q of placed) if (hit(f, q, 1)) pen += 12;
-            if (mo && mo.fs.some((f2) => hit(f, f2, 2))) pen += 100;   // never over the Merchant or his tag
-            pen += nearOther(G.c, x, y, nx, ny);
-          });
-          if (pen < bestPen) { bestPen = pen; best = pos; bestM = mo; }
-        })));
-        if (dbg) dbg.push([mo.at.map((v) => Math.round(v * 10) / 10), Math.round(mo.pen), bestPen < pen0 ? Math.round(bestPen) : "-"]);
-      }
+      const [nx, ny] = G.node, n = G.toks.length, rM = Math.max(...G.toks.map((t) => t.r));
+      const shapes = n > 3 ? [3, n] : [n];
+      let best = null, bestPen = 1e9;
+      G.spots.forEach(([dx, dy, back], si) => shapes.forEach((perRow, hi) => {
+        // the front row holds the last pieces (mine is last, in its middle); the rest stand
+        // one row behind, drawn first, in its gaps, higher (back -1) or lower (back 1)
+        const front = Math.min(perRow, n), rear = n - front, pos = [];
+        const step = rM * (front > 3 ? 1.3 : 1.7), fo = rowOff(front);
+        for (let i = 0; i < rear; i++) pos.push([nx + dx + REAR[i] * step, ny + dy + (back || -1) * rM * .8, (back || -1) < 0]);
+        for (let i = 0; i < front; i++) pos.push([nx + dx + fo[i] * step, ny + dy, false]);
+        if (o.box) {   // a row that would run off the chart's side slides back in (a short way only)
+          let lo = 1e9, hi2 = -1e9; pos.forEach(([x], i) => { const e = G.toks[i].r + (G.toks[i].self ? 6 : 2.5); lo = Math.min(lo, x - e); hi2 = Math.max(hi2, x + e); });
+          const sh = lo < o.box[0] ? o.box[0] - lo : hi2 > o.box[2] ? o.box[2] - hi2 : 0;
+          if (sh && Math.abs(sh) <= step * 1.6) pos.forEach((p) => { p[0] += sh; });
+        }
+        let pen = si * .02 + hi * .5;
+        pos.forEach(([x, y, top], i) => {
+          const t = G.toks[i], f = foot(x, y, t, top);
+          if (o.box && (f[0] < o.box[0] || f[2] > o.box[2] || f[1] < o.box[1] || f[3] > o.box[3])) pen += 50;
+          for (const q of o.obst) if (q[4] !== G.c && hit(f, q, 1.5)) pen += q[5] || 10;
+          for (const q of placed) if (hit(f, q, 1)) pen += 12;
+          const dOwn = Math.hypot(x - nx, y - ny);
+          for (const k in o.nodes) { if (+k === G.c) continue; const P = o.nodes[k]; if (Math.hypot(x - P[0], y - P[1]) < dOwn + 14) pen += 30; }
+        });
+        if (pen < bestPen) { bestPen = pen; best = pos; }
+      }));
       best.forEach(([x, y, top], i) => placed.push(foot(x, y, G.toks[i], top)));
-      if (bestM) { for (const f2 of bestM.fs) placed.push(f2); out.merch = [Math.round(bestM.at[0]), Math.round(bestM.at[1]), bestM.at[2], bestM.at[3]]; }
-      if (n) out[G.c] = best.map(([x, y, top]) => [Math.round(x), Math.round(y), top]);
+      out[G.c] = best.map(([x, y, top]) => [Math.round(x), Math.round(y), top]);
     }
     return out;
   };
-  // a voyage's cost tag at (x, ty) on a phone slides sideways (up to 60 units) off any of
-  // the boxes given (the Merchant, a chest); b = its half width, up/down = its extent
-  window.__pdxSlideTag = window.__pdxSlideTag || function (x, ty, b, up, down, blocks, W) {
-    const clash = (tx) => blocks.some((o) => tx - b < o[2] + 3 && tx + b > o[0] - 3 && ty - up < o[3] + 3 && ty + down > o[1] - 3);
-    if (clash(x)) for (let d = 6; d <= 60; d += 6) {
-      if (!clash(x + d) && x + d + b < W - 8) return x + d;
-      if (!clash(x - d) && x - d - b > 8) return x - d;
-    }
-    return x;
+  /* THE MERCHANT ON A PHONE (the owner, 28/09: the Merchant sits in the place of his
+     century's number, and a reduced copy of the number stays under him so the player still
+     knows which century it is). His plate takes the numeral plate's place: gold, his own
+     wagon/hauler/carrack on the left, MERCHANT beside it, and the century's number, smaller,
+     hangs under it. The travellers keep their spots round the century, above him; the
+     boards give his box (__pdxPhoneMerchBox) to the placement as an obstacle that is never
+     covered. Drawn round the top centre of the numeral's place. o = { art (his drawing),
+     fit: [cx, cy, h] (its centre and height), num (the roman number), dark } */
+  const MP_W = 100, MP_H = 26, MP_NH = 14;
+  window.__pdxPhoneMerchBox = window.__pdxPhoneMerchBox || function (x, top) { return [x - MP_W / 2 - 1, top, x + MP_W / 2 + 1, top + MP_H + MP_NH + 3]; };
+  window.__pdxPhoneMerchPlate = window.__pdxPhoneMerchPlate || function (o) {
+    const ink = o.dark ? "#05060e" : "#2a1c08", [fx, fy, fh] = o.fit || [0, 0, 20], k = 20 / fh;
+    const L = String(o.num).length, nw = L * 6.6 + 10;
+    return `<rect class="pc-mplate" x="${-MP_W / 2}" y="0" width="${MP_W}" height="${MP_H}" rx="5" fill="#e8c05a" stroke="${ink}" stroke-width="1.6"/>`
+      + `<rect x="${-MP_W / 2 + 2.5}" y="2.5" width="${MP_W - 5}" height="${MP_H - 5}" rx="3.5" fill="none" stroke="#fff3c4" stroke-width=".9" opacity=".8"/>`
+      + `<g transform="translate(${(-MP_W / 2 + 17 - fx * k).toFixed(2)} ${(MP_H / 2 - fy * k).toFixed(2)}) scale(${k.toFixed(3)})">${window.__pdxOutline(o.art, { gold: true })}</g>`
+      + `<g class="pc-tag pc-tag-merch" pointer-events="none"><text x="${-MP_W / 2 + 32}" y="${MP_H / 2 + 3.8}" font-family="Georgia,serif" font-weight="bold" font-size="9.5" letter-spacing=".6" fill="#1c1206">MERCHANT</text></g>`
+      + `<g class="pc-mnum" transform="translate(0 ${MP_H + 1})"><rect x="${(-nw / 2).toFixed(1)}" y="0" width="${nw.toFixed(1)}" height="${MP_NH}" rx="3" fill="${o.dark ? "rgba(7,11,26,.95)" : "#f3e6c2"}" stroke="${ink}" stroke-width="1.1"/>`
+      + `<text y="${MP_NH - 3.4}" text-anchor="middle" font-family="${o.dark ? "'Courier New',monospace" : "Georgia,serif"}" font-weight="bold" font-size="11" fill="${o.dark ? "#e9f1ff" : "#2c2010"}">${o.num}</text></g>`;
   };
   // the boxes the placed tokens cover (for the names and tabs that step aside from them)
   window.__pdxPhoneFootprints = window.__pdxPhoneFootprints || function (groups, out) {
@@ -590,7 +552,7 @@
         let best = null;
         // along its band edge, nearest first; a few units lower into its band if need be;
         // printed a little smaller if the band is that crowded
-        seek: for (const kk of [1, .8]) for (let d = 0; d < W; d += 6) for (const sgn of d ? [1, -1] : [1]) for (const v of [0, 5, 10]) {
+        seek: for (const kk of [1, .8, .7]) for (let d = 0; d < W; d += 6) for (const sgn of d ? [1, -1] : [1]) for (const v of [0, 5, 10]) {
           const X = x + sgn * d, Y = y + v, q = [X + (r[0] - x) * kk, Y + (r[1] - y) * kk, X + (r[2] - x) * kk, Y + (r[3] - y) * kk];
           if (q[0] < 14 || q[2] > W - 14) continue;
           if (!hitAny(q, live, 3) && !hitAny(q, fixed, 0)) { best = [sgn * d, v, kk]; break seek; }
@@ -1813,38 +1775,21 @@
      step to the shore; where the chart's edge or a tag leaves no room there (the top row,
      the Merchant's own port) it hangs under the numeral or beside it. */
   const SEA_TR = (t, n) => (n >= 6 ? (t.is_self ? 15 : 12.5) : n >= 4 ? (t.is_self ? 17 : 14) : (t.is_self ? 20 : 17));   // a crowd of four or more stands smaller
-  // where the Merchant's carrack rides for a century: above its island; on a phone's first
-  // row there is no sea above the island for his hull and tag, so he rides beside it, inland
-  // (beside: on the side whose neighbouring islands hold no travellers and no voyage tag)
+  // where the Merchant's carrack rides for a century: above its island on the desk; on a
+  // phone he takes the numeral's place (__pdxPhoneMerchPlate: anchor = the numeral's top centre)
   function seaMerchAt(c) {
     const [x, y] = POS[c];
-    if (!(PHONE() && y - 47 - 30 < 8)) return [x, y - 47];
-    const v = app && app.view, busy = new Set();
-    if (v) for (const t of v.travelers) busy.add(R.shown[t.name] != null ? R.shown[t.name] : t.century);
-    if (mode && mode.kind === "travel") for (let k = 1; k <= 30; k++) { const d = Math.abs(k - mode.self); if (d && d <= mode.max) busy.add(k); }
-    let best = null, bestS = 1e9;
-    for (const sd of [1, -1]) {
-      const ax = x + sd * 54; if (ax < 40 || ax > W - 40) continue;
-      let sc = sd === (x > W * .8 ? -1 : 1) ? 0 : .5;
-      for (let k = 1; k <= 30; k++) if (k !== c && POS[k] && busy.has(k) && Math.abs(POS[k][0] - ax) < 80 && Math.abs(POS[k][1] - y) < 60) sc += 2;
-      if (sc < bestS) { bestS = sc; best = [ax, y + 6]; }   // low enough that his tag clears the first sea's tab
-    }
-    return best || [x, y - 47];
+    return PHONE() ? [x, Math.round(seaNumPlate(c)[1])] : [x, y - 47];
   }
-  // his MERCHANT tag rides above his hull at its own size, whatever the hull's size k
-  const seaMerchTagY = (k) => (k === 1 ? -22 : -Math.round(8 * k + 14));
-  const seaMerchBoxK = (k, t) => [Math.min(-30 * k, -36 + (t || 0)), seaMerchTagY(k) - 8, Math.max(30 * k, 36 + (t || 0)), 35 * k];
-  const seaMerchPartsK = (k, t) => [[(t || 0) - 36, seaMerchTagY(k) - 8, (t || 0) + 36, seaMerchTagY(k) + 8], [-30 * k, -10 * k, 30 * k, 35 * k]];
-  // his hull and tag where he is drawn: on a phone where the placement put him
-  const seaMerchParts = (c) => { const P = PHONE() && R.phMerch ? R.phMerch : null, [ax, ay] = P || seaMerchAt(c); return seaMerchPartsK(P ? P[2] : 1, P ? P[3] : 0).map(b => [ax + b[0], ay + b[1], ax + b[2], ay + b[3]]); };
-  const seaMerchBox = (c) => { const P = PHONE() && R.phMerch ? R.phMerch : null, [ax, ay] = P || seaMerchAt(c), b = seaMerchBoxK(P ? P[2] : 1, P ? P[3] : 0); return [ax + b[0], ay + b[1], ax + b[2], ay + b[3]]; };
+  // his hull and tag (desk), his plate and the small number under it (phone)
+  const seaMerchBox = (c) => { const [ax, ay] = seaMerchAt(c); return PHONE() ? window.__pdxPhoneMerchBox(ax, ay) : [ax - 36, ay - 33, ax + 36, ay + 35]; };
   function seaNumPlate(c) {   // the numeral's box on the island (phone sizes)
     const L = rom(c).length, fs = L <= 2 ? 22 : L <= 4 ? 19 : 16.5, hw = L * fs * .34 + 3, ny = POS[c][1] + fs * .36;
     return [POS[c][0] - hw, ny - fs * .82, POS[c][0] + hw, ny + 3];
   }
   function seaPhoneBerths(byC, view) {
     const nodes = {}, obst = [], groups = [];
-    for (let c = 1; c <= 30; c++) if (POS[c]) { nodes[c] = POS[c]; obst.push(seaNumPlate(c).concat([undefined, 15, "plate"])); }
+    for (let c = 1; c <= 30; c++) if (POS[c]) { nodes[c] = POS[c]; obst.push(seaNumPlate(c)); }
     if (ANCH.well) { nodes[0] = ANCH.well; obst.push([ANCH.well[0] - 30, ANCH.well[1] - 26, ANCH.well[0] + 30, ANCH.well[1] + 46]); }
     const tagBoxes = [];
     if (mode && mode.kind === "travel") for (let c = 1; c <= 30; c++) {   // a voyage's cost tags (costTag)
@@ -1853,11 +1798,12 @@
       const [ix, ty] = seaCostSpot(c);
       tagBoxes.push([ix - 36, ty - 17, ix + 36, ty + 13]);
     }
-    for (const q of tagBoxes) obst.push([q[0], q[1], q[2], q[3], undefined, 25, "tag"]);   // a price is never hidden
-    for (const id in ANCH.tab) { const T = ANCH.tab[id]; obst.push([T.spot[0] - T.hw - 6, T.spot[1] - 11, T.spot[0] + T.hw + 6, T.spot[1] + 11, undefined, 8]); }   // a tab steps aside (phoneTabsDodge)
+    for (const q of tagBoxes) obst.push(q.concat([undefined, 25]));   // a price is never hidden
+    for (const id in ANCH.tab) { const T = ANCH.tab[id]; obst.push([T.spot[0] - T.hw - 6, T.spot[1] - 11, T.spot[0] + T.hw + 6, T.spot[1] + 11]); }
     for (const k in (ANCH.post || {})) { const P = ANCH.post[k]; if (P) obst.push([P[0] - 16, P[1] - 10, P[0] + 16, P[1] + 14]); }
     for (const c of [10, 20]) { const L = ANCH.light && ANCH.light[c]; if (L) obst.push([L[0] - 8, L[1] - 24, L[0] + 8, L[1] + 4, c]); }
     const mc = R.merchantShown != null ? R.merchantShown : view.merchant_century;
+    if (POS[mc]) obst.push(seaMerchBox(mc).concat([undefined, 100]));   // the Merchant in his numeral's place: never covered
     // the delivery flags on the beaches: a stack steps aside rather than hide one, if it can
     for (const t of view.travelers) {
       let k2 = 0;
@@ -1870,57 +1816,14 @@
     for (const [cs, ts] of Object.entries(byC)) {
       const c = +cs; if (!POS[c]) continue;
       ts.sort((a, b) => (a.is_self ? 1 : 0) - (b.is_self ? 1 : 0));   // mine is drawn last, in front
-      const nE = ts.length + (c === mc ? 1 : 0), rM = Math.max(...ts.map(t => SEA_TR(t, nE))), pl = seaNumPlate(c), y = POS[c][1], hw = (pl[2] - pl[0]) / 2;
+      const rM = Math.max(...ts.map(t => SEA_TR(t, ts.length))), pl = seaNumPlate(c), y = POS[c][1], hw = (pl[2] - pl[0]) / 2;
       const up = pl[1] - y - 2 - rM - 6, down = pl[3] - y + 2 + rM + 3, side = hw + rM + 7;
-      groups.push({ c, node: POS[c], toks: ts.map(t => ({ r: SEA_TR(t, nE), self: t.is_self })),
+      groups.push({ c, node: POS[c], toks: ts.map(t => ({ r: SEA_TR(t, ts.length), self: t.is_self })),
         spots: [[0, up, -1], [0, down, 1], [-side * .75, up * .8, -1], [side * .75, up * .8, -1], [-side, -4, -1], [side, -4, -1]] });
     }
-    // the Merchant stands with his century's group (window.__pdxPhonePlace o.merch): his usual
-    // berth first (above his island; beside it on the first row), then the other places round
-    // it, a little smaller if need be; his MERCHANT tag keeps its size
-    let merch = null;
-    if (POS[mc]) {
-      const [ux, uy] = seaMerchAt(mc), u = [ux - POS[mc][0], uy - POS[mc][1]];
-      const nb = seaNumPlate(mc)[3] - POS[mc][1] + 3, under = (k) => nb - seaMerchBoxK(k)[1];   // right under the numeral
-      const cands = [[u[0], u[1], 1], [0, -47, 1], [54, 6, 1], [-54, 6, 1], [50, 8, .8], [-50, 8, .8], [0, -42, .8], [44, -36, .8], [-44, -36, .8], [34, -44, .7], [-34, -44, .7],
-        [0, under(.8), .8], [0, under(1), 1], [54, 12, .7], [-54, 12, .7], [0, under(.7), .7]]
-        .concat([.7, .8].flatMap((k) => { const hw = (seaNumPlate(mc)[2] - seaNumPlate(mc)[0]) / 2 + 30 * k + 6; return [[hw, 0, k], [-hw, 0, k], [hw, 8, k], [-hw, 8, k]]; }))   // beside the numeral, on the island's shore
-        .filter((q, i) => i === 0 || q[0] !== u[0] || q[1] !== u[1] || q[2] !== 1);
-      merch = { c: mc, boxK: seaMerchBoxK, partsK: seaMerchPartsK, cands };
-    }
-    const out = window.__pdxPhonePlace({ groups, nodes, obst, box: [12, 8, W - 12, H - 8], below: 6, merch });
-    R.phMerch = out.merch || null;
+    const out = window.__pdxPhonePlace({ groups, nodes, obst, box: [12, 4, W - 12, H - 8], below: 6 });
     // what a registry chest steps aside from: the voyage's tags, the tokens, the Merchant
-    R.phLive = tagBoxes.concat(window.__pdxPhoneFootprints(groups, out), POS[mc] ? [seaMerchBox(mc)] : []);   // (seaMerchBox reads R.phMerch)
-    // A PRICE STEPS ASIDE TOO: where the Merchant had to stand on a voyage's cost tag (his
-    // port lit, travellers round him, no other room), the tag hangs on another side of its
-    // island (below, above, or beside the numeral) clear of him, the tokens and the plates
-    R.tagAt = {};
-    if (POS[mc] && tagBoxes.length) {
-      const mps = seaMerchParts(mc), foots = window.__pdxPhoneFootprints(groups, out), plates = [];
-      for (let c = 1; c <= 30; c++) if (POS[c]) plates.push(seaNumPlate(c));
-      const hit = (q, L) => L.some(o => q[0] < o[2] + 2 && q[2] > o[0] - 2 && q[1] < o[3] + 2 && q[3] > o[1] - 2);
-      for (let c = 1; c <= 30; c++) {
-        if (!mode || mode.kind !== "travel" || !POS[c]) continue;
-        const d = Math.abs(c - mode.self); if (d === 0 || d > mode.max) continue;
-        const [tx0, ty0] = seaCostSpot(c), tb = (x2, y2) => [x2 - 36, y2 - 17, x2 + 36, y2 + 13];
-        if (!hit(tb(tx0, ty0), mps)) continue;
-        const [x, y] = POS[c], ry = islR(c) * .74, pl = seaNumPlate(c), hw = (pl[2] - pl[0]) / 2;
-        const alts = [[x, y + ry + 26], [x, y - ry - 24], [x - hw - 40, y], [x + hw + 40, y]];
-        for (const d of [16, 26, 36, 46, 56]) alts.push([tx0 - d, ty0], [tx0 + d, ty0], [tx0 - d, ty0 + 12], [tx0 + d, ty0 + 12]);   // along its own row first
-        for (const R2 of [48, 60, 72]) for (let a = 0; a < 360; a += 30) alts.push([x + Math.cos(a * Math.PI / 180) * R2 * 1.2, y + Math.sin(a * Math.PI / 180) * R2 * .8]);
-        const mine = (x2, y2) => { const d0 = Math.hypot(x2 - x, y2 - y); for (let k = 1; k <= 30; k++) if (k !== c && POS[k] && Math.hypot(x2 - POS[k][0], y2 - POS[k][1]) < d0 + 6) return false; return true; };
-        const others = mps.concat(foots, plates, R.phLive.filter(o => !(o[0] === tx0 - 36 && o[1] === ty0 - 17)));
-        // at its usual size, else printed smaller (1.1 instead of 1.5) where only that fits
-        let ok = null;
-        for (const sc of [1.5, 1.1]) {
-          const tbs = (x2, y2) => [x2 - 24 * sc, y2 - 11.3 * sc, x2 + 24 * sc, y2 + 8.7 * sc];
-          const f = alts.concat([[tx0, ty0]]).find(([x2, y2]) => { const q = tbs(x2, y2); return q[0] > 8 && q[2] < W - 8 && q[1] > 6 && q[3] < H - 6 && mine(x2, y2) && !hit(q, others); });
-          if (f) { ok = [f[0], f[1], sc]; break; }
-        }
-        if (ok) { R.tagAt[c] = ok; const i = R.phLive.findIndex(q => q[0] === tx0 - 36 && q[1] === ty0 - 17); if (i >= 0) R.phLive[i] = [ok[0] - 24 * ok[2], ok[1] - 11.3 * ok[2], ok[0] + 24 * ok[2], ok[1] + 8.7 * ok[2]]; }
-      }
-    }
+    R.phLive = tagBoxes.concat(window.__pdxPhoneFootprints(groups, out), POS[mc] ? [seaMerchBox(mc)] : []);
     return out;
   }
   /* A REGISTRY CHEST STEPS ASIDE (phone): its post rests on its tear where the islands and
@@ -1960,7 +1863,7 @@
       const dead = t.is_terminated && t.awaiting_respawn, st = t.statuses || [];
       const ghost = st.includes("terminated") && t.century >= 24, burst = st.includes("exploded");
       const hunted = chase === t.name && view.merchant_century !== t.century;
-      const r = SEA_TR(t, ts.length + (c === (R.merchantShown != null ? R.merchantShown : view.merchant_century) ? 1 : 0)), top = !!(at && at[i] && at[i][2]);
+      const r = SEA_TR(t, ts.length), top = !!(at && at[i] && at[i][2]);
       pcPos[t.name] = [bx, by];
       LIVEOBST.push([bx - r - 3, by - r - 3, bx + r + 3, by + r + 7]);   // a sea tab steps aside from a token too
       const pulse = t.is_self && memo[t.name] != null && memo[t.name] !== c;
@@ -2214,8 +2117,8 @@
     const mc = R.merchantShown != null ? R.merchantShown : view.merchant_century;
     if (POS[mc]) {
       const [x, y] = POS[mc];
-      if (PHONE()) LIVEOBST.push(seaMerchBox(mc));   // his hull and his MERCHANT tag
-      const [mx, my, mk0, mt0] = PHONE() && R.phMerch ? R.phMerch : seaMerchAt(mc), mk = mk0 || 1, mt = mt0 || 0;
+      if (PHONE()) LIVEOBST.push(seaMerchBox(mc));   // his plate in his numeral's place
+      const [mx, my] = seaMerchAt(mc);
       const dice = view.merchant_movement_dice || 1;
       const dir = R.merchantLast ? Math.sign((R.merchantLast.to || mc) - (R.merchantLast.from || mc)) || 1 : 1;
       // the sail wears one RED STRIPE per movement die (1..3), speed you can read
@@ -2223,10 +2126,7 @@
       const bands = Math.min(3, dice);
       for (let i = 0; i < bands; i++)
         stripes += `<rect x="-9.5" y="${(-18 + (i + .5) * 19 / bands).toFixed(1)}" width="19.5" height="${(19 / bands * .42).toFixed(1)}" rx="1" fill="#8c3b2a" opacity=".9"/>`;
-      g += `<g class="sea-shipg pc-merch-live" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${mx} ${my})">
-        <g${mk !== 1 ? ` transform="scale(${mk})"` : ""}>${window.__pdxMerchPlate({ w: 46, base: 33, dark: false })}
-        <g class="sh-slide"><g transform="scale(${dir < 0 ? -1 : 1} 1)" class="sea-ship"><g class="sh-bob">
-        ${window.__pdxOutline(`        <g transform="translate(0 12) scale(.8)">
+      const carrack = `        <g transform="translate(0 12) scale(.8)">
         <path d="M -21 14 Q -23 22 -14 25 L 9 25 Q 19 23 21 14 L 17 12 Q 0 17 -17 12 Z" fill="#6a4522" stroke="#241708" stroke-width="1.1"/>
         <path d="M -18 17 Q 0 21 18 16" fill="none" stroke="#3a2510" stroke-width=".7" opacity=".65"/>
         <path d="M -16 21 Q 0 24 15 20" fill="none" stroke="#3a2510" stroke-width=".7" opacity=".5"/>
@@ -2243,14 +2143,19 @@
         <path d="M -12 -22 L -19 12 M 13 -22 L 19 12" stroke="#3a2510" stroke-width=".6" opacity=".5"/>
         <circle cx="15" cy="4" r="1.7" fill="#ffd98a" class="sea-lantern"/>
         <path d="M -23 22 q -8 3 -14 1 M 22 21 q 7 3 12 1" fill="none" stroke="#eaf4f6" stroke-width="1.1" opacity=".55"/>
-        </g>`, { gold: true })}
+        </g>`;
+      if (PHONE()) g += `<g class="sea-shipg pc-merch-live pc-mplate-g" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${mx} ${my})">${window.__pdxPhoneMerchPlate({ art: carrack, fit: [1, 12.4, 39], num: rom(mc), dark: false })}</g>`;
+      else g += `<g class="sea-shipg pc-merch-live" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${mx} ${my})">
+        ${window.__pdxMerchPlate({ w: 46, base: 33, dark: false })}
+        <g class="sh-slide"><g transform="scale(${dir < 0 ? -1 : 1} 1)" class="sea-ship"><g class="sh-bob">
+        ${window.__pdxOutline(carrack, { gold: true })}
         ${(() => {
           const last = R.merchantHist.length ? R.merchantHist[R.merchantHist.length - 1] : null;
           const dist = last ? Math.abs(last.to - last.from) : 0;
           const split = dist ? d3Split(dist, dice) : new Array(dice).fill(1);
           return `<g transform="translate(${-6 - dice * 5} 30)"><g class="sea-dice">`
             + split.slice(0, 3).map((v, i) => d3Token(v, i * 10, 0)).join("") + `</g></g>`;
-        })()}</g></g></g></g>${mt ? `<g transform="translate(${mt} 0)">` : ""}${window.__pdxMerchTag(seaMerchTagY(mk))}${mt ? "</g>" : ""}</g>`;
+        })()}</g></g></g>${window.__pdxMerchTag(-22)}</g>`;
       // the chase line and the reach beside him (window.__pdxMerchantHUD)
       if (view.merchant_plan) {
         const pl = view.merchant_plan, tt = pl.target_seat && view.travelers.find(t2 => t2.name === pl.target_seat);
@@ -2345,14 +2250,18 @@
   function seaCostSpot(c) {
     const [x, y] = POS[c];
     let ty = y - islR(c) * .74 - 24;
-    if (ty < 30) ty = y + islR(c) * .74 + 26;
-    return [x, ty];   // (the registry chests and the Merchant step aside from it: seaPostAt, the placement)
+    if (ty < 30) ty = y + islR(c) * .74 + 26;   // (a phone's top row: it hangs under the island)
+    // where the Merchant stands in the numeral's place, the price hangs under his plate (the
+    // travellers' tokens take the room above the island)
+    const mc = R.merchantShown != null ? R.merchantShown : app && app.view && app.view.merchant_century;
+    if (PHONE() && mc === c) ty = seaMerchBox(c)[3] + 19;
+    return [x, ty];   // (the registry chests step aside from it: seaPostAt)
   }
   function costTag(c, cost, kind) {
     let [x, y] = POS[c];
     let ty = y - islR(c) * .74 - 24;
-    let tsc = 1.5;
-    if (PHONE()) { const at = R.tagAt && R.tagAt[c]; [x, ty] = at || seaCostSpot(c); if (at && at[2]) tsc = at[2]; }   // a phone's top row: the tag hangs under the island (or wherever it stepped aside to)
+    const tsc = 1.5;
+    if (PHONE()) [x, ty] = seaCostSpot(c);   // a phone's top row: the tag hangs under the island
     const col = kind === "free" ? "#1d6b52" : kind === "risk" ? "#c0392b" : "#8a6215";
     const label = kind === "free" ? "free" : String(cost) + (kind === "risk" ? "!" : "");
     const w2 = label.length * 6.8 + (kind === "free" ? 14 : 26);

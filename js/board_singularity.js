@@ -157,34 +157,30 @@
   function phonePlate(c){ const [px,py]=POS[c], GR=30*((c===10||c===20)?1.5:DUAL[c]?1.28:1), L=rom(c).length; return [px-(L*6.3+6), py+Math.min(GR,36)*.42, px+(L*6.3+6), py+Math.min(GR,36)*.42+21]; }
   function phoneBerths(byC,view,mc){
     const nodes={}, obst=[], groups=[];
-    for(let c=1;c<=30;c++) if(POS[c]){ nodes[c]=POS[c]; obst.push(phonePlate(c).concat([undefined,15,"plate"])); }
+    for(let c=1;c<=30;c++) if(POS[c]){ nodes[c]=POS[c]; obst.push(phonePlate(c)); }
     if(SUN){ nodes[0]=SUN; obst.push([SUN[0]-50,SUN[1]-34,SUN[0]+50,SUN[1]+46]); }
-    for(const q of (PLNAMES||[])) obst.push([q[0],q[1],q[2],q[3],undefined,12]);   // a name steps aside (__pdxPhoneNameDodge): covering its resting spot costs little
+    for(const q of (PLNAMES||[])) obst.push(q);
     for(const k in PHB){ const P=PHB[k]; if(P) obst.push([P[0]-18,P[1]-14,P[0]+18,P[1]+14]); }   // the vaults
     if(POS[11]) obst.push([POS[11][0]+11,POS[11][1]-36,POS[11][0]+49,POS[11][1]+4,11]);   // the ghost market (its own century may stand on it)
     for(const t of view.travelers){ let k2=0; for(const card of (t.is_self?(t.hand||[]):(t.equipment||[]))){ const c=card.delivery_century; if(c==null||!POS[c]) continue; const [fx,fy]=t.is_self?[POS[c][0],POS[c][1]-worldR(c)*.5]:[POS[c][0]+worldR(c)*.5+(k2++)*5,POS[c][1]-worldR(c)*.4]; obst.push([fx-8,fy-5,fx+8,fy+6,undefined,6]); } }   // the delivery flags: a stack steps aside rather than hide one, if it can
     const cand=mode&&mode.kind==="travel"?travelCandidates():null;
-    const tags=[]; if(cand) for(const c of cand){ if(c===mode.self||!POS[c]) continue; const [qx,qy]=POS[c]; let ty=qy-(worldR(c)+16); if(ty<30) ty=qy+worldR(c)+26; tags.push([qx-30,ty-16,qx+30,ty+12]); }   // a voyage's cost tags
-    for(const q of tags) obst.push([q[0],q[1],q[2],q[3],undefined,25]);   // a price is never hidden
+    const tags=[]; if(cand) for(const c of cand){ if(c===mode.self||!POS[c]) continue; const [qx,qy]=POS[c]; let ty=qy-(worldR(c)+16); if(ty<30) ty=qy+worldR(c)+26; ty=hangTy(c,ty); tags.push([qx-30,ty-16,qx+30,ty+12]); }   // a voyage's cost tags
+    for(const q of tags) obst.push(q.concat([undefined,25]));   // a price is never hidden
+    if(POS[mc]) obst.push(merchBox(mc).concat([undefined,100]));   // the Merchant in his numeral's place: never covered
     for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue;
       ts.sort((a,b)=>(a.is_self?1:0)-(b.is_self?1:0));   // mine is drawn last, in front
-      const nE=ts.length+(c===mc?1:0), rM=Math.max(...ts.map(t=>PH_TR(t,nE))), y=POS[c][1], on=phonePlate(c)[1]-y-2-rM-6, side=16+rM;
-      groups.push({c,node:POS[c],toks:ts.map(t=>({r:PH_TR(t,nE),self:t.is_self})),spots:[[0,on,-1],[-side*.6,on-10,-1],[side*.6,on-10,-1],[-side-8,on+4,-1],[side+8,on+4,-1],[0,on-22,-1]]}); }
-    // the Merchant stands with his century's group (window.__pdxPhonePlace o.merch): his usual
-    // spot beside it first, then the other side, above, and a little smaller beside or above
-    let merch=null; if(POS[mc]){ const sd=POS[mc][0]>W*0.82?-1:1, [ux,uy]=haulerAt2(mc), ux0=ux-POS[mc][0], uy0=uy-POS[mc][1];
-      const bK=(k,t)=>[Math.min(-24*k,-34+(t||0)),(k===1?-26:-(14*k+12))-8,Math.max(24*k,34+(t||0)),18*k], nb=phonePlate(mc)[3]-POS[mc][1]+3, under=k=>nb-bK(k)[1];   /* right under the numeral plate */
-      merch={c:mc,boxK:bK,partsK:(k,t)=>[[(t||0)-34,(k===1?-26:-(14*k+12))-8,(t||0)+34,(k===1?-26:-(14*k+12))+8],[-24*k,-12*k,24*k,18*k]],cands:[[ux0,uy0,1],[-ux0,uy0,1],[0,-52,1],[sd*50,4,.8],[-sd*50,4,.8],[sd*42,-40,.8],[-sd*42,-40,.8],[0,-46,.8],[sd*54,10,.7],[-sd*54,10,.7],[0,under(.8),.8],[0,under(1),1],[0,under(.7),.7]]}; }
-    const out=window.__pdxPhonePlace({groups,nodes,obst,box:[12,5,W-12,H-10],below:6,merch});
+      const rM=Math.max(...ts.map(t=>PH_TR(t,ts.length))), y=POS[c][1], on=phonePlate(c)[1]-y-2-rM-6, side=16+rM;
+      groups.push({c,node:POS[c],toks:ts.map(t=>({r:PH_TR(t,ts.length),self:t.is_self})),spots:[[0,on,-1],[-side*.6,on-10,-1],[side*.6,on-10,-1],[-side-8,on+4,-1],[side+8,on+4,-1],[0,on-22,-1]]}); }
+    const out=window.__pdxPhonePlace({groups,nodes,obst,box:[12,5,W-12,H-10],below:6});
     // what the constellations' names step aside from (after the render); what they keep clear of
-    R.phLive=tags.concat(window.__pdxPhoneFootprints(groups,out)); if(out.merch&&merch){ const b=merch.boxK(out.merch[2],out.merch[3]); R.phLive.push([out.merch[0]+b[0],out.merch[1]+b[1],out.merch[0]+b[2],out.merch[1]+b[3]]); }
-    R.phFixed=obst.filter(q=>q[5]==null||q[5]===15).concat(Object.values(nodes).map(([x,y])=>[x-30,y-60,x+30,y+12]));   /* a name keeps 30 off every century below it, as at rest (PL.gaps) */
+    R.phLive=tags.concat(window.__pdxPhoneFootprints(groups,out)); if(POS[mc]) R.phLive.push(merchBox(mc));
+    R.phFixed=obst.filter(q=>q[5]==null&&!(PLNAMES||[]).includes(q)).concat(Object.values(nodes).map(([x,y])=>[x-22,y-30,x+22,y+12]));   /* a name keeps off every century's own art */
     return out;
   }
   function phoneStack(c,ts,at,view){
     const [x,y]=POS[c], chase=view.merchant_plan&&view.merchant_plan.target_seat, memo=R.pcAt||(R.pcAt={}); let g="";
     ts.forEach((t,i)=>{ const col=seatColor(t.name), [bx,by]=at&&at[i]?at[i]:[x,y-14]; const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=chase===t.name&&view.merchant_century!==t.century;
-      const r=PH_TR(t,ts.length+(c===(R.merchantShown!=null?R.merchantShown:view.merchant_century)?1:0)), top=!!(at&&at[i]&&at[i][2]); R.pcPos[t.name]=[bx,by];
+      const r=PH_TR(t,ts.length), top=!!(at&&at[i]&&at[i][2]); R.pcPos[t.name]=[bx,by];
       const pulse=t.is_self&&memo[t.name]!=null&&memo[t.name]!==c; if(t.is_self) memo[t.name]=c;
       const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-(r+(t.is_self?7:3)+(top?20:11))):{cls:"",g:""};
       g+=`<g class="cc-shipg pc-piece-g pc-ph${t.is_self?" pc-self":""}${dead&&!ghost?" cc-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})">`
@@ -533,21 +529,21 @@
     const haulerAt=c=>haulerAt2(c);
     const mc = R.merchantShown!=null?R.merchantShown:view.merchant_century;
     R.mAnchor=null;
-    // a phone: the pieces and the Merchant are placed together before he is drawn
-    let byC0=null, PHT0=null; if(PHONE()){ byC0={}; for(const t of view.travelers){ const sc=R.shown[t.name]!=null?R.shown[t.name]:t.century; (byC0[sc]=byC0[sc]||[]).push(t); } PHT0=phoneBerths(byC0,view,mc); }
     if(POS[mc]){ const [x,y]=POS[mc]; const dice=view.merchant_movement_dice||1; const side=x>W*0.82?-1:1;
       const cargo=(view.market_revealed||[]).slice(0,5).map(c2=>`  ${(c2.display_name||c2.name)}, ${c2.gold_cost!=null?c2.gold_cost+"g":"--"}`).join("\n");
       const tip=`THE HAULER: docked at ${rom(mc)}\n${dice}d3 drift · trade when near\n${cargo?"CARGO FOR TRADE:\n"+cargo:"the hold stands empty"}`;
       let str=""; for(let i=0;i<Math.min(3,dice);i++) str+=`<rect x="-10" y="${-7+i*3}" width="20" height="1.7" fill="#b3402e" opacity=".85"/>`;
-      const [hx,hy]=PHT0&&PHT0.merch?PHT0.merch:haulerAt(mc), mk=PHT0&&PHT0.merch?PHT0.merch[2]:1, mt=PHT0&&PHT0.merch?PHT0.merch[3]||0:0; R.mAnchor=[hx,hy];
+      const [hx,hy]=haulerAt(mc); R.mAnchor=[hx,hy];
       g+=(window.__pdxPieceDefs?window.__pdxPieceDefs("cc",true):"");
-      g+=`<g class="cc-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:40*mk,base:14*mk,dark:true}):""}<g transform="scale(${(side<0?-1.2:1.2)*mk} ${1.2*mk}) translate(3.5 0)"><g class="cc-bob">${window.__pdxOutline(`
+      const art=`
         <path d="M-16 0 L-7 -6 L9 -6 L16 0 L9 6 L-7 6 Z" fill="#2c2414" stroke="#d4b02a" stroke-width="1.2"/>
         <rect x="-9" y="-7" width="5" height="14" rx="1.4" fill="#3a2c16" stroke="#d4b02a" stroke-width=".7"/><rect x="-3" y="-6.5" width="5" height="13" rx="1.4" fill="#463414" stroke="#d4b02a" stroke-width=".6"/>
         <path d="M4 -6 L11 -3 L11 3 L4 6 Z" fill="#4a3a1c" stroke="#d4b02a" stroke-width=".6"/><circle cx="8" cy="0" r="1.8" fill="#e8c05a"/>
         <path d="M-16 -3 L-23 0 L-16 3 Z" fill="#ff9a5a" class="cc-beam"/><path d="M-16 -1.4 L-20 0 L-16 1.4 Z" fill="#ffe0a0"/>
         <path d="M2 -6 L6 -10 L8 -6 Z M2 6 L6 10 L8 6 Z" fill="#c9a45c"/>
-        ${Array.from({length:Math.min(3,dice)},(_,i)=>`<circle cx="${-4+i*4}" cy="11" r="1.4" fill="#e0c478"/>`).join("")}`,{gold:true})}</g></g>${window.__pdxMerchTag?(mt?`<g transform="translate(${mt} 0)">`:"")+window.__pdxMerchTag(mk===1?-26:-Math.round(14*mk+12))+(mt?"</g>":""):""}</g>`; }
+        ${Array.from({length:Math.min(3,dice)},(_,i)=>`<circle cx="${-4+i*4}" cy="11" r="1.4" fill="#e0c478"/>`).join("")}`;
+      if(PHONE()) g+=`<g class="cc-hauler pc-merch-live pc-mplate-g" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxPhoneMerchPlate({art,fit:[-3.5,1.2,22.4],num:rom(mc),dark:true})}</g>`;   /* a phone: he takes his century's numeral place */
+      else g+=`<g class="cc-hauler pc-merch-live" data-tip="${esc(tip)}" transform="translate(${hx} ${hy})">${window.__pdxMerchPlate?window.__pdxMerchPlate({w:40,base:14,dark:true}):""}<g transform="scale(${side<0?-1.2:1.2} 1.2) translate(3.5 0)"><g class="cc-bob">${window.__pdxOutline(art,{gold:true})}</g></g>${window.__pdxMerchTag?window.__pdxMerchTag(-26):""}</g>`; }
     // milestone beacons X / XX
     for(const c of [10,20]){ if(!POS[c]) continue; const [x,y]=POS[c]; const claim=view.travelers.filter(t=>c===10?t.scored_century_x:t.scored_century_xx); g+=`<g class="cc-beacon" data-tip="${esc(`millennium ${rom(c)} beacon, ${claim.length?"claimed by "+claim.map(t=>t.name).join(", "):"unclaimed"} · end an Hour here for +1 CP`)}" transform="translate(${(x-worldR(c)*0.5).toFixed(0)} ${(y+worldR(c)*0.2).toFixed(0)})"><path d="M-3 6 L0 -8 L3 6 Z" fill="#c9a45c" stroke="#e8c05a" stroke-width=".7"/><circle cx="0" cy="-8" r="2.2" fill="#ffe9b0" class="cc-beam"/>${claim.map((t,i)=>`<circle cx="${-3+i*3}" cy="9" r="1.3" fill="${seatColor(t.name)}"/>`).join("")}</g>`; }
     // secret ghost-station (XI)
@@ -568,8 +564,8 @@
     // restored (delivered) ignition rings drawn in worldG via cc-lit; here add a soft "always thus" tag on hover handled by tip
     // travelers (ships) at their worlds
     R.pcPos={};
-    const byC=byC0||{}; if(!byC0) for(const t of view.travelers){ const sc=R.shown[t.name]!=null?R.shown[t.name]:t.century; (byC[sc]=byC[sc]||[]).push(t); }
-    const PHT=PHONE()?PHT0:null;   // a phone: tokens standing on their stars
+    const byC={}; for(const t of view.travelers){ const sc=R.shown[t.name]!=null?R.shown[t.name]:t.century; (byC[sc]=byC[sc]||[]).push(t); }
+    const PHT=PHONE()?phoneBerths(byC,view,mc):null;   // a phone: tokens standing on their stars
     for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue; const [x,y]=POS[c], R0=worldR(c);
       if(PHT){ g+=phoneStack(c,ts,PHT[c],view); continue; }
       if(ts.length>1) g+=`<circle cx="${x}" cy="${y}" r="${R0+18}" fill="none" stroke="#8a6a3a" stroke-width="1" stroke-dasharray="3 4" opacity=".55" data-tip="shared orbit, agreements possible"/>`;
@@ -638,7 +634,7 @@
   function highlights(){
     if(!mode) return ""; let g=""; const cand=pickCandidates();
     const ring=(c,cls,tip)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const rr=(c===0?46:worldR(c)+13); g+=`<circle class="cc-glow ${cls}" data-c="${c}" data-tip="${esc(tip)}" cx="${P[0]}" cy="${P[1]}" r="${rr}"/>`; };
-    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P; let ty=y-(c===0?52:worldR(c)+16); let x2=x; if(PHONE()){ if(ty<30) ty=y+worldR(c)+26; /* a phone's top row: the tag hangs under the plate */ } const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cc-cost"${PHONE()?` transform="translate(${x2} ${ty}) scale(1.55) translate(${-x2} ${-ty})"`:""}><rect x="${x2-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x2-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x2+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
+    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P; let ty=y-(c===0?52:worldR(c)+16); let x2=x; if(PHONE()){ if(ty<30) ty=y+worldR(c)+26; ty=hangTy(c,ty); /* a phone's top row: the tag hangs under the plate (and under the Merchant's plate when he is there) */ } const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cc-cost"${PHONE()?` transform="translate(${x2} ${ty}) scale(1.55) translate(${-x2} ${-ty})"`:""}><rect x="${x2-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x2-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x2+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
     if(mode.kind==="travel"){
       for(let c=1;c<=30;c++){ if(!cand.has(c)||c===mode.self) continue; if(c>mode.self||mode.ppc===0){ ring(c,"cc-go-future",`with the drift to ${rom(c)}, free`); tag(c,"FREE","free"); } else { const cost=armedCost(c); const risk=cost>=mode.energy; ring(c,risk?"cc-go-risk":"cc-go-past",`beat upstream to ${rom(c)}, ${cost} energy${risk?" (this could strand you)":""}`); tag(c,String(cost),risk?"risk":"cost"); } }
       if(cand.has(0)){ ring(0,"cc-go-risk",`the final plunge into the Dead Sun, ends the game (+2 CP)`); tag(0,String(armedCost(0)),"risk"); }
@@ -675,7 +671,10 @@
       if(c) c.innerHTML=""; }catch(e){} R.fx.length=0; if(fxGuard){clearTimeout(fxGuard); fxGuard=null;}
     fxBusy=false; renderPending=false; R.sailing=false; }
   function fxG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-sing .cc-fx"); }
-  function haulerAt2(c){ const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*(worldR(c)*0.55+16)), Math.round(y-worldR(c)*0.15-14)]; }   // clear of the century's label
+  // on a phone he takes his century's numeral place (board_draft.js __pdxPhoneMerchPlate): anchor = the plate's top centre
+  function hangTy(c,ty){ const mc=R.merchantShown!=null?R.merchantShown:app&&app.view&&app.view.merchant_century; return PHONE()&&mc===c&&POS[c]?merchBox(c)[3]+17:ty; }   /* where he stands in the numeral's place, the price hangs under his plate */
+  function merchBox(c){ const [x,y]=haulerAt2(c); return window.__pdxPhoneMerchBox(x,y); }
+  function haulerAt2(c){ if(PHONE()) return [POS[c][0], Math.round(phonePlate(c)[1])]; const [x,y]=POS[c], sd=x>W*0.82?-1:1; return [Math.round(x+sd*(worldR(c)*0.55+16)), Math.round(y-worldR(c)*0.15-14)]; }   // clear of the century's label
   function liveG(){ const r=document.getElementById("timeline-rail"); return r&&r.querySelector(".cplot-sing .cc-live"); }
   function drainFx(){ if(REDUCED){ R.fx.length=0; return; } if(fxBusy) return; const f=R.fx.shift(); if(!f) return; fxBusy=true;
     if(fxGuard) clearTimeout(fxGuard);

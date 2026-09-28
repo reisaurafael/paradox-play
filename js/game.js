@@ -11,20 +11,21 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609281449";
-import { audio } from "./audio.js?202609281449";
+import { icon } from "./icons.js?202609281737";
+import { cardArtImg } from "./card-art.js?202609281737";
+import { audio } from "./audio.js?202609281737";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609281449";
-import { comic } from "./comic.js?202609281449";
-import { fx } from "./fx.js?202609281449";
-import { CatEngine } from "./cat.js?202609281449";
-import { tutorials } from "./tutorial.js?202609281449";
-import { profile } from "./profile.js?202609281449";
-import { Camera } from "./camera.js?202609281449";
+import { juice } from "./juice.js?202609281737";
+import { comic } from "./comic.js?202609281737";
+import { fx } from "./fx.js?202609281737";
+import { CatEngine } from "./cat.js?202609281737";
+import { tutorials } from "./tutorial.js?202609281737";
+import { profile } from "./profile.js?202609281737";
+import { Camera } from "./camera.js?202609281737";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609281449";
+} from "./util.js?202609281737";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -83,6 +84,7 @@ const CARD_FX = {
   "Attila's Sword":              { kind: "glint",  hue: 8,   count: 14, size: 9 },
   "Fire Lance":                  { kind: "glint",  hue: 22,  count: 16, size: 9 },
   "Queen Anne's Revenge Cannon": { kind: "glint",  hue: 4,   count: 18, size: 10 },
+  "Oppenheimer's Trinity":       { kind: "flare",  hue: 28,  count: 26, size: 12 },
   "Laser Sword":                 { kind: "glint",  hue: 120, count: 14, size: 9 },
   // instruments and navigation, teal ripples
   "Alan Turing's Machine":       { kind: "ripple", hue: 172 },
@@ -350,7 +352,8 @@ export class Game {
       (o.candidates || []).forEach((c) => add(nm(c), pick("card", c)));
     else if (k === "target")
       (o.candidates || []).forEach((c) => (c.century != null
-        ? add(roman(c.century), { choice: c.century }) : add(nm(c), pick("choice", c))));
+        ? add(roman(c.century), { choice: c.century })
+        : c.era ? add(c.era, { choice: c.era }) : add(nm(c), pick("choice", c))));
     else if (k === "merchant_century") (o.centuries || []).forEach((c) => add(roman(c), { century: c }));
     else if (k === "matrix_buff") (o.modules || []).forEach((m) => add(`Module ${m + 1}`, { module: m }));
     else if (k === "capacity") {
@@ -1513,7 +1516,7 @@ export class Game {
     main.appendChild(el("div", "market-merchant-label", "Relics salvaged from the Incursion"));
     const row = el("div", "market-row");
     (v.market_revealed || []).forEach((c) => {
-      const card = this.cardEl(c);
+      const card = this.cardEl(c, { art: true });
       const selMeta = sel && sel.byName[c.name];
       if (shopping && !renewMode && buyableNames.has(c.name)) {
         // Buy is the hero drag: haul the card down into your Rucksack. Click stays
@@ -1625,7 +1628,7 @@ export class Game {
       const o = deal.options;
       const steal = o.action === "steal";
       const wrap = el("div", "secret-card-wrap");
-      const card = this.cardEl(o.card);
+      const card = this.cardEl(o.card, { art: true });
       card.classList.add("is-secret", "is-actionable", steal ? "can-steal" : "can-select");
       const take = () => { this.secretDeal = null; this.respond({ take: true }); this.renderMarket(); };
       if (o.affordable !== false) card.addEventListener("click", take);
@@ -1647,7 +1650,7 @@ export class Game {
       stage.appendChild(bay);
     } else if (open && current) {
       const wrap = el("div", "secret-card-wrap");
-      const card = this.cardEl(current); card.classList.add("is-secret");
+      const card = this.cardEl(current, { art: true }); card.classList.add("is-secret");
       const secretBuyable = shopping
         && (req.options.buyable || []).some((c) => c.secret && c.name === current.name);
       const selMeta = this.selectReq && this.selectReq.byName[current.name];
@@ -1790,8 +1793,12 @@ export class Game {
     const c = el("div", "card" + (opts.mini ? " mini" : ""));
     c.dataset.name = card.name;
     c.style.setProperty("--era", eraColor(card.delivery_century));  // era-coloured border
+    // the approved illustration, a window at the top of the face (the Merchant's cards only; a card
+    // without approved art keeps its plain face, js/card-art.js)
+    const art = opts.art ? cardArtImg(card.name, "card-art-img") : "";
+    if (art) c.classList.add("has-art");
     c.innerHTML = `
-      <div class="card-cost" title="Gold cost">${card.gold_cost}</div>
+      <div class="card-cost" title="Gold cost">${card.gold_cost}</div>${art ? `<div class="card-art">${art}</div>` : ""}
       ${card.is_large_item ? `<div class="card-large-tag">Large</div>` : ""}
       <div class="card-name">${this.dn(card)}</div>
       <div class="card-type">${(card.ability_type || "").replace(/_/g, " ")}</div>
@@ -1860,7 +1867,9 @@ export class Game {
     if (!this._popRaf) this._popRaf = requestAnimationFrame(watch);
     const p = el("div", "card-pop");
     p.style.setProperty("--era", eraColor(card.delivery_century));
-    p.innerHTML = `
+    const popArt = cardArtImg(card.name, "cp-art-img");
+    if (popArt) p.classList.add("has-art");
+    p.innerHTML = (popArt ? `<div class="cp-art">${popArt}</div>` : "") + `
       <div class="cp-name">${this.dn(card)}</div>
       <div class="cp-kind">${card.kind_label || (card.ability_type || "").replace(/_/g, " ")} · ${eraName(card.delivery_century)}</div>
       <div class="cp-desc">${card.description || "--"}</div>
@@ -4006,6 +4015,18 @@ export class Game {
       });
       const scroll = el("div"); scroll.style.maxHeight = "130px"; scroll.style.overflowY = "auto";
       scroll.appendChild(grid); body.appendChild(scroll);
+    } else if (tt === "era") {
+      // Oppenheimer's Trinity: one of the six eras; each button names who stands in it
+      // now (the holder too: the blast spares no one in the era)
+      const grid = el("div", "choice-grid");
+      o.candidates.forEach((c) => {
+        const who = (c.travelers || []).map((n) => (n === this.seat ? "you" : n));
+        const b = el("button", "choice target-era");
+        b.innerHTML = `<span>${c.era}</span><span class="tt-meta">${roman(c.from)} to ${roman(c.to)}${who.length ? " · " + who.join(", ") : " · nobody"}</span>`;
+        b.addEventListener("click", () => this.respond({ choice: c.era }));
+        grid.appendChild(b);
+      });
+      body.appendChild(grid);
     } else { // card
       const grid = el("div", "choice-grid");
       o.candidates.forEach((c) => {

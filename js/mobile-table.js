@@ -25,6 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
+import { cardArtImg } from "./card-art.js?202609281737";
+
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
 
@@ -409,17 +411,6 @@ function pile() {
     f.style.setProperty("--pdx-fy", (at.y - zr.y).toFixed(1) + "px");
     f.style.setProperty("--pdx-fk", k.toFixed(3));
     f.style.setProperty("--pdx-fz", String(20 + i));
-    // HIS CONTRACT POINTS on the file's tab, read at a glance (the owner, 28/09)
-    const g = game(), t = g && g.view && g.view.travelers.find((x) => x.name === f.dataset.seat);
-    if (t) {
-      let cp = t.contract_points || 0;
-      try { cp = g._resolvedCP(t.name, cp); } catch (e) {}
-      let b = f.querySelector(":scope > .pdx-cp");
-      if (!b) { b = document.createElement("b"); b.className = "pdx-cp"; f.appendChild(b); }
-      const txt = cp + " CP";
-      if (b.textContent !== txt) b.textContent = txt;
-      b.classList.toggle("pdx-cp-0", !cp);
-    }
   });
 }
 // a tap opens the COMPLETE file, the desktop's own dossier (game.showPanelDetail), drawn
@@ -428,6 +419,14 @@ function openFile(f) {
   const g = game(); if (!g || !g.view || !g.showPanelDetail) return;
   const t = g.view.travelers.find((x) => x.name === f.dataset.seat);
   if (!t) return;
+  // ONE THING AT A TIME: a Herald edition (or a pinned clipping) lying open is put away first, and
+  // the file opens once it has folded; never one paper stacked on another
+  const papers = [...document.querySelectorAll(".he-window.he-news.open")];
+  if (papers.length) {
+    papers.forEach((w) => { try { w.click(); } catch (e) {} });
+    setTimeout(() => { if (!document.querySelector(".he-window.he-news.open")) openFile(f); }, 320);
+    return;
+  }
   outFile = f;
   g.showPanelDetail(t, f);
   layDossier();
@@ -435,53 +434,55 @@ function openFile(f) {
   f.classList.add("dk-held"); setTimeout(() => f.classList.remove("dk-held"), 320);
 }
 // THE COMPLETE FILE, smaller on a phone (the owner, 28/09), by the text size he chose (Normal the
-// smallest), at the stage's left; beside it, what earned him his contract points: the contracts
-// stapled to his file (their count) and the Herald's clippings of his feats
+// smallest), at the stage's left; beside it the Herald's clippings of his feats (the journals),
+// and under them the contracts stapled to his file (the stamp, its count on the first)
 function layDossier() {
   const g = game(), fly = g && g.panelDetail;
   if (!fly) return;
-  const ts = +(D.dataset.ts || 1) || 1;
-  const k = D.classList.contains("pdx-a11y") || ts >= 3 ? 1 : ts === 2 ? 0.9 : 0.78;
-  D.style.setProperty("--pdx-do-k", String(k));
+  // SMALL ENOUGH TO SEE WHOLE (the owner, 28/09: "still too big"): the whole file (no scrolling to
+  // reach its vitals or its equipment) within 80 % of the stage's height and about half its width,
+  // table round it; a larger text setting lets it grow a little, never past that box
+  const ts = D.classList.contains("pdx-a11y") ? 3 : (+(D.dataset.ts || 1) || 1);
+  const want = ts >= 3 ? 0.62 : ts === 2 ? 0.55 : 0.47;
+  D.style.setProperty("--pdx-do-k", "1");
+  // larger text lays the file out wider (shorter), so it can be shown larger in the same box
+  D.style.setProperty("--pdx-do-w", (ts >= 3 ? 620 : ts === 2 ? 530 : 440) + "px");
+  const w0 = fly.offsetWidth || 440, h0 = fly.scrollHeight || fly.offsetHeight || 700;
+  const k = Math.max(0.3, Math.min(want, (stage.h * 0.8) / h0, (stage.w * 0.52) / w0));
+  D.style.setProperty("--pdx-do-k", k.toFixed(3));
+  // centred in the stage's height, its left a little in from the column
+  D.style.setProperty("--pdx-do-top", Math.round(stage.y + (stage.h - h0 * k) / 2) + "px");
+  D.style.setProperty("--pdx-do-left", Math.round(stage.x + stage.w * 0.06) + "px");
   requestAnimationFrame(() => {
     const fr = fly.getBoundingClientRect();
     if (!(fr.width > 0)) return;
-    const x = fr.right + 12, right = stage.x + stage.w - 8, room = right - x;
-    let y = stage.y + 8;
+    const x = fr.right + 12, room = stage.x + stage.w - 8 - x;
+    const top = fr.top, bottom = fr.bottom;
     const cons = [...document.querySelectorAll(".do-contract")];
     const clips = [...document.querySelectorAll(".do-attach")];
-    // the contracts, fanned at the top of the column beside the file, their count on the first
-    const ck = Math.max(0.5, Math.min(0.8, room / 190));
-    cons.forEach((c, i) => {
-      c.classList.add("pdx-do-side");
-      c.style.left = (x + i * 16) + "px"; c.style.top = (y + i * 4) + "px";
-      c.style.scale = String(ck); c.style.transformOrigin = "0 0";
-      c.style.zIndex = String(60186 + cons.length - i);
-    });
-    if (cons.length) {
-      let tag = document.getElementById("pdx-do-cp");
-      if (!tag) { tag = document.createElement("div"); tag.id = "pdx-do-cp"; document.body.appendChild(tag); }
-      const t = g.view && g.view.travelers.find((v) => v.name === fly.dataset.seat);
-      let cp = t ? t.contract_points || 0 : cons.length;
-      try { if (t) cp = g._resolvedCP(t.name, cp); } catch (e) {}
-      tag.textContent = cp + (cp === 1 ? " CONTRACT POINT" : " CONTRACT POINTS");
-      tag.style.left = x + "px"; tag.style.top = (y + 132 * ck + 8 + (cons.length - 1) * 4) + "px";
-      y += 132 * ck + (cons.length - 1) * 4 + 30;
-    }
-    // the clippings, stacked under them, each headline showing
-    const ak = Math.max(0.55, Math.min(0.85, room / 172));
-    const left = stage.y + stage.h - 8 - y;
-    const step = clips.length > 1 ? Math.min(100 * ak, (left - 90 * ak) / (clips.length - 1)) : 0;
+    // the journals and the slips in proportion to the file (they were .85 and .72 beside a .78 file)
+    const ak = Math.min(k * 1.09, room / 172), ck = Math.min(k * 0.92, room / 190);
+    const conH = cons.length ? 132 * ck + (cons.length - 1) * 4 : 0;
+    // the journals down the file's height, each headline showing
+    const left = bottom - (conH ? conH + 8 : 0) - top;
+    const step = clips.length > 1 ? Math.min(100 * ak, Math.max(26, (left - 90 * ak) / (clips.length - 1))) : 0;
     clips.forEach((a, i) => {
       a.classList.add("pdx-do-side");
-      a.style.left = x + "px"; a.style.top = (y + i * Math.max(34, step)) + "px";
+      a.style.left = x + "px"; a.style.top = (top + i * step) + "px";
       a.style.scale = String(ak); a.style.transformOrigin = "0 0";
       a.style.zIndex = String(60186 + i);
+    });
+    // the stamped contracts at the file's foot, fanned
+    const cy = bottom - conH;
+    cons.forEach((c, i) => {
+      c.classList.add("pdx-do-side");
+      c.style.left = (x + i * 12) + "px"; c.style.top = (cy + i * 4) + "px";
+      c.style.scale = String(ck); c.style.transformOrigin = "0 0";
+      c.style.zIndex = String(60196 + cons.length - i);
     });
   });
 }
 function closeFiles() {
-  const tag = document.getElementById("pdx-do-cp"); if (tag) tag.remove();
   if (!outFile) return;
   outFile = null;
   const g = game(); if (g && g.hidePanelDetail) g.hidePanelDetail();
@@ -758,14 +759,15 @@ function openSheet(node) {
   sheet.className = "pdx-sheet";
   const act = actOf(node);
   const kind = (d.kind_label || (d.ability_type || "").replace(/_/g, " ")).trim();
-  sheet.innerHTML = `<div class="ps-card card-pop">
+  const art = cardArtImg(name, "ps-art-img");
+  sheet.innerHTML = `<div class="ps-card card-pop${art ? " ps-hasart" : ""}">${art ? `<div class="ps-art">${art}</div>` : ""}<div class="ps-body">
       <div class="cp-name">${esc(node.querySelector(".card-name") ? node.querySelector(".card-name").textContent : name)}</div>
       <div class="cp-kind">${esc(kind)}</div>
       <div class="cp-desc">${d.description || "--"}</div>
       <div class="cp-stats"><span class="cp-stat">${d.gold_cost != null ? d.gold_cost + " gold" : ""}</span>
         <span class="cp-stat">Deliver ${d.delivery_century != null ? roman(d.delivery_century) : "?"}</span>
         <span class="cp-stat">Recycle ${d.recycle_value != null ? d.recycle_value : "?"}</span></div>
-    </div>
+    </div></div>
     <div class="ps-keys">${act ? `<button type="button" class="ps-act">${esc(act)}</button>` : `<p class="ps-note">${game() && game().selectReq ? "Not one you can pick now." : "Not yours to take now."}</p>`}
       <button type="button" class="ps-close">Back</button></div>`;
   sheet.querySelector(".ps-close").addEventListener("click", (e) => { e.stopPropagation(); closeSheet(); });
@@ -906,6 +908,7 @@ function cardTile(c, cls, tag) {
   const kind = (c.kind_label || (c.ability_type || "").replace(/_/g, " ")).trim();
   return `<button type="button" class="ps-card card-pop pp-tile${cls || ""}" data-name="${esc(c.name)}" style="--era-c:${c.delivery_century || 0}">`
     + (tag ? `<i class="pp-tag">${esc(tag)}</i>` : "")
+    + (cardArtImg(c.name) ? `<span class="pp-art">${cardArtImg(c.name, "pp-art-img")}</span>` : "")
     + `<span class="cp-name">${esc(c.display_name || c.name)}</span><span class="cp-kind">${esc(kind)}</span>`
     + `<span class="cp-desc">${c.description || "--"}</span>`
     + `<span class="cp-stats"><span class="cp-stat">${c.gold_cost != null ? c.gold_cost + " gold" : ""}</span>`
@@ -977,7 +980,6 @@ function pickSheetFor(req) {
 // the decision the pick sheet answers is gone (answered, or the server moved on): it goes too
 function paintPickSheet() {
   const g = game();
-  const tg = document.getElementById("pdx-do-cp"); if (tg && !(g && g.panelDetail)) tg.remove();
   if (psheet && (!on() || !g || g.pendingReq !== psReq)) closePickSheet();
   if (confirmFor && !(g && g.selectReq)) clearConfirm();
 }
@@ -1206,12 +1208,8 @@ function paintExtra() {
     sig += me.gold + ":" + secretOn + ":" + !!pickText();
   } else if (view === "case") {
     const n = ownedTickets().reduce((a, t) => a + t.count, 0);
-    let cp = me ? me.contract_points || 0 : 0;
-    try { if (me) cp = game()._resolvedCP(me.name, cp); } catch (e) {}
-    html = (me ? `<div class="mx-gold"><i></i><span>YOUR GOLD</span><b>${me.gold}</b></div>` : "")
-      + (n ? `<button type="button" class="mx-tickets">TICKETS <b>\u00d7${n}</b></button>` : "")
-      + (me ? `<div class="mx-cp"><span>CONTRACTS</span><b>${cp}</b></div>` : "");
-    sig += ":" + n + ":" + (me ? me.gold : "") + ":" + cp;
+    html = n ? `<button type="button" class="mx-tickets">TICKETS <b>\u00d7${n}</b></button>` : "";
+    sig += ":" + n;
   }
   if (sig !== lastExtra) {
     lastExtra = sig;
@@ -1223,7 +1221,6 @@ function paintExtra() {
 }
 function paintBin() {
   if (!bin) buildBin();
-  if (on() && view === "case") paintCaseCards();
   document.querySelectorAll("#rucksack-zone .ruck-card").forEach((n) => {
     n.classList.toggle("pdx-picked", n.dataset.name === picked);
     if (n.getAttribute("draggable") === "true") n.setAttribute("draggable", "false");
@@ -1271,7 +1268,8 @@ function wireBin() {
     if (!on() || !bin || bin.hidden) return;
     if (!(e.target.closest && e.target.closest("#pdx-bin"))) return;
     e.preventDefault(); e.stopPropagation();
-    binAct(); paintBin();
+    if (binAct()) closeSheet();
+    paintBin();
   }, true);
   // A FINGER DRAGS A CARD OF THE CASE (the owner: "I like dragging them into the bin and into the
   // Records"): the card itself follows the finger, lifted above it; the places it can go glow
@@ -1360,35 +1358,15 @@ function wireBin() {
   window.addEventListener("pointercancel", up, true);
 }
 
-/* ══ THE CASE'S CARDS, READABLE: laid out large over the open case (a grid sized by how many he
-   holds), each with its kind and its text; a tap opens its sheet with the acts that apply now ══ */
-function paintCaseCards() {
-  const pocket = document.querySelector("#rucksack-zone .ruck-pocket");
-  if (!pocket) return;
-  const g = game(), me = g && g._self ? g._self() : null;
-  const mine = me ? (me.hand || me.equipment || []) : [];
-  const cards = [...pocket.querySelectorAll(".ruck-card")];
-  const n = cards.length;
-  const cols = n <= 2 ? 2 : n <= 6 ? 3 : 4;
-  const ts = D.classList.contains("pdx-a11y") ? 3 : (+(D.dataset.ts || 1) || 1);
-  const cf = (n <= 2 ? 30 : n === 3 ? 25 : n <= 6 ? 21 : 17) * (ts >= 3 ? 1.22 : ts === 2 ? 1.1 : 1);
-  pocket.style.setProperty("--pdx-cc", String(cols));
-  pocket.style.setProperty("--pdx-cf", cf.toFixed(1) + "px");
-  pocket.classList.toggle("pdx-cc-wide", n <= 2);
-  cards.forEach((c) => {
-    const d = mine.find((x) => x.name === c.dataset.name);
-    if (!d) return;
-    let t = c.querySelector(":scope > .pdx-cdesc");
-    if (!t) { t = document.createElement("div"); t.className = "pdx-cdesc"; c.insertBefore(t, c.querySelector(".card-foot")); }
-    const kind = (d.kind_label || (d.ability_type || "").replace(/_/g, " ")).trim();
-    const html = `<b>${esc(kind)}</b><span>${d.description || ""}</span>`;
-    if (t.innerHTML !== html) t.innerHTML = html;
-  });
-}
+/* ══ THE CASE'S CARDS are read like the Merchant's: they stay in their places in the case; a tap
+   opens the card's sheet with the acts that apply now (fire it, file it, put it in the bin) ══ */
 function caseSheet(node) {
   closeSheet();
   const g = game(); if (!g) return;
   const name = node.dataset.name;
+  // (the owner: one bin on the screen) the card read is also the card picked: the rail's BIN
+  // recycles it with one tap; the sheet itself has no recycle key
+  picked = name; paintBin();
   const me = g._self ? g._self() : null;
   const d = (me ? (me.hand || me.equipment || []) : []).find((x) => x.name === name) || cardData(name) || { name };
   const st = g._deliverState;
@@ -1397,20 +1375,20 @@ function caseSheet(node) {
   const others = [...document.querySelectorAll("#rucksack-zone .ruck-card.act-ready")].some((n) => n !== node);
   if (node.classList.contains("act-ready")) keys.push(["fire", others ? "Ready it (then FIRE)" : "Fire it"]);
   if (st && st.names && st.names.has(name) && !st.chosen.has(name)) keys.push(["file", `File it (${roman(d.delivery_century)})`]);
-  keys.push(["bin", "Put it in the bin"]);
   const note = node.classList.contains("act-used") ? "Fired this phase." : node.classList.contains("act-notarget") ? "Nothing in reach to use it on now." : "";
   sheet = document.createElement("div");
   sheet.className = "pdx-sheet pdx-casesheet";
   const kind = (d.kind_label || (d.ability_type || "").replace(/_/g, " ")).trim();
-  sheet.innerHTML = `<div class="ps-card card-pop">
+  const art = cardArtImg(d.name, "ps-art-img");
+  sheet.innerHTML = `<div class="ps-card card-pop${art ? " ps-hasart" : ""}">${art ? `<div class="ps-art">${art}</div>` : ""}<div class="ps-body">
       <div class="cp-name">${esc(d.display_name || d.name)}</div>
       <div class="cp-kind">${esc(kind)}</div>
       <div class="cp-desc">${d.description || "--"}</div>
       <div class="cp-stats"><span class="cp-stat">Deliver at ${d.delivery_century != null ? roman(d.delivery_century) : "?"}</span>
         <span class="cp-stat">Recycle for ${d.recycle_value != null ? d.recycle_value : "?"} energy</span>
         <span class="cp-stat">${d.gold_cost != null ? "Worth " + d.gold_cost + " gold" : ""}</span></div>
-    </div>
-    <div class="ps-keys">${note ? `<p class="ps-note">${esc(note)}</p>` : ""}${keys.map(([a, l], i) => `<button type="button" class="${i === 0 && a !== "bin" ? "ps-act" : "ps-close ps-bin"}" data-a="${a}">${esc(l)}</button>`).join("")}
+    </div></div>
+    <div class="ps-keys">${note ? `<p class="ps-note">${esc(note)}</p>` : ""}${keys.map(([a, l], i) => `<button type="button" class="${i === 0 ? "ps-act" : "ps-close"}" data-a="${a}">${esc(l)}</button>`).join("")}
       <button type="button" class="ps-close" data-a="back">Back</button></div>`;
   sheet.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1423,7 +1401,7 @@ function caseSheet(node) {
       // nothing else ready to fire: it fires at once; otherwise the rail's FIRE n fires them together
       if (!document.querySelector("#rucksack-zone .ruck-card.act-ready")) { try { gg._passActivation(); } catch (err) {} }
     } else if (a === "file") { try { gg._fileDeliver(name); } catch (err) {} }
-    else if (a === "bin") { picked = null; pick(name); }
+    else if (a === "back") { picked = null; paintBin(); }
     paintAll();
   }));
   document.body.appendChild(sheet);

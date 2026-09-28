@@ -12,9 +12,9 @@
        headline (game.js breakingNews), and HELA's brain files each mend on its
        Hour's page (window.__helaBrainLog). window.__pdxTimelineWhole() gives
        { mended, total, frac } to anything else that wants to show it.
-     - ON THE CHART, at each century: a faint crack where the timeline is still
-       unravelled (a sharper one where a loose relic belongs), and a ring of light
-       in the mender's colour where it is mended. Small marks beside the islands,
+     - ON THE CHART: a sharp crack beside a century whose relic is loose on the table
+       (the faint crack every unravelled century wore went, 28/09: it marked nothing),
+       and a ring of light in the mender's colour where it is mended. Small marks beside the islands,
        hollow in the middle, so no piece or number is ever covered.
      - THE MEND, when a relic lands home: the broken ring closes, light returns,
        the drawer the relic is filed in glows, and a
@@ -30,7 +30,7 @@
    every animation is transform or opacity on a few small nodes, removed when done.
    All text enters the page through textContent.
    ========================================================================= */
-import { roman } from "./util.js?202609281449";
+import { roman } from "./util.js?202609281737";
 
 const N = 30;
 // the drawer a century's relic is filed in (Origins I to X, Ascension XI to XIX,

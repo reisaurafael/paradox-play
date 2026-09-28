@@ -841,56 +841,15 @@ html.pdx-m-on .panel-detail.dossier { scale: var(--pdx-do-k, .78); transform-ori
   max-height: calc((100vh - var(--pdx-stage-y, 0px) - 16px) / var(--pdx-do-k, .78)) !important; }
 html.pdx-m-on .do-attach:not(.pdx-do-side), html.pdx-m-on .do-contract:not(.pdx-do-side) { visibility: hidden !important; }
 html.pdx-m-on .do-attach.pdx-do-side { position: fixed; }
-#pdx-do-cp { position: fixed; z-index: 60195; padding: 3px 8px; border: 2px solid var(--cx-ink, #15100a); border-radius: 4px; background: var(--cx-paper, #f4e6b0);
-  color: var(--cx-ink, #15100a); box-shadow: 3px 3px 0 var(--cx-ink, #15100a); font: 700 .74rem/1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; pointer-events: none; }
-/* his contract points on the file's tab, on the table */
-html.pdx-m-on #players-zone .pcard.cfolio > .pdx-cp { position: absolute; right: 10px; top: -14px; z-index: 5; padding: 3px 12px; border: 4px solid var(--cx-ink, #15100a);
-  border-radius: 8px; background: #ffd24a; color: var(--cx-ink, #15100a); box-shadow: 4px 4px 0 var(--cx-ink, #15100a);
-  font: 700 30px/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .04em; pointer-events: none; }
-html.pdx-m-on #players-zone .pcard.cfolio > .pdx-cp.pdx-cp-0 { background: #e9dcb4; color: #6b5a3a; }
-#players-zone .pcard.cfolio > .pdx-cp { display: none; }
-html.pdx-m-on #players-zone .pcard.cfolio > .pdx-cp { display: block; }
+
 
 /* ══ THE WHOLE SCREEN, ALWAYS (the owner's phone, 28/09: the rail and the thread ended short of the
    right edge): nothing in a match may make the page wider than the screen (Chrome would zoom the
    page out to fit it); the thread is sized by the screen box, not by 100vw / 100vh ══ */
 html.pdx-m-on, html.pdx-m-on body { overflow: clip !important; max-width: 100%; }
 
-/* ══ THE CASE'S CARDS, READABLE (the owner, 28/09): large, flat, over the open case, a grid sized by
-   how many he holds (mobile-table.js paintCaseCards: --pdx-cc columns, --pdx-cf the face's type);
-   the gold, the tickets and the contracts they lie over are read in her column ══ */
-html.pdx-m-on #rucksack-zone .ruck-pocket { left: 14.5% !important; right: 17% !important; top: 13% !important; bottom: 14% !important; height: auto !important;
-  display: grid !important; grid-template-columns: repeat(var(--pdx-cc, 3), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 12px;
-  align-items: stretch; justify-items: stretch; perspective: none !important; z-index: 4; }
-html.pdx-m-on #rucksack-zone .ruck-pocket .ruck-slot { margin: 0 !important; transform: none !important; min-width: 0; min-height: 0; display: flex; }
-html.pdx-m-on #rucksack-zone .ruck-pocket .ruck-card.card { width: 100% !important; min-height: 0 !important; height: 100%; box-sizing: border-box; margin: 0;
-  padding: calc(var(--pdx-cf, 21px) * .45) calc(var(--pdx-cf, 21px) * .5) calc(var(--pdx-cf, 21px) * .35) !important; display: flex; flex-direction: column;
-  transform: none !important; rotate: none; overflow: hidden; box-shadow: 4px 5px 0 rgba(21, 16, 10, .55); }
-html.pdx-m-on #rucksack-zone .ruck-card .card-name { font-size: var(--pdx-cf, 21px) !important; line-height: 1.05 !important; min-height: 0 !important;
-  padding-left: calc(var(--pdx-cf, 21px) * 1.2) !important; flex: 0 0 auto; }
-html.pdx-m-on #rucksack-zone .ruck-card .card-cost { width: calc(var(--pdx-cf, 21px) * 1.25) !important; height: calc(var(--pdx-cf, 21px) * 1.25) !important;
-  font-size: calc(var(--pdx-cf, 21px) * .8) !important; top: -6px !important; left: -6px !important; }
-html.pdx-m-on #rucksack-zone .ruck-card .card-type { display: none !important; }
-html.pdx-m-on #rucksack-zone .ruck-card .pdx-cdesc { flex: 1 1 auto; min-height: 0; overflow: hidden; margin: calc(var(--pdx-cf, 21px) * .25) 0; display: flex; flex-direction: column; gap: 3px;
-  color: #3a3122; }
-html.pdx-m-on #rucksack-zone .ruck-card .pdx-cdesc b { font: 700 calc(var(--pdx-cf, 21px) * .56)/1.1 var(--f-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: #7a3d6b; }
-html.pdx-m-on #rucksack-zone .ruck-card .pdx-cdesc span { font: 500 calc(var(--pdx-cf, 21px) * .72)/1.25 var(--f-body, "Inter", sans-serif);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
-html.pdx-m-on #rucksack-zone .ruck-pocket:not(.pdx-cc-wide) .ruck-card .pdx-cdesc span { -webkit-line-clamp: 4; }
-html.pdx-m-on #rucksack-zone .ruck-card .card-foot { flex: 0 0 auto; margin-top: auto; font-size: calc(var(--pdx-cf, 21px) * .66) !important; }
-html.pdx-m-on #rucksack-zone .ruck-card .card-deliver .cd-cent, html.pdx-m-on #rucksack-zone .ruck-card .card-recycle { font-size: calc(var(--pdx-cf, 21px) * .66) !important; }
-html.pdx-m-on #rucksack-zone .ruck-card .card-foot svg { width: calc(var(--pdx-cf, 21px) * .7); height: calc(var(--pdx-cf, 21px) * .7); }
-html.pdx-m-on #rucksack-zone .ruck-card.pdx-picked { translate: 0 -8px; }
-/* the tickets' rack and the gold stacks under the cards: read in the column (TICKETS, YOUR GOLD) */
-html.pdx-m-on #rucksack-zone:has(.ruck-card) .ruck-vouchers { visibility: hidden; }
-#pdx-mcol .mx-cp { display: flex; align-items: center; justify-content: space-between; padding: 4px 7px; border: 2px solid var(--cx-ink, #15100a); border-radius: 4px;
-  background: #e9dcb4; color: var(--cx-ink, #15100a); font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .12em; }
-#pdx-mcol .mx-cp b { font: 700 1.1rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: 0; }
 .pdx-casesheet .ps-keys .ps-bin { min-height: 44px; }
-/* the cards lie ON the case's art (its coins and its lock plate stay under them) */
-html.pdx-m-on #rucksack-zone .ruck-body { z-index: 6 !important; }
-/* one or two cards: the lid holds them, the tray (and his gold) shows below */
-html.pdx-m-on #rucksack-zone .ruck-pocket.pdx-cc-wide { bottom: 42% !important; }
+
 
 /* ══ ONE MEASURE (the owner's phone, 28/09: with the camera notch on the left her card spilled over
    the arm; on the right a strip of table showed past the rail): her card and her windows take the
@@ -911,3 +870,19 @@ html.pdx-m-on #pdx-mcol #tut-track .tt-chip.now { order: 3; flex: 1 1 100%; }
 html.pdx-m-on #tut-callout .pdx-tmore { display: none; }
 html.pdx-m-on #tut-callout.pdx-more .pdx-tmore { display: block; position: sticky; bottom: -7px; margin: 4px -8px -7px; padding: 10px 8px 3px; text-align: right;
   background: linear-gradient(180deg, rgba(244, 230, 176, 0), var(--cx-paper, #f4e6b0) 45%); font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .1em; color: var(--cx-ink, #15100a); pointer-events: none; }
+
+/* the complete file, small and whole: placed and scaled by mobile-table.js layDossier (no scroll inside) */
+html.pdx-m-on .panel-detail.dossier { left: var(--pdx-do-left, calc(var(--pdx-colw, 160px) + 10px)) !important; top: var(--pdx-do-top, 8px) !important;
+  width: var(--pdx-do-w, 440px) !important; max-height: none !important; overflow: visible !important; }
+
+/* ══ CARD ILLUSTRATIONS on a phone (js/card-art.js): the card's sheet shows the approved art large
+   beside its words (the landscape page has no height for it above them); a card without art keeps
+   its sheet exactly as it was ══ */
+.pdx-sheet .ps-card.ps-hasart { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.pdx-sheet .ps-art { position: relative; width: min(170px, 26vh + 40px); aspect-ratio: 3 / 4; overflow: hidden; border: 2px solid var(--cx-ink, #15100a);
+  border-radius: 3px; background: #2a2116; box-shadow: 3px 3px 0 rgba(21, 16, 10, .45); max-height: calc(100vh - 60px); }
+.pdx-sheet .ps-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; display: block; }
+.pdx-sheet .ps-body { min-width: 0; }
+.pdx-pick .pp-tile .pp-art { position: relative; flex: 0 0 auto; height: 96px; margin: -10px -11px 8px; overflow: hidden; border-bottom: 1px solid rgba(60, 48, 24, .4); background: #2a2116; }
+.pdx-pick .pp-tile .pp-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; display: block; }
+.pdx-pick .pp-tile .pp-tag { z-index: 2; }

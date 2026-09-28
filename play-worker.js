@@ -9,7 +9,7 @@ async function boot() {
   // A fixed string hash: a match rebuilt after a reload (Reconnect) runs in a new
   // interpreter, and nothing in it may depend on a per-run hash order.
   const pyodide = await loadPyodide({ env: { PYTHONHASHSEED: "0" } });
-  const zip = await (await fetch("game.zip?202609281449")).arrayBuffer();
+  const zip = await (await fetch("game.zip?202609281737")).arrayBuffer();
   pyodide.FS.writeFile("/game.zip", new Uint8Array(zip));
   pyodide.runPython("import sys; sys.path.insert(0, '/game.zip')");
   server = pyodide.pyimport("play_server");

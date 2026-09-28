@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609281449";
-import { Game } from "./game.js?202609281449";
-import { icon } from "./icons.js?202609281449";
-import { roman } from "./util.js?202609281449";
-import { profile } from "./profile.js?202609281449";
+import { api, Connection } from "./net.js?202609281737";
+import { Game } from "./game.js?202609281737";
+import { icon } from "./icons.js?202609281737";
+import { roman } from "./util.js?202609281737";
+import { profile } from "./profile.js?202609281737";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
@@ -39,8 +39,19 @@ const periodOf = (c) => (c >= 20 ? 0 : c >= 11 ? 1 : 2);
 const LESSONS = [
   ["hour", "The Hour"], ["machine", "Generators"], ["travel", "Travel"],
   ["overload", "Overload"], ["market", "Market"], ["paradox", "Paradox"],
-  ["deliver", "Delivery"], ["contract", "Contracts"], ["win", "Winning"],
+  ["deliver", "Delivery"], ["contract", "Contracts"], ["milestone", "Milestones"], ["win", "Winning"],
 ];
+// the last lesson: the millennium mark XX (server/tutorial.py MILESTONE, MILESTONE_HOURS)
+const MILESTONE = 20, MILESTONE_HOURS = 3;
+
+// ON A PHONE the table is a set of fixed pages switched only by the rail keys (mobile-table.js):
+// a line whose subject lives on another page names that page's key and waits until he is there
+const phone = () => document.documentElement.classList.contains("pdx-m-on");
+const mview = () => { try { return window.__pdxMobile ? window.__pdxMobile.view() : null; } catch (e) { return null; } };
+const VIEW_LABEL = { machine: "MACHINE", chart: "CHART", merchant: "MERCHANT", case: "CASE", records: "RECORDS" };
+const VIEW_SCENE = { machine: "main", chart: "timeline", merchant: "market", records: "drawer" };
+const SCENE_VIEW = { main: "machine", market: "merchant", drawer: "records" };
+const railKey = (v) => `#pdx-mrail button[data-view="${v}"]`;
 
 // What a reward does, by category and roll (the engine's table, §23.3).
 const REWARD_TEXT = {
@@ -544,9 +555,26 @@ class Coach {
   }
   once(k) { if (this.said.has(k)) return false; this.said.add(k); return true; }
 
+  /* ON A PHONE, the page a line is about: when he is on another one, her line names its rail
+     key (the key pulses and wears her ring) and waits until he has turned to it. Desktop: nothing. */
+  async lookAt(view, what) {
+    if (!phone() || !VIEW_LABEL[view] || mview() === view || !window.__pdxMobile) return;
+    try { if (VIEW_SCENE[view] && window.__pdxScenePing) window.__pdxScenePing(VIEW_SCENE[view]); } catch (e) {}
+    this.stage.show(railKey(view), `Tap <b>${VIEW_LABEL[view]}</b>${what ? ` to see ${what}` : ""}.`, { rings: [railKey(view)] });
+    await this.untilView(view, 90000);
+    await new Promise((r) => setTimeout(r, 550));          // the page turn lands
+  }
+  untilView(view, ms) {
+    return new Promise((resolve) => {
+      const t0 = Date.now();
+      const iv = setInterval(() => { if (mview() === view || !phone() || Date.now() - t0 > ms) { clearInterval(iv); resolve(); } }, 150);
+    });
+  }
+
   // A line the player must acknowledge. The game's event queue waits behind it.
   async say(at, text, opts = {}) {
     if (this.quiet) return this.note(text, opts);
+    if (opts.view) await this.lookAt(opts.view);
     this.trace("say " + text.replace(/<[^>]+>/g, "").slice(0, 60));
     await this.stage.show(at, text, { ...opts, next: true });
     this.stage.hide();
@@ -622,7 +650,7 @@ class Coach {
     await this.say(".vital-chip.vc-cp", L.goal, { rings: [".vital-chip.vc-cp"] });
     const me = this.me(), c = me ? me.century : 30;
     const ship = () => document.querySelector(`#timeline-rail .cc-shipg[data-seat="${CSS.escape(this.seat)}"]`) || this.fog.starOf(c);
-    await this.say(ship, L.you.replace("{c}", R(c)), { rings: [ship] });
+    await this.say(ship, L.you.replace("{c}", R(c)), { rings: [ship], view: "chart" });
   }
   clear() { this.stage.hide(); }
 
@@ -894,8 +922,9 @@ class Coach {
       this.hourNo = p.hour;
       if (p.hour === 1 && this.once("intro")) await this.wake();
       await this.heraldBeat();
+      if (p.hour === 2 && this.scripted) await this.navLesson();
       if (p.hour >= 2 && this.scripted) await this.merchantIntro();
-      if (this.scripted && !this.done.has("win") && ((this._valveHour && p.hour > this._valveHour) || p.hour >= 12)) await this.wrapUp();
+      await this.lastLessons(p.hour);
     }
     if ((k === "phase_started" || k === "phase_skipped") && this.hourNo === 1 && p.phase === "main") this.markTrack("machine");
     if ((k === "phase_started" || k === "phase_skipped") && p.phase === "market") {
@@ -909,7 +938,7 @@ class Coach {
     const k = msg.kind, p = msg.payload || {};
     const self = this.seat;
     if (k === "merchant_moved" && this.done.has("merchant") && this.once("merchant-first-move")) {
-      await this.say(merchantOnMap, `He moved because the Market phase ended: he always does, toward the richest traveller he is not with. Now he is at ${R(p.to)}.`);
+      await this.say(merchantOnMap, `He moved because the Market phase ended: he always does, toward the richest traveller he is not with. Now he is at ${R(p.to)}.`, { view: "chart" });
     }
     if (k === "allocations_revealed" && this.once("reveal")) {
       this.toast(null, "Everyone's dice are revealed at once, then the modules resolve from 1 to 9.", { ms: 4200 });
@@ -943,11 +972,27 @@ class Coach {
       if (p.seat === self && this.once("dead")) {
         await this.say(".vital-ekg", "<b>You were terminated</b> at 0 energy. Next Hour you return at XXX with 12 energy plus your items' recycle value.");
       } else if (p.by === self && this.once("killer")) {
-        await this.say("#players-zone .pcard", `<b>You terminated ${p.seat}.</b> +1 contract point, and you are now Wanted: a 4 gold bounty on you. Pay 4 gold with Declare at a Market to clear it.`);
+        await this.say("#players-zone .pcard", `<b>You terminated ${p.seat}.</b> Taking a traveller's last energy pays you a contract point, the first time that traveller falls, and makes you Wanted: a 4 gold bounty on you, paid to whoever terminates you. Pay 4 gold with Declare at a Market to clear it.`, { view: "machine" });
+      } else if (p.by && p.by !== self && p.seat !== self && this.scripted && this.once("kill-seen")) {
+        await this.say("#players-zone .pcard", `<b>${p.by} terminated ${p.seat}.</b> Taking a traveller's last energy pays a contract point, the first time that traveller falls, and makes ${p.by} Wanted: 4 gold to whoever terminates them.`, { view: "machine" });
       }
     }
     if (k === "milestone" && p.seat === self && this.once("milestone-" + p.century)) {
-      this.toast(".vital-chip.vc-cp", `<b>+1 point:</b> the first time you end an Hour on ${R(p.century)}.`);
+      if (this.scripted && !this.done.has("milestone")) {
+        // THE LAST LESSON PAYS: he stopped on the mark as the Hour turned
+        this._beat = (this._beat || 0) + 1;
+        try {
+          // the Herald's edition of it comes to the top: older editions still lying open are put away
+          await new Promise((r) => setTimeout(r, 700));
+          const ed = await this.heraldToFront(/milestone|millenni|\bXX\b/i);
+          const rings = ed ? [ed, ".vital-chip.vc-cp"] : [".vital-chip.vc-cp"];
+          await this.say(".vital-chip.vc-cp", `<b>+1 contract point.</b> The Hour turned with you standing on ${R(p.century)}: a millennium mark claimed. The Herald prints it for the whole table.`, { rings });
+          await this.say(null, "Each mark pays once in the whole match, to each traveller who holds it as an Hour ends. And like every point, it earns you a contract.");
+        } finally { this._beat--; }
+        this.learn("milestone");
+      } else {
+        this.toast(".vital-chip.vc-cp", `<b>+1 point:</b> the first time you end an Hour on ${R(p.century)}.`);
+      }
     }
     if (k === "delivered" && p.seat === self && this.once("delivered")) {
       this.learn("deliver");
@@ -963,8 +1008,8 @@ class Coach {
       const txt = (REWARD_TEXT[p.category] || [])[(p.roll || 1) - 1];
       const followed = this.explained && this.explained === this.lastReward;
       this.explained = null;
+      this.learn("contract");                  // signed, whatever its roll asked of him next
       if (!followed && this.once("reward-" + this.hour() + "-" + p.category)) {
-        this.learn("contract");
         await this.say(null, `<b>${p.category}, rolled ${R(p.roll || 1)}:</b> ${txt || "done"}.`
           + (p.category === "Time" ? " The ticket waits in your case: drag it onto the machine's slot when you want it." : ""));
       }
@@ -986,10 +1031,10 @@ class Coach {
       this.fog.lift(p.key);
       if (p.key === "Ascension") {
         await this.say(() => this.fog.starOf(15),
-          "<b>Ascension, centuries XI to XIX.</b> The Secret Market waits at XI and opens once someone ends an Hour there.");
+          "<b>Ascension, centuries XI to XIX.</b> The Secret Market waits at XI and opens once someone ends an Hour there.", { view: "chart" });
       } else {
         await this.say(() => this.fog.starOf(6),
-          "<b>Origins, centuries I to X.</b> Down here every century into the past costs 2 energy, and Year Zero, past century I, ends the game.");
+          "<b>Origins, centuries I to X.</b> Down here every century into the past costs 2 energy, and Year Zero, past century I, ends the game.", { view: "chart" });
       }
     }
   }
@@ -1018,18 +1063,18 @@ class Coach {
         b.add("tut-show-paradox");
         this.born('#machine-body .cell[data-r="1"], #machine-body .matrix-fnlabel.fn-paradox');
         await new Promise((r) => setTimeout(r, 600));
-        await this.say("#machine-body .matrix-wrap", L.paradox, { rings: ["#machine-body .matrix-fnlabel.fn-paradox"], avoid: MACHINE });
+        await this.say("#machine-body .matrix-wrap", L.paradox, { rings: ["#machine-body .matrix-fnlabel.fn-paradox"], avoid: MACHINE, view: "machine" });
         const reach = this.reach();
         if (!reach.inReach) {
           await this.say("#machine-body .matrix-wrap", `Right now it would hit no one: ${reach.behind} ${reach.many ? "are" : "is"} behind you. Travel first. From where you land, you strike next Hour.`,
-            { rings: ["#players-zone .pcard"], avoid: MACHINE });
+            { rings: ["#players-zone .pcard"], avoid: MACHINE, view: "machine" });
         }
       }
       if (stage === 3) {
         b.add("tut-mod3"); b.remove("tut-2x2");
         this.born('#machine-body .cell[data-c="2"]');
         await new Promise((r) => setTimeout(r, 600));
-        await this.say("#machine-body .matrix-wrap", L.mod3, { rings: ['#machine-body .cell[data-c="2"]'], avoid: MACHINE });
+        await this.say("#machine-body .matrix-wrap", L.mod3, { rings: ['#machine-body .cell[data-c="2"]'], avoid: MACHINE, view: "machine" });
         await this.say("#machine-body .matrix-wrap", L.paradoxAim, { rings: ['#machine-body .cell[data-r="1"][data-c="2"]'], avoid: MACHINE });
       }
     } finally { this._growing = false; }
@@ -1050,6 +1095,7 @@ class Coach {
     if (!this.scripted || !shut.length || !this.once("shut-" + this.hour())) return;
     const fn = shut[0], name = FN[fn] || "That function";
     const row = [`#machine-body .matrix-fnlabel.fn-sealed`, machineCell(fn, 0), machineCell(fn, 1), machineCell(fn, 2)];
+    await this.lookAt("machine");
     await this.say(machineCell(fn, 0), `<b>${name} is shut this Hour.</b> It overloaded last Hour: three dice in one function. No die can go there until this Hour is over.`,
       { rings: row, avoid: MACHINE });
     if (h && h.lesson === "valve" && h.matrix && h.matrix[2] && h.matrix[2][0] === 3 && h.matrix[2][1] === 3) {
@@ -1135,16 +1181,16 @@ class Coach {
     const v = this.game.view, me = this.me();
     const mc = v ? v.merchant_century : 20;
     const at = merchantOnMap;
-    await this.say(at, L.merchantArrives.replace("{c}", R(mc)), { rings: [at] });
+    await this.say(at, L.merchantArrives.replace("{c}", R(mc)), { rings: [at], view: "chart" });
     await this.say(at, L.merchantWho, { rings: [at] });
     this.learn("merchant");
     const cam = this.game.camera;
-    cam._engage(); cam.setScene("market");
-    await new Promise((r) => setTimeout(r, 1200));
+    if (phone()) await this.lookAt("merchant", "his wagon");
+    else { cam._engage(); cam.setScene("market"); await new Promise((r) => setTimeout(r, 1200)); }
     await this.say("#market-sign", L.merchantSign, { rings: ["#market-sign"], avoid: SHELF });
     await this.say("#market-zone .market-row", L.marketScene, { rings: ["#market-zone .market-row"], avoid: SHELF });
     await this.say("#market-zone .market-row", L.relics, { rings: ["#market-zone .market-row"], avoid: SHELF });
-    cam.setScene("main");
+    if (!phone()) cam.setScene("main");
     await new Promise((r) => setTimeout(r, 900));
     this.onState && this.onState();
   }
@@ -1160,14 +1206,17 @@ class Coach {
       || shelf.slice().sort((a, b) => a.gold_cost - b.gold_cost || Math.abs(a.delivery_century - me.century) - Math.abs(b.delivery_century - me.century))[0];
     if (!relic) return;
     const cam = this.game.camera;
-    const face = async () => { if (cam.scene !== "market") { cam._engage(); cam.setScene("market"); await new Promise((r) => setTimeout(r, 1200)); } };
+    const face = async () => {
+      if (phone()) return this.lookAt("merchant", "his shelf");
+      if (cam.scene !== "market") { cam._engage(); cam.setScene("market"); await new Promise((r) => setTimeout(r, 1200)); }
+    };
     const cardOnShelf = () => [...document.querySelectorAll("#market-zone .market-row .card")].find((n) => n.dataset.name === relic.name && visible(n)) || null;
     if (me.gold < relic.gold_cost) {
       if (this.once("shelf-gold")) {
         // the relic he cannot afford yet, boxed on the shelf while she names it
         await face();
         await this.say(cardOnShelf, `${cardName(relic)} costs ${relic.gold_cost} gold. You have ${me.gold}. Recharge's second module pays gold: fill it and the Merchant is in reach.`, { rings: [cardOnShelf], avoid: SHELF });
-        if (!phaseOpen) { cam.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
+        if (!phaseOpen && !phone()) { cam.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
       }
       return;
     }
@@ -1180,7 +1229,7 @@ class Coach {
       await this.say(stamp, L.marketPromise, { rings: [stamp], avoid: SHELF });
     }
     // no Market for him this phase: back to the desk; otherwise his decision takes it from here
-    if (!phaseOpen) { cam.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
+    if (!phaseOpen && !phone()) { cam.setScene("main"); await new Promise((r) => setTimeout(r, 900)); }
   }
 
   onDecision(req) {
@@ -1202,7 +1251,7 @@ class Coach {
     if (k === "merchant_century" && this.once("d-merch")) {
       this.explained = this.lastReward;
       const mine = () => { const me = this.me(); return (me && this.fog.starOf(me.century)) || document.querySelector(ANY_GLOW); };
-      return this.atScene("main", () => this.guide(mine, "<b>Move the Merchant:</b> click any lit century to send him there."));
+      return this.atScene("main", () => this.guide(mine, "<b>Move the Merchant:</b> click any lit century to send him there."), null, "chart");
     }
     if (k === "matrix_buff" && this.once("d-buff")) {
       this.explained = this.lastReward;
@@ -1214,7 +1263,7 @@ class Coach {
       const tt = o.target_type;
       if (tt === "traveler") return this.guide("#players-zone .pcard", `<b>${o.card_display || "Your item"}:</b> click the rival's file to target them.`,
         { rings: ["#players-zone .pcard"] });
-      if (tt === "century") return this.atScene("main", () => this.guide(ANY_GLOW, `<b>${o.card_display || "Your item"}:</b> click a lit century.`));
+      if (tt === "century") return this.atScene("main", () => this.guide(ANY_GLOW, `<b>${o.card_display || "Your item"}:</b> click a lit century.`), null, "chart");
       return this.guide(null, `<b>${o.card_display || "Your item"}:</b> click the card you want to target.`);
     }
     if (k === "secret_deal" && this.once("d-secret")) return this.guide(null, "The Secret Market offers its card: take it or pass.");
@@ -1367,6 +1416,10 @@ class Coach {
       if (lesson === "travel" && s.r === 2 && s.c === 0 && this.plan.goal != null) {
         sub = `This Hour's dice are for the trip to ${R(this.plan.goal)}.` + (sub ? " " + sub : "");
       }
+      if (lesson === "milestone" && s.r === 2 && s.c === 0) {
+        sub = `This Hour's dice take you to ${R(MILESTONE)}, the millennium mark.` + (sub ? " " + sub : "");
+      }
+      if (lesson === "milestone" && s.r === 0 && s.c === 0) sub = "The past costs energy: this pays for the trip before anyone travels.";
       // one line at one size: the step, then why it matters
       text = sub ? `${text} ${sub}` : text;
       sub = "";
@@ -1402,7 +1455,8 @@ class Coach {
     const col = o.module === 9 ? 2 : 1;
     this._travelCol = col;
     // never plot into centuries he cannot see: if his reach goes past the roll, it comes off
-    if (!this._mapOpen && from - max < this.cut) this.unrollMap();
+    // (the trip to the millennium mark XX stays on the roll: XX is its last century)
+    if (!this._mapOpen && from - max < this.cut && !(this.scripted && goal != null && goal >= this.cut)) this.unrollMap();
     if (this.hour() <= 5 || this.scripted) { const cell = this.causeCell(2, col); if (cell) cell.classList.add("tut-cause"); }
     if (!this.scripted || goal == null) {
       if (this.once("free-travel")) {
@@ -1418,7 +1472,13 @@ class Coach {
     // the valve Hour's trip walks toward a rival, so his paradox reaches them next Hour
     const rivals = this._valveHour && this._valveHour === this.hour()
       ? ((this.game.view && this.game.view.travelers) || []).filter((t) => !t.is_self && t.century === goal).map((t) => t.name) : [];
-    const why = rivals.length
+    const toMark = goal === MILESTONE && this.done.has("merchant") && (me.temporal_receptor || []).length && !me.scored_century_xx;
+    const roaming = this._valveHour && this._valveHour === this.hour() && (me.temporal_receptor || []).length;
+    const why = toMark
+      ? (land === goal ? "and stop on the millennium mark: stay there as the Hour ends" : "toward the millennium mark")
+      : roaming && !rivals.length
+      ? "closer to your rivals, so your paradox can reach them next Hour"
+      : rivals.length
       ? `${land === goal ? "to stand with" : "toward"} ${rivals.join(" and ")}, so your paradox reaches them next Hour`
       : land === goal
         ? (toMerchant ? "to reach the Merchant" : "to reach the century where your card is delivered")
@@ -1427,13 +1487,14 @@ class Coach {
     if (this.once("travel-cost")) sub = " Going into the past costs 1 energy per century. Going into the future is free.";
     else if (dir > 0 && this.once("travel-free")) sub = " Forward in time is free.";
     this.pointing = true;
-    this.atScene("main", () => this.travelGuide(from, dist, land, why, sub));
+    this.atScene("main", () => this.travelGuide(from, dist, land, why, sub), null, "chart");
     this.learn("travel");
   }
   travelGuide(from, dist, land, why, sub) {
     if (!this.req || this.req.kind !== "travel") return;
     if (dist === 0) {
-      this.guide(ANY_ANCHOR, `You are where you need to be. Click <b>HOLD</b> to stay.${sub}`);
+      const mark = /millennium/.test(why) ? " The mark pays only if the Hour ends with you on it." : "";
+      this.guide(ANY_ANCHOR, `You are where you need to be. Click <b>HOLD</b> to stay.${mark}${sub}`);
     } else {
       this.guide(() => this.fog.starOf(land), `Click <b>${R(land)}</b> to move ${dist} ${dist === 1 ? "century" : "centuries"} ${why}.${sub}`,
         { place: "auto" });
@@ -1580,8 +1641,18 @@ class Coach {
 
   /* ── scene waits ── */
   // Run fn once the camera faces `scene`; until then, say which key gets there.
-  atScene(scene, fn, line) {
+  atScene(scene, fn, line, view) {
     const cam = this.game.camera;
+    // on a phone the PAGE decides (the machine and the chart share the desk's scene)
+    if (phone() && window.__pdxMobile) {
+      const v = view || SCENE_VIEW[scene] || "machine";
+      if (mview() === v) { this._waitScene = null; fn(); return; }
+      try { if (VIEW_SCENE[v] && window.__pdxScenePing) window.__pdxScenePing(VIEW_SCENE[v]); } catch (e) {}
+      this.guide(railKey(v), `Tap <b>${VIEW_LABEL[v]}</b>.`, { rings: [railKey(v)] });
+      this._waitScene = { scene, fn, view: v };
+      this.watchScene();
+      return;
+    }
     if (!cam || cam.scene === scene) { this._waitScene = null; fn(); return; }
     const key = { main: { market: "S", drawer: "D" }, market: { main: "W", drawer: "W" }, drawer: { main: "A", market: "A" } }[scene][cam.scene] || "S";
     const where = { main: "your desk", market: "the Merchant's wagon", drawer: "your records" }[scene];
@@ -1592,10 +1663,68 @@ class Coach {
   watchScene() {
     const w = this._waitScene;
     if (!w || !this.game || !this.game.camera) return;
-    if (this.game.camera.scene === w.scene) {
+    if (w.view ? mview() === w.view : this.game.camera.scene === w.scene) {
       this._waitScene = null;
       setTimeout(() => { try { w.fn(); } catch (e) { console.error(e); } }, 650);   // let the pan land
     }
+  }
+
+  /* ── THE LAST LESSONS: after the escape valve, the trip to the millennium mark XX
+     (the server deals it: server/tutorial.py milestone_phase), then the wrap-up. ── */
+  inMilestone(hour) {
+    const me = this.me(), vh = this._valveHour;
+    return !!(me && vh && hour > vh && hour <= vh + MILESTONE_HOURS && hour < 12
+      && (me.temporal_receptor || []).length && !me.scored_century_xx && !this.done.has("milestone"));
+  }
+  async lastLessons(hour) {
+    if (!this.scripted || this.done.has("win")) return;
+    const vh = this._valveHour;
+    if (vh && hour > vh && this.inMilestone(hour)) { await this.milestoneIntro(); return; }
+    if ((vh && hour > vh) || hour >= 12) await this.wrapUp();
+  }
+  async milestoneIntro() {
+    if (!this.once("milestone-intro")) return;
+    this._beat = (this._beat || 0) + 1;
+    try {
+      this.markTrack("milestone");
+      const xx = () => this.fog.starOf(MILESTONE);
+      await this.say(xx, `One more lesson, and it pays. <b>${R(MILESTONE)}</b> is a millennium mark. End an Hour standing on it and the C.R.O.N.O.S. pays you a contract point.`,
+        { rings: [xx], view: "chart" });
+      await this.say(xx, `This Hour your dice take you there. Stop on ${R(MILESTONE)}: the point is paid only if the Hour ends with you on it.`, { rings: [xx] });
+    } finally { this._beat--; this.persist(); }
+  }
+
+  // put away the Herald editions lying open that are not about `re`, so the one that is shows
+  async heraldToFront(re) {
+    for (let i = 0; i < 4; i++) {
+      const w = document.querySelector(".he-window.he-news.open");
+      if (!w || (re && re.test(w.textContent || ""))) return w || null;
+      try { w.click(); } catch (e) { return null; }
+      await new Promise((r) => setTimeout(r, 900));
+    }
+    return document.querySelector(".he-window.he-news.open");
+  }
+
+  /* ── ON A PHONE, early and calm (the Hour after his first dice): how to look around
+     the table. The keys on the right are its places; the pulsing one is where she needs him. ── */
+  async navLesson() {
+    if (!phone() || !window.__pdxMobile || !document.querySelector("#pdx-mrail") || !this.once("nav")) return;
+    this._beat = (this._beat || 0) + 1;
+    try {
+      await this.lookAt("machine");
+      await this.say("#pdx-mrail", "These keys on the right are the places at your table: your machine, the chart, the Merchant, your case and your records. Tap one to look there.",
+        { rings: ["#pdx-mrail"] });
+      this.stage.show(railKey("chart"), "Tap <b>CHART</b>.", { rings: [railKey("chart")] });
+      await this.untilView("chart", 90000);
+      await new Promise((r) => setTimeout(r, 600));
+      this.stage.show(railKey("machine"), "The chart: where every traveller stands in time. Now tap <b>MACHINE</b> to come back.", { rings: [railKey("machine")] });
+      await this.untilView("machine", 90000);
+      await new Promise((r) => setTimeout(r, 600));
+      const q = "#pdx-mcol .pdx-helpkey, #pdx-tabkey";
+      await this.say(q, "The <b>?</b> in my column: tap it for my tips, hold it to see what everything on the table does.", { rings: [q] });
+      await this.say("#pdx-mrail", "When I need you somewhere else, that place's key pulses. Tap it and look.", { rings: ["#pdx-mrail"] });
+      this.clear();
+    } finally { this._beat--; this.persist(); }
   }
 
   /* ── the end of the guided opening ── */
@@ -1613,10 +1742,25 @@ class Coach {
     this.unrollMap();
     try { window.__fx && window.__fx.chartReveal && window.__fx.chartReveal(); } catch (e) {}
     await new Promise((r) => setTimeout(r, 1100));
-    await this.say("#timeline-rail", L.chartOpen, { ring: false });
+    await this.say("#timeline-rail", L.chartOpen, { ring: false, view: "chart" });
+    // the marks: XX (claimed in the last lesson, or not) and X, down on the way to Year Zero
+    const me = this.me() || {};
+    const x = () => this.fog.starOf(10);
+    await this.say(x, me.scored_century_xx
+      ? "Further down waits <b>X</b>, the second millennium mark: end an Hour on it for one more contract point, once. Below X lie the Origins, where every century into the past costs 2 energy, and past I, <b>YEAR ZERO</b>."
+      : "Two centuries are millennium marks, <b>XX</b> and <b>X</b>: end an Hour standing on one and it pays a contract point, once each. Below X lie the Origins, where every century into the past costs 2 energy, and past I, <b>YEAR ZERO</b>.",
+      { rings: [x] });
+    if (me.scored_century_xx) this.learn("milestone");
     await this.say(null, L.ending, { sub: "At 0 energy you are terminated and come back at XXX. At 12 heat your motor explodes." });
-    await this.say(".vital-chip.vc-cp", "<b>How to win:</b> the most contract points when time settles.",
-      { sub: "+1 per relic returned, +1 per termination, +1 the first time you end an Hour on XX and on X, +1 for being alive at the end.", rings: [".vital-chip.vc-cp"] });
+    // every end, as the engine settles it (server/driver.py _check_end, _finish)
+    await this.say(null, "What each end pays. <b>Year Zero:</b> 2 points to whoever reaches it. <b>A receptor with all three periods:</b> 1 point to its owner. <b>One traveller never terminated:</b> 1 point to whoever made the last termination. And at every end but the empty wagon, each traveller never terminated scores 1 more for surviving.");
+    await this.say(null, "The ends are checked as each Hour closes. Only the empty wagon stops the clock at once, the moment his last relic leaves the shelf.");
+    if (!this.said.has("killer") && !this.said.has("kill-seen")) {
+      await this.say("#players-zone .pcard", "One point I have not shown you. Take a traveller's last energy and you are paid a contract point, the first time that traveller falls, and you become Wanted: 4 gold on your head for whoever terminates you. Terminate a Wanted traveller and their 4 gold is yours.",
+        { rings: ["#players-zone .pcard"], view: "machine" });
+    }
+    await this.say(".vital-chip.vc-cp", "<b>How to win:</b> the most contract points when time settles. A tie goes to the traveller furthest into the future, the highest century, then to the most gold, then to the most energy.",
+      { sub: "+1 per relic returned, +1 per first termination, +1 the first time you end an Hour on XX and on X, +1 for surviving without ever being terminated.", rings: [".vital-chip.vc-cp"] });
     await this.phasesRecap();
     await this.tabLesson();
     await this.say(null, L.gradEnd);
@@ -1661,7 +1805,7 @@ class Coach {
   // his rivals at the table, and their files are his to arrange: a guided drag, then free
   async rivalsLesson() {
     const file = "#players-zone .pcard.cfolio";
-    await this.say(file, L.rival, { rings: [file] });
+    await this.say(file, L.rival, { rings: [file], view: "machine" });
     this.guide(file, L.files, { rings: [file] });
     const moved = await new Promise((resolve) => {
       const t0 = Date.now(); let held = false;
@@ -1693,6 +1837,13 @@ class Coach {
   async brainLesson() {
     const B = window.__helaBrain;
     const root = () => document.getElementById("hela-brain-full") || document.getElementById("hela-brain-dock");
+    // ON A PHONE her memory is a page of its own, opened by her eye at the top of her column
+    const eye = "#pdx-mcol .mc-eye";
+    if (phone() && window.__pdxMobile && document.querySelector(eye) && mview() !== "brain") {
+      this.stage.show(eye, "My memory keeps every Hour. Tap my eye, <b>HOURS</b>, at the top of my column.", { rings: [eye] });
+      await this.untilView("brain", 60000);
+      await new Promise((r) => setTimeout(r, 700));
+    }
     if (!B || !root()) return;
     // a part he can actually click: visible, and nothing (the cat, a paper) sitting on it
     const clickable = (n) => { const b = n.getBoundingClientRect(); const h = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
@@ -1745,8 +1896,21 @@ class Coach {
     this.stage.trackOff();
     document.body.classList.add("tut-phases");
     await new Promise((r) => setTimeout(r, 900));
-    const chip = (label) => () => [...document.querySelectorAll("#vz-phases .vz-ph")]
+    const chip0 = (label) => () => [...document.querySelectorAll("#vz-phases .vz-ph")]
       .find((n) => (n.textContent || "").trim().toLowerCase() === label && visible(n)) || null;
+    // ON A PHONE the turn lives in her column: the Hour, the phase's name and four dots
+    const dot = (label) => () => {
+      const ph = [...document.querySelectorAll("#vz-phases .vz-ph")];
+      const i = ph.findIndex((n) => (n.textContent || "").trim().toLowerCase() === label);
+      return i >= 0 && i < 4 ? document.querySelector(`#pdx-mcol .mc-phases i:nth-child(${i + 1})`) : null;
+    };
+    const onPhone = phone() && !!document.querySelector("#pdx-mcol .mc-phases");
+    const chip = onPhone ? dot : chip0;
+    if (onPhone) {
+      const now = ((document.querySelector("#pdx-mcol .mc-phase") || {}).textContent || "").trim();
+      await this.say("#pdx-mcol .mc-id", `The turn is here, in my column: the Hour, and four dots, one for each phase of it. The lit dot is the phase under way${now ? `: now <b>${now.toUpperCase()}</b>` : ""}.`,
+        { rings: ["#pdx-mcol .mc-id"] });
+    }
     const d = this._did || {}, h = (x) => (x != null ? ` in hour ${x}` : "");
     await this.say(chip("delivery"), `That moment you filed the relic in the drawer${h(d.delivery)}: that was DELIVERY. Every hour opens with it: whoever stands on a relic's own century hands it in.`, { rings: [chip("delivery")] });
     await this.say(chip("market"), `Standing in the wagon's year and buying the relic${h(d.market)}: the MARKET. It comes second, and when it ends, the wagon moves.`, { rings: [chip("market")] });
@@ -1838,6 +2002,7 @@ class Coach {
     }
     if ((me.overloaded_functions || []).length) this.done.add("overload");
     if (me.century !== 30) this.done.add("travel");        // he starts at XXX: he has moved
+    if (me.scored_century_xx) { this.done.add("milestone"); this.said.add("milestone-intro"); }
     this.markTrack();
   }
   // the first decision after a Reconnect: the lesson he was in the middle of, again
@@ -1848,7 +2013,7 @@ class Coach {
     if (req.kind === "allocate" && h.lesson === "valve" && h.hour) this._valveHour = h.hour;
     const hour = this.hour();
     if (hour >= 2 && !this.done.has("merchant")) await this.merchantIntro();
-    if (!this.done.has("win") && ((this._valveHour && hour > this._valveHour) || hour >= 12)) await this.wrapUp();
+    await this.lastLessons(hour);
     this.persist();
   }
   // no lesson kept and the lessons are over: the quiet coach, with no words

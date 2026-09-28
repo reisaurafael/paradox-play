@@ -7394,6 +7394,8 @@ html.pdx-phone #timeline-rail :is(.cplot, .cplot-sing, .cplot-ori) :is(.cm-hit, 
    __pdxPhonePlace / __pdxPhoneToken), drawn above everything on the chart; a finger on a
    token still lands on the century under it (the chart's own tap areas answer) */
 html.pdx-phone #timeline-rail .pc-ph { pointer-events: none; }
+/* the Merchant's plate in his century's numeral place: a finger on it lands on the century */
+html.pdx-phone #timeline-rail .pc-mplate-g { pointer-events: none; }
 /* ...and the chart's decoration steps back a little under them (the Itinerarium's walls,
    trees and dragon; the Sea's waves, sharks and foam; the sky's nebulae, dust and belt
    rocks), never the centuries, the road, the lit ports, the names or the Merchant */
@@ -7975,14 +7977,14 @@ html body #hela-eye .he-caps .cx-cap:not(.on) { display: none; }
 #tl-gauge .tlg-count { font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .06em; color: var(--vz-hot); white-space: nowrap; }
 #tl-gauge.mending { animation: tlgGlow 1.6s ease-out; }
 @keyframes tlgGlow { 0% { box-shadow: 0 0 0 2px var(--vz), 0 0 28px var(--vz); } 100% { box-shadow: 0 0 12px rgb(var(--vz-rgb) / .2); } }
-/* on the chart: a crack beside every unravelled century, a ring of light where mended */
+/* on the chart: a crack only beside a century whose relic is loose on the table, a ring of light
+   where mended (the owner, 28/09: the faint crack at every unravelled century "helps nothing and
+   pollutes"; it marked nothing, since every century not yet mended wore it) */
 .tl-marks { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; z-index: 5; }
 .tl-mk, .tl-burst { position: absolute; width: calc(var(--r) * 2); height: calc(var(--r) * 2);
   margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1); border-radius: 50%; pointer-events: none; }
-.tl-mk.w::after { content: ""; position: absolute; right: -10px; top: -12px; width: 14px; height: 18px; opacity: .38;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 18'%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%23e8dcc0' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
-.tl-mk.w.loose::after { opacity: .95; width: 17px; height: 22px; top: -15px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 18'%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%2315100a' stroke-width='3.6' stroke-linejoin='round'/%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%23ff7a55' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.tl-mk.w.loose::after { content: ""; position: absolute; right: -10px; top: -15px; width: 17px; height: 22px; opacity: .95;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 18'%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%2315100a' stroke-width='3.6' stroke-linejoin='round'/%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%23ff7a55' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
 .tl-mk.w { box-shadow: 0 0 0 1px rgba(232,220,192,.12); }
 .tl-mk.m { box-shadow: 0 0 0 2.5px var(--seat), 0 0 12px 2px var(--seat); }
 /* the MEND: the broken ring closes and light returns */
