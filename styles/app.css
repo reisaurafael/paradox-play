@@ -4635,7 +4635,15 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being.ear-flick .cw-earR { animation: cwEarFlick .5s ease-in-out 1; }
 @keyframes cwEarFlick { 40% { rotate: 20deg; } }
 .cat-being .cw-headin { transform-origin: 50% 85%; transition: rotate .45s ease, translate .45s ease; }
-.cat-being.petted .cw-headin { rotate: 9deg; translate: 4px 6px; }
+.cat-being.petted .cw-headin { rotate: calc(9deg + var(--rub, 0deg)); translate: 4px 6px; }
+/* petting: the head bunts into the hand in time with the strokes, the ears relax,
+   the tail sways slowly */
+.cat-being.bunt .cw-headin { animation: cwBunt var(--bunt, .9s) ease-in-out infinite; }
+@keyframes cwBunt { 0%,100% { translate: 4px 6px; } 45% { translate: -12px 12px; rotate: calc(18deg + var(--rub, 0deg)); } }
+.cat-being.ears-soft:not(.ears-back) .cw-earL { rotate: -14deg; translate: 2px 6px; }
+.cat-being.ears-soft:not(.ears-back) .cw-earR { rotate: 14deg; translate: -2px 6px; }
+.cat-being.petted .cw-tail { animation: cwSway 2.6s ease-in-out infinite; }
+@keyframes cwSway { 0%,100% { rotate: -3deg; } 50% { rotate: 4deg; } }
 .cat-being.biting .cw-headin { rotate: -12deg; translate: -12px 12px; }
 .cat-being.grooming .cw-headin { rotate: -10deg; translate: -4px 12px; }
 .cat-being .cw-sit .cw-tail, .cat-being .cw-bat .cw-tail { transform-origin: 92% 20%; }
@@ -4648,6 +4656,11 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being.grooming .cw-paw { rotate: 24deg; }
 .cat-being.biting .cw-paw { rotate: -18deg; }
 .cat-being.batting .cw-paw { animation: cwSwipe .6s ease-in-out 3; }
+/* treading the cushion (her basket, or a hand she loves) */
+.cat-being.kneading .cw-paw { animation: cwKnead .55s ease-in-out infinite; }
+@keyframes cwKnead { 0%,100% { rotate: 22deg; translate: 0 0; } 50% { rotate: 34deg; translate: 0 10px; } }
+.cat-being.kneading { animation: cwKneadBob .55s ease-in-out infinite; }
+@keyframes cwKneadBob { 50% { translate: 0 2px; } }
 @keyframes cwSwipe { 0%,100% { rotate: 0deg; } 35% { rotate: -16deg; } 70% { rotate: 12deg; } }
 
 /* walking: two step drawings alternate and the whole body lopes (his own layer) */
@@ -4671,8 +4684,8 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being.sleeping { animation: cwBreath 4.2s ease-in-out infinite; }
 @keyframes cwBreath { 0%,100% { scale: 1 1; } 50% { scale: 1.01 1.022; } }
 .cat-being .cw-zzz path { opacity: 0; }
-.cat-being.pose-sleep .cw-zzz .z1 { animation: cwZ 5.6s ease-in-out infinite; }
-.cat-being.pose-sleep .cw-zzz .z2 { animation: cwZ 5.6s ease-in-out 2.8s infinite; }
+:is(.cat-being.pose-sleep, .cat-being.pose-curl) .cw-zzz .z1 { animation: cwZ 5.6s ease-in-out infinite; }
+:is(.cat-being.pose-sleep, .cat-being.pose-curl) .cw-zzz .z2 { animation: cwZ 5.6s ease-in-out 2.8s infinite; }
 @keyframes cwZ { 0% { opacity: 0; translate: 0 10px; } 25%,60% { opacity: .9; } 100% { opacity: 0; translate: -14px -26px; } }
 .cat-being.petted .cw-zzz { display: none; }
 
@@ -5143,8 +5156,7 @@ body.cabin-on.carrying-card #cursor-plane .hela-radar { color: #ffd68a;
   filter: drop-shadow(0 0 9px rgba(255,214,138,.9)); }
 body.vz-crit #cursor-plane .hela-radar { color: var(--vz-warn);
   filter: drop-shadow(0 0 9px rgba(255,106,74,.9)); }
-/* the hand casts onto the desk, this is what gives the cursor its own plane */
-body.cabin-on #cursor-plane .hand-right { filter: drop-shadow(0 12px 16px rgba(0,0,0,.6)); }
+/* the hand's cast shadow onto the desk is drawn flat in its own SVG (cabin.js handShadow) */
 @media (prefers-reduced-motion: reduce) {
   #cursor-plane .hela-radar .hr-a, #cursor-plane .hela-radar .hr-b, #cursor-plane .hela-radar .hr-core { animation: none; } }
 
@@ -7297,6 +7309,17 @@ body.cabin-on #timeline-rail, body.cabin-on #market-zone { will-change: opacity;
 #timeline-rail .pdx-ref { transition: opacity .18s ease; }
 body:not(.pdx-help-hold) #timeline-rail .pdx-ref { opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity .18s ease, visibility 0s linear .18s; }
+
+/* ═══ THE CHART IN ONE LOOK ON A PHONE (board_draft.js window.__pdxPhoneChart) ════════════
+   On a touch phone each chart is recomposed for the landscape chart page: its box takes the
+   stage's own aspect (--pdx-chart-ar, set by the boards), so mobile-table.js fits the whole
+   chart at once, with no pan and no zoom. The sheet does not run on past it (the page is
+   clipped to the chart), and a century's tap area is the board's own (r 40 in the chart's
+   units, over 50 CSS px on a phone), not the desk's enlarged one. */
+html.pdx-phone #timeline-rail > :is(.cplot, .cplot-sing, .cplot-ori) { bottom: auto !important; height: auto !important;
+  aspect-ratio: var(--pdx-chart-ar, 1.6); }
+html.pdx-phone #timeline-rail .sheet-ext { display: none !important; }
+html.pdx-phone #timeline-rail :is(.cplot, .cplot-sing, .cplot-ori) :is(.cm-hit, .cc-hit, .sea-hit) { r: 40px; }
 
 /* ═══ THE ERA TURNS LIKE A COMIC PAGE (board_draft.js window.__pdxChartTurn) ════════════
    Replaces the iris shutter. A slab of ink, halftone and speed lines, edged on both sides

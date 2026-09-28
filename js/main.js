@@ -1,21 +1,21 @@
 /* =========================================================================
    main.js, entry point: landing, lobby, and message routing into the Game
    ========================================================================= */
-import { api, Connection } from "./net.js?202609271951";
-import { hydrateIcons, icon } from "./icons.js?202609271951";
-import { seatColor, initials, el } from "./util.js?202609271951";
-import { Game } from "./game.js?202609271951";
-import { audio } from "./audio.js?202609271951";
-import { tutorials } from "./tutorial.js?202609271951";
-import { profile } from "./profile.js?202609271951";
-import { access } from "./access.js?202609271951";
+import { api, Connection } from "./net.js?202609272212";
+import { hydrateIcons, icon } from "./icons.js?202609272212";
+import { seatColor, initials, el } from "./util.js?202609272212";
+import { Game } from "./game.js?202609272212";
+import { audio } from "./audio.js?202609272212";
+import { tutorials } from "./tutorial.js?202609272212";
+import { profile } from "./profile.js?202609272212";
+import { access } from "./access.js?202609272212";
 import "./menu-cursor.js";
 import "./help.js";
-import { colourPicker, colourWish } from "./chronicle.js?202609271951";
-import { launchTutorial } from "./tutorial-drive.js?202609271951";
-import { PadCursor } from "./controle.js?202609271951";
-import { fx, PACES, LEVELS } from "./fx.js?202609271951";
-import { initResume, leaveWords } from "./resume.js?202609271951";
+import { colourPicker, colourWish } from "./chronicle.js?202609272212";
+import { launchTutorial } from "./tutorial-drive.js?202609272212";
+import { PadCursor } from "./controle.js?202609272212";
+import { fx, PACES, LEVELS } from "./fx.js?202609272212";
+import { initResume, leaveWords } from "./resume.js?202609272212";
 
 hydrateIcons(document);
 // the auction-phase module (an IIFE outside the module graph) draws the live
@@ -594,7 +594,7 @@ window.__pdxLeaveMatch = leaveMatch;
 // The confirm is a line in place of the button, never a pop-up: it covers
 // nothing, and it stays until the player answers (Leave, Stay or Escape).
 // The words follow the table on screen: a match waits for Reconnect; Learn to Play
-// mid-lesson simply starts again (js/resume.js leaveWords).
+// before its first decision simply starts again (js/resume.js leaveWords).
 function setLeaveWords(box) {
   const w = leaveWords();
   const knob = box.classList.contains("leave-knob");

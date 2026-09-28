@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609271951";
-import { Game } from "./game.js?202609271951";
-import { icon } from "./icons.js?202609271951";
-import { roman } from "./util.js?202609271951";
-import { profile } from "./profile.js?202609271951";
+import { api, Connection } from "./net.js?202609272212";
+import { Game } from "./game.js?202609272212";
+import { icon } from "./icons.js?202609272212";
+import { roman } from "./util.js?202609272212";
+import { profile } from "./profile.js?202609272212";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
@@ -90,6 +90,10 @@ const L = {
   marketPromise: "That number is a PROMISE. Buy the relic, carry it to that century, hand it over there, and the C.R.O.N.O.S. pays you in the only currency that decides this game.",
   chartOpen: "Look up. You kept a promise, so the roll comes off the chart and you get the rest of the years. Thirty centuries, all of them yours to cross, and the last thing down there at the end is YEAR ZERO.",
 };
+// RECONNECT MID-LESSON: the match itself comes back by replay (server/replay.py); the
+// lesson's own state is kept here, beside the match record, at every stable point.
+export const LESSON_KEY = "pdx.resume.lesson.v1";
+const LESSON_V = 1;
 const FIRST_ERA_LOW = 24;        // his cut: only XXIV to XXX until the Merchant arrives
 const MERCHANT_ERA_LOW = 20;     // the chart grows to the whole Singularity when he does
 
@@ -511,7 +515,10 @@ class Coach {
 
   me() { const v = this.game && this.game.view; return v ? v.travelers.find((t) => t.is_self) : null; }
   hour() { const v = this.game && this.game.view; return v ? v.hour : 0; }
-  learn(k) { if (!this.done.has(k)) { this.done.add(k); this.trace("learned " + k); } this.markTrack(); }
+  learn(k) {
+    if (!this.done.has(k)) { this.done.add(k); this.trace("learned " + k); if (!this._beat) this.persist(); }
+    this.markTrack();
+  }
   markTrack(current) {
     if (!this.stage) return;
     const cur = current || (LESSONS.find(([k]) => !this.done.has(k)) || [""])[0];
@@ -602,12 +609,16 @@ class Coach {
   clear() { this.stage.hide(); }
 
   /* ───────────── boot: a real room, the real game ───────────── */
-  async start() {
-    const inp = document.getElementById("inp-name");
-    const prof = (() => { try { return profile.get(); } catch (e) { return {}; } })();
-    let name = ((inp && inp.value) || prof.name || "Traveller").trim().slice(0, 24) || "Traveller";
-    if (/^(varr|oda)$/i.test(name)) name = "Traveller";
-    const r = await api.createRoom(name, 3, "tutorial", prof.colour != null ? prof.colour : null);
+  async start(opts = {}) {
+    // a Reconnect hands over the rebuilt room (resume.js); otherwise a new one
+    let r = opts.resume || null;
+    if (!r) {
+      const inp = document.getElementById("inp-name");
+      const prof = (() => { try { return profile.get(); } catch (e) { return {}; } })();
+      let name = ((inp && inp.value) || prof.name || "Traveller").trim().slice(0, 24) || "Traveller";
+      if (/^(varr|oda)$/i.test(name)) name = "Traveller";
+      r = await api.createRoom(name, 3, "tutorial", prof.colour != null ? prof.colour : null);
+    }
     const seat = r.seat;
     const conn = new Connection(r.code, seat);
     const game = new Game(conn, seat);
@@ -618,7 +629,7 @@ class Coach {
     game.setSpeed("slow");
     window.__helaMute = true;               // her ambient remarks wait; the lessons speak
     document.body.classList.add("tut", "tut-story");
-    this.wakeStart();
+    if (!opts.resume) this.wakeStart();
     // the comic effects play in the story too, paced with the lines (fx.js)
     try { window.__fx = window.__fx || {}; window.__fx.tutorial = true; } catch (e) {}
     // the Merchant is not on the chart before his beat (the map's own gate)
@@ -629,6 +640,8 @@ class Coach {
     this.cut = FIRST_ERA_LOW;
     this._cutT = setInterval(() => this.limitMap(), 600);
     this.markTrack("hour");
+    // back after a reload: the lesson stands where it was before the first table arrives
+    if (opts.resume) this.restore(opts.snap || null);
     this.hook();
 
     let begun = false, startSent = false;
@@ -669,7 +682,12 @@ class Coach {
     // Decisions: guidance is laid over the control the game has just drawn.
     const decide = g.onDecision.bind(g);
     g.onDecision = (req) => {
-      const go = () => { const out = decide(req); try { this.onDecision(req); } catch (e) { console.error("[tutorial] decision", e); } return out; };
+      const go = () => {
+        const out = decide(req);
+        try { this.onDecision(req); } catch (e) { console.error("[tutorial] decision", e); }
+        this.persist();                        // a stable point: the lesson as he sees it now
+        return out;
+      };
       let pre = null;
       try { pre = this.scripted ? this.beforeDecision(req) : null; } catch (e) { console.error("[tutorial] pre", e); }
       if (pre && pre.then) { pre.then(go, (e) => { console.error("[tutorial] pre", e); go(); }); return; }
@@ -961,6 +979,7 @@ class Coach {
   /* ───────────── decisions ───────────── */
   /* ── the beat that belongs BEFORE a decision is shown ── */
   beforeDecision(req) {
+    if (this._resumed) { this._resumed = false; return this.catchUp(req).then(() => (this.scripted ? this.beforeDecision(req) : null)); }
     if (this._heraldDue) return this.heraldBeat().then(() => this.beforeDecision(req));
     const h = (req.options || {}).tutorial || {};
     if (req.kind === "allocate") return this.grow(h.machine).then(() => this.shutReminder(req, h));
@@ -974,7 +993,7 @@ class Coach {
     if (this.stageNo === stage || this._growing) return;
     const from = this.stageNo || 0;
     this.stageNo = stage;
-    if (from === 0) { if (stage === 3) b.remove("tut-2x2"); b.add("tut-show-paradox"); if (stage === 3) b.add("tut-mod3"); return; }
+    if (from === 0) { this.applyStage(stage); return; }
     this._growing = true;
     try {
       if (stage >= 2 && from < 2) {
@@ -1086,6 +1105,10 @@ class Coach {
   async merchantIntro() {
     if (this.done.has("merchant") || this._introMerchant) return;
     this._introMerchant = true;
+    this._beat = (this._beat || 0) + 1;
+    try { await this._merchantIntro(); } finally { this._beat--; this.persist(); }
+  }
+  async _merchantIntro() {
     this.cut = MERCHANT_ERA_LOW;            // the chart grows, on the wooden table
     document.body.classList.add("tut-merchant", "tut-map-grow");
     try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(true); } catch (e) {}
@@ -1559,6 +1582,10 @@ class Coach {
   /* ── the end of the guided opening ── */
   async wrapUp() {
     if (this.done.has("win") || this._wrapping) return;
+    this._beat = (this._beat || 0) + 1;
+    try { await this._wrapUp(); } finally { this._beat--; this.persist(); }
+  }
+  async _wrapUp() {
     this._wrapping = true;
     this.markTrack("win");
     // Learn to Play ends: the roll comes off the chart, thirty centuries and Year Zero
@@ -1634,6 +1661,10 @@ class Coach {
   async heraldBeat() {
     if (!this._heraldDue || this._heraldDone) return;
     this._heraldDue = false; this._heraldDone = true;
+    this._beat = (this._beat || 0) + 1;
+    try { await this._heraldBeat(); this._heraldTaught = true; } finally { this._beat--; this.persist(); }
+  }
+  async _heraldBeat() {
     await this.say(".he-window.he-news, .hb-newsread", L.herald, {});
     // read, then put away: the edition lies over her memory, which is shown next
     try { window.__heraldSkip && window.__heraldSkip(); } catch (e) {}
@@ -1705,7 +1736,119 @@ class Coach {
     this.learn("hour");
   }
 
+  /* ── RECONNECT MID-LESSON ──
+     The lesson's state, small and plain: what was taught, the one-time lines said,
+     the machine's size, the map's roll, the scripted Hours, HELA's voice. Saved at
+     every stable point (a decision on screen, a lesson learned, a beat finished),
+     never in the middle of a beat, so a reload during one says it again. */
+  snapshot() {
+    const b = document.body.classList;
+    return {
+      done: [...this.done], said: [...this.said],
+      scripted: !!this.scripted, quiet: !!this.quiet,
+      stage: this.stageNo || 0, cut: this.cut, mapOpen: !!this._mapOpen,
+      valveHour: this._valveHour || null, did: this._did || {}, rewardN: this.rewardN || 0,
+      herald: !!this._heraldTaught, track: !!(this.stage && this.stage.track.classList.contains("gone")),
+      phases: b.contains("tut-phases"), story: b.contains("tut-story"), mute: !!window.__helaMute,
+    };
+  }
+  persist() {
+    if (!this.conn || this._over || window.__pdxResumeBlocked) return;
+    try {
+      localStorage.setItem(LESSON_KEY, JSON.stringify({ v: LESSON_V, room: this.conn.code,
+        hour: this.hour(), saved_at: Date.now(), snap: this.snapshot() }));
+    } catch (e) { /* storage full or off: Reconnect then rebuilds the lesson from the table */ }
+  }
+  // the machine's size on the page, for a stage reached without its lines
+  applyStage(n) {
+    const b = document.body.classList;
+    b.toggle("tut-2x2", n === 1 || n === 2);
+    b.toggle("tut-show-paradox", n >= 2);
+    b.toggle("tut-mod3", n >= 3);
+    this.stageNo = n;
+  }
+  // the lesson as it stood (a snapshot), before the rebuilt table arrives; without one
+  // (storage off), the table's own facts rebuild it at the first decision (reconcile)
+  restore(snap) {
+    this._resumed = true;
+    this._snapped = !!(snap && typeof snap === "object");
+    const s = this._snapped ? snap : {};
+    const b = document.body.classList;
+    (Array.isArray(s.done) ? s.done : []).forEach((k) => this.done.add(String(k)));
+    (Array.isArray(s.said) ? s.said : []).forEach((k) => this.said.add(String(k)));
+    this.said.add("intro");                        // he woke already: never the black again
+    if (s.scripted === false) this.scripted = false;
+    this.quiet = !!s.quiet;
+    if (s.stage) this.applyStage(Math.max(1, Math.min(3, +s.stage || 1)));
+    if (typeof s.cut === "number") this.cut = s.cut;
+    this._valveHour = s.valveHour || null;
+    this._did = s.did && typeof s.did === "object" ? s.did : {};
+    this.rewardN = +s.rewardN || 0;
+    this._heraldTaught = !!s.herald;
+    this._heraldDone = !!s.herald;
+    if (this.done.has("merchant")) {
+      this._introMerchant = true;
+      b.add("tut-merchant", "tut-map-grow");
+      try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(this.done.has("win") ? null : true); } catch (e) {}
+    }
+    if (s.mapOpen) this.unrollMap();
+    if (s.phases) b.add("tut-phases");
+    if (s.track) this.stage.trackOff();
+    if (s.story === false) b.remove("tut-story");
+    window.__helaMute = s.mute !== false;
+    this.markTrack();
+    this.trace("resumed " + (this._snapped ? "with the lesson" : "from the table"));
+  }
+  // facts of the table that make a lesson done, whatever the page saw before the reload
+  reconcile() {
+    const me = this.me(), v = this.game.view;
+    if (!me || !v) return;
+    this.hourNo = v.hour;
+    const bought = (me.hand || []).length || (me.temporal_receptor || []).length;
+    if (bought) {
+      ["merchant", "shelf-offer", "market"].forEach((k) => this.done.add(k));
+      this.said.add("shelf-gold");
+      this._introMerchant = true;
+      document.body.classList.add("tut-merchant", "tut-map-grow");
+      try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(this.done.has("win") ? null : true); } catch (e) {}
+      if (this.cut > MERCHANT_ERA_LOW) this.cut = MERCHANT_ERA_LOW;
+    }
+    if ((me.temporal_receptor || []).length) {
+      this.done.add("deliver");
+      if (!this._heraldDone) this._heraldDue = true;   // the first Herald came with it
+    }
+    if ((me.overloaded_functions || []).length) this.done.add("overload");
+    if (me.century !== 30) this.done.add("travel");        // he starts at XXX: he has moved
+    this.markTrack();
+  }
+  // the first decision after a Reconnect: the lesson he was in the middle of, again
+  async catchUp(req) {
+    const h = (req.options || {}).tutorial || {};
+    this.reconcile();
+    if (!this._snapped && h.scripted === false) { this.finishQuietly(); return; }
+    if (req.kind === "allocate" && h.lesson === "valve" && h.hour) this._valveHour = h.hour;
+    const hour = this.hour();
+    if (hour >= 2 && !this.done.has("merchant")) await this.merchantIntro();
+    if (!this.done.has("win") && ((this._valveHour && hour > this._valveHour) || hour >= 12)) await this.wrapUp();
+    this.persist();
+  }
+  // no lesson kept and the lessons are over: the quiet coach, with no words
+  finishQuietly() {
+    LESSONS.forEach(([k]) => this.done.add(k));
+    this.quiet = true; this.scripted = false;
+    document.body.classList.remove("tut-story");
+    try { window.__pdxMerchantReveal && window.__pdxMerchantReveal(null); } catch (e) {}
+    window.__helaMute = false;
+    this.unrollMap();
+    this.applyStage(3);
+    this.stage.trackOff();
+    this.markTrack();
+    this.persist();
+  }
+
   gameOver(p) {
+    try { localStorage.removeItem(LESSON_KEY); } catch (e) {}   // the match is over: nothing to come back to
+    this._over = true;
     this.quiet = false;
     this.scripted = false;
     this.blockPass = false;
@@ -1744,6 +1887,27 @@ function passSign() {
     .find((n) => /pass/i.test(n.textContent || "") && visible(n)) || null;
 }
 function cssq(s) { return String(s).replace(/["\\]/g, "\\$&"); }
+
+/** The kept lesson of a saved Learn to Play match (room: the record's room code). */
+export function readLesson(room) {
+  try {
+    const o = JSON.parse(localStorage.getItem(LESSON_KEY) || "null");
+    if (!o || o.v !== LESSON_V || !o.snap || typeof o.snap !== "object") return null;
+    return room && o.room !== room ? null : o;
+  } catch (e) { return null; }
+}
+export function dropLesson() { try { localStorage.removeItem(LESSON_KEY); } catch (e) {} }
+
+/** RECONNECT to Learn to Play: the rebuilt room ({ code, seat, room }) and the lesson
+    kept for it (readLesson), or null: the coach rebuilds it from the table. */
+export function resumeTutorial(entry, lesson) {
+  const coach = new Coach();
+  coach.start({ resume: entry, snap: lesson && lesson.snap }).catch((e) => {
+    console.error("[tutorial] could not resume", e);
+    document.body.classList.remove("tut");
+  });
+  return coach;
+}
 
 export function launchTutorial() {
   const coach = new Coach();

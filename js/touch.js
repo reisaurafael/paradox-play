@@ -254,7 +254,7 @@
       + '<div class="tx-rot-box">'
       + '<svg class="tx-phone" viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="6" width="24" height="44" rx="4"/><circle cx="32" cy="45" r="1.8"/>'
       + '<path class="tx-arc" d="M50 22 A20 20 0 0 1 44 52"/><path class="tx-arc-tip" d="M40 50 L44 53 L47 48"/></svg>'
-      + '<p class="tx-rot-title">Turn your phone sideways</p>'
+      + '<p class="tx-rot-title">Turn your ' + (PHONE ? "phone" : "tablet") + ' sideways</p>'
       + '<p class="tx-rot-line">The table is laid out in landscape.</p>'
       + '</div>');
     r.setAttribute("role", "status");
@@ -516,10 +516,10 @@
       if (v === undefined) return m;
       return v ? '<b class="pw-key">' + v + "</b>" : "";
     });
-    // a delivery on a phone: the case and the cabinet are two views; a relic tapped in the
-    // case is carried, and the view turns to the cabinet by itself
+    // a delivery on a phone: the case and the cabinet are two scenes; a relic tapped in the
+    // case is carried while he turns to the records himself
     if (phone) out = out.replace(/Drag (.+?) from your case into the open drawer/g,
-      'Tap <b class="pw-key">CASE</b>, tap $1, then tap the open drawer');
+      'Tap <b class="pw-key">CASE</b>, tap $1, then <b class="pw-key">RECORDS</b> and the open drawer');
     // on touch the Merchant's card opens its sheet first, and the sheet's big key buys
     out = out.replace(/drag it into your case, or click it/g, "tap it, then its <b class=\"pw-key\">BUY</b> key");
     // the verbs of a mouse and a keyboard

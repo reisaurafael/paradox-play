@@ -11,13 +11,15 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   const NS = "http://www.w3.org/2000/svg";
-  let W = 820; const H = 950;
+  let W = 820; let H = 950;
   const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   const ROM = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV",
     "XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX"];
   const rom = c => c === 0 ? "0" : ROM[c - 1];
   const rnd = (a, b) => { const x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); };
   const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // a touch phone draws the Itinerarium in one look (board_draft.js window.__pdxPhoneChart)
+  const PH = window.__pdxPhoneChart, PHONE = () => !!(PH && PH.on());
   const initials = name => { const p = String(name).trim().split(/\s+/); return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase(); };
   const audible = () => { const r = document.getElementById("timeline-rail"); return !!r && r.classList.contains("skin-ori"); };
   const snd = (n, o) => { try { if (audible() && window.__audio) window.__audio.play(n, o); } catch (e) {} };
@@ -54,6 +56,7 @@
   };
   function worldR(c){ return (c===10||c===20)?40:(DUAL[c]?36:31); }
   function layout(){
+    if(PHONE()) return phoneLayout();
     const sx=W/820;
     for(const era in CONSTS){ const cst=CONSTS[era]; for(const c in cst.stars){ const p=cst.stars[c]; POS[+c]=[Math.round(p[0]*sx), p[1]]; META[+c]=era; } }
     SUN=[Math.round(420*sx), 880]; LIGHT=[Math.round(420*sx), 66];   // the sacred cross within the beast's circle
@@ -206,11 +209,11 @@
   /* the walled compounds  /* the walled compounds (820-base coords): [x0,y0,x1,y1, ruined?] */
   const WALLS={ tim:[290,62,765,250,0], con:[30,95,230,325,0], mod:[25,395,272,550,0], lma:[382,398,742,566,0], hma:[408,598,772,852,0], ant:[25,685,298,905,1] };
   /* the road sequence: stations + wall-gate waypoints */
-  const SEQ=[["g",208,54],["g",290,88],["c",30],["c",29],["c",28],["c",27],["c",26],["c",25],["c",24],["g",290,207],["c",23],["g",230,183],["c",22],["c",21],["c",20],["g",180,325],["c",19],["g",195,395],["c",18],["c",17],["c",16],["g",272,510],["c",15],["g",382,505],["c",14],["c",13],["c",12],["c",11],["g",602,566],["g",650,598],["c",10],["c",9],["c",8],["c",7],["c",6],["g",408,791],["c",5],["g",298,755],["c",4],["c",3],["c",2],["c",1],["g",298,868],["c",0]];
+  let SEQ=[["g",208,54],["g",290,88],["c",30],["c",29],["c",28],["c",27],["c",26],["c",25],["c",24],["g",290,207],["c",23],["g",230,183],["c",22],["c",21],["c",20],["g",180,325],["c",19],["g",195,395],["c",18],["c",17],["c",16],["g",272,510],["c",15],["g",382,505],["c",14],["c",13],["c",12],["c",11],["g",602,566],["g",650,598],["c",10],["c",9],["c",8],["c",7],["c",6],["g",408,791],["c",5],["g",298,755],["c",4],["c",3],["c",2],["c",1],["g",298,868],["c",0]];
   /* the beast's coil = the overdrive circumference (ellipse arc, deg CW from tail to head) */
-  const COIL={cx:340,cy:790,rx:300,ry:138,a0:212,a1:510};
+  let COIL={cx:340,cy:790,rx:300,ry:138,a0:212,a1:510};
   let MOUTH=[213,859];
-  function coilPt(deg){ const sx=W/820, r=deg*Math.PI/180; return [(COIL.cx-COIL.rx*Math.cos(r))*sx, COIL.cy+COIL.ry*Math.sin(r)]; }
+  function coilPt(deg){ const sx=PHONE()?1:W/820, r=deg*Math.PI/180; return [(COIL.cx-COIL.rx*Math.cos(r))*sx, COIL.cy+COIL.ry*Math.sin(r)]; }
   let ROADPTS=[], ROADIDX={};
   function buildRoad(){
     ROADPTS=[]; ROADIDX={}; const sx=W/820;
@@ -272,7 +275,7 @@
     return g;
   }
   function coilGround(){
-    const sx=W/820; let g="";
+    const sx=PHONE()?1:W/820; let g="";
     g+=`<ellipse cx="${(COIL.cx*sx).toFixed(0)}" cy="${COIL.cy}" rx="${(COIL.rx*sx-8).toFixed(0)}" ry="${COIL.ry-8}" fill="#5a2412" opacity=".05"/>`;
     for(let i=0;i<22;i++){ const a=rnd(i,9)*6.283, rr=rnd(i,3); const px=COIL.cx*sx+Math.cos(a)*COIL.rx*sx*0.8*rr, py=COIL.cy+Math.sin(a)*COIL.ry*0.8*rr;
       g+=`<circle cx="${px.toFixed(0)}" cy="${py.toFixed(0)}" r="${(rnd(i,5)*7+2).toFixed(0)}" fill="#3a1c0e" opacity="${(rnd(i,7)*.06+.03).toFixed(3)}"/>`; }
@@ -309,6 +312,7 @@
       <path class="cm-flame f3" d="M 3 0 Q 14 -3 26 -2 Q 16 1 26 4 Q 13 6 3 3 Z" fill="#fbe89a" opacity=".9"/>
     </g>`;
     g+=`</g>`;
+    if(PHONE()) return g+`</g>`;   // the phone's road meets the beast without the bridge and the stone
     // the bridge rides OVER the beast's tail the beast's tail (between X and IX)
     const bp=[(619)*sx,744];
     g+=`<g data-tip="THE BEAST-BRIDGE: here the road crosses the World-Dragon's tail; beyond it every league costs 2" transform="translate(${bp[0].toFixed(0)} ${bp[1].toFixed(0)}) rotate(-46)">
@@ -320,7 +324,7 @@
   function sacredCross(){
     const [x,y]=SUN;
     let g=`<g class="cm-sun" data-c="0" data-tip="YEAR ZERO: the sacred cross at the root of time, ringed by the beast; the last pilgrimage ends the game (+2 CP)">`;
-    g+=`<circle class="cm-hit" data-c="0" cx="${x}" cy="${y}" r="28" fill="transparent"/>`;
+    g+=`<circle class="cm-hit" data-c="0" cx="${x}" cy="${y}" r="${PHONE()?40:28}" fill="transparent"/>`;
     g+=`<ellipse cx="${x}" cy="${y+8}" rx="62" ry="30" fill="url(#cmYZGlow)" opacity=".65"/>`;
     g+=`<circle cx="${x}" cy="${y-9}" r="46" fill="#f9efcf" opacity=".30"/>`;
     g+=`<circle class="cm-crosshalo" cx="${x}" cy="${y-9}" r="29" fill="url(#cmYZGlow)"/>`;
@@ -329,7 +333,8 @@
     g+=`<path d="M ${x-13} ${y+14} q 13 -7 26 0 l -3 5 h -20 z" fill="#b7a05a" stroke="#3a2c12" stroke-width="1.2"/>`;
     g+=`<path d="M ${x-2.7} ${y+12} L ${x-2.7} ${y-7} L ${x-11} ${y-7} L ${x-13} ${y-9.8} L ${x-13} ${y-14.2} L ${x-11} ${y-17} L ${x-2.7} ${y-17} L ${x-2.7} ${y-25} L ${x-4.4} ${y-29.5} L ${x+4.4} ${y-29.5} L ${x+2.7} ${y-25} L ${x+2.7} ${y-17} L ${x+11} ${y-17} L ${x+13} ${y-14.2} L ${x+13} ${y-9.8} L ${x+11} ${y-7} L ${x+2.7} ${y-7} L ${x+2.7} ${y+12} L ${x+4.8} ${y+15} L ${x-4.8} ${y+15} Z" fill="url(#cmGoldBar)" stroke="#3a2c12" stroke-width="1.5"/>`;
     g+=`<path d="M ${x} ${y+10} V ${y-26} M ${x-10} ${y-12} H ${x+10}" stroke="#fff3c0" stroke-width="1.3" opacity=".85"/>`;
-    g+=`<g><rect x="${x-33}" y="${y+22}" width="66" height="13.5" rx="2.2" fill="#f3e6c2" stroke="#5a4426" stroke-width=".9" opacity=".95"/><text x="${x}" y="${y+32.5}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="10.5" fill="#2c2010">YEAR ZERO</text></g>`;
+    g+=PHONE()?`<g><rect x="${x-50}" y="${y+19}" width="100" height="21" rx="3" fill="#f3e6c2" stroke="#5a4426" stroke-width="1.2"/><text x="${x}" y="${y+35}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="16" fill="#2c2010">YEAR ZERO</text></g>`
+      :`<g><rect x="${x-33}" y="${y+22}" width="66" height="13.5" rx="2.2" fill="#f3e6c2" stroke="#5a4426" stroke-width=".9" opacity=".95"/><text x="${x}" y="${y+32.5}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="10.5" fill="#2c2010">YEAR ZERO</text></g>`;
     return g+`</g>`;
   }
   function treeG(x,y,s2,ev){ return ev? `<g transform="translate(${x} ${y}) scale(${s2})"><path d="M 0 4 L 0 -1 M -4 4 h8" stroke="#4a3a22" stroke-width="1.2"/><path d="M -4.5 0 L 0 -10 L 4.5 0 Z M -3.5 -5 L 0 -13 L 3.5 -5 Z" fill="#5f7a4a" stroke="#39492b" stroke-width=".8"/></g>`
@@ -380,10 +385,80 @@
     g+=`<g transform="translate(${tx.toFixed(0)} 6)"><path d="M-212 0 h424 v20 l-10 8 h-404 l-10 -8 z" fill="#4a2e12" stroke="url(#cmGold)" stroke-width="1.4"/><text x="0" y="15" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-weight="bold" font-size="11.5" letter-spacing="1.6" fill="#f0d68a">ITINERARIVM SAECVLORVM · the six walled kingdoms</text></g>`;
     return g;
   }
+  /* ═══ THE ITINERARIUM ON A PHONE: one look, no pan, no zoom ═══════════════════════════
+     The same six walled kingdoms, stacked as six bands (LAST DAWN on top, the DRAGON WASTES
+     at the foot), the red pilgrim road turning at the end of each band from XXX down to
+     Year Zero, the castle of every century on the road (the border centuries stand on the
+     wall between their two kingdoms), the world-dragon coiled round the Dragon Wastes with
+     his fire on the sacred cross, and the three receptor-churches in the kingdoms they
+     serve. Bigger castles and plates for a finger, fewer ornaments (no rose, no title
+     cartouche, no rubrics), the same vellum, ink and gold. */
+  let PL=null; const PHB={};
+  const PNAME={tim:"LAST DAWN",con:"CROWNLANDS",mod:"CHARTERED MARCHES",lma:"ABBEYLANDS",hma:"HIGH MARCHES",ant:"DRAGON WASTES"};
+  function phoneLayout(){
+    PL=PH.layout(W,H,{yzX:.745,yzDy:-2});
+    for(const era in CONSTS){ for(const c in CONSTS[era].stars){ META[+c]=era; } }
+    for(let c=1;c<=30;c++) POS[c]=PL.pos[c];
+    SUN=PL.yz; LIGHT=[Math.round(W/2),22];
+    const b5=PL.band(5), b4=PL.band(4);
+    COIL={cx:W*.44, cy:b5.cy+7, rx:W*.425, ry:PL.rowH*.5, a0:214, a1:506};
+    // the road: station to station, the beast's ground from IX down
+    SEQ=[]; for(let c=30;c>=1;c--) SEQ.push(["c",c]); SEQ.push(["c",0]);
+    // the receptor-churches, each in a kingdom of its own period, in that band's widest gap
+    const spot=(r,dy)=>{ const g=PL.gaps(r,52)[0]; const b=PL.band(r); return g?[Math.round((g[0]+g[1])/2), Math.round(b.cy+(dy||0))]:[Math.round(W/2),Math.round(b.cy)]; };
+    PHB.Singularity=spot(1,6); PHB.Ascension=spot(2,6); PHB.Origins=spot(4,8);
+    void b4;
+  }
+  // a kingdom's name on its wall's top edge, in the band's widest stretch clear of castles
+  function phoneName(r,era){
+    const b=PL.band(r), col=HUE[era], txt=PNAME[era], w=txt.length*10.6+26;
+    const gs=PL.gaps(r,30,"top"), g=gs.find(q=>q[1]-q[0]>=w)||gs[0]||[20,20+w];
+    const x=Math.round(Math.max(26, Math.min(W-26-w, Math.max(g[0], Math.min(g[1]-w, (g[0]+g[1])/2-w/2))))), y=Math.round(b.top+6);
+    // (inside a positioned group: bare absolutely placed text in the base layer was left unpainted by Chromium after a re-raster)
+    return `<g data-tip="${esc(CONSTS[era].mean)}" transform="translate(${x} ${y})"><rect x="-4" y="-9" width="${w.toFixed(0)}" height="19" rx="3" fill="#efe3c2" stroke="${shd(col,0.6)}" stroke-width="1.1" opacity=".96"/><g class="cm-pennant" transform="translate(3 7)"><path d="M 0 0 v-13 l9 3.2 l-9 3.2" fill="${col}" stroke="#3a2c12" stroke-width=".8"/></g><text x="15" y="5.5" font-family="Georgia,serif" font-weight="bold" font-size="13.5" letter-spacing=".8" fill="${shd(col,0.55)}">${txt}</text></g>`;
+  }
+  function phoneWalls(){
+    const STY={ tim:{teeth:"2 6"}, con:{teeth:"7 4"}, mod:{teeth:"4 5"}, lma:{teeth:"2.5 8"}, hma:{teeth:"5.5 5"}, ant:{teeth:"4 15"} };
+    let g="";
+    PL.rows.forEach((R0,r)=>{
+      const e=R0.era, b=PL.band(r), col=HUE[e], ruin=e==="ant", dash=ruin?'stroke-dasharray="16 10"':"";
+      const X0=20, X1=W-20, y0=b.top+6, y1=b.bot-6, w=X1-X0, h=y1-y0;
+      g+=`<rect x="${X0}" y="${y0.toFixed(0)}" width="${w}" height="${h.toFixed(0)}" rx="12" fill="${col}" opacity=".09"/>`;
+      g+=`<rect x="${X0}" y="${y0.toFixed(0)}" width="${w}" height="${h.toFixed(0)}" rx="11" fill="none" stroke="${col}" stroke-width="7" ${dash} opacity=".82"/>`;
+      g+=`<rect x="${X0}" y="${y0.toFixed(0)}" width="${w}" height="${h.toFixed(0)}" rx="11" fill="none" stroke="#f3e6c2" stroke-width="1.8" ${dash} opacity=".75"/>`;
+      g+=`<rect x="${X0-4}" y="${(y0-4).toFixed(0)}" width="${w+8}" height="${(h+8).toFixed(0)}" rx="14" fill="none" stroke="${col}" stroke-width="3.4" stroke-dasharray="${STY[e].teeth}" opacity=".9"/>`;
+      for(const [tx,ty] of [[X0+8,y0+6],[X1-8,y0+6],[X0+8,y1-6],[X1-8,y1-6]]) g+=towerG(tx,ty,col,ruin);
+    });
+    PL.rows.forEach((R0,r)=>{ g+=phoneName(r,R0.era); });
+    return g;
+  }
+  function phoneTrees(){
+    let g=`<g class="cm-forest" opacity=".8">`, k=0;
+    for(let r=0;r<5;r++){ const b=PL.band(r); for(const [x0,x1] of PL.gaps(r,50)){ const n=Math.floor((x1-x0)/70); for(let i=0;i<n;i++){ const x=x0+(i+.5)*(x1-x0)/n+(rnd(k,3)-.5)*14, y=b.cy+14+(rnd(k,5)-.5)*16; g+=treeG(x.toFixed(0),y.toFixed(0),(0.9+rnd(k,7)*.3).toFixed(2),rnd(k,9)>.5?1:0); k++; } } }
+    return g+`</g>`;
+  }
+  function phoneFrame(){
+    const F=[[3,"#5a3c10",1.2,1],[7,"url(#cmPhGold)",6,1],[7,"#fff0a8",1,.6],[11,"#5a3c10",1,1]];
+    let g=`<defs>${frameGold("cmPhGold")}</defs>`;
+    for(const [o,c,w,op] of F) g+=`<rect x="${o}" y="${o}" width="${W-2*o}" height="${H-2*o}" fill="none" stroke="${c}" stroke-width="${w}"${op<1?` opacity="${op}"`:""}/>`;
+    return g;
+  }
+  function phoneArt(){
+    let out=parchmentField();
+    out+=phoneWalls();
+    out+=coilGround();
+    out+=roadG();
+    out+=phoneTrees();
+    out+=phoneFrame();
+    out+=dragonCoil();
+    out+=sacredCross();
+    for(let c=1;c<=30;c++) out+=worldG(c);
+    return out;
+  }
   function worldG(c){
     const [x,y]=POS[c], eras=ERAS_OF(c), dual=eras.length===2, era=singleEra(c), col=HUE[era];
     const lit=R.restored.has(c), broken=R.monsters.has(c)&&!lit, wreck=R.wrecks.has(c);
-    const mile=(c===10||c===20), s=(mile?1.28:dual?1.1:1)*1.05;
+    const mile=(c===10||c===20), s=(mile?1.28:dual?1.1:1)*(PHONE()?1.2:1.05);
     const ink=wreck?"#7a6642":"#33260f", stone=lit?"#fbe8c6":(wreck?"#c9bd98":"#efe3c2"), roof=dual?HUE[eras[1]]:col;
     const gild=lit?`<circle r="${(19*s).toFixed(1)}" fill="none" stroke="url(#cmGold)" stroke-width="1.5" opacity=".85" class="cm-lit"/>`:"";
     const shadow=`<ellipse cx="0" cy="${(13*s).toFixed(1)}" rx="${(19*s).toFixed(1)}" ry="${(7*s).toFixed(1)}" fill="#efe3c2" opacity=".55"/><ellipse cx="0" cy="${(15*s).toFixed(1)}" rx="${(13.5*s).toFixed(1)}" ry="${(2.6*s).toFixed(1)}" fill="rgba(60,40,16,.2)"/>`;
@@ -392,11 +467,12 @@
     const dualTags=dual?`<text class="pdx-ref" x="${(-12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[0]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[0].toUpperCase()}</text><text class="pdx-ref" x="${(12*s).toFixed(1)}" y="${(-19*s).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="bold" fill="${HUE[eras[1]]}" stroke="#f3e6c2" stroke-width="1.8" paint-order="stroke">${eras[1].toUpperCase()}</text>`:"";
     const fs=(dual?15:14)*(mile?1.12:1);
     return `<g class="cm-world${broken?" cm-broken":""}${wreck?" cm-wreck":""}" data-c="${c}" transform="translate(${x} ${y})" style="color:${col}">
-      <circle class="cm-hit" data-c="${c}" r="${Math.max(32,26*s).toFixed(1)}" fill="transparent"/>
+      <circle class="cm-hit" data-c="${c}" r="${PHONE()?40:Math.max(32,26*s).toFixed(1)}" fill="transparent"/>
       ${gild}${shadow}
       <g class="cm-worldbody"><g transform="scale(${s.toFixed(3)})">${dual?`<g clip-path="url(#cmHalfL)">${bld(eras[0],ink,stone,HUE[eras[0]])}</g><g clip-path="url(#cmHalfR)">${bld(eras[1],ink,stone,HUE[eras[1]])}</g><line x1="0" y1="-20" x2="0" y2="15" stroke="${ink}" stroke-width="1.4"/>`:bld(era,ink,stone,roof)}</g>${crown}</g>
       ${scorch}${dualTags}
-      <g class="cm-numplate"><rect x="${(-rom(c).length*4.4-4).toFixed(1)}" y="${(17*s).toFixed(1)}" width="${(rom(c).length*8.8+8).toFixed(1)}" height="13.5" rx="2.2" fill="#f3e6c2" stroke="${wreck?"#8a7652":"#5a4426"}" stroke-width=".9" opacity=".94"/><text y="${(17*s+10.6).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="11.5" fill="${wreck?"#7a6642":"#2c2010"}">${rom(c)}</text></g>
+      ${PHONE()?`<g class="cm-numplate"><rect x="${(-rom(c).length*6.6-5).toFixed(1)}" y="${(14*s).toFixed(1)}" width="${(rom(c).length*13.2+10).toFixed(1)}" height="21" rx="3" fill="#f3e6c2" stroke="${wreck?"#8a7652":"#5a4426"}" stroke-width="1.2"/><text y="${(14*s+16.4).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="18.5" fill="${wreck?"#7a6642":"#2c2010"}">${rom(c)}</text></g>`
+      :`<g class="cm-numplate"><rect x="${(-rom(c).length*4.4-4).toFixed(1)}" y="${(17*s).toFixed(1)}" width="${(rom(c).length*8.8+8).toFixed(1)}" height="13.5" rx="2.2" fill="#f3e6c2" stroke="${wreck?"#8a7652":"#5a4426"}" stroke-width=".9" opacity=".94"/><text y="${(17*s+10.6).toFixed(1)}" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="11.5" fill="${wreck?"#7a6642":"#2c2010"}">${rom(c)}</text></g>`}
     </g>`;
   }
   let auditCache=[];
@@ -414,6 +490,7 @@
       <filter id="cmBhBlur" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4"/></filter>
       <clipPath id="cmHalfL"><rect x="-24" y="-32" width="24" height="56"/></clipPath>
       <clipPath id="cmHalfR"><rect x="0" y="-32" width="24" height="56"/></clipPath>`;
+    if(PHONE()) return {defs, out:phoneArt()};
     let out=parchmentField();
     out+=coilGround();
     out+=walls();
@@ -555,7 +632,7 @@
   function highlights(){
     if(!mode) return ""; let g=""; const cand=pickCandidates();
     const ring=(c,cls,tip)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const rr=(c===0?46:worldR(c)+13); g+=`<circle class="cm-glow ${cls}" data-c="${c}" data-tip="${esc(tip)}" cx="${P[0]}" cy="${P[1]}" r="${rr}"/>`; };
-    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P, ty=y-(c===0?52:worldR(c)+16); const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cm-cost"><rect x="${x-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
+    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P; let ty=y-(c===0?52:worldR(c)+16); if(PHONE()&&ty<30) ty=y+worldR(c)+34; /* a phone's top row: the tag hangs under the plate */ const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cm-cost"${PHONE()?` transform="translate(${x} ${ty}) scale(1.55) translate(${-x} ${-ty})"`:""}><rect x="${x-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
     if(mode.kind==="travel"){
       for(let c=1;c<=30;c++){ if(!cand.has(c)||c===mode.self) continue; if(c>mode.self||mode.ppc===0){ ring(c,"cm-go-future",`with the drift to ${rom(c)}, free`); tag(c,"FREE","free"); } else { const cost=armedCost(c); const risk=cost>=mode.energy; ring(c,risk?"cm-go-risk":"cm-go-past",`beat upstream to ${rom(c)}, ${cost} energy${risk?" (this could strand you)":""}`); tag(c,String(cost),risk?"risk":"cost"); } }
       if(cand.has(0)){ ring(0,"cm-go-risk",`the final plunge into the Dead Sun, ends the game (+2 CP)`); tag(0,String(armedCost(0)),"risk"); }
@@ -614,7 +691,7 @@
   }
   function flare(c,col){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return; for(let i=0;i<10;i++){ const a=i/10*6.28, ln=document.createElementNS(NS,"line"); ln.setAttribute("x1",P[0]+Math.cos(a)*8); ln.setAttribute("y1",P[1]+Math.sin(a)*8); ln.setAttribute("x2",P[0]+Math.cos(a)*24); ln.setAttribute("y2",P[1]+Math.sin(a)*24); ln.setAttribute("stroke",col); ln.setAttribute("stroke-width","2"); ln.setAttribute("stroke-linecap","round"); svg.appendChild(ln); ln.animate([{opacity:0},{opacity:1,offset:.3},{opacity:0}],{duration:700,delay:i*30}).onfinish=()=>ln.remove(); } }
   function floatText(c,txt,col){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return; const t=document.createElementNS(NS,"text"); t.setAttribute("x",P[0]); t.setAttribute("y",P[1]-8); t.setAttribute("text-anchor","middle"); t.setAttribute("font-family","'Courier New',monospace"); t.setAttribute("font-weight","bold"); t.setAttribute("font-size","15"); t.setAttribute("fill",col); t.setAttribute("stroke","#05060e"); t.setAttribute("stroke-width","3"); t.setAttribute("paint-order","stroke"); t.style.transformBox="fill-box"; t.style.transformOrigin="center"; t.textContent=txt; svg.appendChild(t); t.animate([{transform:"translateY(6px)",opacity:0},{transform:"translateY(-4px)",opacity:1,offset:.3},{transform:"translateY(-26px)",opacity:0}],{duration:1100,easing:"cubic-bezier(.2,.8,.4,1)"}).onfinish=()=>t.remove(); }
-  function holePos(per){ const b=BHP[per]; return b?[Math.round(b[0]*W/820), b[1]]:null; }
+  function holePos(per){ if(PHONE()) return PHB[per]||null; const b=BHP[per]; return b?[Math.round(b[0]*W/820), b[1]]:null; }
   function absorbToHole(c,per){ const svg=fxG(); const P=(c===0?SUN:POS[c]); const H2=holePos(per); if(!svg||!P||!H2||REDUCED) return; const col=PHUE[per]||"#9a8cf0";
     const dx=H2[0]-P[0], dy=H2[1]-P[1]; const mx=P[0]+dx*0.5-dy*0.22, my=P[1]+dy*0.5+dx*0.22; const d=`M ${P[0]} ${P[1]} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${H2[0]} ${H2[1]}`;
     const gg=document.createElementNS(NS,"g"); gg.innerHTML=`<path d="M0 -6 L5 0 L0 6 L-5 0 Z" fill="${col}" stroke="#fff" stroke-width=".8"/><circle r="1.8" fill="#fff"/>`; gg.style.offsetPath=`path("${d}")`; gg.style.offsetRotate="auto"; svg.appendChild(gg);
@@ -812,10 +889,10 @@
     const rail=document.getElementById("timeline-rail"); if(!rail) return false;
     if(rail.querySelector(".cplot-ori")) return true;
     const rb=rail.getBoundingClientRect(); const bw=rb.width-6, bh=rb.height-74; if(bw<60||bh<60) return false;   // the cplot is inset 74px top + 6px left, derive W from the REAL content box so the chart fills it
-    W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
+    if(PHONE()){ const d=PH.dims(); W=d.W; H=d.H; } else W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
     const base=baseMap();
     rail.insertAdjacentHTML("beforeend",`<div class="cplot-ori"><svg class="pc-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cm-base">${base.out}</g><g class="cm-live"></g><g class="cm-fx"></g><g class="cm-top"></g></svg><div class="cm-cmd"></div><div class="cm-legend pdx-ref">${legendHTML()}</div><div class="cm-tip"></div></div>`);
-    if(window.__pdxSheetExt) window.__pdxSheetExt(rail.querySelector(".cplot-ori"),W,H,vellumExtArt);
+    if(window.__pdxSheetExt&&!PHONE()) window.__pdxSheetExt(rail.querySelector(".cplot-ori"),W,H,vellumExtArt);
     const svg=rail.querySelector(".cplot-ori .pc-chart");
     svg.addEventListener("click",e=>{ const t=e.target.closest(".cm-hit, .cm-glow, .cm-cost, .cm-world, .cm-sun"); let c=(t&&t.dataset&&t.dataset.c!==undefined)?+t.dataset.c:nearestStar(e); if(c!=null&&!isNaN(c)) onWorldClick(c); });
     rail.querySelector(".cplot-ori .cm-cmd").addEventListener("click",e=>{ if(e.target.closest(".cm-anchor")&&mode&&mode.kind==="travel"&&app.pendingReq){ snd("chart_stamp"); app.respond({direction:1,distance:0}); mode=null; scheduleLive(); } });
@@ -865,7 +942,7 @@
       <div class="cm-legfoot">- the muster-roll rides at left · hover a station to read it -</div></div>`;
   }
   let rzT=null;
-  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-ori"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()) renderNow(); },350); };
+  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-ori"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()) renderNow(); },350); };
   window.addEventListener("resize",railRelayout);
   if(window.ResizeObserver){ const railEl=document.getElementById("timeline-rail"); if(railEl) new ResizeObserver(railRelayout).observe(railEl); }
 

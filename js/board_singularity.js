@@ -11,13 +11,15 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   const NS = "http://www.w3.org/2000/svg";
-  let W = 820; const H = 950;
+  let W = 820; let H = 950;
   const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   const ROM = ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV",
     "XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX"];
   const rom = c => c === 0 ? "0" : ROM[c - 1];
   const rnd = (a, b) => { const x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); };
   const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // a touch phone draws the star chart in one look (board_draft.js window.__pdxPhoneChart)
+  const PH = window.__pdxPhoneChart, PHONE = () => !!(PH && PH.on());
   const initials = name => { const p = String(name).trim().split(/\s+/); return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase(); };
   const audible = () => { const r = document.getElementById("timeline-rail"); return !!r && r.classList.contains("skin-sing"); };
   const snd = (n, o) => { try { if (audible() && window.__audio) window.__audio.play(n, o); } catch (e) {} };
@@ -48,7 +50,34 @@
     ant: { name:"THE SERPENT",  sci:"CRN\u00b7ANT", mean:"the root of time, biting its own tail",                   stars:{5:[678,790],4:[752,852],3:[648,888],2:[468,888],1:[300,872]} },
   };
   function worldR(c){ return (c===10||c===20)?40:(DUAL[c]?36:31); }
+  /* ═══ THE STAR CHART ON A PHONE: one look, no pan, no zoom ═══════════════════════════════
+     The same sky, re-hung for the phone's landscape page: the six constellations as six
+     bands (THE TITAN on top, THE SERPENT at the foot), the drift running from XXX down
+     through every star to the Dead Sun, the four border stars on the seam between their two
+     figures, the debris belt drawn round the deep past (I to IX) as it is on the desk, the
+     nebulae round their own stars, the three vaults in the figures they serve. Bigger
+     plates for a finger, no gyro; the same night, stars and ink. */
+  let PL=null; const PHB={};
+  const PNAME={tim:"THE TITAN",con:"THE ENGINE",mod:"THE COMPASS",lma:"THE TOWER",hma:"THE GAUNTLET",ant:"THE SERPENT"};
+  function phoneLayout(){
+    PL=PH.layout(W,H,{yzX:.855,yzDy:-8});
+    for(const era in CONSTS){ for(const c in CONSTS[era].stars) META[+c]=era; }
+    for(let c=1;c<=30;c++) POS[c]=PL.pos[c];
+    SUN=PL.yz;
+    const spot=(r,dy)=>{ const g=PL.gaps(r,56)[0]; const b=PL.band(r); return g?[Math.round((g[0]+g[1])/2), Math.round(b.cy+(dy||0))]:[Math.round(W/2),Math.round(b.cy)]; };
+    PHB.Singularity=spot(1,4); PHB.Ascension=spot(2,4); PHB.Origins=spot(4,4);
+  }
+  function phoneNames(){
+    let g="";
+    PL.rows.forEach((R0,r)=>{ const era=R0.era, txt=PNAME[era], w=txt.length*10.4+8, b=PL.band(r);
+      const gs=PL.gaps(r,40,"top"), q=gs.find(z=>z[1]-z[0]>=w)||gs[0]||[20,20+w];
+      const x=Math.max(16, Math.min(W-16-w, Math.max(q[0], Math.min(q[1]-w, (q[0]+q[1])/2-w/2))));
+      // (inside a positioned group: bare absolutely placed text in the base layer was left unpainted by Chromium after a re-raster)
+      g+=`<g transform="translate(${x.toFixed(0)} ${(b.top+(r?16:22)).toFixed(0)})" data-tip="${esc(CONSTS[era].mean)}"><text font-family="Georgia,serif" font-size="15" letter-spacing="1.6" fill="${HUE[era]}" opacity=".95">${txt}</text></g>`; });
+    return g;
+  }
   function layout(){
+    if(PHONE()) return phoneLayout();
     const sx=W/820;
     for(const era in CONSTS){ const cst=CONSTS[era]; for(const c in cst.stars){ const p=cst.stars[c]; POS[+c]=[Math.round(p[0]*sx), p[1]]; META[+c]=era; } }
     SUN=[Math.round(150*sx), 892];   // Year Zero, the collapsed star at the serpent's tail
@@ -127,7 +156,7 @@
     const rays=`<path d="M0 ${(-rr*2.7).toFixed(1)} V${(rr*2.7).toFixed(1)} M${(-rr*2.7).toFixed(1)} 0 H${(rr*2.7).toFixed(1)}" stroke="${col}" stroke-width="1.4" opacity="${lit?.9:.6}"/><path d="M${(-rr*1.7).toFixed(1)} ${(-rr*1.7).toFixed(1)} L${(rr*1.7).toFixed(1)} ${(rr*1.7).toFixed(1)} M${(-rr*1.7).toFixed(1)} ${(rr*1.7).toFixed(1)} L${(rr*1.7).toFixed(1)} ${(-rr*1.7).toFixed(1)}" stroke="${col}" stroke-width=".8" opacity=".32"/>`;
     const fs=(dual?18:16)*(c===10||c===20?1.08:1);
     return `<g class="cc-world${broken?" cc-broken":""}${wreck?" cc-wreck":""}" data-c="${c}" transform="translate(${x} ${y})" style="color:${col}">
-      <circle class="cc-hit" data-c="${c}" r="${Math.max(38,gr*1.0).toFixed(1)}" fill="transparent"/>
+      <circle class="cc-hit" data-c="${c}" r="${PHONE()?40:Math.max(38,gr*1.0).toFixed(1)}" fill="transparent"/>
       <circle r="${gr}" fill="url(#ccStar${singleEra(c)})" opacity="${lit?1:.75}" class="${lit?"cc-lit":""}"/>
       ${dual?`<path d="M 0 ${(-gr).toFixed(1)} A ${gr} ${gr} 0 0 1 0 ${gr} Z" fill="url(#ccStar${eras[1]})" opacity=".85"/><line x1="0" y1="${(-gr*0.72).toFixed(1)}" x2="0" y2="${(gr*0.72).toFixed(1)}" stroke="#eef4ff" stroke-width="1.6" opacity=".8"/><text class="pdx-ref" x="${(-gr*0.5).toFixed(1)}" y="${(-rr*2.5).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="7.5" font-weight="bold" fill="${HUE[eras[0]]}" stroke="#04040c" stroke-width="1.8" paint-order="stroke">${eras[0].toUpperCase()}</text><text class="pdx-ref" x="${(gr*0.5).toFixed(1)}" y="${(-rr*2.5).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="7.5" font-weight="bold" fill="${HUE[eras[1]]}" stroke="#04040c" stroke-width="1.8" paint-order="stroke">${eras[1].toUpperCase()}</text>`:""}
       ${rays}
@@ -138,13 +167,19 @@
            to be standing there, or if you knew to hold Tab (which nothing tells you). So the
            star chart, alone of the three, could not be READ. It gets what the castles have:
            a plate under the star, always lit, the numeral stamped on it. -->
-      <g class="cc-numplate">
+      ${PHONE()?`<g class="cc-numplate">
+        <rect x="${(-rom(c).length*6.3 - 6).toFixed(1)}" y="${(Math.min(gr,36)*0.42).toFixed(1)}"
+              width="${(rom(c).length*12.6 + 12).toFixed(1)}" height="21" rx="3.4"
+              fill="rgba(7,11,26,.92)" stroke="${col}" stroke-width="1.3"/>
+        <text y="${(Math.min(gr,36)*0.42 + 16.2).toFixed(1)}" text-anchor="middle" font-family="'Courier New',monospace"
+              font-weight="bold" font-size="17.5" letter-spacing=".4" fill="${lit?"#ffffff":"#e9f1ff"}">${rom(c)}</text>
+      </g>`:`<g class="cc-numplate">
         <rect x="${(-rom(c).length*4.3 - 5).toFixed(1)}" y="${(gr*0.60).toFixed(1)}"
               width="${(rom(c).length*8.6 + 10).toFixed(1)}" height="14" rx="2.8"
               fill="rgba(7,11,26,.9)" stroke="${col}" stroke-width="1" opacity=".96"/>
         <text y="${(gr*0.60 + 10.6).toFixed(1)}" text-anchor="middle" font-family="'Courier New',monospace"
               font-weight="bold" font-size="10.8" letter-spacing=".6" fill="${lit?"#ffffff":"#e9f1ff"}">${rom(c)}</text>
-      </g>
+      </g>`}
     </g>`;
   }
   function starfield(){
@@ -345,26 +380,28 @@
     }
     // ...and it is NAMED, the way the Dragon-Wastes are named. Not a banner floating over
     // the sky, the region's own name, written across the region, like a chart names a sea.
-    const lx = cx, ly = cy + ry * 0.02;
-    g += `<text class="cc-beltname" x="${lx.toFixed(0)}" y="${ly.toFixed(0)}" text-anchor="middle"
-            font-family="Georgia,serif" font-style="italic" font-size="15" letter-spacing="2.2"
-            fill="#d68a6a" opacity=".72">THE DEBRIS BELT</text>
-          <text x="${lx.toFixed(0)}" y="${(ly+15).toFixed(0)}" text-anchor="middle"
+    let lx = cx, ly = cy + ry * 0.02;
+    // on a phone the belt's name lies along its foot, left of IV, clear of the Serpent's name
+    if (PHONE() && PL) { lx = 16 + 62; ly = H - 11; }
+    g += `<g transform="translate(${lx.toFixed(0)} ${ly.toFixed(0)})"><text class="cc-beltname" text-anchor="middle"
+            font-family="Georgia,serif" font-style="italic" font-size="${PHONE()?12.5:15}" letter-spacing="${PHONE()?.6:2.2}"
+            fill="#d68a6a" opacity="${PHONE()?.95:.72}">THE DEBRIS BELT</text>
+          <text y="15" text-anchor="middle"
             font-family="'Courier New',monospace" font-size="7.5" letter-spacing="1.4"
-            fill="#a86a52" opacity=".7" class="pdx-ref">2 ENERGY / CENTURY</text></g>`;
+            fill="#a86a52" opacity=".7" class="pdx-ref">2 ENERGY / CENTURY</text></g></g>`;
     return g;
   }
   function deadSun(){
     const [x,y]=SUN;
     let rays=""; for(let i=0;i<16;i++){ const a=i/16*6.28; rays+=`<line x1="${(x+Math.cos(a)*24).toFixed(1)}" y1="${(y+Math.sin(a)*24).toFixed(1)}" x2="${(x+Math.cos(a)*(34+rnd(i,9)*14)).toFixed(1)}" y2="${(y+Math.sin(a)*(34+rnd(i,9)*14)).toFixed(1)}" stroke="#9a8cf0" stroke-width="1" opacity=".4"/>`; }
     return `<g class="cc-sun" data-c="0">
-      <circle class="cc-hit" data-c="0" cx="${x}" cy="${y}" r="42" fill="transparent"/>
+      <circle class="cc-hit" data-c="0" cx="${x}" cy="${y}" r="${PHONE()?40:42}" fill="transparent"/>
       <circle cx="${x}" cy="${y}" r="60" fill="url(#ccSunGlow)"/>
       <g class="cc-sun-rays">${rays}</g>
       <circle cx="${x}" cy="${y}" r="30" fill="none" stroke="#6a5aa0" stroke-width="1" stroke-dasharray="3 4" opacity=".5" class="cc-sun-ring"/>
       <circle cx="${x}" cy="${y}" r="22" fill="#0a0714" stroke="#8f6fd6" stroke-width="1.4"/>
       <circle cx="${x}" cy="${y}" r="22" fill="url(#ccSunCore)"/>
-      <text x="${x}" y="${y-32}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="9" letter-spacing="3" fill="#cfc2e8">YEAR ZERO</text>
+      <text x="${x}" y="${PHONE()?y+40:y-32}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="${PHONE()?14:9}" letter-spacing="${PHONE()?1.4:3}" fill="#cfc2e8"${PHONE()?' stroke="#04040c" stroke-width="3" paint-order="stroke"':""}>YEAR ZERO</text>
       <text x="${x}" y="${y+3}" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" fill="#cfc2e8">&#8734;</text>
     </g>`;
   }
@@ -416,9 +453,9 @@
     out+=current();
     out+=overdriveZone();
     for(let c=1;c<=30;c++) out+=worldG(c);
-    out+=eraNames();
+    out+=PHONE()?phoneNames():eraNames();
     out+=deadSun();
-    out+=gyro();
+    if(!PHONE()) out+=gyro();
     return {defs,out};
   }
   /* ═══ LIVE LAYER ═══ */
@@ -549,7 +586,7 @@
   function highlights(){
     if(!mode) return ""; let g=""; const cand=pickCandidates();
     const ring=(c,cls,tip)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const rr=(c===0?46:worldR(c)+13); g+=`<circle class="cc-glow ${cls}" data-c="${c}" data-tip="${esc(tip)}" cx="${P[0]}" cy="${P[1]}" r="${rr}"/>`; };
-    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P, ty=y-(c===0?52:worldR(c)+16); const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cc-cost"><rect x="${x-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
+    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P; let ty=y-(c===0?52:worldR(c)+16); if(PHONE()&&ty<30) ty=y+worldR(c)+26; /* a phone's top row: the tag hangs under the plate */ const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cc-cost"${PHONE()?` transform="translate(${x} ${ty}) scale(1.55) translate(${-x} ${-ty})"`:""}><rect x="${x-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
     if(mode.kind==="travel"){
       for(let c=1;c<=30;c++){ if(!cand.has(c)||c===mode.self) continue; if(c>mode.self||mode.ppc===0){ ring(c,"cc-go-future",`with the drift to ${rom(c)}, free`); tag(c,"FREE","free"); } else { const cost=armedCost(c); const risk=cost>=mode.energy; ring(c,risk?"cc-go-risk":"cc-go-past",`beat upstream to ${rom(c)}, ${cost} energy${risk?" (this could strand you)":""}`); tag(c,String(cost),risk?"risk":"cost"); } }
       if(cand.has(0)){ ring(0,"cc-go-risk",`the final plunge into the Dead Sun, ends the game (+2 CP)`); tag(0,String(armedCost(0)),"risk"); }
@@ -605,7 +642,7 @@
   }
   function flare(c,col){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return; for(let i=0;i<10;i++){ const a=i/10*6.28, ln=document.createElementNS(NS,"line"); ln.setAttribute("x1",P[0]+Math.cos(a)*8); ln.setAttribute("y1",P[1]+Math.sin(a)*8); ln.setAttribute("x2",P[0]+Math.cos(a)*24); ln.setAttribute("y2",P[1]+Math.sin(a)*24); ln.setAttribute("stroke",col); ln.setAttribute("stroke-width","2"); ln.setAttribute("stroke-linecap","round"); svg.appendChild(ln); ln.animate([{opacity:0},{opacity:1,offset:.3},{opacity:0}],{duration:700,delay:i*30}).onfinish=()=>ln.remove(); } }
   function floatText(c,txt,col){ const svg=fxG(); const P=c===0?SUN:POS[c]; if(!svg||!P||REDUCED) return; const t=document.createElementNS(NS,"text"); t.setAttribute("x",P[0]); t.setAttribute("y",P[1]-8); t.setAttribute("text-anchor","middle"); t.setAttribute("font-family","'Courier New',monospace"); t.setAttribute("font-weight","bold"); t.setAttribute("font-size","15"); t.setAttribute("fill",col); t.setAttribute("stroke","#05060e"); t.setAttribute("stroke-width","3"); t.setAttribute("paint-order","stroke"); t.style.transformBox="fill-box"; t.style.transformOrigin="center"; t.textContent=txt; svg.appendChild(t); t.animate([{transform:"translateY(6px)",opacity:0},{transform:"translateY(-4px)",opacity:1,offset:.3},{transform:"translateY(-26px)",opacity:0}],{duration:1100,easing:"cubic-bezier(.2,.8,.4,1)"}).onfinish=()=>t.remove(); }
-  function holePos(per){ const b=BHP[per]; return b?[Math.round(b[0]*W/820), b[1]]:null; }
+  function holePos(per){ if(PHONE()) return PHB[per]||null; const b=BHP[per]; return b?[Math.round(b[0]*W/820), b[1]]:null; }
   function absorbToHole(c,per){ const svg=fxG(); const P=(c===0?SUN:POS[c]); const H2=holePos(per); if(!svg||!P||!H2||REDUCED) return; const col=PHUE[per]||"#9a8cf0";
     const dx=H2[0]-P[0], dy=H2[1]-P[1]; const mx=P[0]+dx*0.5-dy*0.22, my=P[1]+dy*0.5+dx*0.22; const d=`M ${P[0]} ${P[1]} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${H2[0]} ${H2[1]}`;
     const gg=document.createElementNS(NS,"g"); gg.innerHTML=`<path d="M0 -6 L5 0 L0 6 L-5 0 Z" fill="${col}" stroke="#fff" stroke-width=".8"/><circle r="1.8" fill="#fff"/>`; gg.style.offsetPath=`path("${d}")`; gg.style.offsetRotate="auto"; svg.appendChild(gg);
@@ -716,10 +753,10 @@
     const rail=document.getElementById("timeline-rail"); if(!rail) return false;
     if(rail.querySelector(".cplot-sing")) return true;
     const rb=rail.getBoundingClientRect(); const bw=rb.width-6, bh=rb.height-74; if(bw<60||bh<60) return false;   // the cplot is inset 74px top + 6px left, derive W from the REAL content box so the chart fills it
-    W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
+    if(PHONE()){ const d=PH.dims(); W=d.W; H=d.H; } else W=Math.max(700,Math.min(1200,Math.round(H*bw/bh)));
     const base=baseMap();
     rail.insertAdjacentHTML("beforeend",`<div class="cplot-sing"><svg class="pc-star" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${base.defs}</defs><g class="cc-base">${base.out}</g><g class="cc-live"></g><g class="cc-fx"></g><g class="cc-top"></g></svg><div class="cc-cmd"></div><div class="cc-legend pdx-ref">${legendHTML()}</div><div class="cc-tip"></div></div>`);
-    if(window.__pdxSheetExt) window.__pdxSheetExt(rail.querySelector(".cplot-sing"),W,H,skyExtArt);
+    if(window.__pdxSheetExt&&!PHONE()) window.__pdxSheetExt(rail.querySelector(".cplot-sing"),W,H,skyExtArt);
     const svg=rail.querySelector(".cplot-sing .pc-star");
     svg.addEventListener("click",e=>{ const t=e.target.closest(".cc-hit, .cc-glow, .cc-cost, .cc-world, .cc-sun"); let c=(t&&t.dataset&&t.dataset.c!==undefined)?+t.dataset.c:nearestStar(e); if(c!=null&&!isNaN(c)) onWorldClick(c); });
     rail.querySelector(".cplot-sing .cc-cmd").addEventListener("click",e=>{ if(e.target.closest(".cc-anchor")&&mode&&mode.kind==="travel"&&app.pendingReq){ snd("chart_stamp"); app.respond({direction:1,distance:0}); mode=null; scheduleLive(); } });
@@ -769,7 +806,7 @@
   }
 
   let rzT=null;
-  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-sing"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()) renderNow(); },350); };
+  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-sing"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()) renderNow(); },350); };
   window.addEventListener("resize",railRelayout);
   if(window.ResizeObserver){ const railEl=document.getElementById("timeline-rail"); if(railEl) new ResizeObserver(railRelayout).observe(railEl); }
 

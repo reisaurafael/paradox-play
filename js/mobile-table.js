@@ -42,8 +42,8 @@ const DEVICE = { x: 112, y: 742, w: 520, h: 458 };     // the pip-boy with the s
 // the rivals' files lie in a row on the desk above the glove (the hand rests on their lower
 // halves, as on a real desk); the frame's right edge is the row's right edge
 const PILE = { x0: 604, x1: 930, y: 752, k: 0.64 };
-const CASE = { x: -30, y: -12, w: 990, h: 612 };       // the open briefcase, the cat beside it
-const CAT_AT = { x: 862, y: 452, size: 14 };          // she curls on the desk at the case's right (her only place on a phone)
+const CASE = { x: -30, y: -2, w: 1100, h: 592 };       // the open briefcase, the cat beside it
+const CAT_AT = { x: 905, y: 560, size: 20 };          // she curls on the desk at the case's right (her only place on a phone)
 
 const on = () => D.classList.contains("pdx-m-on");
 const game = () => window.__game || null;
@@ -123,11 +123,7 @@ function build() {
   rail.addEventListener("click", (e) => {
     const a = e.target.closest && e.target.closest(".mr-act");
     if (a) { e.stopPropagation(); if (a._do) a._do(); return; }
-    const b = e.target.closest && e.target.closest("button[data-view]");
-    if (!b) return;
-    e.stopPropagation();
-    manualAt = performance.now();
-    go(b.dataset.view);
+    // (the view keys are handled at the window, before a carried relic can be dropped)
   });
   // her eye opens her core (the brain, her memory of every Hour) where it lives, on the
   // paperwork desk; the eye again, or any key, turns back
@@ -222,10 +218,15 @@ function frame(v, animate) {
   const f = frameRect(v);
   S = Math.min(stage.w / f.w, stage.h / f.h);
   O.x = stage.x + (stage.w - f.w * S) / 2 - f.x * S;
-  O.y = f.bottom ? stage.y + stage.h - (f.y + f.h) * S : stage.y + (stage.h - f.h * S) / 2 - f.y * S;
-  // the chart alone on its page: the desk round the sheet is clipped away
-  D.style.setProperty("--pdx-clip", v === "chart"
-    ? `inset(${Math.max(0, f.y - 4)}px ${Math.max(0, PLANE_W - f.x - f.w - 4)}px ${Math.max(0, PLANE_H - f.y - f.h - 4)}px ${Math.max(0, f.x - 4)}px)` : "none");
+  // on a phone the machine sits on the bottom edge, under the thumbs; a tablet centres every page
+  O.y = f.bottom && D.classList.contains("pdx-phone") ? stage.y + stage.h - (f.y + f.h) * S : stage.y + (stage.h - f.h * S) / 2 - f.y * S;
+  // EVERY VIEW IS ITS OWN PAGE: nothing of the table round its frame shows (the stage's own
+  // backdrop does); the frame is widened to the stage's shape so no strip is cut off inside it
+  const vw = stage.w / S, vh = stage.h / S;
+  const cx0 = (stage.x - O.x) / S, cy0 = (stage.y - O.y) / S;
+  const top = Math.max(f.y, cy0), left = Math.max(f.x, cx0);
+  const right = Math.min(f.x + f.w, cx0 + vw), bottom = Math.min(f.y + f.h, cy0 + vh);
+  D.style.setProperty("--pdx-clip", `inset(${top.toFixed(1)}px ${(PLANE_W - right).toFixed(1)}px ${(PLANE_H - bottom).toFixed(1)}px ${left.toFixed(1)}px)`);
   D.classList.toggle("pdx-chart", v === "chart");
   D.style.setProperty("--pdx-dur", animate && !calm() ? paceMs() + "ms" : "0ms");
   D.style.setProperty("--pdx-s", S.toFixed(5));
@@ -251,28 +252,33 @@ function swapTo(v) {
   if (!swapEl) {
     swapEl = document.createElement("div");
     swapEl.id = "pdx-swap"; swapEl.setAttribute("aria-hidden", "true");
-    swapEl.innerHTML = `<div class="ps-page"><b></b></div>`;
+    swapEl.innerHTML = `<div class="ps-cast"></div><div class="ps-leaf"><div class="ps-face"><div class="ps-panel p1"><b class="ps-cap"></b></div>`
+      + `<div class="ps-panel p2"></div><div class="ps-panel p3"></div><span class="ps-next"></span></div><div class="ps-back"></div><div class="ps-shade"></div></div>`;
     document.body.appendChild(swapEl);
   }
-  const page = swapEl.firstChild;
-  page.querySelector("b").textContent = VIEW_TITLE[v] || "";
+  const leaf = swapEl.querySelector(".ps-leaf"), shade = swapEl.querySelector(".ps-shade"), cast = swapEl.querySelector(".ps-cast");
+  swapEl.querySelector(".ps-cap").textContent = VIEW_TITLE[view] || "";
+  swapEl.querySelector(".ps-next").textContent = "NEXT PAGE: " + (VIEW_TITLE[v] || "");
   swapEl.style.left = stage.x + "px"; swapEl.style.width = stage.w + "px";
+  swapEl.style.top = stage.y + "px"; swapEl.style.height = stage.h + "px"; swapEl.style.bottom = "auto";
   swapEl.classList.add("on");
-  const half = 170;
-  // the timing lives in timers, not in the animations' own events: the cut and the end
-  // happen on time whatever a paused tab or a cancelled animation does
+  // the page he is on lies on the stage (a comic page with its caption); the next scene is set
+  // under it at once, then the page turns over on its left edge and lies back off the stage
+  const dur = 440, settle = 90;
+  setTimeout(() => land(v), settle);                     // the cut, under the page once it lies there
   try {
-    page.getAnimations().forEach((an) => an.cancel());
-    page.animate([{ transform: "perspective(1400px) rotateY(-96deg)", opacity: .6 }, { transform: "perspective(1400px) rotateY(0deg)", opacity: 1 },
-      { transform: "perspective(1400px) rotateY(0deg)", opacity: 1, offset: .56 }, { transform: "perspective(1400px) rotateY(96deg)", opacity: .6 }],
-      { duration: 2 * half + 40, easing: "cubic-bezier(.35,0,.65,1)", fill: "both" });
+    [leaf, shade, cast].forEach((n) => n.getAnimations().forEach((an) => an.cancel()));
+    const ease = "cubic-bezier(.45,.05,.55,.95)";
+    // it inks in over the scene (the scene becomes a page), lifts a little, and turns over
+    leaf.animate([{ transform: "rotateY(0deg)", opacity: 0 }, { transform: "rotateY(0deg)", opacity: 1, offset: settle / dur },
+      { transform: "rotateY(-22deg)", opacity: 1, offset: .4 }, { transform: "rotateY(-180deg)", opacity: 1 }], { duration: dur, easing: ease, fill: "both" });
+    shade.animate([{ opacity: 0 }, { opacity: 1, offset: .5 }, { opacity: 0 }], { duration: dur, easing: ease, fill: "both" });
+    cast.animate([{ opacity: 0, transform: "scaleX(1)" }, { opacity: 1, transform: "scaleX(.55)", offset: .5 }, { opacity: 0, transform: "scaleX(0)" }], { duration: dur, easing: ease, fill: "both" });
   } catch (e) {}
-  setTimeout(() => land(v), half);                       // the cut, behind the page
   setTimeout(() => {
     swapEl.classList.remove("on"); swapping = false;
-    if (view !== v) land(v);                             // never a label without its page
     if (swapNext && swapNext !== view) { const n = swapNext; swapNext = null; swapTo(n); } else swapNext = null;
-  }, 2 * half + 60);
+  }, dur + 30);
 }
 function land(v) {
   if (v !== view) prevView = view;
@@ -283,7 +289,8 @@ function land(v) {
   if (cam && cam.scene !== want) {
     try {
       cam._engage && cam._engage();
-      cam.setScene(want);
+      window.__pdxSceneByHand = true;
+      try { cam.setScene(want); } finally { window.__pdxSceneByHand = false; }
       cam._manualUntil = (cam._now ? cam._now() : performance.now()) + 6000;
       g.updateBeacon && g.updateBeacon();
       g._onSceneArrive && g._onSceneArrive(want);
@@ -292,15 +299,10 @@ function land(v) {
   // the page is still when it lands: the chart's roll and the arm's slide settle at once
   document.body.classList.toggle("chart-rolled", want === "market");
   closeFiles();
+  if (pingView === v) pingView = null;
   frame(v, false);
   paintRail();
   requestAnimationFrame(pile);
-}
-// the camera turned without the rail (HELA's arrow, a key, the tutorial): follow it
-function followCamera() {
-  const g = game(), sc = g && g.camera ? g.camera.scene : "main";
-  if (VIEWS[view].scene === sc || (SCENE_VIEWS[sc] || []).includes(view)) return;
-  go(sc === "market" ? "merchant" : sc === "drawer" ? "records" : "machine");
 }
 // a scene of the real camera holds more than one phone view
 // (the case is looked at with the records, as on the desktop's paperwork desk: a delivery
@@ -312,6 +314,7 @@ function files() {
   return [...document.querySelectorAll("#players-zone .pcard.cfolio")];
 }
 let outFile = null;
+const filePos = new Map();                       // seat -> plane point where he left the file
 function pile() {
   if (!on()) return;
   const zone = document.getElementById("players-zone");
@@ -325,8 +328,10 @@ function pile() {
   const x0 = n > 1 ? PILE.x0 : PILE.x0 + room / 2;
   list.forEach((f, i) => {
     f.classList.add("pdx-piled");
-    f.style.setProperty("--pdx-fx", (x0 + i * step - zr.x).toFixed(1) + "px");
-    f.style.setProperty("--pdx-fy", (PILE.y + (i % 2) * 12 - zr.y).toFixed(1) + "px");
+    // where he left it (dragged on the machine's table), or its place in the row
+    const at = filePos.get(f.dataset.seat) || { x: x0 + i * step, y: PILE.y + (i % 2) * 12 };
+    f.style.setProperty("--pdx-fx", (at.x - zr.x).toFixed(1) + "px");
+    f.style.setProperty("--pdx-fy", (at.y - zr.y).toFixed(1) + "px");
     f.style.setProperty("--pdx-fk", k.toFixed(3));
     f.style.setProperty("--pdx-fz", String(20 + i));
   });
@@ -347,18 +352,56 @@ function closeFiles() {
   outFile = null;
   const g = game(); if (g && g.hidePanelDetail) g.hidePanelDetail();
 }
+// THE FILES ON THE MACHINE'S TABLE: a finger drags one anywhere on that page (never off it);
+// a tap opens the whole dossier. The desk's own drag (cabin.js deskLab) never hears the finger.
 function wireFiles() {
-  // the files are never dragged on a phone (they stay in their row on the table): the desk's
-  // own drag (cabin.js deskLab, document capture) never hears the finger
+  let dg = null, eatUntil = 0;
   window.addEventListener("pointerdown", (e) => {
     if (!on()) return;
-    if (e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio")) e.stopPropagation();
+    const f = e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio");
+    if (!f) return;
+    e.stopPropagation();
+    if (view !== "machine" || e.pointerType === "mouse" && e.button !== 0) return;
+    const zr = planeRectOf(document.getElementById("players-zone"));
+    const x = parseFloat(f.style.getPropertyValue("--pdx-fx")), y = parseFloat(f.style.getPropertyValue("--pdx-fy"));
+    if (!zr || isNaN(x) || isNaN(y)) return;
+    dg = { f, id: e.pointerId, sx: e.clientX, sy: e.clientY, x0: x + zr.x, y0: y + zr.y, moved: false };
   }, true);
+  window.addEventListener("pointermove", (e) => {
+    if (!dg || e.pointerId !== dg.id) return;
+    const dx = (e.clientX - dg.sx) / S, dy = (e.clientY - dg.sy) / S;
+    if (!dg.moved && Math.hypot(e.clientX - dg.sx, e.clientY - dg.sy) < 10) return;
+    if (!dg.moved) { dg.moved = true; dg.f.classList.add("pdx-dragging"); dg.f.style.setProperty("--pdx-fz", "45"); }
+    e.preventDefault();
+    // clamped to the machine's page (its frame): the file stays whole on it
+    const k = PILE.k, fw = (dg.f.offsetWidth || 250) * k, fh = (dg.f.offsetHeight || 330) * k;
+    const F = frameRect("machine");
+    const x = Math.max(F.x, Math.min(F.x + F.w - fw, dg.x0 + dx)), y = Math.max(F.y, Math.min(F.y + F.h - fh, dg.y0 + dy));
+    const zr = planeRectOf(document.getElementById("players-zone"));
+    if (!zr) return;
+    dg.f.style.setProperty("--pdx-fx", (x - zr.x).toFixed(1) + "px");
+    dg.f.style.setProperty("--pdx-fy", (y - zr.y).toFixed(1) + "px");
+    dg.last = { x, y };
+  }, { capture: true, passive: false });
+  const drop = (e) => {
+    if (!dg || e.pointerId !== dg.id) return;
+    const d = dg; dg = null;
+    d.f.classList.remove("pdx-dragging");
+    if (!d.moved) return;
+    if (d.last) filePos.set(d.f.dataset.seat, d.last);
+    eatUntil = performance.now() + 450;                  // the lift is not a tap on the file
+    // her paper lesson waits for a file lifted and let go
+    d.f.classList.add("dk-held"); setTimeout(() => d.f.classList.remove("dk-held"), 320);
+    pile();
+  };
+  window.addEventListener("pointerup", drop, true);
+  window.addEventListener("pointercancel", drop, true);
   document.addEventListener("click", (e) => {
     if (!on()) return;
     const f = e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio");
     if (f) {
       e.preventDefault(); e.stopPropagation();
+      if (performance.now() < eatUntil) return;
       const g = game();
       if (g && g.panelDetail && g.panelDetail.dataset.seat === f.dataset.seat) closeFiles(); else openFile(f);
       return;
@@ -373,8 +416,9 @@ function catHome(mount) {
   if (!c || !c.setPlaces) return;
   if (mount) {
     if (!catSaved) catSaved = { places: c.places, size: c.sizeUnits };
-    c.setPlaces({ table: { x: CAT_AT.x / (PLANE_W / 100), y: CAT_AT.y / (PLANE_H / 100), lie: true, sit: true } }, "table");
-    c.setSize(CAT_AT.size);
+    // her place beside the case is her "bed": the ART agent's basket shows there and she naps in it
+    c.setPlaces({ bed: { x: CAT_AT.x / (PLANE_W / 100), y: CAT_AT.y / (PLANE_H / 100), lie: true, sit: true } }, "bed");
+    c.setSize((c.sizes && c.sizes.phone) || CAT_AT.size);
   } else if (catSaved) {
     c.setPlaces(catSaved.places, "bed");
     c.setSize(catSaved.size);
@@ -425,6 +469,8 @@ function paintCol() {
       if (c) says += capHTML(c);
     }
   }
+  const want = D.dataset.pdxWant;
+  if (want && VIEWS[want]) says = `<div class="mc-go">Go to <b>${esc(VIEWS[want].label.toUpperCase())}</b></div>` + says;
   if (says !== lastSays) { lastSays = says; col.querySelector(".mc-says").innerHTML = says; }
   // (the phase dividers, "- main -", are the desktop log's rulers, not events)
   const items = [...document.querySelectorAll("#log-list > li")]
@@ -440,16 +486,22 @@ function paintCol() {
 }
 function paintRail() {
   if (!rail) return;
-  const g = game();
-  const eye = document.getElementById("hela-eye");
-  const want = g && g._beaconTarget && eye && eye.classList.contains("he-directs") ? g._beaconTarget : null;
-  let wantView = want === "market" ? "merchant" : want === "drawer" ? "records" : want === "timeline" ? "chart" : want === "main" ? "machine" : null;
-  // the automatic camera off (or the tutorial steering): the key of the needed view pulses
-  if (!wantView && (!autoOn() || document.body.classList.contains("tut"))) wantView = wantedView();
-  rail.querySelectorAll("button").forEach((b) => {
+  const g = game(), req = g && g.pendingReq;
+  // what waits where: his decision first, then what the game or the tutorial asked for
+  const need = wantedView();
+  const want = need && need !== view ? need : (pingView && pingView !== view ? pingView : null);
+  const word = want && need === want && req ? (PING_WORD[req.kind] || "!") : "!";
+  rail.querySelectorAll("button[data-view]").forEach((b) => {
     b.classList.toggle("is-on", b.dataset.view === view);
-    b.classList.toggle("beckon", !!wantView && b.dataset.view === wantView && wantView !== view);
+    const pinged = !!want && b.dataset.view === want;
+    b.classList.toggle("beckon", pinged);
+    let badge = b.querySelector(".mr-ping");
+    if (pinged) {
+      if (!badge) { badge = document.createElement("i"); badge.className = "mr-ping"; b.appendChild(badge); }
+      if (badge.textContent !== word) badge.textContent = word;
+    } else if (badge) badge.remove();
   });
+  D.dataset.pdxWant = want || "";
 }
 
 function stagePt(x, y) { return { x: (x - O.x) / S, y: (y - O.y) / S }; }
@@ -595,12 +647,14 @@ function paintLife() {
 }
 window.__pdxLifeAnchor = () => (on() && life && life._end ? { x: life._end.x, y: life._end.y } : null);
 
-/* ── THE AUTOMATIC CAMERA (touch, on by default, Settings > Automatic camera): the head
-      turns to where the decision of the moment lives. Never under a finger, never within
-      1.5 s of his own turn, never while the tutorial steers; off, the key only pulses. ── */
-const AUTO_KEY = "pdx-autocam";
-const autoOn = () => { try { return localStorage.getItem(AUTO_KEY) !== "off"; } catch (e) { return true; } };
-let lastReq = null, fingers = 0;
+/* ── THE DIRECTION PING (the owner, 27/09: no forced movement): nothing turns the view but
+      his own key. When the game or the tutorial needs him elsewhere, the rail key of that
+      scene pulses with an inked badge naming what waits there, and HELA's line names it. ── */
+let pingView = null;
+const SCENE_VIEW = { main: "machine", timeline: "chart", market: "merchant", drawer: "records" };
+window.__pdxScenePing = (scene) => { const v = SCENE_VIEW[scene]; if (v && v !== view) { pingView = v; paintRail(); } };
+const PING_WORD = { allocate: "DICE", matrix_buff: "+1", travel: "SAIL", merchant_century: "AIM", market: "TRADE", steal_target: "STEAL",
+  destroy_target: "AIM", secret_deal: "DEAL", deliver: "FILE", reward_category: "SIGN", recycle: "PICK", capacity: "PICK", activation: "FIRE", target: "AIM" };
 function wantedView() {
   const g = game(), req = g && g.pendingReq;
   if (!req) return null;
@@ -619,40 +673,17 @@ function wantedView() {
   }
   return null;
 }
-let pendingAuto = null;
-function autoCamera() {
-  const g = game(), req = g && g.pendingReq;
-  const key = req ? req : null;
-  if (key !== lastReq) {                       // a fresh decision: turn once, when allowed
-    lastReq = key;
-    pendingAuto = wantedView();
-  }
-  if (!pendingAuto) return;
-  if (!autoOn() || document.body.classList.contains("tut")) { pendingAuto = null; return; }
-  if (fingers > 0 || swapping || performance.now() - manualAt < 1500 || sheet || outFile) return;   // wait
-  const v = pendingAuto; pendingAuto = null;
-  if (v !== view) go(v);
-}
-function wireAuto() {
-  document.addEventListener("pointerdown", (e) => { if (e.pointerType === "touch") fingers++; }, true);
-  const lift = (e) => { if (e.pointerType === "touch") fingers = Math.max(0, fingers - 1); };
-  document.addEventListener("pointerup", lift, true);
-  document.addEventListener("pointercancel", lift, true);
-  // the relic in hand for a delivery: turn to the cabinet, where its drawer is lit
-  new MutationObserver(() => {
+function wireRailCapture() {
+  window.addEventListener("click", (e) => {
     if (!on()) return;
-    if (document.body.classList.contains("carrying-card") && game() && game()._deliverState && view !== "records") go("records");
-  }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
-  // the Settings switch (touch only; index.html #set-touch)
-  const box = document.getElementById("chk-autocam");
-  if (box) {
-    box.checked = autoOn();
-    box.addEventListener("change", () => { try { localStorage.setItem(AUTO_KEY, box.checked ? "on" : "off"); } catch (e) {} });
-  }
+    const b = e.target && e.target.closest && e.target.closest("#pdx-mrail button[data-view]");
+    if (!b) return;
+    e.stopPropagation(); e.preventDefault();
+    manualAt = performance.now();
+    go(b.dataset.view);
+  }, true);
 }
 
-/* ── the tutorial steers: whatever HELA rings must be in view (her lessons were written
-      for the whole desk; on a phone the view holding the ring comes to it) ── */
 /* the inked thread from her caption in the column to what she rings in the view */
 let tutLink = null;
 function paintTutLink() {
@@ -677,29 +708,6 @@ function paintTutLink() {
   tutLink.querySelectorAll("path").forEach((p) => p.setAttribute("d", d));
   const dot = tutLink.querySelector("circle"); dot.setAttribute("cx", x1); dot.setAttribute("cy", y1);
 }
-let ringSeen = "";
-function followRings() {
-  if (!document.body.classList.contains("tut")) { ringSeen = ""; return; }
-  const rings = [...document.querySelectorAll(".tut-ring")].filter((r) => r.getBoundingClientRect().width > 4);
-  // one move per ring she draws: a ring that stays never pulls the view again, so his own
-  // key always wins after that (and never within 1.5 s of it)
-  const sig = rings.map((r) => r.style.left + "," + r.style.top + "," + r.style.width).join("|");
-  if (!rings.length || sig === ringSeen || swapping) return;
-  if (performance.now() - manualAt < 1500) return;
-  ringSeen = sig;
-  for (const r0 of rings) {
-    const r = r0.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    const inside = cx > stage.x + 4 && cx < stage.x + stage.w - 4 && cy > stage.y + 2 && cy < stage.y + stage.h - 2;
-    if (inside) return;
-    const p = stagePt(cx, cy);
-    const order = ["machine", "case", "chart", "records", "brain", "merchant"];
-    for (const v of order) {
-      const f = frameRect(v);
-      if (p.x >= f.x && p.x <= f.x + f.w && p.y >= f.y && p.y <= f.y + f.h) { if (v !== view) go(v); return; }
-    }
-  }
-}
-
 /* ── mount / unmount with the table ── */
 let mounted = false;
 function wanted() {
@@ -736,17 +744,16 @@ function start() {
   if (!D.classList.contains("pdx-touch")) return;   // a desktop: nothing
   wireFiles();
   wireSheet();
-  wireAuto();
+  wireRailCapture();
   const obs = new MutationObserver(sync);
   obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
   const sg = document.getElementById("screen-game");
   if (sg) obs.observe(sg, { attributes: true, attributeFilter: ["class"] });
   const cam = document.getElementById("cam");
-  if (cam) new MutationObserver(() => { if (on()) { followCamera(); paintRail(); } }).observe(cam, { attributes: true, attributeFilter: ["data-scene"] });
   addEventListener("resize", () => { if (on()) { layout(); frame(view, false); pile(); } });
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
-  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintCol(); paintRail(); paintAction(); paintLife(); autoCamera(); followRings(); paintTutLink(); } }); };
+  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintCol(); paintAction(); paintLife(); paintTutLink(); } }); };
   setInterval(() => {
     if (!on()) { if (life) life.style.display = "none"; return; }
     // the tutorial starting or ending moves the stage's top edge

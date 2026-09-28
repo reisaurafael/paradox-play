@@ -120,7 +120,6 @@
       if(near<110||warm) g=mix(a,[28,24,38],warm?.42:.3);
       r.style.setProperty("--glove",css(g));
       r.style.setProperty("--glove-dk",css(mix(g,[16,12,20],.45)));
-      r.style.setProperty("--glove-lt",css(mix(g,[255,246,226],.28)));
       r.style.setProperty("--glove-trim",css(t2||mix(a,[255,246,226],.55)));
     }
     apply();
@@ -155,11 +154,12 @@
 
   /* ── THE HAND, inked like the case files and the briefcase: one silhouette under a
         warm-dark ink edge, heavier on the shadow side (nothing cuts the hand into
-        parts), comic cel shading (a flat tone, one hard shadow shape per form, a
-        small hard highlight, a few hatching strokes in the deepest shadow), five
+        parts), matte comic shading (a flat tone, one flat shadow shape per form, a
+        few hatching strokes in the deepest shadow; no highlights), five
         digits in a relaxed pose (four fingers side by side and the thumb, the
         machine's first hand), no nails. Over it the fingerless glove in the
-        player's colours: matte worn leather, stitched, scuffed.
+        player's colours: matte worn leather, stitched, scuffed. On the pointer, a
+        flat cast shadow (handShadow) lifts the hand off the board.
         The feminine hand is smaller and slimmer, with a ring; the masculine one
         broader. Fingers point +x, palm down, thumb below. ── */
   const LINE="#24150c";
@@ -186,48 +186,57 @@
     const clip=(n,d)=>`<clipPath id="${id}${n}"><path d="${d}"/></clipPath>`;
     const inClip=(n,body)=>`<g clip-path="url(#${id}${n})" pointer-events="none">${body}</g>`;
     const flat=(d)=>`<path d="${d}" style="fill:${sk(1)}"/>`;
-    const tone=(d,i)=>`<path d="${d}" style="fill:${sk(i)}"/>`;
     const tick=(d,i,w)=>`<path d="${d}" fill="none" style="stroke:${sk(i)}" stroke-width="${w}" stroke-linecap="round"/>`;
     const hatch=(d)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>`;
     const ring = m ? "" : `<path d="M 684 277 Q 687 287 686 297" fill="none" stroke="${LINE}" stroke-width="6" stroke-linecap="round" pointer-events="none"/>
-      <path d="M 684 277 Q 687 287 686 297" fill="none" stroke="#e0b44e" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
-      <path d="M 684.6 280 L 685.4 285" fill="none" stroke="#fff4d4" stroke-width="1.2" stroke-linecap="round" pointer-events="none"/>`;
+      <path d="M 684 277 Q 687 287 686 297" fill="none" stroke="#e0b44e" stroke-width="3" stroke-linecap="round" pointer-events="none"/>`;
+    // skin: ONE mid tone, shaded only with ink (hatching and contour strokes on the
+    // shadow side), warmer at the knuckles, fingertips and wrist, a few faint pores;
+    // nothing anywhere lighter than the base tone
+    const warm=(d,o)=>`<path d="${d}" style="fill:${sk(6)}" opacity="${o}"/>`;
+    const pores=(pts)=>`<g style="fill:${sk(3)}" opacity=".45">${pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r=".9"/>`).join("")}</g>`;
+    const contour=(d,w=1.2,o=.55)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
     const open=`<g class="${cls}-open">
       ${clip("f",H.fingers)}${clip("t",H.thumb)}${clip("w",H.wrist)}
       ${ink(H.wrist,H.back,H.fingers,H.thumb)}
       ${flat(H.wrist)}${flat(H.back)}${flat(H.fingers)}
-      ${inClip("w", tone("M 520 322 Q 540 318 556 322 Q 566 318 580 316 L 580 360 L 520 360 Z",2))}
+      ${inClip("w", `${warm("M 520 250 L 580 250 L 580 350 L 520 350 Z",.25)}
+        ${hatch("M 540 346 l 6 -8 M 548 347 l 6 -8 M 556 346 l 6 -8 M 564 344 l 5 -7")}`)}
       ${inClip("f", `
-        ${tone("M 664 268 Q 680 265 694 268 Q 702 270 711 272 L 712 279 Q 688 274 664 276 Z",2)}
-        ${tone("M 664 291 Q 682 289 698 292 Q 718 294 735 300 L 737 308 Q 704 302 664 300 Z",2)}
-        ${tone("M 662 315 Q 684 314 704 318 Q 724 321 741 327 L 741 336 Q 704 329 662 324 Z",2)}
-        ${tone("M 662 334 Q 684 339 700 340 Q 720 342 742 338 L 744 358 L 660 358 Z",2)}
-        ${tone("M 662 342 Q 686 347 704 348 L 704 358 L 660 358 Z",3)}
-        ${tick("M 707 276 Q 688 273 666 274 M 731 305 Q 704 300 666 298 M 735 333 Q 704 327 664 322",3,1.6)}
-        ${tone("M 672 256 Q 686 251 700 256 Q 686 256 673 260 Z M 678 282 Q 696 280 714 286 Q 696 285 679 286 Z M 680 306 Q 700 306 720 312 Q 700 310 681 310 Z M 678 328 Q 696 330 712 334 Q 696 334 679 332 Z",4)}
-        ${tick("M 691 261 q 2 5 0 8 M 705 286 q 2 6 0 10 M 709 311 q 2 6 0 10 M 703 334 q 2 5 0 8",3,1.4)}
-        ${hatch("M 664 344 l 6 -6 M 671 346 l 6 -6 M 678 347 l 6 -6")}`)}
+        <!-- warmth at the knuckle ends and the fingertips -->
+        ${warm("M 700 266 a 11 8 0 1 0 22 0 a 11 8 0 1 0 -22 0 M 722 293 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 726 320 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 714 342 a 11 7 0 1 0 22 0 a 11 7 0 1 0 -22 0",.3)}
+        ${warm("M 662 262 a 8 12 0 1 0 16 0 a 8 12 0 1 0 -16 0 M 664 288 a 8 12 0 1 0 16 0 a 8 12 0 1 0 -16 0 M 664 312 a 8 12 0 1 0 16 0 a 8 12 0 1 0 -16 0 M 662 334 a 8 10 0 1 0 16 0 a 8 10 0 1 0 -16 0",.25)}
+        <!-- a thin shadow and an ink line between each finger, tip to knuckle -->
+        ${tick("M 709 278 Q 688 276 666 277 M 733 307 Q 704 302 666 301 M 737 335 Q 704 330 664 325",2,3.4)}
+        <path d="M 709 276 Q 688 273 664 274 M 733 305 Q 704 300 664 298 M 737 333 Q 704 327 662 322" fill="none" stroke="${LINE}" stroke-width="1.9" stroke-linecap="round"/>
+        <!-- the finger joints and the knuckles on the top contour -->
+        ${contour("M 690 258 q 3 5 1 10 M 704 283 q 3 6 1 12 M 708 308 q 3 6 1 12 M 702 333 q 3 5 1 9",1.4,.75)}
+        ${contour("M 668 253 q 6 -4 12 -1 M 672 279 q 6 -3 11 0 M 672 303 q 6 -3 11 0 M 670 327 q 6 -3 11 0",1.3,.6)}
+        <!-- shadow side: ink hatching along the underside of each finger -->
+        ${hatch("M 670 345 l 5 -6 M 680 346 l 5 -6 M 690 347 l 5 -6 M 700 347 l 5 -6")}
+        ${pores([[680,262],[696,266],[688,290],[716,294],[700,314],[722,318],[690,338],[712,342],[676,312]])}`)}
       ${ring}
       ${flat(H.thumb)}
       ${inClip("t", `
-        ${tone("M 598 344 Q 614 352 628 358 Q 644 364 664 356 L 670 380 L 590 380 Z",2)}
-        ${tone("M 604 362 Q 628 374 652 372 L 660 384 L 600 384 Z",3)}
-        ${tone("M 604 320 Q 612 314 624 318 Q 612 318 605 324 Z",4)}
-        ${hatch("M 626 366 l 5 -6 M 633 368 l 5 -6 M 640 369 l 5 -6")}`)}
-      ${tick("M 600 322 Q 614 313 630 319",3,2)}
+        ${warm("M 644 356 a 10 8 0 1 0 20 0 a 10 8 0 1 0 -20 0",.3)}
+        ${contour("M 606 330 Q 624 328 646 342",1.2,.5)}
+        ${hatch("M 616 356 l 5 -6 M 626 361 l 5 -6 M 636 364 l 5 -6 M 646 366 l 5 -6")}
+        ${pores([[616,334],[630,342],[644,352]])}`)}
+      ${contour("M 600 322 Q 614 313 630 319",1.6,.8)}
     </g>`;
     const grab=`<g class="${cls}-grab"${hide}>
       ${clip("k",H.fist)}${clip("kt",H.fistThumb)}${clip("w2",H.wrist)}
       ${ink(H.wrist,H.fist,H.fistThumb)}
       ${flat(H.wrist)}${flat(H.fist)}
-      ${inClip("w2", tone("M 520 322 Q 540 318 556 322 Q 566 318 580 316 L 580 360 L 520 360 Z",2))}
-      ${inClip("k", `${tone("M 600 322 Q 640 330 672 332 Q 704 332 736 316 L 740 360 L 600 360 Z",2)}
-        ${tone("M 652 244 Q 680 238 704 248 Q 680 246 654 250 Z",4)}
-        ${tick("M 726 284 Q 700 294 670 293 M 728 308 Q 702 318 668 315 M 720 330 Q 696 340 666 336",3,2)}
+      ${inClip("w2", `${warm("M 520 250 L 580 250 L 580 350 L 520 350 Z",.25)}${hatch("M 540 346 l 6 -8 M 548 347 l 6 -8 M 556 346 l 6 -8")}`)}
+      ${inClip("k", `${warm("M 700 244 Q 736 262 734 330 L 712 330 Z",.3)}
+        ${tick("M 726 286 Q 700 296 670 295 M 728 310 Q 702 320 668 317 M 720 332 Q 696 342 666 338",2,3.2)}
+        <path d="M 726 284 Q 700 294 670 293 M 728 308 Q 702 318 668 315 M 720 330 Q 696 340 666 336" fill="none" stroke="${LINE}" stroke-width="1.9" stroke-linecap="round"/>
+        ${hatch("M 640 344 l 6 -8 M 650 347 l 6 -8 M 660 349 l 6 -8 M 670 350 l 6 -8 M 680 350 l 6 -8 M 690 349 l 6 -8 M 700 346 l 6 -8")}
         ${hatch("M 690 348 l 6 -7 M 698 347 l 6 -7 M 706 345 l 6 -7")}`)}
       ${flat(H.fistThumb)}
-      ${inClip("kt", tone("M 610 322 Q 640 340 676 338 L 680 360 L 606 360 Z",2))}
-      ${tick("M 616 300 Q 632 292 648 302",3,2)}
+      ${inClip("kt", hatch("M 622 336 l 5 -6 M 631 340 l 5 -6 M 640 343 l 5 -6 M 649 345 l 5 -6 M 658 345 l 5 -6"))}
+      ${contour("M 616 300 Q 632 292 648 302",1.6,.8)}
     </g>`;
     // the glove: matte, worn leather in the player's colour, stitched, a few scuffs;
     // its cuff in the second colour with a brass snap
@@ -237,9 +246,8 @@
       <path d="${H.glove}" style="fill:var(--glove,#4a6fa8)"/>
       ${inClip("g", `
         <path d="M 576 318 Q 594 326 612 322 Q 634 318 650 322 Q 662 318 674 312 L 676 360 L 570 360 Z" style="fill:var(--glove-dk,#2c4166)"/>
-        <path d="M 586 258 Q 604 250 624 250 Q 640 250 652 256 Q 632 254 612 256 Q 598 258 587 264 Z" style="fill:var(--glove-lt,#6f93c8)"/>
         ${hatch("M 588 344 l 8 -9 M 597 346 l 8 -9 M 606 347 l 8 -9 M 615 348 l 8 -9")}
-        <path d="M 604 282 l 10 -2 M 620 296 l 6 4 M 596 304 l 7 -3 M 634 270 l 5 3" fill="none" style="stroke:var(--glove-lt,#6f93c8)" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M 604 282 l 10 -2 M 620 296 l 6 4 M 596 304 l 7 -3 M 634 270 l 5 3" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
         <path d="M 612 312 l 6 -2 M 640 290 l 4 4" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.8" stroke-linecap="round"/>
         <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.6" stroke-dasharray="4 3"/>
         <path d="M 590 257 Q 616 251 640 255" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3"/>
@@ -247,22 +255,28 @@
       <path d="${H.cuff}" style="fill:var(--glove-trim,#d8c8a0)"/>
       ${inClip("c", `
         <path d="M 560 324 Q 574 330 586 326 Q 594 324 600 320 L 600 350 L 560 350 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".45"/>
-        <path d="M 568 256 L 588 252 L 588 258 L 568 262 Z" fill="#fff" opacity=".3"/>
         <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-dasharray="3 3"/>`)}
-      <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>
-      <path d="M 578 293 l 3 -1.5" fill="none" stroke="#fff4d4" stroke-width="1.6" stroke-linecap="round" pointer-events="none"/>`;
+      <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;
     // the feminine hand: the same drawing, smaller and slimmer, from the wrist
     const fit = m ? ` transform="translate(560 300) scale(1.05) translate(-560 -300)"` : ` transform="translate(560 300) scale(.88 .76) translate(-560 -300)"`;
     return `<g class="pb-${b}"${m ? "" : ` display="none"`}><g${fit}>${open}${grab}${glove}</g></g>`;
   }
-  /* The comic ink edge: one silhouette per body, heavier on the shadow side (a second
-     pass of ink pushed down and right), lighter on the lit side. */
+  /* The comic ink edge: one silhouette per body, heavy and a little uneven, heavier on
+     the shadow side (a second pass of ink pushed down and right). */
   function celInk(ds){
     const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;
-    return g("2.2 3.2",5)+g(".4 .6",4.2);
+    return g("2.4 3.4",5.4)+g("-.3 .5",4.4);
   }
   function handArtSVG(p, cls){
     return `${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`;
+  }
+  // the hand's silhouette, flat, for the pointer's cast shadow on the board
+  function handShadow(cls){
+    const H=HAND_PATHS, sil=(...ds)=>ds.map(d=>`<path d="${d}"/>`).join("");
+    return ["m","f"].map(b=>{ const m=b==="m";
+      const fit = m ? ` transform="translate(560 300) scale(1.05) translate(-560 -300)"` : ` transform="translate(560 300) scale(.88 .76) translate(-560 -300)"`;
+      return `<g class="pb-${b}"${m ? "" : ` display="none"`}><g${fit}><g class="${cls}-open">${sil(H.wrist,H.back,H.fingers,H.thumb,H.glove,H.cuff)}</g>`
+        +`<g class="${cls}-grab">${sil(H.wrist,H.fist,H.fistThumb,H.glove,H.cuff)}</g></g></g>`; }).join("");
   }
 
   /* The ERA SEALS on the casing, beside the screen: the three periods of the
@@ -308,42 +322,47 @@
     const marks=(list,col)=>`<path d="${list.map(f=>markD(...f)).join(" ")}" fill="${col}" pointer-events="none"/>`;
     const hatch=(d)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="1.3" stroke-linecap="round" opacity=".7" pointer-events="none"/>`;
     const inClip=(n,body)=>`<g clip-path="url(#mnF${b}${n})" pointer-events="none">${body}</g>`;
-    const [cl,cm,cd]=F.cloth, y0=F.top, y1=F.bot, mid=(y0+y1)/2;
+    const [,cm,cd]=F.cloth, y0=F.top, y1=F.bot, mid=(y0+y1)/2, dx=m?100:110;
     return `<g class="pb-${b}"${m ? "" : ` display="none"`}>
     <clipPath id="mnF${b}s"><path d="${F.sleeve}"/></clipPath><clipPath id="mnF${b}a"><path d="${F.arm}"/></clipPath><clipPath id="mnF${b}r"><path d="${F.roll}"/></clipPath>
-    <!-- the sleeve toward the elbow: flat cloth, a hard shadow, folds, a little hatching -->
-    ${celInk([F.sleeve])}
-    <path d="${F.sleeve}" fill="${cm}"/>
-    ${inClip("s", `
-      <path d="M -800 ${y0-16} C -600 ${y0-22} -400 ${y0-12} -100 ${y0-10} L -100 ${y0+4} C -400 ${y0+2} -600 ${y0-6} -800 ${y0} Z" fill="${cl}"/>
-      <path d="M -800 ${y1+4} C -680 ${y1-8} -560 ${y1+6} -440 ${y1-6} C -320 ${y1-16} -220 ${y1-2} -90 ${y1-12} L -90 ${y1+60} L -800 ${y1+60} Z" fill="${cd}"/>
-      ${marks(F.folds,cd)}
-      ${marks(F.folds.map(([x,y,a,l,w])=>[x+5,y+(y<300?4:-4),a,l*.8,w*.35]),cl)}
-      ${hatch(`M -300 ${y1+18} l 9 -12 M -286 ${y1+18} l 9 -12 M -272 ${y1+18} l 9 -12 M -170 ${y1+14} l 9 -12 M -156 ${y1+13} l 9 -12`)}
-      <path d="M -800 ${y0-4} C -560 ${y0-10} -300 ${y0-2} -110 ${y0}" fill="none" stroke="${cd}" stroke-width="1.4" stroke-dasharray="7 5"/>`)}
     <!-- the bare forearm: flat skin, one hard shadow along its underside -->
     ${celInk([F.arm])}
     <path d="${F.arm}" style="fill:${sk(1)}"/>
     ${inClip("a", `
-      <path d="M -60 ${y1-24} C -20 ${y1-20} 20 ${y1-28} 64 ${y1-22} C 104 ${y1-16} 140 ${y1-26} 184 ${y1-24} C 230 ${y1-22} 270 ${y1-28} 310 ${y1-26} L 310 ${y1+10} L -60 ${y1+10} Z" style="fill:${sk(2)}"/>
-      <path d="M -40 ${y0+6} C 20 ${y0+2} 90 ${y0+3} 150 ${y0+8} C 90 ${y0+9} 20 ${y0+9} -40 ${y0+12} Z" style="fill:${sk(4)}"/>
-      <path d="M -60 ${y0} C -24 ${y0+10} -6 ${mid} -14 ${y1} L -60 ${y1} Z" style="fill:${sk(3)}"/>
-      ${hatch(`M -8 ${y1-6} l 7 -9 M 2 ${y1-4} l 7 -9 M 12 ${y1-3} l 7 -9`)}
-      ${m ? `<path d="M 44 ${y0+18} l 6 -3 M 66 ${y0+26} l 6 -3 M 90 ${y0+17} l 6 -3 M 112 ${y0+27} l 6 -3" fill="none" style="stroke:${sk(3)}" stroke-width="1.3" stroke-linecap="round"/>` : ""}`)}
+      <!-- one skin tone: slightly cooler along the underside, warmer toward the wrist, the
+           shadow side told with ink hatching and a contour stroke, a few faint pores -->
+      <path d="M -60 ${y1-18} C 60 ${y1-14} 180 ${y1-18} 310 ${y1-20} L 310 ${y1+10} L -60 ${y1+10} Z" fill="#6a5a78" opacity=".12"/>
+      <path d="M 140 ${y0-4} L 320 ${y0-4} L 320 ${y1+4} L 140 ${y1+4} Z" style="fill:${sk(6)}" opacity=".18"/>
+      ${hatch(Array.from({ length: 10 }, (_, i) => `M ${112 + i * 14} ${y1 - 2} l 6 -${m ? 10 : 7}`).join(" "))}
+      <path d="M 110 ${y1-(m?22:16)} C 150 ${y1-(m?18:13)} 200 ${y1-(m?20:15)} 240 ${y1-(m?24:18)}" fill="none" stroke="${LINE}" stroke-width="1.2" stroke-linecap="round" opacity=".45"/>
+      <g style="fill:${sk(3)}" opacity=".4">${[[128,.42],[162,.58],[196,.36],[146,.7],[182,.5]].map(([x,f])=>`<circle cx="${x}" cy="${(y0+(y1-y0)*f).toFixed(1)}" r=".9"/>`).join("")}</g>
+      <g transform="translate(${dx} 0)"><path d="M -60 ${y0} C -24 ${y0+10} -6 ${mid} -14 ${y1} L -60 ${y1} Z" style="fill:${sk(3)}"/>
+      ${hatch(`M -8 ${y1-6} l 7 -9 M 2 ${y1-4} l 7 -9 M 12 ${y1-3} l 7 -9`)}</g>
+      ${m ? `<path d="M 126 ${y0+18} l 6 -3 M 140 ${y0+28} l 6 -3 M 152 ${y0+16} l 6 -3" fill="none" style="stroke:${sk(3)}" stroke-width="1.3" stroke-linecap="round"/>` : ""}`)}
     ${m ? "" : `<path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="${LINE}" stroke-width="6" stroke-linecap="round" pointer-events="none"/>
-    <path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="#e0b44e" stroke-width="3" stroke-linecap="round" pointer-events="none"/>
-    <path d="M 141 ${y0+8} L 142.5 ${y0+20}" fill="none" stroke="#fff4d4" stroke-width="1.2" stroke-linecap="round" pointer-events="none"/>`}
+    <path d="M 140 ${y0+1} Q 147 ${mid} 142 ${y1-1}" fill="none" stroke="#e0b44e" stroke-width="3" stroke-linecap="round" pointer-events="none"/>`}
+    <!-- the sleeve toward the elbow: flat cloth, a hard shadow, folds, a little hatching.
+         Sleeve and roll sit pushed toward the machine (dx), so the shirt shows at rest -->
+    <g transform="translate(${dx} 0)">
+    ${celInk([F.sleeve])}
+    <path d="${F.sleeve}" fill="${cm}"/>
+    ${inClip("s", `
+      <path d="M -800 ${y1+4} C -680 ${y1-8} -560 ${y1+6} -440 ${y1-6} C -320 ${y1-16} -220 ${y1-2} -90 ${y1-12} L -90 ${y1+60} L -800 ${y1+60} Z" fill="${cd}"/>
+      ${marks(F.folds,cd)}
+      ${hatch(`M -300 ${y1+18} l 9 -12 M -286 ${y1+18} l 9 -12 M -272 ${y1+18} l 9 -12 M -170 ${y1+14} l 9 -12 M -156 ${y1+13} l 9 -12`)}
+      <path d="M -800 ${y0-4} C -560 ${y0-10} -300 ${y0-2} -110 ${y0}" fill="none" stroke="${cd}" stroke-width="1.4" stroke-dasharray="7 5"/>`)}
+    </g>
     <!-- the roll -->
+    <g transform="translate(${dx} 0)">
     ${celInk([F.roll])}
     <path d="${F.roll}" fill="${cm}"/>
     ${inClip("r", `
       <path d="M -130 ${y1-18} C -90 ${y1-26} -50 ${y1-12} -10 ${y1-22} C 10 ${y1-26} 20 ${y1-14} 30 ${y1-18} L 30 ${y1+40} L -130 ${y1+40} Z" fill="${cd}"/>
-      <path d="M -110 ${y0-14} C -80 ${y0-24} -40 ${y0-22} ${m?0:-14} ${y0-12} L ${m?2:-12} ${y0-4} C -40 ${y0-12} -80 ${y0-12} -110 ${y0-4} Z" fill="${cl}"/>
       ${marks(F.rollFolds,cd)}
-      <path d="M ${m?4:-16} ${y0-16} C ${m?14:-8} ${mid-40} ${m?10:-10} ${mid+30} ${m?0:-18} ${y1+8}" fill="none" stroke="${cl}" stroke-width="${m?8:5}" stroke-linecap="round"/>
       <path d="M ${m?-6:-22} ${y0-14} C ${m?4:-14} ${mid-40} ${m?0:-16} ${mid+30} ${m?-10:-24} ${y1+8}" fill="none" stroke="${LINE}" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
       ${hatch(`M -96 ${y1-2} l 8 -10 M -84 ${y1} l 8 -10 M -72 ${y1+1} l 8 -10`)}`)}
-    ${m ? "" : `<circle cx="-40" cy="${mid}" r="5" fill="#fbf7ef" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/><path d="M -42 ${mid-2} l 2 -1" stroke="#fff" stroke-width="1.4" stroke-linecap="round" pointer-events="none"/>`}
+    ${m ? "" : `<circle cx="-40" cy="${mid}" r="5" fill="#fbf7ef" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`}
+    </g>
   </g>`;
   }
 
@@ -356,7 +375,6 @@
   <radialGradient id="mnScreen" cx=".5" cy=".38" r=".85"><stop offset="0" stop-color="#123a56"/><stop offset=".7" stop-color="#0a2135"/><stop offset="1" stop-color="#04101c"/></radialGradient>
   <radialGradient id="mnHex" cx=".4" cy=".35"><stop offset="0" stop-color="#bfeaff"/><stop offset=".55" stop-color="#4aa8d8"/><stop offset="1" stop-color="#1a4a66"/></radialGradient>
   <linearGradient id="mnAmber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c078"/><stop offset="1" stop-color="#8a6a2c"/></linearGradient>
-  <linearGradient id="mnLeath" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#7a5234"/><stop offset=".5" stop-color="#553620"/><stop offset="1" stop-color="#2e1c0f"/></linearGradient>
   <linearGradient id="mnValve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0573c"/><stop offset=".55" stop-color="#b3321f"/><stop offset="1" stop-color="#6e1a10"/></linearGradient>
   ${handDefs("mn")}
 </defs>
@@ -368,15 +386,15 @@
   <!-- REST: the straight extended forearm on the desk (no elbow in sight) -->
   <g class="limb-rest">${forearmSVG("m")}${forearmSVG("f")}
   </g>
-  <!-- the leather bracer that carries the escape valve -->
+  <!-- the leather bracer that carries the escape valve: the glove's leather, matte -->
   <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"
         transform="translate(1.6 2.4)" fill="${INK}" pointer-events="none"/>
   <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"
-        fill="url(#mnLeath)" stroke="${INK}" stroke-width="2.8"/>
+        style="fill:var(--glove,#4a6fa8)" stroke="${INK}" stroke-width="2.8"/>
   <g pointer-events="none">
-    <path d="M 172 250 L 204 250 Q 210 250 210 256 L 210 266 Q 190 262 170 266 L 170 256 Q 170 250 172 250 Z" fill="#b98a5c" opacity=".35"/>
-    <path d="M 174 256 L 208 255 M 176 352 L 208 352" stroke="#e2bd86" stroke-width="1.3" stroke-dasharray="4 3" opacity=".7" fill="none"/>
-    <path d="M 170 330 Q 190 340 214 334 L 215 354 Q 215 362 207 362 L 176 361 Q 169 361 169 354 Z" fill="#1c0f06" opacity=".35"/>
+    <path d="M 174 256 L 208 255 M 176 352 L 208 352" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3" fill="none"/>
+    <path d="M 169 328 Q 190 338 215 332 L 215 354 Q 215 362 207 362 L 176 361 Q 169 361 169 354 Z" style="fill:var(--glove-dk,#2c4166)"/>
+    <path d="M 176 280 l 7 -2 M 196 318 l 6 3 M 186 300 l 5 -2" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
     <g fill="url(#mnBrass)" stroke="${INK}" stroke-width="1.2"><circle cx="175" cy="263" r="2.6"/><circle cx="175" cy="346" r="2.6"/></g>
   </g>
   <path d="M 218 310 Q 208 310 202 306" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>
@@ -575,6 +593,7 @@
   function rightHandSVG(){
     return `<svg class="rh-svg" viewBox="250 90 700 620" xmlns="http://www.w3.org/2000/svg">
   <defs>${handDefs("rh")}</defs>
+  <g transform="translate(6 16)" fill="#140b05" opacity=".38" pointer-events="none"><g transform="rotate(38 538 300) translate(1280 0) scale(-1 1)">${handShadow("rh")}</g></g>
   <g transform="rotate(38 538 300) translate(1280 0) scale(-1 1)">${handArtSVG("rh", "rh", false)}
   </g></svg>`;
   }
@@ -1677,9 +1696,14 @@
       const real = world.dataset.scene || "main";
       const tour = ["drawer", "market"];
       let i = 0;
+      // the tour ends on the scene the CAMERA is on now: a player who turned his head
+      // during it (or a Reconnect that did) stays where he looked; the tour stops the
+      // moment the camera moves (it used to put the view back on the desk while the
+      // camera believed it was elsewhere)
+      const cam0 = () => { const a = window.__game; return (a && a.camera && a.camera.scene) || real; };
       const step = () => {
-        if (i < tour.length){ world.dataset.scene = tour[i++]; setTimeout(step, 800); }
-        else world.dataset.scene = real;
+        if (i < tour.length && cam0() === real){ world.dataset.scene = tour[i++]; setTimeout(step, 800); }
+        else world.dataset.scene = cam0();
       };
       step();
     }, 2600);
@@ -3428,10 +3452,73 @@
   }
   // new memory: she turns a moment to show it, if anyone is looking
   const _log = window.__helaBrainLog, _file = window.__helaBrainFile;
-  window.__helaBrainLog = function(hour, cls, text){ _log(hour, cls, text);
+  window.__helaBrainLog = function(hour, cls, text){ _log(hour, cls, text); memSave();
     if (full){ full.dirty = true; if (full.pinnedHour === hour) showPage(full, hour); wake(); } };
-  window.__helaBrainFile = function(item){ _file(item);
+  window.__helaBrainFile = function(item){ _file(item); memSave();
     if (full){ full.dirty = true; full.spinUntil = performance.now() + 2500; wake(); } };
+
+  /* HER MEMORY SURVIVES A RECONNECT. A reloaded match is rebuilt by a silent replay
+     (server/replay.py), so the Hours before the reload never reach her again. Her pages
+     (each Hour's log lines, the last 60) and the Herald editions she filed are kept on
+     this device beside the Reconnect record (resume.js, play-shim.js), keyed by that
+     match's seed, and merged back the moment the resumed match is on screen: an Hour she
+     already holds keeps its own lines. Versioned; storage errors never break the game;
+     Discard, a new match (another seed overwrites it) and the finale let it go. */
+  const MEM_KEY = "pdx.resume.memory.v1", MEM_V = 1, MEM_LOGS = 60;
+  let memDone = null, memT = 0, memCode = null;
+  function memSeed(){
+    try {
+      const o = JSON.parse(localStorage.getItem("pdx.resume.v1") || "null");
+      const g = window.__game, code = g && g.conn && g.conn.code;
+      return o && o.record && code && o.room === code && o.record.seed != null ? String(o.record.mode || "") + ":" + o.record.seed : null;
+    } catch (e) { return null; }
+  }
+  function memRestore(seed){
+    memDone = seed;
+    let o = null;
+    try { o = JSON.parse(localStorage.getItem(MEM_KEY) || "null"); } catch (e) { o = null; }
+    if (!o || o.v !== MEM_V || o.seed !== seed) return;
+    const dkey = (it) => it.hour + "|" + it.headline;
+    const have = new Set(disp.map(dkey));
+    for (const [h, logs] of o.hours || []) {
+      const t = turns.get(+h);
+      if (t && t.logs.length) continue;              // an Hour she holds keeps its own lines
+      turnOf(+h).logs.push(...logs);
+    }
+    const store = window.__helaNewsStore;
+    for (const it of o.disp || []) {
+      if (!it || have.has(dkey(it))) continue;
+      const i = disp.push(it) - 1;
+      turnOf(it.hour === "--" ? 0 : +it.hour || 0).sats.push(i);
+      if (Array.isArray(store)) store.push(it);
+    }
+    if (Array.isArray(store)) store.sort((a, b) => (+a.hour || 0) - (+b.hour || 0));
+    if (full){ full.dirty = true; wake(); }
+  }
+  function memWrite(seed){
+    const pack = (keepHtml) => JSON.stringify({ v: MEM_V, seed,
+      hours: [...turns].filter(([, t]) => t.logs.length).map(([h, t]) => [h, t.logs.slice(-MEM_LOGS)]),
+      disp: disp.map(({ hour, kind, headline, sub, say, html }) => ({ hour, kind, headline, sub, say, html: keepHtml ? html : "" })) });
+    try { localStorage.setItem(MEM_KEY, pack(true)); }
+    catch (e) { try { localStorage.setItem(MEM_KEY, pack(false)); } catch (e2) {} }   // full storage: the pages without the papers
+  }
+  function memSave(){
+    clearTimeout(memT);
+    memT = setTimeout(() => {
+      const seed = memSeed(); if (!seed) return;
+      if (memDone !== seed) memRestore(seed);          // never overwrite what a Reconnect should bring back
+      memWrite(seed);
+    }, 700);
+  }
+  // the resumed match on screen: bring her pages back before the table moves on
+  setInterval(() => {
+    const g = window.__game, code = g && g.conn && g.conn.code;
+    if (!code || !document.body.classList.contains("cabin-on") || memCode === code) return;
+    const seed = memSeed(); if (!seed) return;
+    memCode = code;
+    if (memDone !== seed) memRestore(seed);
+  }, 1000);
+  window.__helaMemoryForget = () => { try { localStorage.removeItem(MEM_KEY); } catch (e) {} };
   // the camera arriving at the desk wakes her (one draw, then rest)
   try {
     const camEl = document.getElementById("cam");
@@ -3649,6 +3736,7 @@
    satellites in tow, the winner is STAMPED. The bureau panel waits its turn. ═══ */
 (function helaFinale(){
   window.__helaFinale = function(winner){
+    try { window.__helaMemoryForget && window.__helaMemoryForget(); } catch (e) {}   // the match is over: nothing to come back to
     if (document.getElementById("hela-finale")) return;
     const store = window.__helaNewsStore || [];
     const fin = document.createElement("div");

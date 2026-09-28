@@ -358,7 +358,9 @@ function poseCurl() {
     headPart("translate(390 606) rotate(-12) scale(.74)", ["sleepy"], false),
     { seed: 84, cls: "cw-tail", soft: true, pts: [[618, 630], [628, 660], [612, 686, .5], [570, 700, .6], [460, 704, .6], [390, 700, .5], [330, 694], [316, 678], [340, 684], [400, 688], [460, 688], [548, 688], [598, 672], [606, 640]],
       detail: marks([[560, 700, -90, 14, 9], [500, 702, -90, 14, 9], [440, 702, -90, 14, 9], [330, 690, -30, 16, 9]]) },
-  ], shadow(460, 200, .22));
+  ], shadow(460, 200, .22), `<g class="cw-zzz" fill="#f6ecd4" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
+      <path class="z1" d="M 280 520 h 22 l -16 20 h 18 v 6 h -30 l 16 -20 h -10 Z"/>
+      <path class="z2" d="M 248 474 h 30 l -22 28 h 24 v 8 h -40 l 22 -28 h -14 Z"/></g>`);
 }
 
 export function catSVG() {
@@ -379,20 +381,39 @@ ${poseSit()}${poseBat()}${poseStand()}${poseCrouch()}${poseLeap()}${poseSleep()}
 </svg>`;
 }
 
-// her bed: a worn velvet cushion (the briefcase's velvet), dented where she sleeps, with her hairs on it
+/* Her bed: a round leather basket with a velvet cushion, seen at the desk's angle like
+   the briefcase and the cabinet (its rim an ellipse, its front wall showing its depth,
+   a hard shadow on the desk), in the briefcase's materials: camel leather stitched in
+   gold thread, brass rivets, the case's wine velvet, a dent where she sleeps and a few
+   of her hairs. She rests at BED_REST (the cushion's middle, in these coordinates). */
+const BED_W = 420, BED_H = 200, BED_REST = 112;
 function bedSVG() {
-  return `<svg viewBox="0 0 420 150" xmlns="${NS}" stroke-linejoin="round">
-  <defs><linearGradient id="cbVel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a3342"/><stop offset=".55" stop-color="#65212e"/><stop offset="1" stop-color="#43141d"/></linearGradient></defs>
-  <ellipse cx="212" cy="128" rx="200" ry="18" fill="#000" opacity=".3"/>
-  <path d="M 22 92 C 14 60 90 34 210 32 C 330 30 410 56 400 92 C 392 124 320 136 210 136 C 100 136 30 124 22 92 Z" transform="translate(2 3)" fill="${INK}"/>
-  <path d="M 22 92 C 14 60 90 34 210 32 C 330 30 410 56 400 92 C 392 124 320 136 210 136 C 100 136 30 124 22 92 Z" fill="url(#cbVel)" stroke="${INK}" stroke-width="3.2"/>
-  <path d="M 70 82 C 90 60 160 50 214 50 C 280 50 340 62 354 84 C 330 104 270 110 212 110 C 150 110 94 102 70 82 Z" fill="#3a1018" opacity=".55"/>
-  <path d="M 44 78 C 70 50 150 40 214 40 C 290 40 360 52 380 76" fill="none" stroke="#c98a8f" stroke-width="3" stroke-linecap="round" opacity=".45"/>
-  <path d="M 36 96 C 70 124 150 130 212 130 C 290 130 360 122 390 98" fill="none" stroke="#caa06a" stroke-width="1.6" stroke-dasharray="6 5" opacity=".6"/>
-  <g stroke="#f0a256" stroke-width="1.4" stroke-linecap="round" opacity=".8" fill="none">
-    <path d="M 150 86 q 6 -2 10 1"/><path d="M 196 96 q 5 -3 9 0"/><path d="M 262 84 q 5 2 8 -1"/><path d="M 236 100 q 4 -3 8 -1"/><path d="M 120 100 q 5 -1 8 2"/>
+  const K = "#14100b";
+  return `<svg viewBox="0 0 ${BED_W} ${BED_H}" xmlns="${NS}" stroke-linejoin="round">
+  <defs>
+    <linearGradient id="cbCamel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9c7850"/><stop offset="1" stop-color="#6a4c30"/></linearGradient>
+    <linearGradient id="cbWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c5a38"/><stop offset="1" stop-color="#4e3620"/></linearGradient>
+    <linearGradient id="cbVel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a2b38"/><stop offset=".6" stop-color="#621f2b"/><stop offset="1" stop-color="#4c1620"/></linearGradient>
+  </defs>
+  <!-- its hard shadow on the desk -->
+  <path d="M 44 150 Q 60 196 226 198 Q 404 196 414 146 L 404 120 Q 380 176 214 180 Q 60 176 40 128 Z" fill="#000" opacity=".32"/>
+  <!-- the front wall, its depth -->
+  <path d="M 22 96 L 28 136 Q 44 170 110 182 Q 210 196 310 182 Q 376 170 392 136 L 398 96 A 188 62 0 0 1 22 96 Z" fill="url(#cbWall)" stroke="${K}" stroke-width="3.4"/>
+  <path d="M 30 132 Q 50 166 112 176 Q 210 190 308 176 Q 370 166 390 132" fill="none" stroke="#2e2014" stroke-width="10" opacity=".45"/>
+  <path d="M 26 116 Q 44 150 112 162 Q 210 176 308 162 Q 376 150 394 116" fill="none" stroke="#caa06a" stroke-width="1.6" stroke-dasharray="6 4" opacity=".8"/>
+  <g fill="#c9a04e" stroke="${K}" stroke-width="1.4"><circle cx="70" cy="150" r="3.6"/><circle cx="160" cy="166" r="3.6"/><circle cx="260" cy="166" r="3.6"/><circle cx="350" cy="150" r="3.6"/></g>
+  <!-- the rolled leather rim -->
+  <ellipse cx="210" cy="96" rx="188" ry="62" fill="url(#cbCamel)" stroke="${K}" stroke-width="3.4"/>
+  <ellipse cx="210" cy="100" rx="164" ry="48" fill="#3a2616" stroke="${K}" stroke-width="2.4"/>
+  <path d="M 40 92 Q 60 50 210 42 Q 360 50 380 92" fill="none" stroke="#caa06a" stroke-width="1.5" stroke-dasharray="6 4" opacity=".75"/>
+  <!-- the velvet cushion inside, dented where she sleeps -->
+  <ellipse cx="210" cy="108" rx="152" ry="40" fill="url(#cbVel)" stroke="${K}" stroke-width="2.6"/>
+  <path d="M 70 110 Q 90 132 210 134 Q 330 132 350 110 Q 330 124 210 126 Q 90 124 70 110 Z" fill="#3c1019" opacity=".5"/>
+  <ellipse cx="214" cy="112" rx="96" ry="22" fill="#4c1620" opacity=".6"/>
+  <ellipse cx="210" cy="108" rx="140" ry="34" fill="none" stroke="#caa06a" stroke-width="1.3" stroke-dasharray="5 4" opacity=".5"/>
+  <g stroke="#f0a256" stroke-width="1.4" stroke-linecap="round" fill="none" opacity=".85">
+    <path d="M 150 100 q 6 -2 10 1"/><path d="M 196 118 q 5 -3 9 0"/><path d="M 262 102 q 5 2 8 -1"/><path d="M 236 122 q 4 -3 8 -1"/><path d="M 120 114 q 5 -1 8 2"/>
   </g>
-  <g stroke="#fff4e0" stroke-width="1.2" stroke-linecap="round" opacity=".7" fill="none"><path d="M 178 90 q 4 -2 7 0"/><path d="M 290 96 q 4 1 7 -1"/></g>
 </svg>`;
 }
 
@@ -400,28 +421,30 @@ function bedSVG() {
       unit is 1% of the plane, not of the window ── */
 const UX = 2133 / 100, UY = 1200 / 100;
 // Her size: her drawing box is this many plane units wide (the sitting cat is about a
-// third of it). At 18 she sits a little shorter than the briefcase is deep, a real
-// cat's scale against the desk's objects. setSize() changes it (the phone table).
-const SIZE = 18;
+// third of it): a real cat's scale against the briefcase and the files. setSize()
+// changes it; SIZES.phone is the size for the phone's case scene.
+const SIZE = 24;
+export const SIZES = { desk: 24, phone: 20 };
 
 /* Her places (plane units, feet point). The paperwork desk is left of the plane's
    origin: HELA's core owns its left half and the cabinet its top, so she keeps to the
    strip on their right. One place is on the machine's desk, beside the briefcase (clear
    of the case's clasps, the files and the machine); now and then she walks over and
    the player finds her there.
-   `sit` says whether she may sit up there without covering a drawer or the case. */
+   `sit` says whether she may sit up there without covering a drawer or the case; `curl`
+   that she naps there only curled up (a stretched-out sleep would reach the machine). */
 const PLACES = {
-  bed:   { x: -7.5, y: 95.5, lie: true, sit: true },    // her cushion, the desk's bottom right corner
+  bed:   { x: -8, y: 91, lie: true, sit: true },        // her basket, the desk's bottom right corner
   core:  { x: -11, y: 80, lie: false, sit: true },      // beside HELA's core, where her light is warm
   ledge: { x: -6, y: 57, lie: true, sit: false },       // the floor under the cabinet, where she hides
-  case:  { x: 6, y: 66, lie: true, sit: true },         // beside the briefcase on the machine's desk: she sits or naps there
+  case:  { x: 4.8, y: 72.5, lie: true, sit: true, curl: true }, // beside the briefcase on the machine's desk: she sits there or naps curled up
 };
 const ROAM = { x0: -14, x1: 6 };           // how far a leap may carry her (never into her core)
 
-const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat",
+const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat", knead: "bat", turn: "stand", belly: "sleep",
   walk: "stand", flee: "stand", crouch: "crouch", scared: "crouch", pounce: "leap", sleep: "sleep", curl: "curl" };
 // her face in each state: relaxed at rest, curious when she watches, focused on the hunt
-const EXPR = { sit: "relaxed", watch: "open", walk: "open", flee: "scared", pet: "happy", groom: "happy",
+const EXPR = { sit: "relaxed", watch: "open", walk: "open", flee: "scared", pet: "happy", groom: "happy", knead: "happy", turn: "relaxed", belly: "sleepy",
   bat: "focused", bite: "focused", crouch: "focused", pounce: "focused", scared: "scared", sleep: "sleepy", curl: "sleepy" };
 const WALK_SPEED = 4.2;                   // plane units per second, an unhurried stroll
 
@@ -442,7 +465,16 @@ export class CatEngine {
     this._huntCool = 0;
     this._batCool = 0;
     this._running = false;
+    this.sizes = SIZES;
     this._onMove = (e) => this._move(e);
+    // a finger held on her pets her too (the phone): each beat keeps the petting going
+    this._onDown = (e) => {
+      if (e.pointerType === "mouse" || !this.hitTest(e.clientX, e.clientY)) return;
+      this._mouse.x = e.clientX; this._mouse.y = e.clientY; this._hold = true;
+      const beat = () => { if (!this._hold || !this._running) return; this._petStart(1400); this._later(beat, 700); };
+      beat();
+    };
+    this._onUp = () => { this._hold = false; };
   }
 
   /* ── lifecycle ── */
@@ -451,14 +483,20 @@ export class CatEngine {
     this._running = true;
     try { window.__pdxCat = this; } catch (err) {}
     if (!this.root && !this._mount()) { this._later(() => { this._running = false; this.start(); }, 500); return; }
-    window.addEventListener("mousemove", this._onMove, { passive: true });
+    window.addEventListener("pointermove", this._onMove, { passive: true });
+    window.addEventListener("pointerdown", this._onDown, { passive: true });
+    window.addEventListener("pointerup", this._onUp, { passive: true });
+    window.addEventListener("pointercancel", this._onUp, { passive: true });
     this._watchScene();
     this._watchCore();
     this._think(4 + Math.random() * 6);
   }
   stop() {
     this._running = false;
-    window.removeEventListener("mousemove", this._onMove);
+    window.removeEventListener("pointermove", this._onMove);
+    window.removeEventListener("pointerdown", this._onDown);
+    window.removeEventListener("pointerup", this._onUp);
+    window.removeEventListener("pointercancel", this._onUp);
     this._timers.forEach(clearTimeout); this._timers.clear();
     if (this._sceneObs) this._sceneObs.disconnect();
     this._setPurr(false);
@@ -488,7 +526,8 @@ export class CatEngine {
   /* ── her size and her places, for tables other than the desk (the phone layout):
         window.__pdxCat.setSize(units) and window.__pdxCat.setPlaces({ name: { x, y,
         lie, sit } }, home). Units are plane units (1% of the 2133x1200 plane); a
-        place named "bed" carries her cushion, without one the cushion hides. ── */
+        place named "bed" carries her basket (she naps there), without one it hides.
+        SIZES (also on the engine as .sizes): desk 24, phone 20. ── */
   setSize(units) { if (units > 4 && units < 60) this._size(units); }
   setPlaces(places, home) {
     if (!places || !Object.keys(places).length) return;
@@ -510,9 +549,10 @@ export class CatEngine {
     if (this.bed) {
       this.bed.style.display = b ? "" : "none";
       if (b) {
-        const bw = units * 0.48 * UX;
+        // the basket is sized to her lying body; its cushion's middle is where she rests
+        const bw = units * 0.74 * UX, k = bw / BED_W;
         this.bed.style.width = bw.toFixed(1) + "px";
-        this.bed.style.transform = `translate(${(b.x * UX - bw / 2).toFixed(1)}px, ${(b.y * UY + units * 0.04 * UY - bw * 150 / 420).toFixed(1)}px)`;
+        this.bed.style.transform = `translate(${(b.x * UX - bw / 2).toFixed(1)}px, ${(b.y * UY - BED_REST * k).toFixed(1)}px)`;
       }
     }
     this._place(0);
@@ -551,16 +591,24 @@ export class CatEngine {
   _enter(state, secs) {
     this.state = state;
     this._applyPose(state);
+    // in her basket her lying body is centred on the cushion, whichever way she faces
+    const bed = this.places.bed;
+    if (this.place === "bed" && bed && !this._moveT && state !== "walk" && state !== "flee") {
+      const off = ({ sleep: 85, belly: 85, curl: 15 }[state] || 0) / VB_W * this.sizeUnits;
+      const x = bed.x + this.face * off;
+      if (Math.abs(x - this.pos.x) > 0.01) { this.pos = { x, y: bed.y }; this._place(0); }
+    }
     clearTimeout(this._stateT);
     if (secs > 0) this._stateT = this._later(() => { if (this.state === state) this._settle(); }, secs * 1000);
   }
   _applyPose(state) {
     if (!this.root) return;
     const pose = POSE_OF[state] || "sit";
-    const extra = { walk: "walking", flee: "walking ears-back", pet: "petted purring", groom: "grooming", crouch: "hunting",
+    const extra = { walk: "walking", flee: "walking ears-back", pet: "petted purring", groom: "grooming", crouch: "hunting", knead: "kneading", turn: "turning", belly: "sleeping",
       scared: "ears-back", bite: "biting", bat: "batting", watch: "pupils-wide", sleep: "sleeping", curl: "sleeping" }[state] || "";
-    const keep = ["mood-afraid", "by-core", "offstage", "face-right", "petted", "purring", "jolt"].filter((c) => this.root.classList.contains(c)
-      && (c !== "petted" && c !== "purring" || state === "pet" || this._petting));
+    const petOnly = ["petted", "purring", "ears-soft", "bunt"];
+    const keep = ["mood-afraid", "by-core", "offstage", "face-right", "jolt", ...petOnly].filter((c) => this.root.classList.contains(c)
+      && (!petOnly.includes(c) || state === "pet" || this._petting));
     const x = "x-" + (this.mood === "afraid" && pose === "crouch" ? "scared" : (EXPR[state] || "relaxed"));
     this.root.className = ["cat-being", "pose-" + pose, x, extra, ...keep].filter(Boolean).join(" ");
     if (this._pose && this._pose !== pose) {
@@ -574,13 +622,30 @@ export class CatEngine {
     this._rect = null;
     if (state !== "pet" && !this._petting) this._setPurr(false);
   }
-  // after anything, she goes back to being a cat in her place
+  // after anything, she goes back to being a cat in her place. Her naps belong to her
+  // basket: arriving there she treads the cushion, turns round and curls up
   _settle() {
     if (this.mood === "afraid") { this._enter("scared", 0); return; }
     const p = this.places[this.place];
-    if (p && p.lie) this._enter(Math.random() < 0.55 ? "curl" : "sleep", 0);
+    if (this.place === "bed" && this._fresh) { this._fresh = false; this._bedRitual(); return; }
+    const lie = p && p.lie && (this.place === "bed" || !p.sit || Math.random() < 0.3);
+    if (lie) this._enter(this._napPose(), 0);
     else this._enter("sit", 0);
     this._think(10 + Math.random() * 14);
+  }
+  _napPose() {
+    const p = this.places[this.place];
+    return (p && p.curl) || Math.random() < 0.55 ? "curl" : "sleep";
+  }
+  _bedRitual() {
+    this._enter("knead", 0);
+    this._later(() => {
+      if (this.state !== "knead") return;
+      this._enter("turn", 0);
+      const turns = Math.random() < 0.5 ? 1 : 2;
+      for (let i = 1; i <= turns * 2; i++) this._later(() => { if (this.state === "turn") { this.face = -this.face; this._place(0); } }, i * 340);
+      this._later(() => { if (this.state !== "turn") return; this._enter(Math.random() < 0.5 ? "curl" : "sleep", 0); this._think(30 + Math.random() * 30); }, turns * 680 + 240);
+    }, 1800 + Math.random() * 900);
   }
 
   _setPurr(on) {
@@ -597,7 +662,7 @@ export class CatEngine {
   }
   _decide() {
     if (!this._running || !this.root) return;
-    const busy = ["walk", "crouch", "pounce", "bite", "bat", "pet", "scared"].includes(this.state);
+    const busy = ["walk", "crouch", "pounce", "bite", "bat", "pet", "scared", "knead", "turn", "belly"].includes(this.state);
     if (busy || this._petting) { this._think(6); return; }
     if (!this._seen) { this._think(20 + Math.random() * 20); return; }   // nobody is watching: she naps on
     if (this.mood === "afraid") { this._think(12); return; }
@@ -611,13 +676,16 @@ export class CatEngine {
       this._think(8 + Math.random() * 8);
       return;
     }
-    if (r < 0.35) {
+    if (r < 0.3) {
       // a stroll to another of her places
       this._goTo(this._otherPlace());
-    } else if (r < 0.55) {
+    } else if (r < 0.48) {
       this._enter("groom", 3.2 + Math.random() * 2.5);
-    } else if (r < 0.8 && this.places[this.place] && this.places[this.place].lie) {
-      this._settle();
+    } else if (r < 0.8) {
+      // time for a nap: most of the time she goes to her basket for it
+      if (this.places.bed && this.place !== "bed" && Math.random() < 0.8) this._goTo("bed");
+      else if (this.places[this.place] && this.places[this.place].lie) { this._enter(this._napPose(), 0); this._think(24 + Math.random() * 24); }
+      else { this._flick(); this._think(10 + Math.random() * 10); }
     } else {
       this._flick();
       if (this.onMeow && Math.random() < 0.15) this.onMeow();
@@ -651,6 +719,7 @@ export class CatEngine {
     this._moveT = this._later(() => {
       this._moveT = null;
       if (this._updSeen) this._updSeen();
+      this._fresh = name === "bed";
       if (name === "core" && Math.random() < 0.6) { this._enter("sit", 0); this._faceCore(); this._think(8 + Math.random() * 10); }
       else this._settle();
     }, secs * 1000 + 60);
@@ -724,14 +793,19 @@ export class CatEngine {
     const on = this.hitTest(m.x, m.y);
     if (on && m.v < 0.9 && !["pounce", "bite", "crouch", "scared", "walk"].includes(this.state)) {
       this._petMs += Math.min(dt, 80);
-      if (this._petMs > 380) this._petStart(1500);
-      else if (this._petting) this._petStart(1500);
+      if (this._petMs > 380 || this._petting) this._petStart(1500);
+      if (this._petting) {
+        const rub = Math.round(Math.max(-12, Math.min(12, (dx / r.width) * 24 * (this.face > 0 ? -1 : 1))));
+        if (rub !== this._rub) { this._rub = rub; this.root.style.setProperty("--rub", rub + "deg"); }
+        const beat = Math.max(0.5, Math.min(1.3, 1.4 - m.v)).toFixed(1);
+        if (beat !== this._beat) { this._beat = beat; this.root.style.setProperty("--bunt", beat + "s"); }
+      }
       return;
     }
     if (!on) this._petMs = Math.max(0, this._petMs - dt);
 
     // the hunt: the hand darts past her while she is up, and she has not played lately
-    const awake = ["sit", "watch", "groom"].includes(this.state);
+    const awake = ["sit", "watch", "groom"].includes(this.state) && e.pointerType !== "touch";
     if (awake && m.v > 1.4 && dist < r.width * 1.6 && dist > r.width * 0.4 && now > this._huntCool && this.mood !== "afraid") {
       this._huntCool = now + 70000 + Math.random() * 60000;
       if (Math.random() < 0.6) this._hunt();
@@ -744,25 +818,75 @@ export class CatEngine {
     if (px !== this._px) { this._px = px; this.root.style.setProperty("--px", px + "px"); }
     if (py !== this._py) { this._py = py; this.root.style.setProperty("--py", py + "px"); }
   }
+  /* ── petting. Each session picks one way of enjoying it, never the same as the last:
+        head-bunts into the hand (timed to the strokes), treading with her front paws,
+        or rolling over to show her belly (and, petted there too long, a playful bat).
+        While petted her eyes squeeze shut, her ears relax and her tail sways, and her
+        cheek rubs along the hand as it moves. When the hand leaves she blinks slowly
+        back at it and follows it a step. Hearts and the purr are only accents. ── */
   _petStart(ms) {
     if (!this.root) return;
-    this._petting = true;
-    const lying = this.state === "sleep" || this.state === "curl";
-    if (!lying && this.state !== "pet") { this._cancelMove(); this._enter("pet", 0); }
-    this.root.classList.add("petted");
-    document.body.classList.add("cat-petting");     // the hand strokes her (app.css armPet)
-    this._setPurr(true);
+    const now = performance.now(), lying = ["sleep", "curl", "belly"].includes(this.state);
+    if (!this._petting) {
+      this._petting = true; this._petSince = now;
+      const kinds = lying ? ["stay", "belly"] : ["bunt", "knead", "belly"];
+      let k = kinds[Math.floor(Math.random() * kinds.length)];
+      if (k === this._lastPet) k = kinds[(kinds.indexOf(k) + 1) % kinds.length];
+      this._petKind = this._lastPet = k;
+      if (!lying) { this._cancelMove(); this._enter("pet", 0); }
+      this.root.classList.add("petted", "ears-soft");
+      document.body.classList.add("cat-petting");     // the hand strokes her (app.css armPet)
+      this._setPurr(true);
+    }
+    this._petStep(now);
     clearTimeout(this._petT);
     this._petT = this._later(() => this._petEnd(), ms);
   }
+  _petStep(now) {
+    const t = now - this._petSince, k = this._petKind;
+    if (k === "bunt" && t > 500 && this.state === "pet") this.root.classList.add("bunt");
+    if (k === "knead" && t > 900 && this.state === "pet") this._enter("knead", 0);
+    if (k === "belly") {
+      if (t > 2200 && !["belly", "bite"].includes(this.state)) this._enter("belly", 0);
+      if (t > 6000 && this.state === "belly") {
+        // enough of that: a playful swipe at the hand, then she sits up
+        this._enter("bite", 0);
+        this._later(() => { if (this.state === "bite") { this._petEnd(); this._enter("sit", 0); this._think(8); } }, 900);
+      }
+    }
+  }
   _petEnd() {
     if (!this._petting) return;
-    this._petting = false; this._petMs = 0;
+    this._petting = false; this._petMs = 0; this._hold = false;
     clearTimeout(this._petT);
-    if (this.root) this.root.classList.remove("petted");
     document.body.classList.remove("cat-petting");
     this._setPurr(false);
-    if (this.state === "pet") this._enter("sit", 2.5 + Math.random() * 2);
+    if (!this.root) return;
+    this.root.classList.remove("petted", "ears-soft", "bunt");
+    this.root.style.removeProperty("--rub");
+    if (["pet", "knead"].includes(this.state)) {
+      this._enter("sit", 0);
+      // a slow blink back at the hand
+      this.root.classList.replace("x-relaxed", "x-happy");
+      this._later(() => { if (this.state === "sit" && this.root) this.root.classList.replace("x-happy", "x-relaxed"); }, 800);
+      // and a step after it, if it went off to one side
+      const r = this._poseRect();
+      if (r && this._seen) {
+        const off = this._mouse.x - (r.left + r.width / 2);
+        if (Math.abs(off) > r.width * 0.7) {
+          this._later(() => {
+            if (this.state !== "sit" || this._petting) return;
+            this.face = off > 0 ? 1 : -1;
+            this.pos = { x: this.pos.x + this.face * this.sizeUnits * 0.07, y: this.pos.y };
+            this._enter("walk", 0); this._place(0.6);
+            this._later(() => { if (this.state === "walk" && !this._moveT) this._enter("sit", 0); }, 650);
+          }, 900);
+        }
+      }
+      this._think(6 + Math.random() * 6);
+    } else if (this.state === "belly") {
+      this._enter(this.place === "bed" ? "sleep" : "sit", 0); this._think(10);
+    }
   }
   _hunt() {
     this._cancelMove();

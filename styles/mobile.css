@@ -139,7 +139,7 @@ html.pdx-in-match #pdx-fs-pill { top: auto; bottom: max(8px, var(--tx-sa-b)); ri
 
 /* ══ TURN YOUR PHONE SIDEWAYS (a phone held upright during a match) ══════ */
 #pdx-rotate { display: none; }
-html.pdx-phone.pdx-portrait.pdx-in-match #pdx-rotate {
+html.pdx-touch.pdx-portrait.pdx-in-match #pdx-rotate {
   position: fixed; inset: 0; z-index: 2147483200; display: flex; align-items: center; justify-content: center;
   padding: max(24px, var(--tx-sa-t)) 24px max(24px, var(--tx-sa-b)); background: #13100c; color: var(--tx-paper); text-align: center; }
 .tx-rot-box { display: grid; justify-items: center; gap: 10px; }
@@ -373,8 +373,6 @@ html.pdx-m-on #market-zone .card.pdx-looked { outline: 3px solid var(--hela-seat
 /* the game's own hover pop stays away on a phone (the sheet is the card's detail) */
 html.pdx-m-on .card-pop:not(.ps-card) { display: none !important; }
 
-/* ── the Settings panel's touch group (index.html #set-touch) ── */
-html:not(.pdx-touch) #set-touch { display: none !important; }
 
 /* her words name what a finger taps (js/touch.js __pdxWords): an inked keycap label */
 html.pdx-touch #tut-callout b.pw-key, html.pdx-touch .he-window b.pw-key { display: inline-block; padding: 0 .3em; border: 1.5px solid currentColor;
@@ -473,3 +471,83 @@ html.pdx-m-on body.cabin-on #timeline-rail > .cplot, html.pdx-m-on body.cabin-on
 html.pdx-m-on body.cabin-on #timeline-rail > .cplot-ori { transition: none !important; }
 html.pdx-m-on body.cabin-on:not(.chart-rolled) #chart-roll { display: none !important; }
 html.pdx-m-on #hull .hull-manopla, html.pdx-m-on body.cabin-on #hull-console { transition: none !important; }
+
+/* ══ ROUND 4 (the owner on his phone, 27/09 night): exclusive scenes, no forced movement, a
+   real comic page turn, and no black blinks ══ */
+
+/* EXCLUSIVE SCENES: each view shows only its own things (display none, not clipped), on its
+   own backdrop; the table round the frame is clipped too (mobile-table.js --pdx-clip) */
+html.pdx-m-on body.cabin-on #cam.cam-world, html.pdx-m-on body.cabin-on #hull { clip-path: var(--pdx-clip, none); }
+html.pdx-m-on:not([data-pdx-view="machine"]) body.cabin-on #hull,
+html.pdx-m-on:not([data-pdx-view="machine"]) #players-zone,
+html.pdx-m-on:not([data-pdx-view="chart"]) #timeline-rail,
+html.pdx-m-on:not([data-pdx-view="merchant"]) #market-zone,
+html.pdx-m-on:not([data-pdx-view="case"]) #rucksack-zone,
+html.pdx-m-on:not([data-pdx-view="case"]) #cat,
+html.pdx-m-on:not([data-pdx-view="records"]) #drawer-zone,
+html.pdx-m-on:not([data-pdx-view="brain"]) #log-zone { display: none !important; }
+html.pdx-m-on .cam-veil { display: none !important; }
+html.pdx-m-on:not([data-pdx-view="case"]) #cat-bed { display: none !important; }
+/* the backdrop behind each page (no black anywhere, even while a tile is late) */
+html.pdx-m-on, html.pdx-m-on body { background: #3b2511 !important; }
+html.pdx-m-on[data-pdx-view="merchant"], html.pdx-m-on[data-pdx-view="merchant"] body { background: #2b1f14 !important; }
+html.pdx-m-on[data-pdx-view="chart"], html.pdx-m-on[data-pdx-view="chart"] body { background: #120f1c !important; }
+html.pdx-m-on[data-pdx-view="records"], html.pdx-m-on[data-pdx-view="records"] body,
+html.pdx-m-on[data-pdx-view="brain"], html.pdx-m-on[data-pdx-view="brain"] body { background: #2e2118 !important; }
+html.pdx-m-on #screen-game { background: transparent !important; }
+/* the room behind the table (big fixed layers, one of them always moving) is not drawn on a phone */
+html.pdx-m-on .world-bg, html.pdx-m-on .world-haze, html.pdx-m-on .world-motes, html.pdx-m-on .world-dread,
+html.pdx-m-on .vignette, html.pdx-m-on .grain { display: none !important; }
+
+/* NO BLACK BLINKS: few, small composited layers. Nothing is promoted in advance, nothing blends
+   with what is under it, nothing is filtered (a filtered or promoted layer the size of the
+   table is bigger than a phone's GPU tile budget, which is what flashes black) */
+html.pdx-touch *, html.pdx-touch *::before, html.pdx-touch *::after { will-change: auto !important; }
+html.pdx-m-on body.cabin-on *, html.pdx-m-on body.cabin-on *::before, html.pdx-m-on body.cabin-on *::after {
+  mix-blend-mode: normal !important; filter: none !important; }
+html.pdx-m-on .mano-scan { display: none !important; }
+/* the big areas never animate on a phone; small things (a die, a light) still may */
+html.pdx-m-on body.cabin-on #market-zone, html.pdx-m-on body.cabin-on #market-zone::before, html.pdx-m-on body.cabin-on #market-zone::after,
+html.pdx-m-on body.cabin-on #timeline-rail, html.pdx-m-on body.cabin-on #timeline-rail::before, html.pdx-m-on body.cabin-on #timeline-rail::after,
+html.pdx-m-on body.cabin-on .game-grid, html.pdx-m-on body.cabin-on .game-grid::before, html.pdx-m-on body.cabin-on .game-grid::after,
+html.pdx-m-on body.cabin-on #rucksack-zone, html.pdx-m-on body.cabin-on #drawer-zone, html.pdx-m-on body.cabin-on #log-zone,
+html.pdx-m-on body.cabin-on .portal-bg, html.pdx-m-on body.cabin-on .portal-fx, html.pdx-m-on body.cabin-on .secret-bg,
+html.pdx-m-on #hull .hull-manopla, html.pdx-m-on #hull .mano-svg { animation: none !important; transition: none !important; }
+
+/* THE DIRECTION PING: the key of the scene where he is needed pulses, with an inked badge */
+#pdx-mrail button[data-view] { position: relative; }
+#pdx-mrail .mr-ping { position: absolute; right: -4px; top: -6px; min-width: 18px; padding: 1px 4px; border: 2px solid var(--cx-ink, #15100a);
+  border-radius: 3px; background: #e0483a; color: #fff; font: 700 .6rem/1.2 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em;
+  font-style: normal; box-shadow: 2px 2px 0 var(--cx-ink, #15100a); transform: rotate(6deg); pointer-events: none; }
+#pdx-mrail button.beckon::after { content: ""; position: absolute; left: -12px; top: 50%; margin-top: -7px; border: 7px solid transparent;
+  border-right: 9px solid #e0483a; filter: none; }
+#pdx-mcol .mc-go { padding: 4px 7px; border: 2px solid var(--cx-ink, #15100a); background: #e0483a; color: #fff; box-shadow: 2px 2px 0 var(--cx-ink, #15100a);
+  font: 700 .74rem/1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; text-transform: uppercase; }
+#pdx-mcol .mc-go b { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+
+/* THE COMIC PAGE TURN: the page he is on (a comic page: paper, panel border and gutter, the
+   scene's caption) turns over on the stage's left edge like a page of a comic, its own shading
+   and the shadow it casts moving with it, and the next scene's page lies under it */
+#pdx-swap { perspective: 1600px; }
+#pdx-swap .ps-leaf { position: absolute; inset: 0; transform-origin: 0 50%; transform-style: preserve-3d; }
+#pdx-swap .ps-face, #pdx-swap .ps-back { position: absolute; inset: 0; backface-visibility: hidden; box-sizing: border-box; }
+#pdx-swap .ps-face { background:
+    radial-gradient(circle, rgba(21, 16, 10, .14) 1.1px, transparent 1.5px) 0 0 / 8px 8px,
+    linear-gradient(100deg, #f5e7b8, #efdca4 70%, #e4cd8e);
+  border: 3px solid var(--cx-ink, #15100a); padding: 12px; display: grid; grid-template-columns: 1.3fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; }
+#pdx-swap .ps-panel { border: 3px solid var(--cx-ink, #15100a); background: rgba(255, 251, 232, .55); position: relative; }
+#pdx-swap .ps-panel.p1 { grid-row: span 2; display: grid; place-items: center; }
+#pdx-swap .ps-panel.p2 { background: repeating-linear-gradient(135deg, rgba(21, 16, 10, .08) 0 2px, transparent 2px 7px), rgba(255, 251, 232, .5); }
+#pdx-swap .ps-cap { padding: 6px 12px; border: 3px solid var(--cx-ink, #15100a); background: var(--hela-seat, #f2a93b); box-shadow: 4px 4px 0 var(--cx-ink, #15100a);
+  font: 700 clamp(1.1rem, 3.6vw, 2rem)/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; color: var(--cx-ink, #15100a); transform: rotate(-2deg); }
+#pdx-swap .ps-next { position: absolute; left: 10px; bottom: 8px; font: 700 .72rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .12em; color: var(--cx-ink, #15100a); }
+#pdx-swap .ps-back { transform: rotateY(180deg); background: linear-gradient(80deg, #d9c48c, #eadaa8); border: 3px solid var(--cx-ink, #15100a); }
+#pdx-swap .ps-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, .28)); opacity: 0; }
+#pdx-swap .ps-cast { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .5), rgba(0, 0, 0, 0) 60%); opacity: 0; transform-origin: 0 50%; }
+html.pdx-m-on #players-zone .pcard.cfolio.pdx-dragging { transition: none !important; }
+html.pdx-m-on #players-zone .pcard.cfolio.pdx-piled { transition: none !important; }
+/* the pip-boy is always ready on its own page: never parked below the table, its screen lit at
+   once (the desk's arm tick would otherwise slide it in up to 400 ms after the page lands) */
+html.pdx-m-on #hull .hull-manopla[data-pose="park"] { transform: scale(var(--mano-scale)) !important; }
+html.pdx-m-on[data-pdx-view="machine"] body.mano-away #hull-console { opacity: 1 !important; }

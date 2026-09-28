@@ -14,8 +14,11 @@
    older build of the game says so and offers only Discard: another game code may
    deal other dice from the same seed.
    ========================================================================= */
-import { seatColor } from "./util.js?202609271951";
-import { hydrateIcons } from "./icons.js?202609271951";
+import { seatColor } from "./util.js?202609272212";
+import { hydrateIcons } from "./icons.js?202609272212";
+// Learn to Play keeps its lesson beside the record (tutorial-drive.js): a Reconnect
+// in the middle of the lessons goes back to HELA's coach, lesson and all
+import { resumeTutorial, readLesson, dropLesson } from "./tutorial-drive.js?202609272212";
 
 const KEY = "pdx.resume.v1";           // play-shim.js writes the same key
 const IN_MATCH = "pdx.inMatch";         // sessionStorage: a match was on screen in this tab
@@ -40,6 +43,8 @@ function ssSet(k, v) { try { if (v == null) sessionStorage.removeItem(k); else s
 /** The saved match, forgotten (Discard on the card, or a finished match left). */
 function discard() {
   remove();
+  dropLesson();
+  try { window.__helaMemoryForget && window.__helaMemoryForget(); } catch (e) {}   // HELA's pages kept for it (cabin.js)
   ssSet(IN_MATCH, null);
 }
 
@@ -233,7 +238,12 @@ export function initResume(deps) {
     if (res && res.ok && body.code) {
       // the card keeps saying "Restoring" until the table is up (nothing flickers)
       window.__pdxResumeBlocked = false;
-      deps.enterRoom(body.seat, body.code, body.seat, body.room, { solo: true, resumed: true });
+      if (saved.record.mode === "tutorial") {
+        // the coach again, with the lesson it kept (or rebuilt from the table)
+        resumeTutorial({ code: body.code, seat: body.seat, room: body.room }, readLesson(saved.room));
+      } else {
+        deps.enterRoom(body.seat, body.code, body.seat, body.room, { solo: true, resumed: true });
+      }
       setTimeout(() => {
         if (!busy) return;
         busy = false;                        // the table never came: let him try again
@@ -281,6 +291,8 @@ export function initResume(deps) {
     if (saved && code && saved.room !== code) {
       // the new match's own save points write the record from here on
       remove();
+      const les = readLesson(null);
+      if (les && les.room !== code) dropLesson();
       window.__pdxResumeBlocked = false;
     }
   }).observe(game, { attributes: true, attributeFilter: ["class"] });
@@ -305,8 +317,8 @@ export function initResume(deps) {
 }
 
 /** Labels of the Leave controls for the table on screen. Leaving keeps the match
-    for Reconnect; only Learn to Play in the middle of its lessons is not kept
-    (its lesson steps live in the page), and then it simply starts again. */
+    for Reconnect, Learn to Play too (lesson and all) from its first decision; before
+    that nothing is kept yet, and it simply starts again. */
 export function leaveWords() {
   const tut = document.body.classList.contains("tut") || document.body.dataset.roomMode === "tutorial";
   const back = "You can come back to it from the menu with Reconnect.";

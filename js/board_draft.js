@@ -14,7 +14,7 @@
 (function () {
   const NS = "http://www.w3.org/2000/svg";
   let W = 780;             // set from the rail's real box at mount, the chart FILLS its frame
-  const H = 950;
+  let H = 950;
   const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
   // scale the x of every coordinate pair in an authored path (M/C absolute, x y alternating)
   function scalePathX(d, fn) {
@@ -29,6 +29,95 @@
   const rom = c => c === 0 ? "0" : ROM[c - 1];
   const rnd = (a, b) => { const x = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return x - Math.floor(x); };
   const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ── THE CHART IN ONE LOOK ON A PHONE (the owner, 27/09: "one single look", no pan, no zoom) ──
+     On a touch phone (html.pdx-phone, touch.js) each of the three charts is recomposed for
+     the phone's landscape chart page instead of shrinking the tall desk chart into it. The
+     same thirty centuries, the same road from XXX down to Year Zero, the same six periods,
+     laid out as six bands read like a book: the Timeless on top, Antiquity at the foot, the
+     road turning at the end of each band (XXX top right, I and Year Zero bottom right), the
+     four border centuries (XXIII, XIX, XV, V) on the seam between their two bands. Every
+     chart keeps its own skin on that frame (the vellum and castles, the sea and islands,
+     the stars); the boards ask this for the geometry and draw it their own way. The chart's
+     box takes the stage's own aspect (--pdx-chart-ar), so mobile-table.js fits it whole. */
+  window.__pdxPhoneChart = window.__pdxPhoneChart || (function () {
+    const D = document.documentElement;
+    const on = () => D.classList.contains("pdx-phone");
+    const HP = 560;
+    function ar() {
+      const cs = getComputedStyle(D);
+      const cw = parseFloat(cs.getPropertyValue("--pdx-colw")) || 150, rw = parseFloat(cs.getPropertyValue("--pdx-railw")) || 64;
+      const w = Math.max(innerWidth, innerHeight) - cw - rw, h = Math.min(innerWidth, innerHeight);   // the table is always landscape
+      return Math.max(1.2, Math.min(2.1, w / Math.max(1, h)));
+    }
+    function dims() { const a = ar(); D.style.setProperty("--pdx-chart-ar", a.toFixed(4)); return { W: Math.round(HP * a), H: HP }; }
+    // the six bands, top to bottom, and the direction the road runs along each
+    const ROWS = [
+      { era: "tim", cs: [30, 29, 28, 27, 26, 25, 24], x: [.93, .2] },
+      { era: "con", cs: [22, 21, 20], x: [.27, .73] },
+      { era: "mod", cs: [18, 17, 16], x: [.73, .27] },
+      { era: "lma", cs: [14, 13, 12, 11], x: [.2, .8] },
+      { era: "hma", cs: [10, 9, 8, 7, 6], x: [.92, .2] },
+      { era: "ant", cs: [4, 3, 2, 1], x: [.2, .62] },
+    ];
+    const SEAMS = { 23: [0, .075], 19: [1, .925], 15: [2, .075], 5: [4, .075] };   // century: [band above, x]
+    function layout(W, H, o) {
+      o = o || {};
+      const m = o.margin != null ? o.margin : 14, rowH = (H - 2 * m) / 6, wob = o.wobble != null ? o.wobble : 7;
+      const band = (r) => ({ top: m + r * rowH, bot: m + (r + 1) * rowH, cy: m + (r + .5) * rowH, h: rowH });
+      const pos = {}, rowOf = {};
+      ROWS.forEach((R, r) => {
+        const b = band(r), n = R.cs.length;
+        R.cs.forEach((c, i) => {
+          const t = n === 1 ? .5 : i / (n - 1);
+          pos[c] = [Math.round(W * (R.x[0] + (R.x[1] - R.x[0]) * t)), Math.round(b.cy + (i % 2 ? wob : -wob))];
+          rowOf[c] = r;
+        });
+      });
+      for (const [cs, [r, fx]] of Object.entries(SEAMS)) { pos[+cs] = [Math.round(W * fx), Math.round(band(r).bot)]; rowOf[+cs] = r + .5; }
+      const yz = [Math.round(W * (o.yzX || .85)), Math.round(band(5).cy + (o.yzDy || 4))];
+      // the widest free stretch of a band (for its name, a church, a cove): [x0, x1]
+      // side "top" / "bot": only the border centuries on that edge of the band count
+      function gaps(r, pad, side) {
+        pad = pad == null ? 46 : pad;
+        const xs = [];
+        for (let c = 1; c <= 30; c++) { const k = rowOf[c]; if (k === r || (k === r - .5 && side !== "bot") || (k === r + .5 && side !== "top")) xs.push(pos[c][0]); }
+        if (r === 5) xs.push(yz[0]);
+        xs.sort((a, b) => a - b);
+        const pts = [[12, 0]].concat(xs.map((x) => [x, pad]), [[W - 12, 0]]), out = [];
+        for (let i = 0; i + 1 < pts.length; i++) { const x0 = pts[i][0] + pts[i][1], x1 = pts[i + 1][0] - pts[i + 1][1]; if (x1 - x0 > 20) out.push([x0, x1]); }
+        return out.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]));
+      }
+      return { pos, rowOf, yz, band, gaps, rows: ROWS, rowH, W, H };
+    }
+    // THE TEXT WAS LAID OUT FOR A CHART NOBODY COULD SEE. The two charts off screen are
+    // content-visibility: hidden (app.css PERF), and Chromium sizes SVG text for the screen
+    // scale it has when laid out: a chart built or re-framed while hidden kept its words at
+    // the wrong size (the names did not paint at all, the numerals came out at 0.6), and
+    // turning it visible, or the phone's page re-framing it (mobile-table.js --pdx-s), did
+    // not lay them out again. On a phone, whenever the chart on show or its framing
+    // changes, the visible chart is laid out once more (display off and on, one frame).
+    let relT = null;
+    function relayout() {
+      clearTimeout(relT);
+      relT = setTimeout(() => {
+        const rail = document.getElementById("timeline-rail"); if (!rail || !on()) return;
+        const cp = rail.querySelector(rail.classList.contains("skin-sing") ? ":scope > .cplot-sing" : rail.classList.contains("skin-ori") ? ":scope > .cplot-ori" : ":scope > .cplot");
+        const svg = cp && cp.querySelector(":scope > svg"); if (!svg) return;
+        svg.style.display = "none"; void svg.getBoundingClientRect(); svg.style.display = "";
+      }, 80);
+    }
+    function watch() {
+      const rail = document.getElementById("timeline-rail"); if (!rail || !on()) return false;
+      new MutationObserver(relayout).observe(rail, { attributes: true, attributeFilter: ["class"] });
+      let lastS = "";
+      new MutationObserver(() => { const s2 = D.style.getPropertyValue("--pdx-s"); if (s2 !== lastS) { lastS = s2; relayout(); } })
+        .observe(D, { attributes: true, attributeFilter: ["style"] });
+      return true;
+    }
+    if (!watch()) document.addEventListener("DOMContentLoaded", watch, { once: true });
+    return { on, dims, layout, relayout, H: HP };
+  })();
 
   /* ── THE SHEET RUNS ON (shared by all three charts; app.css THE CHART SHEET GROWS) ──
      Mounts a decorative sheet UNDER a chart that may run past the chart's right and
@@ -610,7 +699,7 @@
   };
   const ERA_NAME = { tim: "Timeless", con: "Contemporary", mod: "Modern", lma: "Low Middle Ages", hma: "High Middle Ages", ant: "Antiquity" };
   const PERIOD_ERAS = { Origins: ["ant", "hma"], Ascension: ["lma", "mod"], Singularity: ["con", "tim"] };
-  const islR = c => (ERAS_OF(c).length === 2 ? 38 : 31) + rnd(c, 3) * 5;
+  const islR = c => ((ERAS_OF(c).length === 2 ? 38 : 31) + rnd(c, 3) * 5) * (window.__pdxPhoneChart && window.__pdxPhoneChart.on() ? .8 : 1);
   const ACCENT = {}; BANDS.forEach(b => ACCENT[b.id] = b.accent);
   const FIXCOL = { self: "#1d6b52", r0: "#3a5a86", r1: "#6a4a8a", r2: "#8c5a2a", r3: "#8c2a4a", r4: "#4a7a5a" };
 
@@ -641,7 +730,77 @@
     pts._path = p; pts._svg = svg; pts.L = L;
     return pts;
   }
+  /* ═══ THE PARADOX SEA ON A PHONE: one look, no pan, no zoom ═══════════════════════════════
+     The six seas stay six coloured sheets of water, stacked Timeless to Antiquity, their
+     torn seams foaming, the waves adrift; each century is its island with its numeral on it;
+     the survey route runs from XXX to the Skull Mount; the four straits sit on their seams;
+     the sharks patrol I to IX, the lighthouses stand on X and XX, the haven hides at XI, the
+     registry posts stand on their tears. Short sea names, bigger numerals, no cartouche and
+     no compass. The geometry is board_draft.js window.__pdxPhoneChart. */
+  const PH = window.__pdxPhoneChart, PHONE = () => !!(PH && PH.on());
+  let PL = null;
+  const PSHORT = { tim: "TIMELESS REACHES", con: "CONTEMPORARY ISLES", mod: "MODERN ISLES", lma: "LOW MEDIEVAL CHAIN", hma: "HIGH MEDIEVAL CHAIN", ant: "ANTIQVITY" };
+  function phoneLayout() {
+    PL = PH.layout(W, H, { yzX: .86, yzDy: 2 });
+    BANDS.forEach((m, i) => {
+      if (i < BANDS.length - 1) { const y0 = PL.band(i).bot, k = (i % 2 ? -5 : 5); SEAMS[i] = x => y0 + k * (x / W - .5); }
+    });
+    BANDS.forEach((m, i) => { m.top = i ? SEAMS[i - 1] : () => 0; m.bottom = i < BANDS.length - 1 ? SEAMS[i] : () => H; });
+    for (const m of BANDS) for (const c of m.islands) { POS[c] = PL.pos[c].slice(); META[c] = m; LBL[c] = POS[c]; }
+    for (const [cs, st] of Object.entries(STRAITS)) {
+      const c = +cs, x = PL.pos[c][0];
+      POS[c] = [x, Math.round(SEAMS[st.seam](x))]; META[c] = BANDS[st.seam]; LBL[c] = POS[c];
+    }
+  }
+  function phoneAnchors() {
+    ANCH.taken.length = 0; ANCH.obst.length = 0;
+    ANCH.key = [W - 196, 24];
+    ANCH.tab = {};
+    BANDS.forEach((m, i) => {
+      const label = PSHORT[m.id], hw = label.length * 5.2 + 10;
+      // a tab rides its sheet's top tear: clear of the straits on that tear (they sit ON it),
+      // between the islands of the two seas it parts, and off the top-right corner where
+      // the voyages start (XXX)
+      let x = Math.round(W / 2), best = -1e9;
+      for (let x2 = hw + 16; x2 <= W - hw - 16; x2 += 6) {
+        let sc = 200;
+        for (let c = 1; c <= 30; c++) {
+          const k = PL.rowOf[c], dx = Math.abs(x2 - POS[c][0]);
+          if (k === i - .5) sc = Math.min(sc, dx - hw - 52);
+          else if (k === i || k === i - 1) sc = Math.min(sc, (dx - hw - 14) * .5 + 30);
+        }
+        if (i <= 1) sc = Math.min(sc, Math.abs(x2 - POS[30][0]) - hw - 70);
+        sc -= x2 * .002;
+        if (sc > best) { best = sc; x = x2; }
+      }
+      const y = Math.round(i === 0 ? 22 : m.top(x) + 1);
+      ANCH.tab[m.id] = { spot: [x, y], label, hw };
+      addObst(x - hw - 8, y - 12, hw * 2 + 16, 24);
+    });
+    ANCH.ord = [0, 88];
+    addObst(0, 84, 30, 152, "soft");
+    ANCH.compass = [W - 60, H - 60];
+    ANCH.well = PL.yz.slice();
+    addObst(ANCH.well[0] - 26, ANCH.well[1] - 26, 52, 56);
+    ANCH.light = {};
+    for (const c of [10, 20]) { const [x, y] = POS[c]; ANCH.light[c] = [x - 6, y - islR(c) * 0.74 - 13]; }
+    ANCH.post = {};
+    [["Origins", 4], ["Ascension", 2], ["Singularity", 0]].forEach(([pname, si]) => {
+      let best = null, bestD = -1;
+      for (let fx2 = 0.12; fx2 <= 0.88; fx2 += 0.01) {
+        const x = Math.round(W * fx2), y = Math.round(SEAMS[si](x));
+        let dmin = 1e9;
+        for (let c = 1; c <= 30; c++) dmin = Math.min(dmin, Math.hypot((x - POS[c][0]) * .8, (y - POS[c][1]) * 1.6) - islR(c));
+        for (const id of [BANDS[si].id, BANDS[si + 1].id]) { const t = ANCH.tab[id]; if (t) dmin = Math.min(dmin, Math.abs(x - t.spot[0]) - t.hw - 50); }
+        if (dmin > bestD) { bestD = dmin; best = [x, y]; }
+      }
+      ANCH.post[pname] = best;
+      addObst(best[0] - 46, best[1] - 30, 92, 62, "soft");
+    });
+    ANCH.coveLab = [POS[11][0] - 48, POS[11][1] - 50];
+  }
   function layout() {
+    if (PHONE()) return phoneLayout();
     const sx = W / 780;
     // islands spread toward the freed corners, straits stay PINNED below
     const SPREAD = 1.07;
@@ -699,6 +858,7 @@
     return best || [prefX, prefY];
   }
   function computeAnchors() {
+    if (PHONE()) return phoneAnchors();
     ANCH.taken.length = 0; ANCH.obst.length = 0;   // fresh solver state on every layout
     addObst(24, 18, 258, 56, "panel");                            // cartouche
     // the CHART KEY pins itself to the clearest water (islands are the hard
@@ -1027,13 +1187,13 @@
     const sand = "#e9dcb8";
 
     // the century's number lives ON its island, no floating labels to collide
-    const fs = rom(c).length <= 2 ? 18 : rom(c).length <= 4 ? 14 : 11.5;
+    const fs = PHONE() ? (rom(c).length <= 2 ? 22 : rom(c).length <= 4 ? 19 : 16.5) : rom(c).length <= 2 ? 18 : rom(c).length <= 4 ? 14 : 11.5;
     return `<g class="sea-isle${c <= 9 ? " od" : ""}" data-c="${c}">
       <g transform="translate(${x} ${y}) rotate(${rot})">
         <path d="${coast}" fill="${sand}" stroke="${m.ink}" stroke-width="2"/>
         <path d="${high}" fill="${ACCENT[META[c].id] || m.accent}" opacity=".18"/>
       </g>
-      <circle class="sea-hit" data-c="${c}" cx="${x}" cy="${y}" r="${R0 + 10}" fill="transparent"/>
+      <circle class="sea-hit" data-c="${c}" cx="${x}" cy="${y}" r="${PHONE() ? 40 : R0 + 10}" fill="transparent"/>
       <text x="${x}" y="${y + fs * .36}" text-anchor="middle" font-family="${m.font}" font-weight="bold"
         font-size="${fs}" letter-spacing=".5" fill="${m.ink}"
         stroke="${sand}" stroke-width="3.5" paint-order="stroke" class="sea-num" data-c="${c}">${rom(c)}</text>
@@ -1160,7 +1320,7 @@
       g += `<g transform="translate(${x} ${y}) rotate(${tilt})">
         <rect x="${-hw - 8}" y="-11" width="${hw * 2 + 16}" height="22" fill="${m.paper[0]}" stroke="${m.ink}" stroke-width="1.2" opacity=".96"/>
         <rect x="${-hw - 5}" y="-8" width="${hw * 2 + 10}" height="16" fill="none" stroke="${m.ink}" stroke-width=".5" opacity=".5"/>
-        <text y="4" text-anchor="middle" font-family="${m.font}" font-weight="bold" font-size="11" letter-spacing="1.2" fill="${m.ink}">${label}</text></g>`;
+        <text y="${PHONE() ? 5 : 4}" text-anchor="middle" font-family="${m.font}" font-weight="bold" font-size="${PHONE() ? 14 : 11}" letter-spacing="${PHONE() ? .6 : 1.2}" fill="${m.ink}">${label}</text></g>`;
     });
     return g;
   }
@@ -1192,7 +1352,7 @@
         <text x="26" y="4" font-family="Georgia" font-style="italic" font-size="8" fill="#3a2c16">${label}</text></g>`;
     let keyOpen = true;
     try { keyOpen = localStorage.getItem("seaKeyOpen") !== "0"; } catch (e) {}
-    return `<g class="sea-key pdx-ref${keyOpen ? "" : " folded"}" transform="translate(${kx} ${ky}) rotate(-1.2)">
+    return `<g class="sea-key pdx-ref${keyOpen ? "" : " folded"}" transform="translate(${kx} ${ky}) rotate(-1.2)${PHONE() ? " scale(1.1)" : ""}">
       <g class="sea-key-body">
       <rect width="160" height="286" fill="#ead9b0" stroke="#5a4526" stroke-width="1.6" rx="2"/>
       <rect x="4" y="4" width="152" height="278" fill="none" stroke="#5a4526" stroke-width=".5" opacity=".6"/>
@@ -1219,14 +1379,15 @@
     </g>`;
   }
   function furniture() {
-    let g = `<g class="sea-cart" transform="translate(24 18)">
+    // (a phone draws no cartouche and no compass: fewer ornaments, the lights and the key stay)
+    let g = PHONE() ? "" : `<g class="sea-cart" transform="translate(24 18)">
       <rect width="258" height="56" fill="#d9cba4" stroke="#3a2c16" stroke-width="1.4" opacity=".95"/>
       <rect x="4" y="4" width="250" height="48" fill="none" stroke="#3a2c16" stroke-width=".5"/>
       <text x="129" y="20" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="14" letter-spacing="3" fill="#3a2c16">THE PARADOX SEA</text>
       <text x="129" y="33" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" letter-spacing=".8" fill="#3a2c16">C.R.O.N.O.S. SURVEY · THE SIX SEAS OF TIME</text>
       <text x="129" y="46" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" letter-spacing="1" fill="#8c2a1a" class="sea-hour">TUESDAY 31 DEC 2999 · HOUR -</text></g>`;
     const cp = ANCH.compass;
-    g += `<g transform="translate(${cp[0]} ${cp[1]})" stroke="#3a3458" fill="none" opacity=".9" class="sea-compass">
+    if (!PHONE()) g += `<g transform="translate(${cp[0]} ${cp[1]})" stroke="#3a3458" fill="none" opacity=".9" class="sea-compass">
       <circle r="26" stroke-width="1"/><circle r="18" stroke-width=".5" opacity=".7"/>
       <path d="M0 -24 L4.5 -5 L0 0 L-4.5 -5 Z" fill="#8c2a1a" stroke="none"/>
       <path d="M0 24 L4.5 5 L0 0 L-4.5 5 Z M-24 0 L-5 -4.5 L0 0 L-5 4.5 Z M24 0 L5 -4.5 L0 0 L5 4.5 Z" fill="#3a3458" stroke="none" opacity=".6"/>
@@ -1675,7 +1836,7 @@
       <path d="M -9 12 L -6.5 7.5 L -4 12 M -2.5 12 L 0 7.5 L 2.5 12 M 4 12 L 6.5 7.5 L 9 12" fill="#171226" stroke="#171226" stroke-width=".6"/>
       <path d="M -6 12 q 6 4 12 0 q -6 5 -12 0 z" fill="#0e0a1c"/>
       <path d="M -20 14 q 4 -3 7 0 M 13 14 q 4 -3 7 0" fill="none" stroke="#eaf4f6" stroke-width="1" opacity=".5"/>
-      <circle class="sea-hit" data-c="0" r="26" fill="transparent"/></g>`;
+      <circle class="sea-hit" data-c="0" r="${PHONE() ? 40 : 26}" fill="transparent"/>${PHONE() ? `<text y="38" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="15" fill="#2a2438" stroke="#e8e0cc" stroke-width="3.2" paint-order="stroke">YEAR ZERO</text>` : ""}</g>`;
     return g;
   }
 
@@ -1713,11 +1874,12 @@
   const BOLT = "M 0 0 l -2.7 4.9 h 2 l -1.2 4.7 4.5 -6.1 h -2.1 l 2 -3.5 z";
   function costTag(c, cost, kind) {
     const [x, y] = POS[c];
-    const ty = y - islR(c) * .74 - 24;
+    let ty = y - islR(c) * .74 - 24;
+    if (PHONE() && ty < 30) ty = y + islR(c) * .74 + 26;   // a phone's top row: the tag hangs under the island
     const col = kind === "free" ? "#1d6b52" : kind === "risk" ? "#c0392b" : "#8a6215";
     const label = kind === "free" ? "free" : String(cost) + (kind === "risk" ? "!" : "");
     const w2 = label.length * 6.8 + (kind === "free" ? 14 : 26);
-    return `<g class="sea-cost">
+    return `<g class="sea-cost"${PHONE() ? ` transform="translate(${x} ${ty}) scale(1.5) translate(${-x} ${-ty})"` : ""}>
       <rect x="${x - w2 / 2}" y="${ty - 11}" width="${w2}" height="18" rx="3" fill="rgba(255,246,220,.95)" stroke="${col}" stroke-width="1.4"/>
       ${kind === "free" ? "" : `<path d="${BOLT}" transform="translate(${x - w2 / 2 + 9} ${ty - 7})" fill="${col}"/>`}
       <text x="${x + (kind === "free" ? 0 : 6)}" y="${ty + 3}" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="11" fill="${col}">${label}</text></g>`;
@@ -2285,7 +2447,7 @@
       const rb = rail.getBoundingClientRect();
       const bw = rb.width - 6, bh = rb.height - 74;   // .cplot insets (74px top, 6px left)
       if (bw < 60 || bh < 60) return false;            // rail not laid out yet, retry
-      W = Math.max(700, Math.min(1200, Math.round(H * bw / bh)));
+      if (PHONE()) { const d = PH.dims(); W = d.W; H = d.H; } else W = Math.max(700, Math.min(1200, Math.round(H * bw / bh)));
       baseCache = baseMap();
       if (baseCache.violations.length) console.warn("SEA AUDIT VIOLATIONS:", baseCache.violations);
     }
@@ -2315,7 +2477,7 @@
         </svg>
         <div class="sea-cmd"></div>
       </div>`);
-    window.__pdxSheetExt(rail.querySelector(".cplot"), W, H, seaExtArt);
+    if (!PHONE()) window.__pdxSheetExt(rail.querySelector(".cplot"), W, H, seaExtArt);
     liveG = rail.querySelector(".sea-live");
     fxG = rail.querySelector(".sea-fx");
     topG = rail.querySelector(".sea-top");
@@ -2437,7 +2599,7 @@
       if (!cp) return;
       const box = cp.getBoundingClientRect();
       if (!box.width || !box.height) return;
-      const want = Math.max(700, Math.min(1200, Math.round(H * box.width / box.height)));
+      const want = PHONE() ? PH.dims().W : Math.max(700, Math.min(1200, Math.round(H * box.width / box.height)));
       if (Math.abs(want - W) < 12) return;   // the chart must FILL its frame, tiny drifts only
       cp.remove(); baseCache = null; liveG = null;
       if (mount()) { rehome(); renderNow(); }
