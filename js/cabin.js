@@ -202,7 +202,7 @@
         for(let k=k0;k<=k1;k+=6){ const a=P(P(o,dd,k),nn,out*w*.95), b=P(P(o,dd,k+3),nn,out*w*.45); h+=` M ${f(a[0])} ${f(a[1])} L ${f(b[0])} ${f(b[1])}`; } return h; } };
   }
   // the four fingertips' nails (the feminine hand): [x, y, angle, length, width]
-  const FINGER_NAILS=[[704,266.5,8,12,8.5],[728,296.5,16,12.5,9],[734,324,12,12.5,9],[723,342.5,4,12,8.5]];
+  const FINGER_NAILS=[[707,267,8,15.5,9.5],[733,296.5,16,16,10],[738.5,323.5,12,16,10],[726.5,343.5,4,15,9.5]];
   const THUMB=thumbGeo([612,337],[636,360],[662,370],14.5,13.5,12);
   const FIST_THUMB=thumbGeo([612,306],[640,318],[668,332],14,13.5,12.5);
   const HAND_PATHS={
@@ -237,7 +237,7 @@
     const soft=(d)=>m ? "" : `<path d="${d}" style="fill:${sk(3)}" opacity=".32"/>`;
     const contour=(d,w=1.2,o=.55)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
     // painted nails (the feminine hand): the player's colour, matte, a thin ink edge
-    const nail=([x,y,a,l,w])=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M ${-l/2} ${-w/2} L ${l*.18} ${-w/2} Q ${l/2} ${-w/2} ${l/2} 0 Q ${l/2} ${w/2} ${l*.18} ${w/2} L ${-l/2} ${w/2} Q ${-l/2-1.6} 0 ${-l/2} ${-w/2} Z" style="fill:var(--hela-seat,#6fae6a)" stroke="${LINE}" stroke-width="1.3" stroke-linejoin="round"/><path d="M ${-l/2+1.2} ${-w/2+1.4} Q ${-l/2-.4} 0 ${-l/2+1.2} ${w/2-1.4}" fill="none" style="stroke:${sk(3)}" stroke-width="1.2" stroke-linecap="round"/></g>`;
+    const nail=([x,y,a,l,w])=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M ${-l/2} ${-w/2} L ${l*.02} ${-w/2} C ${l*.34} ${-w/2} ${l/2+.6} ${-w*.36} ${l/2+.6} 0 C ${l/2+.6} ${w*.36} ${l*.34} ${w/2} ${l*.02} ${w/2} L ${-l/2} ${w/2} Q ${-l/2-1.6} 0 ${-l/2} ${-w/2} Z" style="fill:var(--hela-seat,#6fae6a)" stroke="${LINE}" stroke-width="1.3" stroke-linejoin="round"/><path d="M ${-l/2+1.2} ${-w/2+1.4} Q ${-l/2-.4} 0 ${-l/2+1.2} ${w/2-1.4}" fill="none" style="stroke:${sk(3)}" stroke-width="1.2" stroke-linecap="round"/></g>`;
     const nails=(list)=>`<g pointer-events="none">${list.map(nail).join("")}</g>`;
     const thumbArt=(G,n)=>{
       const f=(v)=>v.toFixed(1);
@@ -428,6 +428,30 @@
   </g>`;
   }
 
+  // the valve's leather band, from just above the forearm's top contour to just below
+  // its bottom one (t, u), its side edges bowed as it wraps round the arm
+  function strapSVG(b, t, u){
+    const mid=(t+u)/2, d=`M 172 ${t} Q 192 ${t-3} 212 ${t} Q 220 ${mid} 214 ${u} Q 192 ${u+4} 170 ${u} Q 162 ${mid} 172 ${t} Z`;
+    return `<g class="pb-${b}"${b==="m" ? "" : ` display="none"`}>
+  <path d="${d}" transform="translate(1.6 2.4)" fill="${INK}" pointer-events="none"/>
+  <path d="${d}" style="fill:var(--glove,#4a6fa8)" stroke="${INK}" stroke-width="2.8"/>
+  <g pointer-events="none">
+    <clipPath id="mnStrap${b}"><path d="${d}"/></clipPath>
+    <g clip-path="url(#mnStrap${b})">
+      <!-- matte leather: grain, the shadow side, soft creases where it wraps the arm,
+           darker worn cut edges, stitching with its thread holes -->
+      <rect x="156" y="${t-6}" width="70" height="${u-t+14}" fill="url(#mnGrain)" opacity=".38"/>
+      <path d="M 160 ${u-30} Q 190 ${u-20} 222 ${u-26} L 222 ${u+8} L 160 ${u+8} Z" style="fill:var(--glove-dk,#2c4166)" opacity=".85"/>
+      <path d="M 166 ${t+24} Q 190 ${t+30} 216 ${t+24} M 166 ${u-22} Q 190 ${u-16} 217 ${u-22}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+      <path d="${d}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="6" opacity=".55"/>
+    </g>
+    <path d="M 174 ${t+9} Q 192 ${t+6} 210 ${t+9} M 174 ${u-9} Q 192 ${u-6} 210 ${u-9}" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3" fill="none"/>
+    <path d="M 174 ${t+9} Q 192 ${t+6} 210 ${t+9} M 174 ${u-9} Q 192 ${u-6} 210 ${u-9}" stroke="${INK}" stroke-width="1.4" stroke-dasharray="0 7" stroke-dashoffset="-5.5" stroke-linecap="round" opacity=".7" fill="none"/>
+    <g fill="url(#mnBrass)" stroke="${INK}" stroke-width="1.2"><circle cx="174" cy="${t+16}" r="2.6"/><circle cx="174" cy="${u-16}" r="2.6"/></g>
+  </g>
+  </g>`;
+  }
+
   function armSVG(){
     return `<svg class="mano-svg" viewBox="-800 0 1580 900" width="1580" height="900" preserveAspectRatio="xMidYMax meet">
 <defs>
@@ -448,25 +472,9 @@
   <!-- REST: the straight extended forearm on the desk (no elbow in sight) -->
   <g class="limb-rest">${forearmSVG("m")}${forearmSVG("f")}
   </g>
-  <!-- the leather bracer that carries the escape valve: the glove's leather, matte -->
-  <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"
-        transform="translate(1.6 2.4)" fill="${INK}" pointer-events="none"/>
-  <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"
-        style="fill:var(--glove,#4a6fa8)" stroke="${INK}" stroke-width="2.8"/>
-  <g pointer-events="none">
-    <clipPath id="mnStrap"><path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"/></clipPath>
-    <g clip-path="url(#mnStrap)">
-      <!-- matte leather: grain, the shadow side, a soft crease where it wraps the arm,
-           darker worn cut edges, stitching with its thread holes -->
-      <rect x="160" y="240" width="60" height="130" fill="url(#mnGrain)" opacity=".38"/>
-      <path d="M 169 328 Q 190 338 215 332 L 215 354 Q 215 362 207 362 L 176 361 Q 169 361 169 354 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".85"/>
-      <path d="M 170 272 Q 190 278 212 272 M 171 338 Q 190 344 213 338" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
-      <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="6" opacity=".55"/>
-    </g>
-    <path d="M 174 256 L 208 255 M 176 352 L 208 352" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3" fill="none"/>
-    <path d="M 174 256 L 208 255 M 176 352 L 208 352" stroke="${INK}" stroke-width="1.4" stroke-dasharray="0 7" stroke-dashoffset="-5.5" stroke-linecap="round" opacity=".7" fill="none"/>
-    <g fill="url(#mnBrass)" stroke="${INK}" stroke-width="1.2"><circle cx="175" cy="263" r="2.6"/><circle cx="175" cy="346" r="2.6"/></g>
-  </g>
+  <!-- the leather bracer that carries the escape valve: the glove's leather, matte, wrapped
+       round the whole forearm of each build (its edges curve with the arm) -->
+  ${strapSVG("m", 240, 376)}${strapSVG("f", 258, 356)}
   <path d="M 218 310 Q 208 310 202 306" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>
   <path d="M 216 307 Q 209 307 204 304" fill="none" stroke="#6d777f" stroke-width="2" stroke-linecap="round" opacity=".7" pointer-events="none"/>
   <g id="mano-vent">

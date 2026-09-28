@@ -232,29 +232,48 @@ function capsule(A, B, rA, rB, w = 0) {
   return [at(A, rA, 0, 1).concat(w), at(M, rM, 0, 1.02).concat(w), at(B, rB, 0, 1), at(B, rB, .72, .72), at(B, rB, 1, 0), at(B, rB, .72, -.72),
     at(B, rB, 0, -1), at(M, rM, 0, -1.02), at(A, rA, 0, -1), at(A, rA, -.72, -.72), at(A, rA, -1, 0), at(A, rA, -.72, .72)];
 }
-/* The raised fore limb of the sitting cat, jointed like a cat's: the upper arm grows out
-   of the chest at the shoulder (SH) and is drawn under the torso, so the torso's own
-   contour covers its root; the forearm (from the elbow, EL) and the paw (from the wrist,
-   WR) ride it, each turning about its own joint (app.css: cw-uarm, cw-farm, cw-wrist).
-   All three share the body's ink, so the limb and the body are one silhouette. */
-const SH = [378, 468], EL = [344, 418], WR = [322, 366];
+/* The raised fore limb of the sitting cat, drawn as a cat's is seen from the front:
+   the shoulder is a soft bulge of the torso's own outline, the upper arm is hidden in
+   the chest fur, the forearm comes out of that bulge tapering to the wrist, and the paw
+   bends at the wrist, its toes curled over (its beans show only when it swipes at us).
+   The limb is drawn under the torso, so the torso's contour covers its root; it turns
+   about its real joints (app.css: cw-uarm at the shoulder SH, cw-farm at the elbow EL,
+   cw-wrist at the wrist WR) and shares the body's ink: one silhouette. */
+const SH = [370, 462], EL = [336, 438], WR = [308, 384];
+function pawParts(wr, dir, cls, seed) {
+  const tip = [wr[0] + dir[0] * 20, wr[1] + dir[1] * 20], n = [-dir[1], dir[0]];
+  const T = (a, b) => `${(wr[0] + dir[0] * a + n[0] * b).toFixed(1)} ${(wr[1] + dir[1] * a + n[1] * b).toFixed(1)}`;
+  return { seed, cls, pts: capsule(wr, tip, 15, 18.5), sock: [wr[0] - 40, wr[1] - 40, 80, 80],
+    detail: `<g class="cw-toes">${line(`M ${T(26, -9)} Q ${T(30, -8)} ${T(31, -4)} M ${T(29, 1)} Q ${T(33, 2)} ${T(33, 6)} M ${T(26, 9)} Q ${T(30, 10)} ${T(30, 14)}`, "#b39a7c", 1.8)}</g>`
+      + `<g class="cw-beans" fill="#e99a94"><ellipse cx="${T(16, 0).split(" ")[0]}" cy="${T(16, 0).split(" ")[1]}" rx="7" ry="6"/>`
+      + [[28, -9], [32, 0], [28, 9], [22, 14]].map(([a, b]) => { const [x, y] = T(a, b).split(" "); return `<circle cx="${x}" cy="${y}" r="3.3"/>`; }).join("") + `</g>`
+      + claws(`M ${T(34, -8)} q -2 -8 3 -12 M ${T(37, 1)} q 0 -8 6 -11 M ${T(33, 10)} q 2 -8 8 -9`) };
+}
 function armParts() {
-  const dir = [(WR[0] - EL[0]) / 56.5, (WR[1] - EL[1]) / 56.5], tip = [WR[0] + dir[0] * 22, WR[1] + dir[1] * 22];
-  const upper = { seed: 42, cls: ["cw-uarm"], vol: true, pts: capsule(SH, EL, 31, 25, .3),
-    detail: line("M 366 452 C 358 440 350 430 344 420", LIGHT, 3, .5) };
-  const fore = { seed: 43, cls: ["cw-uarm", "cw-farm"], soft: true, pts: capsule(EL, WR, 23, 19, .25),
-    detail: line("M 336 414 C 330 400 324 386 318 372", LIGHT, 2.6, .55) };
-  const paw = { seed: 41, cls: ["cw-uarm", "cw-farm", "cw-wrist"], soft: true, sock: [270, 320, 100, 80], pts: capsule(WR, tip, 20, 23),
-    detail: `<g fill="#e99a94"><ellipse cx="316" cy="354" rx="7" ry="6"/><circle cx="302" cy="350" r="3.4"/><circle cx="306" cy="340" r="3.4"/><circle cx="316" cy="336" r="3.4"/><circle cx="326" cy="339" r="3.2"/></g>`
-      + claws("M 300 346 q -8 -4 -6 -12 M 305 336 q -5 -7 0 -13 M 316 332 q -2 -8 4 -12") };
+  const d = [(WR[0] - EL[0]) / 61.4, (WR[1] - EL[1]) / 61.4];
+  const upper = { seed: 42, cls: ["cw-uarm"], pts: capsule(SH, EL, 26, 22, .25) };
+  const fore = { seed: 43, cls: ["cw-uarm", "cw-farm"], pts: capsule(EL, WR, 21, 14.5, .3),
+    detail: line("M 326 426 C 320 410 314 398 306 388", LIGHT, 2.4, .5) };
+  // the wrist bends: the paw leans forward of the forearm's line
+  const pd = [d[0] * .8 - .45, d[1] * .8 - .1], pl = Math.hypot(pd[0], pd[1]);
+  const paw = pawParts(WR, [pd[0] / pl, pd[1] / pl], ["cw-uarm", "cw-farm", "cw-wrist"], 41);
   return { upper, fore, paw };
 }
+/* Grooming: the elbow stays down at the chest, the forearm rises behind the chest fur
+   and the paw comes up to the mouth from below the cheek, its pads toward the tongue. */
+function groomParts() {
+  const e = [396, 470], w = [404, 392];
+  const fore = { seed: 44, cls: ["cw-lick"], pts: capsule(e, w, 20, 14.5, .3) };
+  const paw = { ...pawParts(w, [.28, -.96], ["cw-lick"], 45), soft: true };
+  return { fore, paw };
+}
 
-function sitParts(raised) {
+function sitParts(raised, beforeBib = []) {
   // front-facing sit: a bell of a body, the haunches bulging at its feet, straight
   // front legs under the chest, a ruff where the head meets the shoulders
   const parts = [
-    { seed: 31, pts: [[450, 352], [500, 358], [540, 380], [562, 420], [572, 480, -.5], [578, 540, -.5], [574, 600], [540, 650], [470, 672], [400, 668], [352, 640], [336, 590], [340, 530, .6], [346, 470, .6], [360, 416], [396, 374]],
+    { seed: 31, pts: [[450, 352], [500, 358], [540, 380], [562, 420], [572, 480, -.5], [578, 540, -.5], [574, 600], [540, 650], [470, 672], [400, 668], [352, 640], [336, 590], [340, 530, .6],
+      ...(raised === "bat" ? [[336, 480, .5], [326, 456, .4], [332, 430], [354, 408]] : [[346, 470, .6], [360, 416]]), [396, 374]],
       detail: marks([[346, 500, 8, 26, 9], [342, 560, 4, 26, 9], [570, 470, 176, 26, 9], [576, 530, 178, 26, 9]])
         + line("M 366 420 C 350 470 344 530 346 590", LIGHT, 3.2, .65) + line("M 560 440 C 572 500 574 560 566 610", "#ffcf8a", 2.4, .4)
         + glow("M 396 374 C 360 416 344 480 340 540 C 336 600 344 640 360 650 C 356 560 364 470 404 380 Z") },
@@ -271,6 +290,7 @@ function sitParts(raised) {
   ];
   if (!raised) parts.push({ seed: 39, cls: "cw-legL", sock: 628, soft: true, pts: [[398, 480], [448, 480], [448, 560], [448, 640], [446, 672], [440, 690], [424, 697], [406, 695], [398, 684], [398, 640], [399, 560]],
     detail: line("M 412 490 L 411 612", LIGHT, 3, .6) + toes("M 418 695 v -9 M 432 695 v -9") });
+  parts.push(...beforeBib);
   parts.push({ seed: 37, fill: WHT, ink: false, pts: [[420, 380], [450, 372], [482, 380], [500, 420], [500, 470], [490, 520, .7], [470, 556, .7], [450, 566, .7], [430, 556, .7], [410, 520, .7], [400, 470], [402, 420]],
       detail: `<path d="M 470 390 Q 494 400 498 440 Q 496 500 476 548 Q 488 480 470 390 Z" fill="${WHITE_S}" opacity=".7"/>` });
   parts.push({ seed: 40, cls: "cw-tail", soft: true, pts: [[596, 650], [620, 672], [616, 696, .5], [580, 706, .5], [500, 708, .5], [420, 706, .5], [370, 700], [352, 688], [362, 680], [380, 688], [420, 692], [500, 694], [570, 690], [590, 676]],
@@ -284,7 +304,13 @@ function poseSit() {
 // sitting up with a paw raised: batting at HELA's Hours, holding the hand to nibble it, grooming
 function poseBat() {
   const A = armParts();
-  return body("bat", [A.upper, ...sitParts(true), headPart("translate(456 294) rotate(7)", ["focused", "open", "happy"]), A.fore, A.paw],
+  return body("bat", [A.upper, A.fore, A.paw, ...sitParts("bat"), headPart("translate(456 294) rotate(7)", ["focused", "open", "happy"])],
+    shadow(468, 170));
+}
+// licking a paw: the paw comes up to the mouth from below the cheek
+function poseGroom() {
+  const G = groomParts();
+  return body("groom", [...sitParts("groom", [G.fore]), headPart("translate(452 292) rotate(-4)", ["happy"]), G.paw],
     shadow(468, 170));
 }
 
@@ -336,7 +362,9 @@ function poseCrouch() {
 // mid-air, reaching for the hand
 function poseLeap() {
   return body("leap", [
-    { seed: 61, cls: "cw-reach", fill: FUR_S, pts: [[312, 410], [286, 420], [258, 430], [230, 432], [208, 426], [212, 410], [232, 408], [258, 406], [282, 398], [300, 386]] },
+    { seed: 61, cls: "cw-reach", fill: FUR_S, pts: [[318, 400], [300, 420], [282, 436], [262, 444], [240, 446], [220, 442], [212, 432], [222, 424], [242, 426], [262, 422], [280, 410], [296, 392]] },
+    { seed: 66, cls: "cw-reach", sock: [186, 452, 44, 50], pts: [[334, 424], [318, 448], [300, 466], [276, 480], [248, 488], [220, 490], [198, 488], [194, 476], [204, 466], [228, 466], [256, 462], [280, 450], [298, 432], [312, 408]],
+      detail: claws("M 196 472 q -9 -1 -12 -8 M 195 483 q -9 1 -14 -3 M 204 492 q -6 5 -13 3") },
     { seed: 62, cls: "cw-push", fill: FUR_S, pts: [[660, 480], [700, 510], [736, 546], [764, 580], [778, 600], [766, 608], [750, 610], [740, 596], [714, 562], [684, 530], [648, 500]] },
     { seed: 63, cls: "cw-tail", pts: [[690, 494], [740, 500], [800, 506], [860, 496], [882, 494], [886, 508], [880, 522], [862, 524, .5], [800, 532, .5], [740, 532, .5], [684, 542]],
       detail: marks([[760, 502, 90, 26, 9], [820, 500, 90, 26, 9]]) },
@@ -345,8 +373,6 @@ function poseLeap() {
         + marks([[470, 378, 104, 44, 11], [526, 394, 106, 44, 11], [580, 416, 110, 42, 11], [630, 444, 116, 36, 10]])
         + line("M 324 384 C 400 372 520 404 636 458", LIGHT, 3.6, .75) },
     { seed: 65, cls: "cw-push", soft: true, sock: [690, 626, 60, 50], pts: [[640, 500], [676, 540], [700, 590], [726, 636], [738, 660], [722, 668], [702, 672], [696, 650], [676, 606], [648, 566], [612, 532]] },
-    { seed: 66, cls: "cw-reach", soft: true, sock: [186, 452, 44, 50], pts: [[330, 430], [300, 452], [262, 478], [222, 490], [196, 494], [194, 480], [196, 468], [214, 462], [250, 454], [282, 432], [306, 408]],
-      detail: claws("M 196 472 q -9 -1 -12 -8 M 195 483 q -9 1 -14 -3 M 204 492 q -6 5 -13 3") },
     headPart("translate(256 366) rotate(-10) scale(.9)", ["focused"]),
   ], shadow(470, 150, .14));
 }
@@ -358,16 +384,20 @@ function poseSleep() {
       detail: marks([[720, 630, 90, 26, 9], [772, 636, 96, 24, 9], [818, 654, 110, 20, 8]]) },
     { seed: 72, fill: FUR_S, pts: [[330, 600], [300, 590], [270, 590], [246, 596], [230, 606], [236, 616], [258, 618], [282, 612], [306, 614], [332, 620]] },
     { seed: 73, fill: FUR_S, pts: [[600, 620], [640, 612], [690, 614], [722, 624], [740, 634], [732, 644], [706, 644], [676, 634], [636, 634], [600, 640]] },
+    // the hind paw and the front paw tucked under her: the body's contour covers the legs,
+    // only the rounded paws show at its edge
+    { seed: 76, sock: [690, 660, 60, 44], pts: [[600, 650], [640, 656], [680, 664], [708, 668], [726, 674], [728, 688], [716, 696], [696, 694], [660, 686], [620, 680], [598, 672]] },
+    { seed: 77, sock: [236, 640, 34, 44], pts: [[344, 628], [318, 632], [290, 644], [266, 654], [250, 664], [254, 676], [268, 680], [284, 674], [308, 664], [332, 658], [350, 652]],
+      detail: `<g fill="#e99a94"><circle cx="258" cy="666" r="3"/><circle cx="264" cy="674" r="3"/></g>` },
     { seed: 74, pts: [[300, 620], [310, 582], [350, 548, .3], [440, 530, .3], [530, 526, .3], [614, 540], [662, 574], [690, 610], [684, 650], [640, 678], [580, 694], [460, 696], [380, 690], [330, 680], [304, 656]],
       detail: marks([[420, 532, 94, 38, 10], [470, 529, 92, 40, 10], [520, 528, 90, 40, 10], [570, 534, 84, 38, 10], [614, 552, 70, 34, 10]])
         + line("M 336 580 C 384 550 480 538 578 550", LIGHT, 3.6, .75)
         + `<path d="M 340 650 C 380 612 470 600 560 612 C 610 620 634 646 614 668 C 574 690 450 692 380 684 C 350 680 334 668 340 650 Z" fill="${WHT}"/>`
         + `<path d="M 360 676 C 440 690 560 686 612 668 C 574 690 450 692 380 684 Z" fill="${WHITE_S}" opacity=".8"/>`
         + glow("M 300 620 C 296 570 350 536 440 530 C 380 550 330 580 322 640 Z") + purr(700, 560, true) },
-    { seed: 75, soft: true, pts: [[556, 640], [566, 610], [604, 598], [636, 612, .5], [652, 640, .5], [640, 672], [610, 680], [580, 676], [558, 660]] },
-    { seed: 76, soft: true, sock: [700, 660, 50, 44], pts: [[580, 646], [626, 650], [676, 664], [716, 668], [742, 676], [740, 690], [728, 700], [712, 696], [668, 690], [624, 684], [584, 676]] },
-    { seed: 77, soft: true, sock: [236, 640, 34, 44], pts: [[350, 624], [318, 626], [282, 640], [258, 650], [242, 662], [248, 674], [262, 678], [274, 674], [298, 664], [326, 656], [356, 654]],
-      detail: `<g fill="#e99a94"><circle cx="252" cy="664" r="3"/><circle cx="258" cy="672" r="3"/></g>` },
+    // the thigh: a round mass of the haunch inside her outline, told by shading only
+    { seed: 75, ink: false, amp: 5, pts: [[556, 640], [566, 612], [600, 600], [634, 612, .4], [650, 640, .4], [642, 668], [612, 678], [582, 674], [560, 660]],
+      detail: line("M 566 656 C 578 676 616 682 642 666", EDGE, 2.2, .35) + line("M 572 618 C 588 604 612 602 630 612", LIGHT, 3, .45) },
     headPart("translate(262 606) rotate(-18) scale(.88)", ["sleepy"], false),
   ], shadow(480, 270, .22), `<g class="cw-zzz" fill="#f6ecd4" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
       <path class="z1" d="M 150 470 h 22 l -16 20 h 18 v 6 h -30 l 16 -20 h -10 Z"/>
@@ -405,7 +435,7 @@ export function catSVG() {
   <radialGradient id="cwIris" cx=".5" cy=".62" r=".7"><stop offset="0" stop-color="#eef59a"/><stop offset=".45" stop-color="#a6d24a"/><stop offset="1" stop-color="#4d7f1c"/></radialGradient>
   ${eyeDefs()}
 </defs>
-${poseSit()}${poseBat()}${poseStand()}${poseCrouch()}${poseLeap()}${poseSleep()}${poseCurl()}
+${poseSit()}${poseBat()}${poseGroom()}${poseStand()}${poseCrouch()}${poseLeap()}${poseSleep()}${poseCurl()}
 </svg>`;
 }
 
@@ -469,7 +499,7 @@ const PLACES = {
 };
 const ROAM = { x0: -14, x1: 6 };           // how far a leap may carry her (never into her core)
 
-const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat", knead: "sit", turn: "stand", belly: "sleep",
+const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "groom", bat: "bat", bite: "bat", knead: "sit", turn: "stand", belly: "sleep",
   walk: "stand", flee: "stand", crouch: "crouch", scared: "crouch", pounce: "leap", sleep: "sleep", curl: "curl" };
 // her face in each state: relaxed at rest, curious when she watches, focused on the hunt
 const EXPR = { sit: "relaxed", watch: "open", walk: "open", flee: "scared", pet: "happy", groom: "happy", knead: "happy", turn: "relaxed", belly: "sleepy",
