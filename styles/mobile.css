@@ -726,3 +726,8 @@ html.pdx-m-on[data-pdx-view="merchant"]:not(.pdx-secret) #market-zone .secret-bg
 #pdx-rtray .rt-folder { min-height: 52px; padding: 12px 12px 6px; }
 /* a card of the case picked for the bin or the drawer: lifted and ringed */
 html.pdx-m-on #rucksack-zone .ruck-card.pdx-picked { outline: 4px solid var(--hela-seat, #f2a93b); outline-offset: 3px; translate: 0 -14px; z-index: 5; }
+
+/* the simple market is his shelf alone: nothing of the Secret Market peeks in at the edge
+   (the second tap on the key brings it back beside the shelf) */
+html.pdx-m-on[data-pdx-view="merchant"]:not(.pdx-secret) #market-zone :is(.secret-curtain, .secret-bg, .secret-stage, .secret-brief-sign) {
+  visibility: hidden; }

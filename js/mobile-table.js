@@ -210,8 +210,12 @@ function frameRect(v) {
     // second tap) is BOTH markets side by side (the owner, 28/09)
     const sels = ["#market-zone .market-row", "#market-zone .market-side-signs", "#market-sign"];
     if (secretOn) sels.push("#market-zone .secret-stage");
-    // the simple market is a whole scene too: the wagon's arch and some wall around the shelf
-    const u = unionRect(sels, secretOn ? 36 : 210);
+    // the simple market is a whole scene too: the wagon's arch and some wall around the shelf,
+    // centred on his shelf; both markets get a little wall around them as well
+    const u = unionRect(sels, secretOn ? 150 : 210);
+    const row = !secretOn && (unionRect(["#market-zone > .portal-bg"], 0)
+      || unionRect(["#market-zone .market-row"], 0));
+    if (u && row) { const half = Math.max(row.x + row.w / 2 - u.x, u.x + u.w - (row.x + row.w / 2)); u.x = row.x + row.w / 2 - half; u.w = half * 2; }
     return u || planeRectOf(document.getElementById("market-zone")) || { x: 300, y: -560, w: 1100, h: 560 };
   }
   if (v === "records") return planeRectOf(document.getElementById("drawer-zone")) || { x: -1066, y: 0, w: 1066, h: 1200 };
