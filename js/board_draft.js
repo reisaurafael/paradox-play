@@ -508,6 +508,51 @@
     }
     return out;
   };
+  // a voyage's cost tag at (x, ty) on a phone slides sideways (up to 60 units) off any of
+  // the boxes given (the Merchant, a chest); b = its half width, up/down = its extent
+  window.__pdxSlideTag = window.__pdxSlideTag || function (x, ty, b, up, down, blocks, W) {
+    const clash = (tx) => blocks.some((o) => tx - b < o[2] + 3 && tx + b > o[0] - 3 && ty - up < o[3] + 3 && ty + down > o[1] - 3);
+    if (clash(x)) for (let d = 6; d <= 60; d += 6) {
+      if (!clash(x + d) && x + d + b < W - 8) return x + d;
+      if (!clash(x - d) && x - d - b > 8) return x - d;
+    }
+    return x;
+  };
+  // the boxes the placed tokens cover (for the names and tabs that step aside from them)
+  window.__pdxPhoneFootprints = window.__pdxPhoneFootprints || function (groups, out) {
+    const f = [];
+    for (const G of groups) (out[G.c] || []).forEach(([x, y, top], i) => { const t = G.toks[i]; if (!t) return; const e = t.self ? 6 : 2.5;
+      f.push([x - t.r - e, y - t.r - (top ? 9 : e), x + t.r + e, y + t.r + (top ? e : 6)]); });
+    return f;
+  };
+  /* THE NAMES STEP ASIDE (phone): a band's printed name (the Itinerarium's kingdoms, the
+     Singularity's constellations) is base art at a resting spot clear of the centuries; when
+     a voyage's cost tag or a token lands on it, it slides along its band edge to the nearest
+     spot clear of those and of the chart's fixed marks, and fades only if there is none.
+     els: the name groups (data-x, data-y: their resting translate; data-r: x0,y0,x1,y1 of
+     their box at rest), live: the tags' and tokens' boxes, fixed: plates, centuries, marks. */
+  window.__pdxPhoneNameDodge = window.__pdxPhoneNameDodge || function (els, live, fixed, W) {
+    const hitAny = (q, L, p) => L.some((o) => q[0] < o[2] + p && q[2] > o[0] - p && q[1] < o[3] + p && q[3] > o[1] - p);
+    for (const el of els) {
+      const x = +el.dataset.x, y = +el.dataset.y, r = String(el.dataset.r || "").split(",").map(Number);
+      if (r.length !== 4 || !Number.isFinite(x)) continue;
+      let dx = 0, dy = 0, k = 1, dim = false;
+      if (hitAny(r, live, 3)) {
+        let best = null;
+        // along its band edge, nearest first; a few units lower into its band if need be;
+        // printed a little smaller if the band is that crowded
+        seek: for (const kk of [1, .8]) for (let d = 0; d < W; d += 6) for (const sgn of d ? [1, -1] : [1]) for (const v of [0, 5, 10]) {
+          const X = x + sgn * d, Y = y + v, q = [X + (r[0] - x) * kk, Y + (r[1] - y) * kk, X + (r[2] - x) * kk, Y + (r[3] - y) * kk];
+          if (q[0] < 14 || q[2] > W - 14) continue;
+          if (!hitAny(q, live, 3) && !hitAny(q, fixed, 0)) { best = [sgn * d, v, kk]; break seek; }
+        }
+        if (best == null) dim = true; else [dx, dy, k] = best;
+      }
+      const tr = `translate(${x + dx} ${y + dy})${k !== 1 ? ` scale(${k})` : ""}`;
+      if (el.getAttribute("transform") !== tr) el.setAttribute("transform", tr);
+      el.style.opacity = dim ? ".3" : "";
+    }
+  };
   // a seat colour mixed toward white (the token's light disc)
   function tintOf(col, k) {
     let r = 128, g = 128, b = 128; const s = String(col || "").trim();
@@ -924,21 +969,27 @@
       const T = ANCH.tab[m.id]; if (!T) return;
       const [x, y] = T.spot, hw = T.hw;
       const hit = LIVEOBST.some(o => x + hw + 10 > o[0] && x - hw - 10 < o[2] && y + 13 > o[1] && y - 13 < o[3]);
-      let dx = 0, dy = 0, dim = false;
+      let dx = 0, dy = 0, dim = false, sc = 1;
       if (hit) {
         // how crowded its resting spot is with islands alone: a spot clear of the tags that
         // is no more crowded than that is as good a home (on a phone the islands stand well
         // off the tears, so the tab can always sit between them)
         tabBestX(i, hw, null); const rest = Math.min(0, tabBestX.score);
         const fixed = [];   // ...and it never steps onto the registry posts or the lighthouses
-        for (const k in (ANCH.post || {})) { const P = ANCH.post[k]; if (P) fixed.push([P[0] - 18, P[1] - 12, P[0] + 34, P[1] + 16]); }
+        for (const k in (ANCH.post || {})) { const P = (R.postLive && R.postLive[k]) || ANCH.post[k]; if (P) fixed.push(postBox(P[0], P[1])); }
         for (const c of [10, 20]) { const L = ANCH.light && ANCH.light[c]; if (L) fixed.push([L[0] - 10, L[1] - 26, L[0] + 10, L[1] + 4]); }
-        const nx = tabBestX(i, hw, LIVEOBST.concat(fixed), true);
-        // a clear spot along the tear: step there; none (the tear is crowded, every stretch
-        // would cover an island or a tag): stay put and fade under what is on top of it
-        if (tabBestX.score >= rest - 4) { dx = nx - x; dy = Math.round(i === 0 ? 22 : m.top(nx) + 1) - y; } else dim = true;
+        const obs = LIVEOBST.concat(fixed), yAt = (x2) => Math.round(i === 0 ? 22 : m.top(x2) + 1);
+        const clearAt = (x2, h, k) => !obs.some(o => x2 + h + 4 > o[0] && x2 - h - 4 < o[2] && yAt(x2) + 13 * k > o[1] && yAt(x2) - 13 * k < o[3]);
+        // a clear spot along the tear: step there, at full size, else printed a little smaller;
+        // none (the tear is crowded, every stretch would cover an island or a tag): stay put
+        // and fade under what is on top of it
+        dim = true;
+        for (const k of [1, .8]) {
+          const nx = tabBestX(i, hw * k, obs, true);
+          if (tabBestX.score >= rest - 4 && clearAt(nx, hw * k, k)) { dx = nx - x; dy = yAt(nx) - y; sc = k; dim = false; break; }
+        }
       }
-      const tr = dx || dy ? `translate(${dx} ${dy})` : "";
+      const tr = sc !== 1 ? `translate(${x + dx} ${y + dy}) scale(${sc}) translate(${-x} ${-y})` : dx || dy ? `translate(${dx} ${dy})` : "";
       if ((el.getAttribute("transform") || "") !== tr) { if (tr) el.setAttribute("transform", tr); else el.removeAttribute("transform"); }
       el.style.opacity = dim ? ".3" : "";
     });
@@ -1715,10 +1766,21 @@
   const SEA_TR = (t, n) => (n >= 4 ? (t.is_self ? 17 : 14) : (t.is_self ? 20 : 17));   // a crowd of four or more stands smaller
   // where the Merchant's carrack rides for a century: above its island; on a phone's first
   // row there is no sea above the island for his hull and tag, so he rides beside it, inland
+  // (beside: on the side whose neighbouring islands hold no travellers and no voyage tag)
   function seaMerchAt(c) {
     const [x, y] = POS[c];
-    if (PHONE() && y - 47 - 30 < 8) { const sd = x > W * .8 ? -1 : 1; return [x + sd * 60, y - 4]; }
-    return [x, y - 47];
+    if (!(PHONE() && y - 47 - 30 < 8)) return [x, y - 47];
+    const v = app && app.view, busy = new Set();
+    if (v) for (const t of v.travelers) busy.add(R.shown[t.name] != null ? R.shown[t.name] : t.century);
+    if (mode && mode.kind === "travel") for (let k = 1; k <= 30; k++) { const d = Math.abs(k - mode.self); if (d && d <= mode.max) busy.add(k); }
+    let best = null, bestS = 1e9;
+    for (const sd of [1, -1]) {
+      const ax = x + sd * 54; if (ax < 40 || ax > W - 40) continue;
+      let sc = sd === (x > W * .8 ? -1 : 1) ? 0 : .5;
+      for (let k = 1; k <= 30; k++) if (k !== c && POS[k] && busy.has(k) && Math.abs(POS[k][0] - ax) < 80 && Math.abs(POS[k][1] - y) < 60) sc += 2;
+      if (sc < bestS) { bestS = sc; best = [ax, y + 6]; }   // low enough that his tag clears the first sea's tab
+    }
+    return best || [x, y - 47];
   }
   const seaMerchBox = (c) => { const [ax, ay] = seaMerchAt(c); return [ax - 36, ay - 33, ax + 36, ay + 35]; };   // his hull and his MERCHANT tag
   function seaNumPlate(c) {   // the numeral's box on the island (phone sizes)
@@ -1729,11 +1791,14 @@
     const nodes = {}, obst = [], groups = [];
     for (let c = 1; c <= 30; c++) if (POS[c]) { nodes[c] = POS[c]; obst.push(seaNumPlate(c)); }
     if (ANCH.well) { nodes[0] = ANCH.well; obst.push([ANCH.well[0] - 30, ANCH.well[1] - 26, ANCH.well[0] + 30, ANCH.well[1] + 46]); }
+    const tagBoxes = [];
     if (mode && mode.kind === "travel") for (let c = 1; c <= 30; c++) {   // a voyage's cost tags (costTag)
       const d = Math.abs(c - mode.self); if (d === 0 || d > mode.max || !POS[c]) continue;
-      const [ix, iy] = POS[c]; let ty = iy - islR(c) * .74 - 24; if (ty < 30) ty = iy + islR(c) * .74 + 26;
-      obst.push([ix - 36, ty - 17, ix + 36, ty + 13]);
+      if (mode.locked != null && Math.sign(c - mode.self) !== mode.locked) continue;
+      const [ix, ty] = seaCostSpot(c);
+      tagBoxes.push([ix - 36, ty - 17, ix + 36, ty + 13]);
     }
+    for (const q of tagBoxes) obst.push(q);
     for (const id in ANCH.tab) { const T = ANCH.tab[id]; obst.push([T.spot[0] - T.hw - 6, T.spot[1] - 11, T.spot[0] + T.hw + 6, T.spot[1] + 11]); }
     for (const k in (ANCH.post || {})) { const P = ANCH.post[k]; if (P) obst.push([P[0] - 16, P[1] - 10, P[0] + 16, P[1] + 14]); }
     for (const c of [10, 20]) { const L = ANCH.light && ANCH.light[c]; if (L) obst.push([L[0] - 8, L[1] - 24, L[0] + 8, L[1] + 4, c]); }
@@ -1756,7 +1821,32 @@
       groups.push({ c, node: POS[c], toks: ts.map(t => ({ r: SEA_TR(t, ts.length), self: t.is_self })),
         spots: [[0, up, -1], [0, down, 1], [-side * .75, up * .8, -1], [side * .75, up * .8, -1], [-side, -4, -1], [side, -4, -1]] });
     }
-    return window.__pdxPhonePlace({ groups, nodes, obst, box: [12, 8, W - 12, H - 8], below: 6 });
+    const out = window.__pdxPhonePlace({ groups, nodes, obst, box: [12, 8, W - 12, H - 8], below: 6 });
+    // what a registry chest steps aside from: the voyage's tags, the tokens, the Merchant
+    R.phLive = tagBoxes.concat(window.__pdxPhoneFootprints(groups, out), POS[mc] ? [seaMerchBox(mc)] : []);
+    return out;
+  }
+  /* A REGISTRY CHEST STEPS ASIDE (phone): its post rests on its tear where the islands and
+     sea tabs leave room (phoneAnchors); when a voyage's cost tag, a token or the Merchant
+     lands on it, it slides along the same tear to the nearest spot clear of them that is
+     still clear of the islands and tabs. */
+  const POST_SEAM = { Origins: 4, Ascension: 2, Singularity: 0 };
+  const postBox = (x, y) => [x - 16, y - 12, x + 43, y + 26];
+  function seaPostAt(pname, live) {
+    const rest = ANCH.post[pname], si = POST_SEAM[pname];
+    const hitL = (q) => live.some(o => q[0] < o[2] + 3 && q[2] > o[0] - 3 && q[1] < o[3] + 3 && q[3] > o[1] - 3);
+    if (!PHONE() || !rest || si == null || !hitL(postBox(rest[0], rest[1]))) return rest;
+    let best = null, bd = 1e9;
+    for (let fx2 = 0.08; fx2 <= 0.92; fx2 += 0.01) {
+      const x = Math.round(W * fx2), y = Math.round(SEAMS[si](x));
+      if (hitL(postBox(x, y))) continue;
+      let dmin = 1e9;
+      for (let c = 1; c <= 30; c++) dmin = Math.min(dmin, Math.hypot((x - POS[c][0]) * .8, (y - POS[c][1]) * 1.6) - islR(c));
+      for (const id of [BANDS[si].id, BANDS[si + 1].id]) { const t = ANCH.tab[id]; if (t) dmin = Math.min(dmin, Math.abs(x - t.spot[0]) - t.hw - 50); }
+      if (dmin < 8) continue;
+      const d = Math.abs(x - rest[0]); if (d < bd) { bd = d; best = [x, y]; }
+    }
+    return best || rest;
   }
   // the string ends on the island just clear of its numeral, on the token's side
   function seaLeashR(c, bx, by) {
@@ -1952,7 +2042,8 @@
     // ═══ PERIOD MARKERS, a carved plaque lying ON the divide, a chest beside it ═══
     for (const pname of Object.keys(PERIOD_ERAS)) {
       if (!ANCH.post || !ANCH.post[pname]) continue;
-      const [px, py] = ANCH.post[pname];
+      const [px, py] = PHONE() ? seaPostAt(pname, R.phLive || []) : ANCH.post[pname];
+      if (PHONE()) (R.postLive || (R.postLive = {}))[pname] = [px, py];
       const eras2 = PERIOD_ERAS[pname];
       const items = R.deliveries.filter(dv => ERAS_OF(dv.century).some(e2 => eras2.includes(e2)));
       const covered = view.travelers.filter(t => (t.delivered_periods || []).includes(pname));
@@ -2153,10 +2244,26 @@
     return cost;
   }
   const BOLT = "M 0 0 l -2.7 4.9 h 2 l -1.2 4.7 4.5 -6.1 h -2.1 l 2 -3.5 z";
-  function costTag(c, cost, kind) {
+  // where a voyage's cost tag hangs on a phone: above its island (under it on the top row),
+  // slid sideways a little when the Merchant stands there
+  function seaCostSpot(c) {
     const [x, y] = POS[c];
     let ty = y - islR(c) * .74 - 24;
-    if (PHONE() && ty < 30) ty = y + islR(c) * .74 + 26;   // a phone's top row: the tag hangs under the island
+    if (ty < 30) ty = y + islR(c) * .74 + 26;
+    const posts = [];   // (a registry chest steps aside from the tag instead: seaPostAt)
+    const mc = R.merchantShown != null ? R.merchantShown : app && app.view && app.view.merchant_century;
+    if (POS[mc] && mc !== c) posts.push(seaMerchBox(mc));   // the Merchant's hull and tag
+    const clash = (tx) => posts.some(o => tx - 36 < o[2] + 3 && tx + 36 > o[0] - 3 && ty - 17 < o[3] + 3 && ty + 13 > o[1] - 3);
+    if (clash(x)) for (let d = 6; d <= 60; d += 6) {
+      if (!clash(x + d) && x + d + 36 < W - 8) return [x + d, ty];
+      if (!clash(x - d) && x - d - 36 > 8) return [x - d, ty];
+    }
+    return [x, ty];
+  }
+  function costTag(c, cost, kind) {
+    let [x, y] = POS[c];
+    let ty = y - islR(c) * .74 - 24;
+    if (PHONE()) [x, ty] = seaCostSpot(c);   // a phone's top row: the tag hangs under the island
     const col = kind === "free" ? "#1d6b52" : kind === "risk" ? "#c0392b" : "#8a6215";
     const label = kind === "free" ? "free" : String(cost) + (kind === "risk" ? "!" : "");
     const w2 = label.length * 6.8 + (kind === "free" ? 14 : 26);

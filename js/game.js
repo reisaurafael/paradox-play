@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609280708";
-import { audio } from "./audio.js?202609280708";
+import { icon } from "./icons.js?202609280800";
+import { audio } from "./audio.js?202609280800";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609280708";
-import { comic } from "./comic.js?202609280708";
-import { fx } from "./fx.js?202609280708";
-import { CatEngine } from "./cat.js?202609280708";
-import { tutorials } from "./tutorial.js?202609280708";
-import { profile } from "./profile.js?202609280708";
-import { Camera } from "./camera.js?202609280708";
+import { juice } from "./juice.js?202609280800";
+import { comic } from "./comic.js?202609280800";
+import { fx } from "./fx.js?202609280800";
+import { CatEngine } from "./cat.js?202609280800";
+import { tutorials } from "./tutorial.js?202609280800";
+import { profile } from "./profile.js?202609280800";
+import { Camera } from "./camera.js?202609280800";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609280708";
+} from "./util.js?202609280800";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -1599,8 +1599,12 @@ export class Game {
   // The Secret Market bay, HIDDEN / DISCOVERED, buyable in-place, prison bars if Wanted.
   _renderSecret(shopping, req) {
     const v = this.view;
-    const open = !!v.secret_market_open;        // DISCOVERED
-    const current = v.secret_market_current;
+    // the market request itself offers the Secret card (options.secret_card) to a traveler who
+    // may buy it now (on XI, the Smartphone, the Window of Time): the bay shows it then, even
+    // when the view's own Secret Market fields are still empty
+    const offered = shopping && req && req.options && req.options.secret_card ? req.options.secret_card : null;
+    const open = !!v.secret_market_open || !!offered;        // DISCOVERED
+    const current = v.secret_market_current || offered;
     const me = (v.travelers || []).find((t) => t.is_self) || {};
     const sec = el("div", "market-secret");
     // (No caption over the window: the curtain itself says sealed or open, and the
@@ -4929,9 +4933,9 @@ export class Game {
     const bay = this.dom.market && this.dom.market.querySelector(".market-secret");
     const zone = document.getElementById("market-zone");
     const host = bay || zone;
-    if (!host) return;
-    const r = host.getBoundingClientRect();
-    if (!r.width) return;
+    // No visible bay (a phone on another page): skip the show, never leave the card stuck.
+    const r = host ? host.getBoundingClientRect() : null;
+    if (!r || !r.width) { this._secretRevealing = false; this.renderMarket(); return; }
     const fx = el("div", "secret-reveal-fx");
     fx.style.left = r.left + "px"; fx.style.top = r.top + "px";
     fx.style.width = r.width + "px"; fx.style.height = r.height + "px";

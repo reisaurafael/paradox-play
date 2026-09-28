@@ -416,7 +416,7 @@
     const x=Math.round(Math.max(26, Math.min(W-26-w, Math.max(g[0], Math.min(g[1]-w, (g[0]+g[1])/2-w/2))))), y=Math.round(b.top+6);
     PLNAMES.push([x-4, y-9, x-4+w, y+10]);
     // (inside a positioned group: bare absolutely placed text in the base layer was left unpainted by Chromium after a re-raster)
-    return `<g data-tip="${esc(CONSTS[era].mean)}" transform="translate(${x} ${y})"><rect x="-4" y="-9" width="${w.toFixed(0)}" height="19" rx="3" fill="#efe3c2" stroke="${shd(col,0.6)}" stroke-width="1.1" opacity=".96"/><g class="cm-pennant" transform="translate(3 7)"><path d="M 0 0 v-13 l9 3.2 l-9 3.2" fill="${col}" stroke="#3a2c12" stroke-width=".8"/></g><text x="15" y="5.5" font-family="Georgia,serif" font-weight="bold" font-size="13.5" letter-spacing=".8" fill="${shd(col,0.55)}">${txt}</text></g>`;
+    return `<g class="ph-name" data-x="${x}" data-y="${y}" data-r="${[x-4,y-9,x-4+Math.round(w),y+10].join(",")}" data-tip="${esc(CONSTS[era].mean)}" transform="translate(${x} ${y})"><rect x="-4" y="-9" width="${w.toFixed(0)}" height="19" rx="3" fill="#efe3c2" stroke="${shd(col,0.6)}" stroke-width="1.1" opacity=".96"/><g class="cm-pennant" transform="translate(3 7)"><path d="M 0 0 v-13 l9 3.2 l-9 3.2" fill="${col}" stroke="#3a2c12" stroke-width=".8"/></g><text x="15" y="5.5" font-family="Georgia,serif" font-weight="bold" font-size="13.5" letter-spacing=".8" fill="${shd(col,0.55)}">${txt}</text></g>`;
   }
   function phoneWalls(){
     const STY={ tim:{teeth:"2 6"}, con:{teeth:"7 4"}, mod:{teeth:"4 5"}, lma:{teeth:"2.5 8"}, hma:{teeth:"5.5 5"}, ant:{teeth:"4 15"} };
@@ -462,6 +462,8 @@
      front); where the plate, a tag or the Merchant leaves no room it steps beside the castle. */
   const PH_TR=(t,n)=>(n>=4?(t.is_self?17:14):(t.is_self?20:17));   // a crowd of four or more stands smaller
   function phonePlate(c){ const [px,py]=POS[c], SC=((c===10||c===20)?1.28:DUAL[c]?1.1:1)*1.2, L=rom(c).length; return [px-(L*6.6+5), py+14*SC, px+(L*6.6+5), py+14*SC+21]; }
+  // a phone's cost tag slides off the Merchant (his wagon/ship and his tag)
+  function tagX(c,x,ty){ const mc=R.merchantShown!=null?R.merchantShown:app&&app.view&&app.view.merchant_century; if(!POS[mc]||mc===c) return x; const [hx,hy]=haulerAt2(mc); return window.__pdxSlideTag(x,ty,30,16,12,[[hx-36,hy-38,hx+36,hy+20]],W); }
   function phoneBerths(byC,view){
     const nodes={}, obst=[], groups=[];
     for(let c=1;c<=30;c++) if(POS[c]){ nodes[c]=POS[c]; obst.push(phonePlate(c)); }
@@ -469,15 +471,20 @@
     for(const q of (PLNAMES||[])) obst.push(q);
     for(const k in PHB){ const P=PHB[k]; if(P) obst.push([P[0]-16,P[1]-22,P[0]+16,P[1]+14]); }   // the receptor-churches
     if(POS[11]) obst.push([POS[11][0]+11,POS[11][1]-36,POS[11][0]+49,POS[11][1]+4,11]);   // the hidden hospice (its own century may stand on it)
-    if(R.mAnchor) obst.push([R.mAnchor[0]-26,R.mAnchor[1]-38,R.mAnchor[0]+26,R.mAnchor[1]+20]);   // the Merchant and his tag
+    if(R.mAnchor) obst.push([R.mAnchor[0]-36,R.mAnchor[1]-38,R.mAnchor[0]+36,R.mAnchor[1]+20]);   // the Merchant and his tag
     for(const t of view.travelers){ let k2=0; for(const card of (t.is_self?(t.hand||[]):(t.equipment||[]))){ const c=card.delivery_century; if(c==null||!POS[c]) continue; const [fx,fy]=t.is_self?[POS[c][0],POS[c][1]-worldR(c)*.5]:[POS[c][0]+worldR(c)*.5+(k2++)*5,POS[c][1]-worldR(c)*.4]; obst.push([fx-8,fy-5,fx+8,fy+6,undefined,6]); } }   // the delivery flags: a stack steps aside rather than hide one, if it can
     const cand=mode&&mode.kind==="travel"?travelCandidates():null;
-    if(cand) for(const c of cand){ if(c===mode.self||!POS[c]) continue; const [qx,qy]=POS[c]; let ty=qy-(worldR(c)+16); if(ty<30) ty=qy+worldR(c)+34; obst.push([qx-30,ty-16,qx+30,ty+12]); }   // a voyage's cost tags
+    const tags=[]; if(cand) for(const c of cand){ if(c===mode.self||!POS[c]) continue; const [qx,qy]=POS[c]; let ty=qy-(worldR(c)+16); if(ty<30) ty=qy+worldR(c)+34; const tx=tagX(c,qx,ty); tags.push([tx-30,ty-16,tx+30,ty+12]); }   // a voyage's cost tags
+    for(const q of tags) obst.push(q);
     for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue;
       ts.sort((a,b)=>(a.is_self?1:0)-(b.is_self?1:0));   // mine is drawn last, in front
       const rM=Math.max(...ts.map(t=>PH_TR(t,ts.length))), y=POS[c][1], on=phonePlate(c)[1]-y-2-rM-6, side=20+rM;
       groups.push({c,node:POS[c],toks:ts.map(t=>({r:PH_TR(t,ts.length),self:t.is_self})),spots:[[0,on,-1],[-side*.6,on-10,-1],[side*.6,on-10,-1],[-side-8,on+2,-1],[side+8,on+2,-1],[0,on-22,-1]]}); }
-    return window.__pdxPhonePlace({groups,nodes,obst,box:[14,5,W-14,H-12],below:6});
+    const out=window.__pdxPhonePlace({groups,nodes,obst,box:[14,5,W-14,H-12],below:6});
+    // what the kingdoms' names step aside from (phoneNames: after the render); what they keep clear of
+    R.phLive=tags.concat(window.__pdxPhoneFootprints(groups,out));
+    R.phFixed=obst.filter(q=>!tags.includes(q)&&q[5]==null&&!(PLNAMES||[]).includes(q)).concat(Object.values(nodes).map(([x,y])=>[x-30,y-60,x+30,y+12]));   /* a name keeps 30 off every century below it, as at rest (PL.gaps) */
+    return out;
   }
   function phoneStack(c,ts,at,view){
     const [x,y]=POS[c], chase=view.merchant_plan&&view.merchant_plan.target_seat, memo=R.pcAt||(R.pcAt={}); let g="";
@@ -672,7 +679,7 @@
   function highlights(){
     if(!mode) return ""; let g=""; const cand=pickCandidates();
     const ring=(c,cls,tip)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const rr=(c===0?46:worldR(c)+13); g+=`<circle class="cm-glow ${cls}" data-c="${c}" data-tip="${esc(tip)}" cx="${P[0]}" cy="${P[1]}" r="${rr}"/>`; };
-    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P; let ty=y-(c===0?52:worldR(c)+16); if(PHONE()&&ty<30) ty=y+worldR(c)+34; /* a phone's top row: the tag hangs under the plate */ const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cm-cost"${PHONE()?` transform="translate(${x} ${ty}) scale(1.55) translate(${-x} ${-ty})"`:""}><rect x="${x-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
+    const tag=(c,txt,kind)=>{ const P=c===0?SUN:POS[c]; if(!P) return; const [x,y]=P; let ty=y-(c===0?52:worldR(c)+16); let x2=x; if(PHONE()){ if(ty<30) ty=y+worldR(c)+34; /* a phone's top row: the tag hangs under the plate */ x2=tagX(c,x,ty); } const col=kind==="free"?"#6ff0c0":kind==="risk"?"#ff6a5a":"#e6b95a"; const w=txt.length*6.6+(kind==="free"?12:22); g+=`<g class="cm-cost"${PHONE()?` transform="translate(${x2} ${ty}) scale(1.55) translate(${-x2} ${-ty})"`:""}><rect x="${x2-w/2}" y="${ty-10}" width="${w}" height="17" rx="3" fill="rgba(10,10,26,.92)" stroke="${col}" stroke-width="1.3"/>${kind==="free"?"":`<path d="${BOLT}" transform="translate(${x2-w/2+8} ${ty-6})" fill="${col}"/>`}<text x="${x2+(kind==="free"?0:5)}" y="${ty+3}" text-anchor="middle" font-family="'Courier New',monospace" font-weight="bold" font-size="10" fill="${col}">${txt}</text></g>`; };
     if(mode.kind==="travel"){
       for(let c=1;c<=30;c++){ if(!cand.has(c)||c===mode.self) continue; if(c>mode.self||mode.ppc===0){ ring(c,"cm-go-future",`with the drift to ${rom(c)}, free`); tag(c,"FREE","free"); } else { const cost=armedCost(c); const risk=cost>=mode.energy; ring(c,risk?"cm-go-risk":"cm-go-past",`beat upstream to ${rom(c)}, ${cost} energy${risk?" (this could strand you)":""}`); tag(c,String(cost),risk?"risk":"cost"); } }
       if(cand.has(0)){ ring(0,"cm-go-risk",`the final plunge into the Dead Sun, ends the game (+2 CP)`); tag(0,String(armedCost(0)),"risk"); }
@@ -905,7 +912,7 @@
     // the live layer is rewritten only when it changed (the 300ms poll calls this forever;
     // rebuilding it each time re-rastered the chart three times a second at rest)
     const liveHTML=liveLayer(), liveSame=!force&&lg.__pdxHTML===liveHTML;
-    if(!liveSame){ lg.innerHTML=liveHTML; lg.__pdxHTML=liveHTML; if(PHONE()) for(const n of lg.querySelectorAll(":scope > .pc-ph")) lg.appendChild(n); }   // a phone: the pieces above everything on the chart
+    if(!liveSame){ lg.innerHTML=liveHTML; lg.__pdxHTML=liveHTML; if(PHONE()){ for(const n of lg.querySelectorAll(":scope > .pc-ph")) lg.appendChild(n); if(window.__pdxPhoneNameDodge) window.__pdxPhoneNameDodge(r.querySelectorAll(".cplot-ori .ph-name"),R.phLive||[],R.phFixed||[],W); } }   // a phone: the pieces above everything on the chart; the kingdoms' names step aside from tags and tokens
     const top=r.querySelector(".cplot-ori .cm-top"); if(top&&!liveSame){ top.replaceChildren(); const ord=lg.querySelector(".cm-ord"); if(ord) top.appendChild(ord); }
     const cmd=r.querySelector(".cplot-ori .cm-cmd"); if(cmd){ const t=commandText(); if(cmd.__pdxHTML!==t){ cmd.innerHTML=t; cmd.__pdxHTML=t; } cmd.classList.toggle("on",!!t); }
     const svg=r.querySelector(".cplot-ori .pc-chart"); if(svg) svg.classList.toggle("mode-pick",!!mode);

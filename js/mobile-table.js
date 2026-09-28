@@ -828,7 +828,7 @@ function paintTutLink() {
    (or dragged by a finger) and put in the bin: it is recycled for energy. In a Delivery phase,
    while he holds a relic that can be filed here, the bin is a DRAWER: the same tap files it
    (no change of scene). Never by accident: a card must be picked up first. ══ */
-let bin = null;
+let bin = null, binDragEat = 0;
 function buildBin() {
   bin = document.createElement("button");
   bin.type = "button"; bin.id = "pdx-bin";
@@ -838,9 +838,21 @@ function buildBin() {
   // stacked when both apply; nothing of it is ever over the case or the cat
   if (rail) rail.insertBefore(bin, rail.querySelector(".mr-act")); else document.body.appendChild(bin);
 }
+// ON A PHONE A CARD OF THE CASE IS PICKED, NOT CARRIED: a tap marks it (its own lift), and the
+// bin (or the drawer) acts on it. The game's carry (a card following the pointer until the next
+// click) was dropped by the next re-render of the case during a decision, so a picked card went
+// back before the bin was reached.
+let picked = null;
+function pick(name) {
+  picked = picked === name ? null : name;
+  document.querySelectorAll("#rucksack-zone .ruck-card").forEach((n) => n.classList.toggle("pdx-picked", n.dataset.name === picked));
+  paintBin();
+}
 function binState() {
   const g = game(); if (!g) return { mode: "idle" };
-  const c = g._carry, st = g._deliverState;
+  const me0 = g._self && g._self();
+  if (picked && !(me0 && (me0.hand || me0.equipment || []).some((x) => x.name === picked))) picked = null;
+  const c = picked ? { name: picked } : null, st = g._deliverState;
   if (c && st && st.names && st.names.has(c.name)) return { mode: "file", name: c.name };
   if (c) {
     const me = g._self && g._self();
@@ -860,7 +872,7 @@ function paintExtra() {
   let sig = view, html = "";
   if (view === "merchant" && me) {
     html = `<div class="mx-gold"><i></i><span>YOUR GOLD</span><b>${me.gold}</b></div>`
-      + `<p class="mx-hint">${secretOn ? "<b>SHELF</b> returns to his shelf alone." : "Tap <b>SECRET</b> on the right: his shelf and the Secret Market together."}</p>`;
+      + `<p class="mx-hint">${secretOn ? "Tap <b>SHELF</b> on the right for his shelf alone." : "Tap <b>SECRET</b> on the right: his shelf and the Secret Market together."}</p>`;
     sig += me.gold + ":" + secretOn;
   } else if (view === "case") {
     const n = ownedTickets().reduce((a, t) => a + t.count, 0);
@@ -877,6 +889,7 @@ function paintExtra() {
 }
 function paintBin() {
   if (!bin) buildBin();
+  document.querySelectorAll("#rucksack-zone .ruck-card").forEach((n) => n.classList.toggle("pdx-picked", n.dataset.name === picked));
   const g = game(), me = g && g._self ? g._self() : null;
   const has = !!(me && (me.hand || me.equipment || []).length);
   if (rail && bin.parentElement !== rail) rail.insertBefore(bin, rail.querySelector(".mr-act"));
@@ -892,8 +905,8 @@ function paintBin() {
 function binAct() {
   const g = game(); if (!g) return false;
   const b = binState();
-  if (b.mode === "file") { g._dropCard(true); g._fileDeliver(b.name); return true; }
-  if (b.mode === "recycle") { g._dropCard(true); g.recycleCard(b.name); return true; }
+  if (b.mode === "file") { picked = null; g._fileDeliver(b.name); return true; }
+  if (b.mode === "recycle") { picked = null; g.recycleCard(b.name); return true; }
   return false;
 }
 function overBin(x, y) {
@@ -902,6 +915,15 @@ function overBin(x, y) {
   return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8;
 }
 function wireBin() {
+  window.addEventListener("click", (e) => {
+    if (!on() || view !== "case") return;
+    const c = e.target.closest && e.target.closest("#rucksack-zone .ruck-card");
+    if (!c || c.classList.contains("act-ready") || c.classList.contains("act-used")) return;
+    if (e.target.closest(".ruck-recycle")) return;
+    e.preventDefault(); e.stopPropagation();
+    if (performance.now() < binDragEat) return;
+    pick(c.dataset.name);
+  }, true);
   // the bin's tap is taken before the game's own "a click anywhere drops the carried card"
   window.addEventListener("click", (e) => {
     if (!on() || !bin || bin.hidden) return;
@@ -923,7 +945,7 @@ function wireBin() {
       if (Math.hypot(e.clientX - dg.x, e.clientY - dg.y) < 10) return;
       dg.moved = true;
       const g = game();
-      if (!(g && g._carry && g._carry.name === dg.c.dataset.name)) dg.c.click();   // picked up, as a tap would
+      if (picked !== dg.c.dataset.name) pick(dg.c.dataset.name);   // picked, as a tap would
     }
     e.preventDefault();
     try { window.dispatchEvent(new MouseEvent("mousemove", { clientX: e.clientX, clientY: e.clientY, bubbles: true })); } catch (err) {}
@@ -934,9 +956,9 @@ function wireBin() {
     const d = dg; dg = null;
     if (bin) bin.classList.remove("pb-hot");
     if (!d.moved) return;
-    const g = game();
+    binDragEat = performance.now() + 400;
     if (overBin(e.clientX, e.clientY)) binAct();
-    else if (g && g._carry) g._dropCard(false);          // let go elsewhere: back in the case
+    else pick(null);                                       // let go elsewhere: back in the case
     paintBin();
   };
   window.addEventListener("pointerup", up, true);
