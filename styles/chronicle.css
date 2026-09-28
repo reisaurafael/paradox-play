@@ -249,3 +249,113 @@ body.chr-hs-blue .bn-paper:not(.bn-wanted) .bn-extra { background: #1b2f5a; }
 
 /* calm motion: the page fades, the stamp only fades (js/chronicle.js) */
 html.pdx-a11y .chr-page { animation: none; }
+
+/* ═════════════════════════ MATCH RECORDS (js/chronicle.js) ═════════════════════════
+   One match as a comic-paper document. Every .chr-doc / .chd- rule below is also
+   copied into the downloaded .html file, so they carry their own colours and
+   fonts with fallbacks (no page variables). */
+.chr-doc { box-sizing: border-box; width: min(900px, 100%); margin: 0 auto; padding: 26px 30px 20px; color: #15100a;
+  font: 400 15px/1.45 "Inter", system-ui, sans-serif;
+  background: radial-gradient(circle, rgba(120,84,20,.12) 1px, transparent 1.5px) 0 0 / 6px 6px, #f4e6b0;
+  border: 3px solid #15100a; box-shadow: 8px 8px 0 #15100a; }
+.chr-doc * { box-sizing: border-box; }
+.chr-doc h3 { margin: 22px 0 10px; font: 600 1.05rem/1.1 "Oswald", "Arial Narrow", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.chr-doc h3 span { display: inline-block; padding: 4px 10px 3px; background: #15100a; color: #f4e6b0; transform: rotate(-1deg); }
+.chd-head { position: relative; padding: 0 0 14px 16px; border-bottom: 3px double #15100a; border-left: 10px solid var(--me, #6fae6a); }
+.chd-kick { margin: 0 0 2px; font: 700 .72rem/1.2 "JetBrains Mono", monospace; letter-spacing: .16em; text-transform: uppercase; color: #5a4526; }
+.chd-head h2 { margin: 0; font: italic 700 2.4rem/1.05 "Oswald", "Arial Narrow", sans-serif; letter-spacing: .02em; text-transform: uppercase; }
+.chd-meta { margin: 6px 0 0; font: 500 .78rem/1.4 "JetBrains Mono", monospace; color: #4a3a20; }
+.chd-how { margin: 6px 0 0; font-size: .95rem; }
+.chd-result { position: absolute; right: 4px; top: 6px; padding: 8px 18px 6px; transform: rotate(-8deg);
+  font: 700 2rem/1 "Oswald", "Arial Narrow", sans-serif; letter-spacing: .12em; border: 4px solid; outline: 2px solid; outline-offset: -9px; opacity: .88; }
+.chd-result.won { color: #11706d; } .chd-result.lost { color: #a3241a; }
+.chd-final { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.chd-final th { text-align: left; padding: 4px 6px; font: 700 .66rem/1.2 "JetBrains Mono", monospace; letter-spacing: .1em; text-transform: uppercase; border-bottom: 2px solid #15100a; }
+.chd-final td { padding: 6px; border-bottom: 1px solid rgba(21,16,10,.25); vertical-align: top; }
+.chd-final td:nth-child(n+2):nth-child(-n+6) { font: italic 700 1.05rem/1.1 "Oswald", "Arial Narrow", sans-serif; white-space: nowrap; }
+.chd-final td:last-child { font-size: .78rem; color: #3a2c16; }
+.chd-final tr.is-me { background: rgba(21,16,10,.07); }
+.chd-final i, .chd-seats i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border: 2px solid #15100a; vertical-align: -1px; }
+.chd-crown { font: 700 .62rem/1 "JetBrains Mono", monospace; letter-spacing: .1em; text-transform: uppercase; padding: 2px 5px; background: #15100a; color: #f4e6b0; }
+.chd-st { margin-right: 5px; font: 700 .62rem/1 "JetBrains Mono", monospace; text-transform: uppercase; color: #a3241a; }
+.chd-seats { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 10px 0 0; font-size: .8rem; color: #3a2c16; }
+.chd-persona { color: #5a4526; }
+.chd-earned ul { list-style: none; margin: 0; padding: 0; columns: 2 18rem; column-gap: 24px; font-size: .88rem; }
+.chd-earned li { break-inside: avoid; margin-bottom: 3px; }
+.chd-earned b { display: inline-block; min-width: 6.4rem; font: 700 .68rem/1 "JetBrains Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: #5a3aa8; }
+.chd-hour { margin: 0 0 12px; padding: 10px 12px 10px; border: 2px solid #15100a; box-shadow: 4px 4px 0 #15100a; background: #fbeec4; break-inside: avoid; page-break-inside: avoid; }
+.chd-hour h3 { margin: -20px 0 6px; }
+.chd-hbody { display: flex; gap: 14px; align-items: flex-start; }
+.chd-hcol { flex: 1; min-width: 0; }
+.chd-dice { flex: none; border-collapse: collapse; font: 700 .7rem/1 "JetBrains Mono", monospace; }
+.chd-dice caption { caption-side: top; text-align: left; padding-bottom: 3px; font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: #5a4526; }
+.chd-dice th { padding: 3px 6px 3px 0; text-align: right; font-size: .6rem; letter-spacing: .06em; text-transform: uppercase; color: #5a4526; }
+.chd-dice td { width: 30px; height: 24px; text-align: center; border: 1.5px solid #15100a; background: #fffaf0; color: #15100a; }
+.chd-dice td.on { background: #15100a; color: #f4e6b0; }
+.chd-lines, .chd-notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.chd-lines li { padding-left: 14px; position: relative; font-size: .86rem; }
+.chd-lines li::before { content: ""; position: absolute; left: 2px; top: .55em; width: 6px; height: 6px; background: #8a7a5a; }
+.chd-lines .chd-deliver::before, .chd-lines .chd-cp::before { background: #b8862a; }
+.chd-lines .chd-paradox::before { background: #5a3aa8; } .chd-lines .chd-danger::before { background: #a3241a; }
+.chd-lines .chd-travel::before { background: #1f6f95; } .chd-lines .chd-market::before { background: #2f7a3a; }
+.chd-lines .chd-contract::before { background: #7a4c10; } .chd-lines .chd-end { font-weight: 700; }
+.chd-herald { margin: 8px 0 0; padding: 6px 10px; border: 1.5px solid #241c10; background: #efe4c4; font: 700 .92rem/1.25 Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: .02em; }
+.chd-herald span { display: block; font: 700 .6rem/1.2 Georgia, serif; letter-spacing: .14em; color: #8c2a1a; margin-bottom: 2px; }
+.chd-notes { margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(21,16,10,.35); }
+.chd-notes li { font: italic 500 .8rem/1.35 "Inter", system-ui, sans-serif; color: #2f4a44; }
+.chd-notes li::before { content: "HELA: "; font: 700 .62rem/1 "JetBrains Mono", monospace; font-style: normal; color: #11706d; letter-spacing: .1em; }
+.chd-quiet { margin: 0; font-style: italic; color: #5a4526; font-size: .84rem; }
+.chd-foot { margin-top: 18px; padding-top: 8px; border-top: 3px double #15100a; font: 500 .7rem/1.3 "JetBrains Mono", monospace; color: #5a4526; text-align: center; }
+@media (max-width: 640px) {
+  .chr-doc { padding: 18px 14px 14px; box-shadow: 4px 4px 0 #15100a; font-size: 14px; }
+  .chd-head { padding-right: 84px; }
+  .chd-head h2 { font-size: 1.7rem; }
+  .chd-result { font-size: 1.2rem; padding: 6px 9px 4px; right: 0; }
+  .chd-hbody { flex-direction: column; }
+  .chd-final { font-size: .74rem; }
+  .chd-final th:nth-child(7), .chd-final td:nth-child(7) { display: none; }
+}
+
+/* the viewer: the document over the page, with its actions above it */
+.chr-match-page { align-items: flex-start; touch-action: pan-y; }
+.chr-page { touch-action: pan-y; }
+.chr-match-wrap { width: min(920px, 100%); flex: none; }
+.chr-match-bar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 0 0 14px; padding: 10px 12px; background: var(--ink-850, #111419); border: 1px solid var(--line, #38424f); border-radius: 5px; }
+.chm-msg { font-size: .8rem; color: var(--text-soft, #c9ceda); }
+.chm-close { margin-left: auto; }
+.chm-del-ask, .chp-ask { display: none; align-items: center; gap: 6px; font-size: .8rem; color: var(--text, #e9e2d2); }
+.chm-del-box.is-asking .chm-del, .chr-past li.is-asking .chp-del { display: none; }
+.chm-del-box.is-asking .chm-del-ask, .chr-past li.is-asking .chp-ask { display: inline-flex; }
+
+/* the Chronicle page's past matches */
+.chr-past { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 22rem; overflow-y: auto; }
+.chr-past li { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); gap: 4px 10px; align-items: center; padding: 8px 10px;
+  border: 1px solid var(--line, #38424f); border-radius: 4px; background: var(--ink-750, #1c212a); }
+.chp-res { grid-row: 1 / span 2; text-align: center; padding: 6px 0 5px; transform: rotate(-4deg); border: 2.5px solid;
+  font: 700 .82rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .1em; text-transform: uppercase; }
+.chp-res.won { color: #5fc9c2; } .chp-res.lost { color: #e35949; }
+.chp-what { display: flex; flex-direction: column; min-width: 0; }
+.chp-what b { font: 600 .92rem/1.2 var(--f-display, "Oswald", sans-serif); letter-spacing: .04em; color: var(--text, #e9e2d2); }
+.chp-what span { font: 500 .7rem/1.3 var(--f-mono, monospace); color: var(--text-mute, #98a2b0); }
+.chp-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.chp-acts .btn-sm { padding: .3em .7em; }
+
+/* the results card: the record's two buttons */
+.cr-rec-btns { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.cr-note { margin: 0 0 8px; font-size: .84rem; color: var(--text-soft, #c9ceda); }
+
+/* PRINT: only the record, on paper, black ink, no shadows, Hours kept whole */
+@media print {
+  html.chr-printing body > *:not(#chr-match) { display: none !important; }
+  html.chr-printing, html.chr-printing body { background: #fff !important; overflow: visible !important; height: auto !important; }
+  html.chr-printing #chr-match { position: static !important; display: block !important; padding: 0 !important; background: none !important; overflow: visible !important; animation: none !important; }
+  html.chr-printing .chr-match-bar { display: none !important; }
+  html.chr-printing .chr-doc { width: 100%; border: 0; box-shadow: none; background: #fff; padding: 0; }
+  html.chr-printing .chd-hour { box-shadow: none; background: #fff; }
+  html.chr-printing .chd-hour h3 { margin: 0 0 6px; }
+  html.chr-printing .chd-herald { background: #fff; }
+  html.chr-printing .chd-dice td.on { background: #15100a !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html.chr-printing .chd-head, html.chr-printing .chd-final i, html.chr-printing .chd-seats i { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { margin: 14mm 12mm; }
+}

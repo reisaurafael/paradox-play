@@ -63,8 +63,9 @@
     const SEAMS = { 23: [0, .075], 19: [1, .925], 15: [2, .075], 5: [4, .075] };   // century: [band above, x]
     function layout(W, H, o) {
       o = o || {};
-      const m = o.margin != null ? o.margin : 14, rowH = (H - 2 * m) / 6, wob = o.wobble != null ? o.wobble : 7;
-      const band = (r) => ({ top: m + r * rowH, bot: m + (r + 1) * rowH, cy: m + (r + .5) * rowH, h: rowH });
+      // o.top: extra room above the first band only (the Sea's pieces stand above their islands)
+      const m = o.margin != null ? o.margin : 14, t0 = o.top || 0, rowH = (H - 2 * m - t0) / 6, wob = o.wobble != null ? o.wobble : 7;
+      const band = (r) => ({ top: r ? m + t0 + r * rowH : m, bot: m + t0 + (r + 1) * rowH, cy: m + t0 + (r + .5) * rowH, h: rowH });
       const pos = {}, rowOf = {};
       ROWS.forEach((R, r) => {
         const b = band(r), n = R.cs.length;
@@ -449,6 +450,103 @@
     return pts;
   };
 
+  /* ── THE PIECES ON A PHONE (the owner, 28/09: "hard to tell whether the characters are in
+     a given century or its vertical neighbours", "a little hard to see the characters") ──
+     On the phone's one-look chart the bands are close, so a piece pushed out on a long
+     string read as belonging to the band above or below. Here every piece is a TOKEN (an
+     ink edge, a light disc in the seat's colour, the seat's own ship on it, a name ribbon;
+     mine wears a white crown ring and YOU) that stands ON its own century: the board gives
+     the spots where a stack may stand (on the castle or star, above the island, and
+     fallbacks), and a stack on one century is a tight row of coins at that spot (two rows
+     from four pieces on). A spot is refused when a token would leave the chart, cover a
+     numeral plate, a cost tag, a sea tab, the Merchant or another stack, or stand nearer
+     another century than its own. Only the phone uses this; the desk keeps its berths. */
+  window.__pdxPhonePlace = window.__pdxPhonePlace || function (o) {
+    // o = { groups: [{ c, node: [x, y], toks: [{ r, self }], spots: [[dx, dy, back]] }],
+    //       nodes: { c: [x, y] } (every century and Year Zero), obst: [[x0, y0, x1, y1, c?, cost?]]
+    //       (an obstacle tagged with a century does not count for that century's own stack;
+    //       cost: how much covering it weighs, 10 by default, less for small marks),
+    //       box: [x0, y0, x1, y1], below: how far a token's ribbon hangs under its centre }
+    // returns { c: [[x, y, top], ...] } in the order given (top: a back-row token whose
+    // ribbon rides above it, its lower edge being behind the front row)
+    const out = {}, placed = [], below = o.below == null ? 6 : o.below;
+    const hit = (a, b, pad) => a[0] < b[2] + pad && a[2] > b[0] - pad && a[1] < b[3] + pad && a[3] > b[1] - pad;
+    const foot = (x, y, t, top) => { const e = t.self ? 6 : 2.5; return [x - t.r - e, y - t.r - (top ? 9 : e), x + t.r + e, y + t.r + (top ? e : Math.max(e, below))]; };
+    // a row's places, the middle one last (mine is last: in the middle, in front)
+    const rowOff = (k) => { const a = Array.from({ length: k }, (_, i) => i - (k - 1) / 2); return a.sort((p, q) => Math.abs(q) - Math.abs(p) || p - q); };
+    const REAR = [-.5, .5, -1.5, 1.5];   // the back row stands in the front row's gaps
+    const groups = o.groups.slice().sort((a, b) => b.toks.length - a.toks.length);
+    for (const G of groups) {
+      const [nx, ny] = G.node, n = G.toks.length, rM = Math.max(...G.toks.map((t) => t.r));
+      const shapes = n > 3 ? [3, n] : [n];
+      let best = null, bestPen = 1e9;
+      G.spots.forEach(([dx, dy, back], si) => shapes.forEach((perRow, hi) => {
+        // the front row holds the last pieces (mine is last, in its middle); the rest stand
+        // one row behind, drawn first, in its gaps, higher (back -1) or lower (back 1)
+        const front = Math.min(perRow, n), rear = n - front, pos = [];
+        const step = rM * (front > 3 ? 1.3 : 1.7), fo = rowOff(front);
+        for (let i = 0; i < rear; i++) pos.push([nx + dx + REAR[i] * step, ny + dy + (back || -1) * rM * .8, (back || -1) < 0]);
+        for (let i = 0; i < front; i++) pos.push([nx + dx + fo[i] * step, ny + dy, false]);
+        if (o.box) {   // a row that would run off the chart's side slides back in (a short way only)
+          let lo = 1e9, hi = -1e9; pos.forEach(([x], i) => { const e = G.toks[i].r + (G.toks[i].self ? 6 : 2.5); lo = Math.min(lo, x - e); hi = Math.max(hi, x + e); });
+          const sh = lo < o.box[0] ? o.box[0] - lo : hi > o.box[2] ? o.box[2] - hi : 0;
+          if (sh && Math.abs(sh) <= step * 1.6) pos.forEach((p) => { p[0] += sh; });
+        }
+        let pen = si * .02 + hi * .5;
+        pos.forEach(([x, y, top], i) => {
+          const t = G.toks[i], f = foot(x, y, t, top);
+          if (o.box && (f[0] < o.box[0] || f[2] > o.box[2] || f[1] < o.box[1] || f[3] > o.box[3])) pen += 50;
+          for (const q of o.obst) if (q[4] !== G.c && hit(f, q, 1.5)) pen += q[5] || 10;
+          for (const q of placed) if (hit(f, q, 1)) pen += 12;
+          const dOwn = Math.hypot(x - nx, y - ny);
+          for (const k in o.nodes) { if (+k === G.c) continue; const P = o.nodes[k]; if (Math.hypot(x - P[0], y - P[1]) < dOwn + 14) pen += 30; }
+        });
+        if (pen < bestPen) { bestPen = pen; best = pos; }
+      }));
+      best.forEach(([x, y, top], i) => placed.push(foot(x, y, G.toks[i], top)));
+      out[G.c] = best.map(([x, y, top]) => [Math.round(x), Math.round(y), top]);
+    }
+    return out;
+  };
+  // a seat colour mixed toward white (the token's light disc)
+  function tintOf(col, k) {
+    let r = 128, g = 128, b = 128; const s = String(col || "").trim();
+    const m = /^#?([0-9a-f]{6})$/i.exec(s), m3 = /^#?([0-9a-f]{3})$/i.exec(s), mr = /rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/i.exec(s);
+    if (m) { r = parseInt(m[1].slice(0, 2), 16); g = parseInt(m[1].slice(2, 4), 16); b = parseInt(m[1].slice(4, 6), 16); }
+    else if (m3) { r = parseInt(m3[1][0] + m3[1][0], 16); g = parseInt(m3[1][1] + m3[1][1], 16); b = parseInt(m3[1][2] + m3[1][2], 16); }
+    else if (mr) { r = +mr[1]; g = +mr[2]; b = +mr[3]; }
+    const f = (v) => Math.round(v + (255 - v) * k);
+    return `rgb(${f(r)},${f(g)},${f(b)})`;
+  }
+  /* The token, drawn round its own centre. o = { col, self, r, dark, ship (the seat's ship at
+     its own scale), fit: [cx, cy, h] (that ship's centre and height), label, chased, pulse, lost,
+     top (a back-row token: its ribbon rides above it) } */
+  window.__pdxPhoneToken = window.__pdxPhoneToken || function (o) {
+    const r = o.r, ink = o.dark ? "#04050c" : "#140e06", col = o.col;
+    let s = `<g class="pc-piece pc-token">`;
+    if (o.pulse) s += `<circle class="pc-pulse" r="${r + 3}" fill="none" stroke="${col}" stroke-width="2.4"/>`;
+    if (o.self) s += `<circle r="${(r + 6.2).toFixed(1)}" fill="${ink}"/><circle r="${(r + 4.1).toFixed(1)}" fill="#fff8e4"/>`;
+    s += `<circle class="pc-disc-ink" r="${(r + 2.2).toFixed(1)}" fill="${ink}"/>`
+      + `<circle class="pc-disc" r="${r}" fill="${tintOf(col, o.dark ? .5 : .62)}"/>`
+      + `<circle r="${(r - 1.7).toFixed(1)}" fill="none" stroke="${col}" stroke-width="2.6"/>`;
+    const [fx, fy, fh] = o.fit || [0, 0, 20], k = (r * 1.42) / fh;
+    s += `<g transform="translate(${(-fx * k).toFixed(2)} ${(-fy * k - r * .14).toFixed(2)}) scale(${k.toFixed(3)})${o.lost ? " rotate(-24)" : ""}">${window.__pdxOutline(o.ship)}</g>`;
+    s += window.__pdxTag(o.label, col, o.top ? -r - 1 : r - 1, { self: o.self, dark: o.dark, chased: o.chased, fs: 9 });
+    return s + `</g>`;
+  };
+  // the STRING, short: from the century's edge to the token's edge, in the seat's colour on an
+  // ink core, with a knot on the century; none when the token stands on it. Drawn in the
+  // token's own frame: node = its century's centre relative to the token, nodeR = how far
+  // that century's own art reaches, r = the token's radius
+  window.__pdxPhoneLeash = window.__pdxPhoneLeash || function (node, nodeR, r, col, dark) {
+    const [nx, ny] = node, L = Math.hypot(nx, ny), nr = nodeR || 8, ink = dark ? "#04050c" : "#140e06";
+    if (L - r - nr <= 3) return "";
+    const ux = nx / L, uy = ny / L, x1 = (ux * (r + 1)).toFixed(1), y1 = (uy * (r + 1)).toFixed(1), x2 = (nx - ux * nr).toFixed(1), y2 = (ny - uy * nr).toFixed(1);
+    return `<g class="pc-leash" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${ink}" stroke-width="4.4" stroke-linecap="round"/>`
+      + `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`
+      + `<circle cx="${x2}" cy="${y2}" r="3.2" fill="${col}" stroke="${ink}" stroke-width="1.4"/></g>`;
+  };
+
   /* ── THE MERCHANT, READ ALOUD (shared by all three charts and the TAB layer) ──
      Players could not tell WHEN, WHY, HOW or WHERE the Merchant moves. The rule is written
      in plain words from public state (view.merchant_plan, server/serialize.py). The chart
@@ -781,7 +879,7 @@
   let PL = null;
   const PSHORT = { tim: "TIMELESS REACHES", con: "CONTEMPORARY ISLES", mod: "MODERN ISLES", lma: "LOW MEDIEVAL CHAIN", hma: "HIGH MEDIEVAL CHAIN", ant: "ANTIQVITY" };
   function phoneLayout() {
-    PL = PH.layout(W, H, { yzX: .86, yzDy: 2 });
+    PL = PH.layout(W, H, { yzX: .86, yzDy: 2, top: 14 });   // room above the first islands for the pieces
     BANDS.forEach((m, i) => {
       if (i < BANDS.length - 1) { const y0 = PL.band(i).bot, k = (i % 2 ? -5 : 5); SEAMS[i] = x => y0 + k * (x / W - .5); }
     });
@@ -795,7 +893,7 @@
   // a tab rides its sheet's top tear: clear of the straits on that tear (they sit ON it),
   // between the islands of the two seas it parts, off the top-right corner where the
   // voyages start (XXX), and (live, phoneTabsDodge) clear of the Merchant and cost tags
-  function tabBestX(i, hw, obst) {
+  function tabBestX(i, hw, obst, loose) {
     const yOf = (x2) => (i === 0 ? 22 : BANDS[i].top(x2) + 1);
     let x = Math.round(W / 2), best = -1e9;
     tabBestX.score = -1e9;
@@ -804,7 +902,9 @@
       for (let c = 1; c <= 30; c++) {
         const k = PL.rowOf[c], dx = Math.abs(x2 - POS[c][0]);
         if (k === i - .5) sc = Math.min(sc, dx - hw - 52);
-        else if (k === i || k === i - 1) sc = Math.min(sc, (dx - hw - 14) * .5 + 30);
+        // (loose, when it steps aside from a tag: an island counts only where it comes near
+        // the tear; the phone's rows stand well off it, the tab may pass above its shore)
+        else if ((k === i || k === i - 1) && (!loose || Math.abs(POS[c][1] - yOf(x2)) < islR(c) * .74 + 16)) sc = Math.min(sc, (dx - hw - 14) * .5 + 30);
       }
       if (i <= 1) sc = Math.min(sc, Math.abs(x2 - POS[30][0]) - hw - 70);
       if (obst) { const y2 = yOf(x2); for (const o of obst) if (y2 + 13 > o[1] && y2 - 13 < o[3]) sc = Math.min(sc, Math.max(o[0] - (x2 + hw), (x2 - hw) - o[2]) - 10); }
@@ -826,10 +926,17 @@
       const hit = LIVEOBST.some(o => x + hw + 10 > o[0] && x - hw - 10 < o[2] && y + 13 > o[1] && y - 13 < o[3]);
       let dx = 0, dy = 0, dim = false;
       if (hit) {
-        const nx = tabBestX(i, hw, LIVEOBST);
+        // how crowded its resting spot is with islands alone: a spot clear of the tags that
+        // is no more crowded than that is as good a home (on a phone the islands stand well
+        // off the tears, so the tab can always sit between them)
+        tabBestX(i, hw, null); const rest = Math.min(0, tabBestX.score);
+        const fixed = [];   // ...and it never steps onto the registry posts or the lighthouses
+        for (const k in (ANCH.post || {})) { const P = ANCH.post[k]; if (P) fixed.push([P[0] - 18, P[1] - 12, P[0] + 34, P[1] + 16]); }
+        for (const c of [10, 20]) { const L = ANCH.light && ANCH.light[c]; if (L) fixed.push([L[0] - 10, L[1] - 26, L[0] + 10, L[1] + 4]); }
+        const nx = tabBestX(i, hw, LIVEOBST.concat(fixed), true);
         // a clear spot along the tear: step there; none (the tear is crowded, every stretch
         // would cover an island or a tag): stay put and fade under what is on top of it
-        if (tabBestX.score >= 0) { dx = nx - x; dy = Math.round(i === 0 ? 22 : m.top(nx) + 1) - y; } else dim = true;
+        if (tabBestX.score >= rest - 4) { dx = nx - x; dy = Math.round(i === 0 ? 22 : m.top(nx) + 1) - y; } else dim = true;
       }
       const tr = dx || dy ? `translate(${dx} ${dy})` : "";
       if ((el.getAttribute("transform") || "") !== tr) { if (tr) el.setAttribute("transform", tr); else el.removeAttribute("transform"); }
@@ -1587,20 +1694,98 @@
       out += `<g clip-path="url(#${cid})">
         <rect x="0" y="0" width="${W}" height="${H}" fill="${m.paper[0]}"/>
         <rect x="0" y="0" width="${W}" height="${H}" fill="${m.paper[1]}"/>`;
-      out += waveRows(m.ink);
-      out += sharkWaters(m);
+      out += PHONE() ? `<g class="ph-deco">${waveRows(m.ink)}${sharkWaters(m)}</g>` : waveRows(m.ink) + sharkWaters(m);   // a phone: the water steps back a little (app.css .ph-deco)
       for (const c of m.islands) out += islandG(c);
       out += `</g>`;
       if (clip.hole) out += `<path d="${clip.hole}" fill="none" stroke="rgba(20,12,4,.6)" stroke-width="2.2"/>
         <path d="${clip.hole}" fill="none" stroke="rgba(255,246,220,.5)" stroke-width="1" transform="translate(-1.2 -1.5)"/>`;
     }
-    out += SHARKS;
-    out += foamSeams();
+    out += PHONE() ? `<g class="ph-deco">${SHARKS}${foamSeams()}</g>` : SHARKS + foamSeams();
     out += surveyRoute();
     for (const c of Object.keys(STRAITS)) out += islandG(+c);   // straits sit ON the seams, unclipped
     out += eraTabs();
     out += furniture();
     return { defs, out, violations };
+  }
+
+  /* ═══ THE PIECES ON A PHONE (window.__pdxPhonePlace / __pdxPhoneToken) ═══
+     A stack stands on its island's north beach, right above the numeral, its string a short
+     step to the shore; where the chart's edge or a tag leaves no room there (the top row,
+     the Merchant's own port) it hangs under the numeral or beside it. */
+  const SEA_TR = (t, n) => (n >= 4 ? (t.is_self ? 17 : 14) : (t.is_self ? 20 : 17));   // a crowd of four or more stands smaller
+  // where the Merchant's carrack rides for a century: above its island; on a phone's first
+  // row there is no sea above the island for his hull and tag, so he rides beside it, inland
+  function seaMerchAt(c) {
+    const [x, y] = POS[c];
+    if (PHONE() && y - 47 - 30 < 8) { const sd = x > W * .8 ? -1 : 1; return [x + sd * 60, y - 4]; }
+    return [x, y - 47];
+  }
+  const seaMerchBox = (c) => { const [ax, ay] = seaMerchAt(c); return [ax - 36, ay - 33, ax + 36, ay + 35]; };   // his hull and his MERCHANT tag
+  function seaNumPlate(c) {   // the numeral's box on the island (phone sizes)
+    const L = rom(c).length, fs = L <= 2 ? 22 : L <= 4 ? 19 : 16.5, hw = L * fs * .34 + 3, ny = POS[c][1] + fs * .36;
+    return [POS[c][0] - hw, ny - fs * .82, POS[c][0] + hw, ny + 3];
+  }
+  function seaPhoneBerths(byC, view) {
+    const nodes = {}, obst = [], groups = [];
+    for (let c = 1; c <= 30; c++) if (POS[c]) { nodes[c] = POS[c]; obst.push(seaNumPlate(c)); }
+    if (ANCH.well) { nodes[0] = ANCH.well; obst.push([ANCH.well[0] - 30, ANCH.well[1] - 26, ANCH.well[0] + 30, ANCH.well[1] + 46]); }
+    if (mode && mode.kind === "travel") for (let c = 1; c <= 30; c++) {   // a voyage's cost tags (costTag)
+      const d = Math.abs(c - mode.self); if (d === 0 || d > mode.max || !POS[c]) continue;
+      const [ix, iy] = POS[c]; let ty = iy - islR(c) * .74 - 24; if (ty < 30) ty = iy + islR(c) * .74 + 26;
+      obst.push([ix - 36, ty - 17, ix + 36, ty + 13]);
+    }
+    for (const id in ANCH.tab) { const T = ANCH.tab[id]; obst.push([T.spot[0] - T.hw - 6, T.spot[1] - 11, T.spot[0] + T.hw + 6, T.spot[1] + 11]); }
+    for (const k in (ANCH.post || {})) { const P = ANCH.post[k]; if (P) obst.push([P[0] - 16, P[1] - 10, P[0] + 16, P[1] + 14]); }
+    for (const c of [10, 20]) { const L = ANCH.light && ANCH.light[c]; if (L) obst.push([L[0] - 8, L[1] - 24, L[0] + 8, L[1] + 4, c]); }
+    const mc = R.merchantShown != null ? R.merchantShown : view.merchant_century;
+    if (POS[mc]) obst.push(seaMerchBox(mc));   // his hull and tag
+    // the delivery flags on the beaches: a stack steps aside rather than hide one, if it can
+    for (const t of view.travelers) {
+      let k2 = 0;
+      for (const card of (t.is_self ? (t.hand || []) : (t.equipment || []))) {
+        const c = card.delivery_century; if (c == null || !POS[c]) continue;
+        const fx = POS[c][0] + (t.is_self ? -4 : 8 + k2 * 8), fy = POS[c][1] - islR(c) * .74 + 3; if (!t.is_self) k2++;
+        obst.push([fx - 2, fy - 23, fx + 15, fy + 3, undefined, 6]);
+      }
+    }
+    for (const [cs, ts] of Object.entries(byC)) {
+      const c = +cs; if (!POS[c]) continue;
+      ts.sort((a, b) => (a.is_self ? 1 : 0) - (b.is_self ? 1 : 0));   // mine is drawn last, in front
+      const rM = Math.max(...ts.map(t => SEA_TR(t, ts.length))), pl = seaNumPlate(c), y = POS[c][1], hw = (pl[2] - pl[0]) / 2;
+      const up = pl[1] - y - 2 - rM - 6, down = pl[3] - y + 2 + rM + 3, side = hw + rM + 7;
+      groups.push({ c, node: POS[c], toks: ts.map(t => ({ r: SEA_TR(t, ts.length), self: t.is_self })),
+        spots: [[0, up, -1], [0, down, 1], [-side * .75, up * .8, -1], [side * .75, up * .8, -1], [-side, -4, -1], [side, -4, -1]] });
+    }
+    return window.__pdxPhonePlace({ groups, nodes, obst, box: [12, 8, W - 12, H - 8], below: 6 });
+  }
+  // the string ends on the island just clear of its numeral, on the token's side
+  function seaLeashR(c, bx, by) {
+    const pl = seaNumPlate(c), [x, y] = POS[c], dx = bx - x, dy = by - y;
+    if (Math.abs(dy) >= Math.abs(dx) * .6) return (dy < 0 ? y - pl[1] : pl[3] - y) + 3;
+    return (pl[2] - pl[0]) / 2 + 3;
+  }
+  function seaPhoneStack(c, ts, at, view) {
+    const [x, y] = POS[c], chase = view.merchant_plan && view.merchant_plan.target_seat;
+    const pcPos = R.pcPos || (R.pcPos = {}), memo = R.pcAt || (R.pcAt = {});
+    let g = "";
+    ts.forEach((t, i) => {
+      const col = seatColor(t.name), [bx, by] = at && at[i] ? at[i] : [x, y - 36];
+      const dead = t.is_terminated && t.awaiting_respawn, st = t.statuses || [];
+      const ghost = st.includes("terminated") && t.century >= 24, burst = st.includes("exploded");
+      const hunted = chase === t.name && view.merchant_century !== t.century;
+      const r = SEA_TR(t, ts.length), top = !!(at && at[i] && at[i][2]);
+      pcPos[t.name] = [bx, by];
+      LIVEOBST.push([bx - r - 3, by - r - 3, bx + r + 3, by + r + 7]);   // a sea tab steps aside from a token too
+      const pulse = t.is_self && memo[t.name] != null && memo[t.name] !== c;
+      if (t.is_self) memo[t.name] = c;
+      const em = window.__pdxEmanata(t, col, R.em || (R.em = {}), -(r + (t.is_self ? 7 : 3) + (top ? 20 : 11)));
+      g += `<g class="sea-fixg pc-piece-g pc-ph${t.is_self ? " pc-self" : ""}${ghost ? " sea-ghost": ""}${em.cls}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self ? " (you)": ""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.booms}/12 booms${t.is_wanted ? " · WANTED": ""}${hunted ? " · the Merchant is chasing you (richest traveller not in his century)": ""}${burst ? " · boiler burst, cannot sail or activate this hour": ""}${ghost ? " · sheltered beyond time, the Reaches spare the terminated": ""}${dead && !ghost ? " · lost at sea (respawning)": ""}`)}" opacity="${dead && !ghost ? .55: 1}">`
+        + `<g transform="translate(${bx} ${by})">${window.__pdxPhoneLeash([x - bx, y - by], seaLeashR(c, bx, by), r, col, false)}<g class="sea-fix-boat">`
+        + window.__pdxPhoneToken({ col, self: t.is_self, r, dark: false, ship: rigSVG(0, col, { ghost, burst }), fit: [-.7, -2.3, 26.5],
+          label: t.is_self ? "YOU" : esc(window.__pdxInitials(t.name)), chased: hunted, pulse, lost: dead && !ghost, top })
+        + `</g>${em.g}</g></g>`;
+    });
+    return g;
   }
 
   /* ═══ LIVE LAYER ═══ */
@@ -1686,10 +1871,12 @@
       const sc = R.shown[t.name] != null ? R.shown[t.name] : t.century;
       (byC[sc] = byC[sc] || []).push(t);
     }
+    const PHT = PHONE() ? seaPhoneBerths(byC, view) : null;   // a phone: tokens on their islands
     for (const [cStr, ts] of Object.entries(byC)) {
       const c = +cStr; if (!POS[c]) continue;
       const [x, y] = POS[c];
       const rx = islR(c), ry = rx * .74;
+      if (PHT) { g += seaPhoneStack(c, ts, PHT[c], view); continue; }
       if (ts.length > 1) g += `<circle data-tip="shared anchorage, agreements possible" cx="${x}" cy="${y}" r="${rx + 16}" fill="none" stroke="#8a6a3a"
         stroke-width="1.2" stroke-dasharray="4 4" opacity=".7"/>`;
       // BERTHS, RE-CUT FOR THE AURA. The hulls used to KISS the shore at a single fixed
@@ -1839,7 +2026,8 @@
     const mc = R.merchantShown != null ? R.merchantShown : view.merchant_century;
     if (POS[mc]) {
       const [x, y] = POS[mc];
-      if (PHONE()) LIVEOBST.push([x - 36, y - 80, x + 36, y - 12]);   // his hull and his MERCHANT tag
+      if (PHONE()) LIVEOBST.push(seaMerchBox(mc));   // his hull and his MERCHANT tag
+      const [mx, my] = seaMerchAt(mc);
       const dice = view.merchant_movement_dice || 1;
       const dir = R.merchantLast ? Math.sign((R.merchantLast.to || mc) - (R.merchantLast.from || mc)) || 1 : 1;
       // the sail wears one RED STRIPE per movement die (1..3), speed you can read
@@ -1847,7 +2035,7 @@
       const bands = Math.min(3, dice);
       for (let i = 0; i < bands; i++)
         stripes += `<rect x="-9.5" y="${(-18 + (i + .5) * 19 / bands).toFixed(1)}" width="19.5" height="${(19 / bands * .42).toFixed(1)}" rx="1" fill="#8c3b2a" opacity=".9"/>`;
-      g += `<g class="sea-shipg pc-merch-live" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${x} ${y - 47})">
+      g += `<g class="sea-shipg pc-merch-live" data-tip="${esc(`the Merchant's carrack, ${dice} sail${dice > 1 ? "s": ""} (${dice}d3 speed)${R.merchantLast && R.merchantLast.target ? " · hunting " + R.merchantLast.target: ""} · anchored at ${rom(mc)}`)}" transform="translate(${mx} ${my})">
         ${window.__pdxMerchPlate({ w: 46, base: 33, dark: false })}
         <g class="sh-slide"><g transform="scale(${dir < 0 ? -1 : 1} 1)" class="sea-ship"><g class="sh-bob">
         ${window.__pdxOutline(`        <g transform="translate(0 12) scale(.8)">
@@ -1878,7 +2066,7 @@
       // the chase line and the reach beside him (window.__pdxMerchantHUD)
       if (view.merchant_plan) {
         const pl = view.merchant_plan, tt = pl.target_seat && view.travelers.find(t2 => t2.name === pl.target_seat);
-        g += window.__pdxMerchantHUD({ v: view, m: [x, y - 47 + 13],
+        g += window.__pdxMerchantHUD({ v: view, m: [mx, my + 13],
           tpos: tt && tt.century !== mc && R.pcPos && R.pcPos[tt.name] || null,
           pos: c2 => POS[c2] || null, dark: false });
       }
@@ -2382,7 +2570,7 @@
             const piece = liveG.querySelector(".sea-shipg.pc-merch-live");
             snd("chart_creak");
             window.__pdxMerchantTrip({ layer: fxG || liveG, piece, pos: c2 => POS[c2] || null,
-              m0: [POS[from][0], POS[from][1] - 47], cdy: 13, stopDy: 58, p, W, H, dark: false,
+              m0: seaMerchAt(from), anchor: c2 => (POS[c2] ? seaMerchAt(c2) : null), cdy: 13, stopDy: 58, p, W, H, dark: false,
               tpos: (p.target && R.pcPos && R.pcPos[p.target]) || null,
               onLand: () => { R.merchantShown = to; R.prevShip = to; R.mPend = { c: to, t: performance.now() }; renderNow(); snd("chart_bell"); },
               onDone: () => done(60) });
@@ -2483,7 +2671,9 @@
     // and tile raster of the chart three times a second on a table where nothing moved.
     const liveHTML = liveLayer() + highlights();
     const liveSame = !force && liveG.__pdxHTML === liveHTML;
-    if (!liveSame) { liveG.innerHTML = liveHTML; liveG.__pdxHTML = liveHTML; phoneTabsDodge(); }
+    if (!liveSame) { liveG.innerHTML = liveHTML; liveG.__pdxHTML = liveHTML; phoneTabsDodge();
+      // a phone: the pieces stand above everything on the chart (lit ports and tags included)
+      if (PHONE()) for (const n of liveG.querySelectorAll(":scope > .pc-ph")) liveG.appendChild(n); }
     if (!liveSame && R.ordFlip && R.ordFlip.prev && !REDUCED) {   // the slate re-orders with a slide
       const { prev, next } = R.ordFlip;
       liveG.querySelectorAll("[data-ordrow]").forEach(row => {

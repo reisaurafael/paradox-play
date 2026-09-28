@@ -150,6 +150,40 @@
     const st=ghost?col:"rgba(255,255,255,.6)", body=ghost?"none":col, dash=ghost?' stroke-dasharray="2 2"':"";
     return `<g class="cc-ship${dead?" cc-dead":""}"><path d="M0 -10 L7 7 L0 3 L-7 7 Z" fill="${body}" stroke="${st}" stroke-width="1.1"${dash}/>${ghost?"":`<circle cy="-1" r="2" fill="#fff" opacity=".85"/>`}</g>`;
   }
+  /* ═══ THE PIECES ON A PHONE (board_draft.js window.__pdxPhonePlace / __pdxPhoneToken) ═══
+     A stack stands ON its star, just above the numeral plate (a row of tokens, mine in
+     front); where the plate, a tag or the Merchant leaves no room it steps beside the star. */
+  const PH_TR=(t,n)=>(n>=4?(t.is_self?17:14):(t.is_self?20:17));   // a crowd of four or more stands smaller
+  function phonePlate(c){ const [px,py]=POS[c], GR=30*((c===10||c===20)?1.5:DUAL[c]?1.28:1), L=rom(c).length; return [px-(L*6.3+6), py+Math.min(GR,36)*.42, px+(L*6.3+6), py+Math.min(GR,36)*.42+21]; }
+  function phoneBerths(byC,view){
+    const nodes={}, obst=[], groups=[];
+    for(let c=1;c<=30;c++) if(POS[c]){ nodes[c]=POS[c]; obst.push(phonePlate(c)); }
+    if(SUN){ nodes[0]=SUN; obst.push([SUN[0]-50,SUN[1]-34,SUN[0]+50,SUN[1]+46]); }
+    for(const q of (PLNAMES||[])) obst.push(q);
+    for(const k in PHB){ const P=PHB[k]; if(P) obst.push([P[0]-18,P[1]-14,P[0]+18,P[1]+14]); }   // the vaults
+    if(POS[11]) obst.push([POS[11][0]+11,POS[11][1]-36,POS[11][0]+49,POS[11][1]+4,11]);   // the ghost market (its own century may stand on it)
+    if(R.mAnchor) obst.push([R.mAnchor[0]-26,R.mAnchor[1]-38,R.mAnchor[0]+26,R.mAnchor[1]+20]);   // the Merchant and his tag
+    for(const t of view.travelers){ let k2=0; for(const card of (t.is_self?(t.hand||[]):(t.equipment||[]))){ const c=card.delivery_century; if(c==null||!POS[c]) continue; const [fx,fy]=t.is_self?[POS[c][0],POS[c][1]-worldR(c)*.5]:[POS[c][0]+worldR(c)*.5+(k2++)*5,POS[c][1]-worldR(c)*.4]; obst.push([fx-8,fy-5,fx+8,fy+6,undefined,6]); } }   // the delivery flags: a stack steps aside rather than hide one, if it can
+    const cand=mode&&mode.kind==="travel"?travelCandidates():null;
+    if(cand) for(const c of cand){ if(c===mode.self||!POS[c]) continue; const [qx,qy]=POS[c]; let ty=qy-(worldR(c)+16); if(ty<30) ty=qy+worldR(c)+26; obst.push([qx-30,ty-16,qx+30,ty+12]); }   // a voyage's cost tags
+    for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue;
+      ts.sort((a,b)=>(a.is_self?1:0)-(b.is_self?1:0));   // mine is drawn last, in front
+      const rM=Math.max(...ts.map(t=>PH_TR(t,ts.length))), y=POS[c][1], on=phonePlate(c)[1]-y-2-rM-6, side=16+rM;
+      groups.push({c,node:POS[c],toks:ts.map(t=>({r:PH_TR(t,ts.length),self:t.is_self})),spots:[[0,on,-1],[-side*.6,on-10,-1],[side*.6,on-10,-1],[-side-8,on+4,-1],[side+8,on+4,-1],[0,on-22,-1]]}); }
+    return window.__pdxPhonePlace({groups,nodes,obst,box:[12,5,W-12,H-10],below:6});
+  }
+  function phoneStack(c,ts,at,view){
+    const [x,y]=POS[c], chase=view.merchant_plan&&view.merchant_plan.target_seat, memo=R.pcAt||(R.pcAt={}); let g="";
+    ts.forEach((t,i)=>{ const col=seatColor(t.name), [bx,by]=at&&at[i]?at[i]:[x,y-14]; const st=t.statuses||[]; const ghost=st.includes("terminated")&&t.century>=24; const dead=t.is_terminated&&t.awaiting_respawn; const hunted=chase===t.name&&view.merchant_century!==t.century;
+      const r=PH_TR(t,ts.length), top=!!(at&&at[i]&&at[i][2]); R.pcPos[t.name]=[bx,by];
+      const pulse=t.is_self&&memo[t.name]!=null&&memo[t.name]!==c; if(t.is_self) memo[t.name]=c;
+      const em=window.__pdxEmanata?window.__pdxEmanata(t,col,R.em||(R.em={}),-(r+(t.is_self?7:3)+(top?20:11))):{cls:"",g:""};
+      g+=`<g class="cc-shipg pc-piece-g pc-ph${t.is_self?" pc-self":""}${dead&&!ghost?" cc-lost":""}${em.cls}" data-hlseat="${esc(t.name)}" data-seat="${t.name}" data-tip="${esc(`${t.name}${t.is_self?" (you)":""}, ${rom(c)} · ${t.energy} energy · ${t.gold} gold · ${t.contract_points||0} CP${t.is_wanted?" · WANTED":""}${hunted?" · the Merchant is chasing you (richest traveller not in his century)":""}${ghost?" · sheltered in the Reaches (terminated)":""}${dead&&!ghost?" · lost, recompiling":""}`)}" transform="translate(${bx} ${by})">`
+        +window.__pdxPhoneLeash([x-bx,y-by],9,r,col,true)
+        +window.__pdxPhoneToken({col,self:t.is_self,r,dark:true,ship:shipSVG(seatShip(t.name),col,{ghost,dead:dead&&!ghost}),fit:[0,-1.5,17],label:t.is_self?"YOU":esc(initials(t.name)),chased:hunted,pulse,lost:dead&&!ghost,top})
+        +`${em.g}</g>`; });
+    return g;
+  }
   function worldG(c){
     const [x,y]=POS[c], eras=ERAS_OF(c), dual=eras.length===2, col=HUE[singleEra(c)];
     const lit=R.restored.has(c), broken=R.monsters.has(c)&&!lit, wreck=R.wrecks.has(c);
@@ -449,10 +483,12 @@
     defs+=`<radialGradient id="ccDust"><stop offset="0" stop-color="rgba(150,120,96,0)"/><stop offset=".62" stop-color="rgba(150,120,96,.06)"/><stop offset=".88" stop-color="rgba(168,136,104,.16)"/><stop offset="1" stop-color="rgba(120,96,72,0)"/></radialGradient>`;
     ["tim","con","mod","lma","hma","ant"].forEach(e=>{ defs+=`<radialGradient id="ccStar${e}"><stop offset="0" stop-color="${HUE[e]}" stop-opacity=".95"/><stop offset=".35" stop-color="${HUE[e]}" stop-opacity=".4"/><stop offset="1" stop-color="${HUE[e]}" stop-opacity="0"/></radialGradient><radialGradient id="ccNeb${e}"><stop offset="0" stop-color="${HUE[e]}" stop-opacity=".74"/><stop offset=".32" stop-color="${HUE[e]}" stop-opacity=".36"/><stop offset=".68" stop-color="${HUE[e]}" stop-opacity=".11"/><stop offset="1" stop-color="${HUE[e]}" stop-opacity="0"/></radialGradient><filter id="ccNebF${e}" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="4" seed="${NEBSEED[e]}" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="42" xChannelSelector="R" yChannelSelector="G" result="disp"/><feGaussianBlur in="disp" stdDeviation="8" result="body"/><feColorMatrix in="disp" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 14 -0.55" result="solid"/><feMorphology in="solid" operator="dilate" radius="1.5" result="dil"/><feComposite in="dil" in2="solid" operator="out" result="ring"/><feFlood flood-color="${HUE[e]}" flood-opacity=".98" result="fc"/><feComposite in="fc" in2="ring" operator="in" result="rim"/><feGaussianBlur in="rim" stdDeviation=".55" result="rimS"/><feMerge><feMergeNode in="body"/><feMergeNode in="rimS"/></feMerge></filter>`; });
     let out=`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#ccBg)"/>`;
-    out+=`<g class="cc-neblayer">${eraZones()}</g>`;
-    out+=starfield();
+    // a phone: the sky's decoration steps back a little so the pieces and numerals read first
+    // (app.css .ph-deco); the drift line, the stars of the centuries and the belt's name stay
+    out+=`<g class="cc-neblayer${PHONE()?" ph-deco":""}">${eraZones()}</g>`;
+    out+=PHONE()?`<g class="ph-deco">${starfield()}</g>`:starfield();
     out+=current();
-    out+=overdriveZone();
+    out+=PHONE()?`<g class="ph-deco ph-deco-soft">${overdriveZone()}</g>`:overdriveZone();
     for(let c=1;c<=30;c++) out+=worldG(c);
     out+=PHONE()?phoneNames():eraNames();
     out+=deadSun();
@@ -522,7 +558,9 @@
     // travelers (ships) at their worlds
     R.pcPos={};
     const byC={}; for(const t of view.travelers){ const sc=R.shown[t.name]!=null?R.shown[t.name]:t.century; (byC[sc]=byC[sc]||[]).push(t); }
+    const PHT=PHONE()?phoneBerths(byC,view):null;   // a phone: tokens standing on their stars
     for(const [cs,ts] of Object.entries(byC)){ const c=+cs; if(!POS[c]) continue; const [x,y]=POS[c], R0=worldR(c);
+      if(PHT){ g+=phoneStack(c,ts,PHT[c],view); continue; }
       if(ts.length>1) g+=`<circle cx="${x}" cy="${y}" r="${R0+18}" fill="none" stroke="#8a6a3a" stroke-width="1" stroke-dasharray="3 4" opacity=".55" data-tip="shared orbit, agreements possible"/>`;
       // BERTHS, RE-CUT FOR THE AURA. These were laid out for a token 1.2x tall with no
       // ring: four diagonals at ~16px from the star's heart. The aura is r=17.5, so at
@@ -732,7 +770,7 @@
     // the live layer is rewritten only when it changed (the 300ms poll calls this forever;
     // rebuilding it each time re-rastered the chart three times a second at rest)
     const liveHTML=liveLayer(), liveSame=!force&&lg.__pdxHTML===liveHTML;
-    if(!liveSame){ lg.innerHTML=liveHTML; lg.__pdxHTML=liveHTML; }
+    if(!liveSame){ lg.innerHTML=liveHTML; lg.__pdxHTML=liveHTML; if(PHONE()) for(const n of lg.querySelectorAll(":scope > .pc-ph")) lg.appendChild(n); }   // a phone: the pieces above everything on the chart
     const top=r.querySelector(".cplot-sing .cc-top"); if(top&&!liveSame){ top.replaceChildren(); const ord=lg.querySelector(".cc-ord"); if(ord) top.appendChild(ord); }
     const cmd=r.querySelector(".cplot-sing .cc-cmd"); if(cmd){ const t=commandText(); if(cmd.__pdxHTML!==t){ cmd.innerHTML=t; cmd.__pdxHTML=t; } cmd.classList.toggle("on",!!t); }
     const svg=r.querySelector(".cplot-sing .pc-star"); if(svg) svg.classList.toggle("mode-pick",!!mode);

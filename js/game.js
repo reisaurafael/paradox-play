@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609280617";
-import { audio } from "./audio.js?202609280617";
+import { icon } from "./icons.js?202609280647";
+import { audio } from "./audio.js?202609280647";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609280617";
-import { comic } from "./comic.js?202609280617";
-import { fx } from "./fx.js?202609280617";
-import { CatEngine } from "./cat.js?202609280617";
-import { tutorials } from "./tutorial.js?202609280617";
-import { profile } from "./profile.js?202609280617";
-import { Camera } from "./camera.js?202609280617";
+import { juice } from "./juice.js?202609280647";
+import { comic } from "./comic.js?202609280647";
+import { fx } from "./fx.js?202609280647";
+import { CatEngine } from "./cat.js?202609280647";
+import { tutorials } from "./tutorial.js?202609280647";
+import { profile } from "./profile.js?202609280647";
+import { Camera } from "./camera.js?202609280647";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609280617";
+} from "./util.js?202609280647";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -3928,7 +3928,10 @@ export class Game {
           Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2));
         return !!(hit && (hit === el || el.contains(hit) || hit.contains(el)));
       });
-      if (!reachable) {
+      // on a phone the cards lie on another page until he turns to it (its key is pinged):
+      // drawn is enough there, he reaches them himself
+      const phonePage = document.documentElement.classList.contains("pdx-m-on") && targets.length > 0;
+      if (!reachable && !phonePage) {
         console.error("[target] no card of the selection is reachable on screen ("
           + targets.length + " drawn), falling back to the popup");
         this.selectReq = null;
@@ -4565,7 +4568,9 @@ export class Game {
         if (payload.seat === this.seat) {
           this.showOverload([...(this._ovlShow || []), ...(payload.functions || [])]);
           // the comic OVERLOAD! and SHUT stamp land first (fx.js), then HELA explains
-          if (!this._skip && !document.hidden) { try { await fx.overload(payload); } catch (e) {} }
+          // the OVERLOAD! burst and SHUT stamp teach it in the tutorial; in a normal match the shut
+          // row's red bar says it (the owner, 28/09)
+          if (!this._skip && !document.hidden && document.body.classList.contains("tut")) { try { await fx.overload(payload); } catch (e) {} }
           // HELA's overload window is the tutorial's lesson only (the owner, 28/09): in a normal
           // match the shut row's red bar and its SHUT stamp say it
           const told = document.body.classList.contains("tut") && window.__pdxHelp && window.__pdxHelp.overload(payload.functions, { first: !this._ovlTold });

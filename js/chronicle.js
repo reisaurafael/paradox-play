@@ -49,10 +49,10 @@
      window.__pdxChronicle.snapshot()   the stable shape above
      window.__pdxChronicle.tutorialDone()     Learn to Play finished
    ========================================================================= */
-import { profile } from "./profile.js?202609280617";
-import { audio } from "./audio.js?202609280617";
-import { roman, esc, seatColor } from "./util.js?202609280617";
-import { THEMES, THEME_BY_ID, TIER_NAME, applyTheme } from "./theme.js?202609280617";
+import { profile } from "./profile.js?202609280647";
+import { audio } from "./audio.js?202609280647";
+import { roman, esc, seatColor } from "./util.js?202609280647";
+import { THEMES, THEME_BY_ID, TIER_NAME, applyTheme } from "./theme.js?202609280647";
 
 const PANEL = (() => {
   try { return parseInt(new URLSearchParams(location.search).get("panel")) || 0; } catch (e) { return 0; }
@@ -509,6 +509,9 @@ class Match {
     this.over = false; this.filed = false; this.won = false; this.reason = ""; this.margin = 0;
     this.counts = null;          // decided once the table is known (vs AI, not the tutorial)
     this.newRecords = []; this.missionsDone = []; this.questsDone = [];
+    // the match record (MATCH RECORDS below): what happened, Hour by Hour
+    this.startedAt = Date.now(); this.lines = []; this.dice = {}; this.noteKeys = new Set();
+    this.recId = null;
   }
   view() { return this.game && this.game.view; }
   decide() {
@@ -646,6 +649,7 @@ class Match {
           this.wantedAtEnd = !!(me && (me.is_wanted || (me.statuses || []).includes("wanted")));
         }
         this.won = !!p.winner && p.winner === me;
+        this.winnerName = String(p.winner || ""); this.lastScores = p.scores || {};
         this.reason = String(p.reason || "");
         const sc = p.scores || {};
         if (typeof sc[me] === "number") this.cp = sc[me];
@@ -740,9 +744,14 @@ function onEvent(kind, payload, game) {
   if (m.over && kind !== "game_over") return;
   if (m.over && m.filed) return;
   const p = payload || {};
+  try { jot(m, kind, p); } catch (e) {}
   m.on(kind, p);
   if (m.tutorial) {
-    if (kind === "game_over") tutorialDone();
+    if (kind === "game_over") {
+      if (tutorialDone()) m.questsDone.push("wake_call");
+      keepRecord(m);
+      watchResults(m);
+    }
     return;
   }
   // your look shows in every match you play (never in the tutorial's story)
@@ -762,6 +771,7 @@ function onEvent(kind, payload, game) {
     stamp("QUEST", quests[0].name, TIERS[quests[0].tier - 1].name + (gets.length ? ` · unlocks ${gets.join(", ")}` : ""), "quest");
   }
   else if (quests.length) stamp("QUESTS", `${quests.length} quests filed`, quests.map((q) => q.name).join(" · "), "quest");
+  if (final) keepRecord(m);
   if (done.length || quests.length || final) changed();
   if (final) watchResults(m);
 }
@@ -772,7 +782,9 @@ function tutorialDone() {
     save();
     stamp("QUEST", QUEST_BY_ID.wake_call.name, "First Steps · unlocks HELA's Eye", "quest");
     changed();
+    return true;
   }
+  return false;
 }
 
 /* ───────────────────────── the stamp in the match ─────────────────────────
@@ -866,6 +878,14 @@ function watchResults(m) {
 function resultBlock(m) {
   const box = document.createElement("div");
   box.className = "chr-result";
+  const recBtns = m.recId ? `<span class="cr-rec-btns"><button class="btn btn-ghost btn-sm cr-match" type="button">Match record</button><button class="btn btn-ghost btn-sm cr-print" type="button">Print / save as PDF</button></span>` : "";
+  if (m.tutorial) {
+    box.innerHTML = `<div class="cr-head"><span class="cr-kick">The Chronicle</span></div>
+      <p class="cr-note">This match is filed in your Chronicle, Hour by Hour.</p>
+      <div class="cr-foot">${recBtns}</div>`;
+    wireResult(box, m);
+    return box;
+  }
   const st = equipped("stamp"), rk = rank();
   const lines = [];
   // the orders and quests first (they are the news), then the records
@@ -881,10 +901,18 @@ function resultBlock(m) {
     <ul class="cr-list">${lines.slice(0, 8).join("")}${lines.length > 8 ? `<li class="cr-more">and ${lines.length - 8} more in the Chronicle</li>` : ""}</ul>
     <div class="cr-foot">
       <span class="chr-inkstamp chr-ink-${st.tone}" aria-label="${esc(st.name)}">${esc(st.name)}</span>
+      ${recBtns}
       <button class="btn btn-ghost btn-sm cr-open" type="button">Open the Chronicle</button>
     </div>`;
   box.querySelector(".cr-open").addEventListener("click", () => open());
+  wireResult(box, m);
   return box;
+}
+
+function wireResult(box, m) {
+  const v = box.querySelector(".cr-match"), pr = box.querySelector(".cr-print");
+  if (v) v.addEventListener("click", () => openMatch(m.recId));
+  if (pr) pr.addEventListener("click", () => { openMatch(m.recId); printMatch(); });
 }
 
 /* ───────────────────────────── THE COLOURS ─────────────────────────────
@@ -1074,6 +1102,7 @@ function onPageKey(e) {
 function onPageClick(e) {
   const t = e.target;
   if (t === pageEl || t.closest(".chr-close")) { close(); return; }
+  if (onPastClick(t)) return;
   const eq = t.closest("[data-equip]");
   if (eq && !eq.disabled) {
     const c = COSMETIC_BY_ID[eq.dataset.equip];
@@ -1184,6 +1213,10 @@ function renderPage() {
             <span class="chr-table chr-streak"><b>${D.streak.best}</b><small>best streak</small></span>
           </div>
           <p class="chr-totals">${T.matches} matches · ${T.wins} wins · ${T.relics} relics home · ${T.damage} paradox damage · ${T.wrecks} rivals wrecked · ${T.missions} orders done · ${questsGot} of ${QUESTS.length} quests</p>
+        </section>
+        <section class="chr-block chr-pastbox" aria-labelledby="chr-past-h">
+          <h3 id="chr-past-h">Past matches <span>Each match, Hour by Hour</span></h3>
+          ${pastMatchesHtml()}
         </section>
         <section class="chr-block chr-share" aria-labelledby="chr-share-h">
           <h3 id="chr-share-h">Your record card</h3>
@@ -1378,6 +1411,414 @@ async function copyCard() {
   }
 }
 
+/* ───────────────────────────── MATCH RECORDS ─────────────────────────────
+   The owner: "a way of saving match histories, like printing the whole
+   Chronicle, but just for one match." Every finished match against the AI and
+   every Learn to Play is filed as a record: the table, how it ended, an account
+   Hour by Hour (your dice, the voyages, the paradox hits, purchases, deliveries,
+   contracts, the Herald's headlines, HELA's notes), everyone's final state and
+   what the match earned. It is drawn as a comic-paper document; the page prints
+   clean (Print / save as PDF), downloads as one self-contained .html file or as
+   a picture, and can be deleted. Kept in localStorage under its own versioned
+   key, the last MATCH_KEEP matches, the oldest dropped first.
+
+   The record's shape (v 1, compact on purpose):
+     { v, id, start, at, mode: "solo"|"tutorial", me, n, hours, won, winner, reason,
+       table: [{ n, c, me, ai }], persona: { build, skin } | null, theme,
+       final: [{ n, cp, e, g, c, rel, eq: [names], st: [statuses] }],
+       earned: { rec: [[recordId, value]], mis: [missionIds], qst: [questIds] },
+       h: [[hour, dice | null, [[cls, text], ...]], ...] }
+     dice = [matrix 3x3 of generator values, escape value]. Texts are plain text. */
+const MATCH_KEY = "paradoxo.matches.v1" + (PANEL > 1 ? ".panel" + PANEL : "");
+const MATCH_KEEP = 20, LINES_PER_HOUR = 48, NOTES_PER_MATCH = 80;
+const MODULE_NAME = { 4: "Future", 5: "Present", 6: "Past" };
+const FN_NAME = ["Recharge", "Paradox", "Travel"];
+
+function plain(html) {
+  const s0 = String(html == null ? "" : html);
+  if (!/[<&]/.test(s0)) return s0.slice(0, 300);
+  try { return (new DOMParser().parseFromString(s0, "text/html").body.textContent || "").replace(/\s+/g, " ").trim().slice(0, 300); }
+  catch (e) { return s0.replace(/<[^>]*>/g, "").slice(0, 300); }
+}
+function who(m, name) { return name === m.me ? "You" : String(name || "Someone"); }
+function cardName(m, n) { try { return m.game.nameEn ? m.game.nameEn(n) : n; } catch (e) { return n; } }
+function add(m, cls, text) {
+  const h = m.hour;
+  const count = m.lines.reduce((k, l) => k + (l[0] === h ? 1 : 0), 0);
+  if (count >= LINES_PER_HOUR) return;
+  m.lines.push([h, cls, String(text).slice(0, 300)]);
+}
+
+// one line per thing worth reading later; everyone's moves, yours in the first person
+function jot(m, kind, p) {
+  hookSources();
+  const W = (n) => who(m, n), C = (n) => cardName(m, n);
+  // "the Oil Lamp", never "the The First Smartphone"
+  const T = (n) => { const c = String(C(n) || ""); return /^the /i.test(c) ? c.replace(/^the /i, "the ") : /'s\b/.test(c) ? c : "the " + c; };
+  const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  switch (kind) {
+    case "allocations_revealed": {
+      const a = p.allocations && p.allocations[m.me];
+      if (a && a.matrix) m.dice[m.hour] = [a.matrix.map((r) => r.slice(0, 3)), num(a.escape_valve)];
+      break;
+    }
+    case "delivered": add(m, "deliver", `${W(p.seat)} delivered ${T(p.card)} to Century ${roman(num(p.century))}.`); break;
+    case "card_bought":
+      add(m, "market", p.stolen ? `${W(p.seat)} took ${T(p.card)} for nothing, a theft.`
+        : `${W(p.seat)} bought ${T(p.card)}${p.secret ? " at the Secret Market" : ""} for ${num(p.cost)} gold.`); break;
+    case "card_renewed": add(m, "market", `${W(p.seat)} renewed ${T(p.card)} on the Merchant's shelf (${num(p.cost)} gold).`); break;
+    case "briefcase_acquired": add(m, "market", `${W(p.seat)} bought a Temporal Briefcase.`); break;
+    case "declared": add(m, "market", `${W(p.seat)} paid off the warrant.`); break;
+    case "traveled": add(m, "travel", `${W(p.seat)} sailed from Century ${roman(num(p.from))} to ${num(p.to) === 0 ? "Year Zero" : "Century " + roman(num(p.to))}.`); break;
+    case "paradox_resolved": {
+      const hits = p.hits || [];
+      if (p.module === "chaos_reward") {
+        add(m, "paradox", `Chaos contract${m.roller ? ` by ${W(m.roller)}` : ""}: a paradox on ${hits.map((h) => W(h.seat)).join(", ") || "no one"}.`);
+        break;
+      }
+      const col = num(p.module) - 4, A = m.alloc || {};
+      const fired = Object.keys(A).filter((s) => A[s][1] && A[s][1][col] > 0).map(W);
+      const hit = hits.map((h) => `${W(h.seat)} -${num(h.damage)}`).join(", ");
+      if (hit) add(m, "paradox", `Paradox, ${MODULE_NAME[p.module] || "module " + p.module}${fired.length ? ` (fired by ${fired.join(", ")})` : ""}: ${hit}.`);
+      break;
+    }
+    case "exploded": add(m, "danger", `${W(p.seat)}: the motor exploded${p.energy_lost ? ` (-${num(p.energy_lost)} energy)` : ""}.`); break;
+    case "overloaded":
+      if (p.seat === m.me) add(m, "machine", `You overloaded ${(p.functions || []).map((f) => FN_NAME[f] || f).join(" and ") || "a function"}: shut next Hour.`); break;
+    case "valve_reward": if (p.seat === m.me) add(m, "machine", "Your reactor filled through the calm escape valve."); break;
+    case "reward_resolved": add(m, "contract", `${W(p.seat)} signed a ${p.category} contract (${["", "I", "II", "III"][num(p.roll)] || p.roll}).`); break;
+    case "milestone": add(m, "cp", `${W(p.seat)} claimed the millennium milestone at Century ${roman(num(p.century))}.`); break;
+    case "wanted": add(m, "danger", `${W(p.seat)} ${p.seat === m.me ? "are" : "is"} declared WANTED.`); break;
+    case "terminated": add(m, "danger", `${W(p.seat)} ${p.seat === m.me ? "were" : "was"} terminated${p.by && p.by !== p.seat ? ` by ${W(p.by)}` : ""}.`); break;
+    case "respawned": add(m, "travel", `${W(p.seat)} came back at Century ${roman(num(p.century))}.`); break;
+    case "secret_market_opened": add(m, "market", `The Secret Market opened at Century XI${p.by ? `, found by ${W(p.by)}` : ""}.`); break;
+    case "activated": add(m, "item", `${W(p.seat)} used ${T(p.card)}.`); break;
+    case "card_stolen": add(m, "danger", `${W(p.seat)} stole ${T(p.card)}${p.from ? ` from ${W(p.from)}` : ""}.`); break;
+    case "card_destroyed": add(m, "danger", `${cap(T(p.card))} was destroyed.`); break;
+    case "game_over": add(m, "end", `The match ends: ${W(p.winner)} ${p.winner === m.me ? "win" : "wins"}.`); break;
+    default: break;
+  }
+}
+
+// The Herald and HELA's notes are not game events: listen where they are filed
+// (cabin.js __helaFileNews, help.js __pdxHelp.note), passing every call through.
+function hookSources() {
+  try {
+    const fn = window.__helaFileNews;
+    if (typeof fn === "function" && !fn.__chr) {
+      const wrapped = function (item) {
+        try { if (M && !M.over && item && item.headline) add(M, "herald", `${plain(item.headline)}${item.sub ? ". " + plain(item.sub) : ""}`); } catch (e) {}
+        return fn.apply(this, arguments);
+      };
+      wrapped.__chr = true; window.__helaFileNews = wrapped;
+    }
+  } catch (e) {}
+  try {
+    const H = window.__pdxHelp;
+    if (H && typeof H.note === "function" && !H.note.__chr) {
+      const orig = H.note;
+      const wrapped = function (html, opt) {
+        try {
+          if (M && !M.over && M.noteKeys.size < NOTES_PER_MATCH) {
+            const t = plain(html && html.nodeType === 1 ? html.innerHTML : html), k = (opt && opt.key) || t;
+            // her narration of a voyage or a purchase is already a line of the Hour
+            const echo = /^[^.]{1,40} (sails?|buys?) /.test(t) && t.length < 90;
+            if (t && !echo && !M.noteKeys.has(k)) { M.noteKeys.add(k); add(M, "note", t); }
+          }
+        } catch (e) {}
+        return orig.apply(this, arguments);
+      };
+      wrapped.__chr = true; H.note = wrapped;
+    }
+  } catch (e) {}
+}
+
+function buildRecord(m) {
+  const g = m.game, v = g.view || {}, tr = v.travelers || [];
+  const scores = (m.lastScores || {});
+  const colour = (n) => { try { return g.colorOf(n); } catch (e) { return "#888"; } };
+  const bots = g._bots || new Set();
+  const byHour = {};
+  for (const [h, c, t] of m.lines) (byHour[h] = byHour[h] || []).push([c, t]);
+  const hours = Object.keys(Object.assign({}, byHour, m.dice)).map(Number).sort((a, b) => a - b);
+  let persona = null;
+  try { persona = window.__pdxPersona ? window.__pdxPersona.get() : null; } catch (e) {}
+  return {
+    v: 1, id: `${m.startedAt.toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`,
+    start: m.startedAt, at: Date.now(), mode: m.tutorial ? "tutorial" : "solo", me: m.me,
+    n: m.n || tr.length, hours: m.hour, won: !!m.won, winner: m.winnerName || "", reason: m.reason,
+    table: tr.map((t) => ({ n: t.name, c: colour(t.name), me: t.name === m.me, ai: bots.has(t.name) || t.name !== m.me })),
+    persona, theme: (document.body && document.body.dataset.pdxTheme) || null,
+    final: tr.map((t) => ({
+      n: t.name, cp: typeof scores[t.name] === "number" ? scores[t.name] : num(t.contract_points),
+      e: num(t.energy), g: num(t.gold), c: num(t.century),
+      rel: (t.temporal_receptor || []).length,
+      eq: (t.equipment || t.hand || []).map((c) => cardName(m, c.name || c)).slice(0, 8),
+      st: (t.statuses || []).filter((x) => x === "terminated" || x === "wanted"),
+    })).sort((a, b) => b.cp - a.cp),
+    earned: { rec: m.newRecords.map((r) => [r.id, r.value]), mis: m.missionsDone.slice(), qst: m.questsDone.slice() },
+    h: hours.map((h) => [h, m.dice[h] || null, byHour[h] || []]),
+  };
+}
+
+function loadMatches() {
+  try {
+    const raw = localStorage.getItem(MATCH_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter((r) => r && r.v === 1 && typeof r.id === "string" && Array.isArray(r.h)) : [];
+  } catch (e) { return memMatches.slice(); }
+}
+let memMatches = [];                 // the copy kept when storage is blocked or full
+function saveMatches(list) {
+  list = list.slice(-MATCH_KEEP);
+  memMatches = list.slice();
+  // full storage: the oldest records go first until it fits
+  for (let tries = 0; tries <= list.length; tries++) {
+    try { localStorage.setItem(MATCH_KEY, JSON.stringify(list)); return list; }
+    catch (e) { if (list.length <= 1) break; list = list.slice(1); }
+  }
+  return list;
+}
+function keepRecord(m) {
+  if (m.recId) return;
+  try {
+    const rec = buildRecord(m);
+    m.recId = rec.id;
+    const list = loadMatches(); list.push(rec); saveMatches(list);
+  } catch (e) { console.warn("chronicle record:", e); }
+}
+function findMatch(id) { return loadMatches().find((r) => r.id === id) || memMatches.find((r) => r.id === id) || null; }
+function deleteMatch(id) { saveMatches(loadMatches().filter((r) => r.id !== id)); }
+
+const REASON = { year_zero: "a traveller reached Year Zero", full_receptor: "a traveller mended all three periods",
+  last_traveler: "the last traveller standing", all_terminated: "every traveller was terminated", merchant_empty: "the Merchant ran out of relics" };
+function whenText(t) {
+  const d = new Date(t);
+  return `${shortDate(t)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+function recTitle(r) { return r.mode === "tutorial" ? "Learn to Play" : `Against the AI, ${r.n} at the table`; }
+
+/* the document: the same markup on screen, in print and in the downloaded file */
+function matchDocHtml(r) {
+  const me = r.table.find((t) => t.me) || { n: r.me, c: "#6fae6a" };
+  const colOf = (n) => (r.table.find((t) => t.n === n) || {}).c || "#888";
+  const W = (n) => (n === r.me ? "You" : n);
+  const dur = Math.max(1, Math.round((r.at - r.start) / 60000));
+  const earned = [
+    ...r.earned.mis.map((id) => MISSION_BY_ID[id] ? `<li><b>Mission</b> ${esc(MISSION_BY_ID[id].title)}</li>` : ""),
+    ...r.earned.qst.map((id) => QUEST_BY_ID[id] ? `<li><b>Quest</b> ${esc(QUEST_BY_ID[id].name)}</li>` : ""),
+    ...r.earned.rec.map(([id, v]) => RECORD_BY_ID[id] ? `<li><b>New record</b> ${esc(RECORD_BY_ID[id].name)}: ${esc(fmtRecord(RECORD_BY_ID[id], v))}${id === "deepest" ? "" : " " + esc(unitOf(RECORD_BY_ID[id], v))}</li>` : ""),
+  ].join("");
+  const dice = (d) => {
+    if (!d) return "";
+    const R = ["", "I", "II", "III"];
+    const cells = d[0].map((row, ri) => `<tr><th>${FN_NAME[ri]}</th>${row.map((v) => `<td class="${v ? "on" : ""}">${v ? R[v] || v : ""}</td>`).join("")}</tr>`).join("");
+    return `<table class="chd-dice" aria-label="Your dice this Hour"><caption>Your dice</caption>${cells}${d[1] ? `<tr><th>Valve</th><td class="on" colspan="3">${R[d[1]] || d[1]}</td></tr>` : ""}</table>`;
+  };
+  const hours = r.h.map(([h, d, lines]) => {
+    const heralds = lines.filter((l) => l[0] === "herald"), notes = lines.filter((l) => l[0] === "note");
+    const rest = lines.filter((l) => l[0] !== "herald" && l[0] !== "note");
+    return `<section class="chd-hour">
+      <h3><span>Hour ${h}</span></h3>
+      <div class="chd-hbody">${dice(d)}
+        <div class="chd-hcol">
+          ${rest.length ? `<ul class="chd-lines">${rest.map(([c, t]) => `<li class="chd-${esc(c)}">${esc(t)}</li>`).join("")}</ul>` : `<p class="chd-quiet">A quiet Hour.</p>`}
+          ${heralds.map(([, t]) => `<p class="chd-herald"><span>The Temporal Herald</span>${esc(t)}</p>`).join("")}
+          ${notes.length ? `<ul class="chd-notes">${notes.map(([, t]) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+        </div></div></section>`;
+  }).join("");
+  const finals = r.final.map((f) => `<tr class="${f.n === r.me ? "is-me" : ""}">
+      <td><i style="background:${esc(colOf(f.n))}"></i>${esc(W(f.n))}${f.n === r.winner ? ` <b class="chd-crown">winner</b>` : ""}</td>
+      <td>${f.cp}</td><td>${f.rel}</td><td>${f.e}</td><td>${f.g}</td><td>${f.c === 0 ? "Year Zero" : roman(f.c)}</td>
+      <td>${f.st.map((x) => `<b class="chd-st">${esc(x)}</b>`).join(" ")}${esc(f.eq.join(", "))}</td></tr>`).join("");
+  return `<article class="chr-doc" data-match="${esc(r.id)}">
+    <header class="chd-head" style="--me:${esc(me.c)}">
+      <p class="chd-kick">Paradox: The Last Timeline · C.R.O.N.O.S. match record</p>
+      <h2>${esc(r.mode === "tutorial" ? "Learn to Play" : "A match against the AI")}</h2>
+      <p class="chd-meta">${esc(whenText(r.start))} · ${r.n} travellers · ${r.hours} Hours · about ${dur} min · filed for ${esc(r.me)}</p>
+      <span class="chd-result ${r.won ? "won" : "lost"}">${r.won ? "WON" : "LOST"}</span>
+      <p class="chd-how">${esc(W(r.winner))} ${r.winner === r.me ? "win" : "wins"}: ${esc(REASON[r.reason] || r.reason || "time settles")}.</p>
+    </header>
+    <section class="chd-table">
+      <h3><span>The table and the final state</span></h3>
+      <table class="chd-final"><thead><tr><th>Traveller</th><th>CP</th><th>Relics</th><th>Energy</th><th>Gold</th><th>Century</th><th>Carrying</th></tr></thead><tbody>${finals}</tbody></table>
+      <p class="chd-seats">${r.table.map((t) => `<span><i style="background:${esc(t.c)}"></i>${esc(t.me ? `${t.n} (you)` : `${t.n}, AI`)}</span>`).join("")}${r.persona ? `<span class="chd-persona">Your arm: ${r.persona.build === "f" ? "feminine" : "masculine"}, tone ${num(r.persona.skin) + 1}</span>` : ""}</p>
+    </section>
+    ${earned ? `<section class="chd-earned"><h3><span>Earned in this match</span></h3><ul>${earned}</ul></section>` : ""}
+    <section class="chd-account"><h3 class="chd-acc-h"><span>Hour by Hour</span></h3>${hours || `<p class="chd-quiet">No Hours were filed.</p>`}</section>
+    <footer class="chd-foot">Kept by HELA on this device · nothing is sent anywhere · printed ${esc(shortDate(Date.now()))}</footer>
+  </article>`;
+}
+
+let matchEl = null;
+function openMatch(id) {
+  const r = findMatch(id);
+  if (!r) return;
+  closeMatch();
+  matchEl = document.createElement("div");
+  matchEl.id = "chr-match";
+  matchEl.className = "chr-page chr-match-page";
+  matchEl.setAttribute("role", "dialog"); matchEl.setAttribute("aria-modal", "true"); matchEl.setAttribute("aria-label", "Match record");
+  matchEl.innerHTML = `<div class="chr-match-wrap">
+    <div class="chr-match-bar">
+      <button class="btn btn-primary btn-sm chm-print" type="button">Print / save as PDF</button>
+      <button class="btn btn-ghost btn-sm chm-html" type="button">Download page</button>
+      <button class="btn btn-ghost btn-sm chm-png" type="button">Download picture</button>
+      <span class="chm-del-box"><button class="btn btn-ghost btn-sm chm-del" type="button">Delete</button>
+        <span class="chm-del-ask">Delete this record for good? <button class="btn btn-danger btn-sm chm-del-yes" type="button">Delete</button> <button class="btn btn-ghost btn-sm chm-del-no" type="button">Keep</button></span></span>
+      <span class="chm-msg" role="status" aria-live="polite"></span>
+      <button class="icon-btn chm-close" type="button" aria-label="Close the match record" title="Close (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+    </div>
+    ${matchDocHtml(r)}</div>`;
+  document.body.appendChild(matchEl);
+  const msg = (t) => { const n = matchEl && matchEl.querySelector(".chm-msg"); if (n) n.textContent = t; };
+  matchEl.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.stopPropagation(); closeMatch(); } });
+  matchEl.addEventListener("click", (e) => {
+    const t = e.target;
+    if (t === matchEl || t.closest(".chm-close")) return closeMatch();
+    if (t.closest(".chm-print")) return printMatch();
+    if (t.closest(".chm-html")) { downloadMatchHtml(r); return msg("Saved to your downloads."); }
+    if (t.closest(".chm-png")) { downloadMatchPng(r).then((ok) => msg(ok ? "Saved to your downloads." : "The picture could not be drawn in this browser.")); return; }
+    const box = t.closest(".chm-del-box");
+    if (t.closest(".chm-del")) { box.classList.add("is-asking"); const k = box.querySelector(".chm-del-no"); if (k) k.focus(); return; }
+    if (t.closest(".chm-del-no")) { box.classList.remove("is-asking"); return; }
+    if (t.closest(".chm-del-yes")) { deleteMatch(r.id); closeMatch(); if (pageEl) renderPage(); return; }
+  });
+  const pb = matchEl.querySelector(".chm-print"); if (pb) pb.focus({ preventScroll: true });
+}
+function closeMatch() { if (matchEl) { matchEl.remove(); matchEl = null; } }
+
+// The browser's own print dialog, with a print sheet that shows the record alone
+// on paper (chronicle.css @media print): "Save as PDF" makes the file.
+function printMatch() {
+  if (!matchEl) return;
+  const html = document.documentElement;
+  html.classList.add("chr-printing");
+  const done = () => { html.classList.remove("chr-printing"); window.removeEventListener("afterprint", done); };
+  window.addEventListener("afterprint", done);
+  setTimeout(() => { try { window.print(); } catch (e) {} setTimeout(done, 1000); }, 60);
+}
+
+function saveBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function fileName(r, ext) {
+  const d = new Date(r.start);
+  const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}-${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+  return `paradox-match-${stamp}.${ext}`;
+}
+// the document's own rules, lifted from chronicle.css, so the file needs nothing else
+function docCss() {
+  let css = "";
+  for (const sh of document.styleSheets) {
+    let rules = null;
+    try { if (!/chronicle\.css/.test(sh.href || "")) continue; rules = sh.cssRules; } catch (e) { continue; }
+    for (const rule of rules) if (/chr-doc|chd-/.test(rule.cssText) && !/chr-printing/.test(rule.cssText)) css += rule.cssText + "\n";
+  }
+  return css;
+}
+function downloadMatchHtml(r) {
+  const title = `Paradox match record, ${whenText(r.start)}`;
+  const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title)}</title><style>body{margin:0;padding:24px 12px;background:#2a2218}\n${docCss()}</style></head>
+<body>${matchDocHtml(r)}</body></html>`;
+  saveBlob(new Blob([doc], { type: "text/html" }), fileName(r, "html"));
+}
+
+// the summary card: a picture of the result and the table, in the record card's style
+async function downloadMatchPng(r) {
+  try {
+    const cv = document.createElement("canvas"); cv.width = 1200; cv.height = 675;
+    const x = cv.getContext("2d");
+    try { await Promise.all([document.fonts.load('italic 700 64px "Oswald"'), document.fonts.load('500 16px "JetBrains Mono"')]); } catch (e) {}
+    const INK = "#15100a", PAPER = "#f4e6b0", D1 = '"Oswald", "Arial Narrow", sans-serif', MONO = '"JetBrains Mono", monospace';
+    const me = r.table.find((t) => t.me) || { c: "#6fae6a" };
+    x.fillStyle = "#211a10"; x.fillRect(0, 0, 1200, 675);
+    x.fillStyle = INK; x.fillRect(34, 34, 1144, 619); x.fillStyle = PAPER; x.fillRect(24, 24, 1144, 619);
+    x.lineWidth = 4; x.strokeStyle = INK; x.strokeRect(24, 24, 1144, 619);
+    x.fillStyle = me.c; x.fillRect(26, 26, 14, 615);
+    x.fillStyle = INK; x.font = `700 16px ${MONO}`; x.fillText("PARADOX: THE LAST TIMELINE · MATCH RECORD", 64, 70);
+    x.font = `italic 700 64px ${D1}`; x.fillText(r.mode === "tutorial" ? "LEARN TO PLAY" : "A MATCH AGAINST THE AI", 64, 140);
+    x.font = `500 18px ${MONO}`; x.fillStyle = "#4a3a20";
+    x.fillText(`${whenText(r.start)} · ${r.n} TRAVELLERS · ${r.hours} HOURS`.toUpperCase(), 66, 176);
+    x.fillStyle = INK; x.font = `500 20px ${MONO}`;
+    x.fillText(`${(r.winner === r.me ? "You win" : r.winner + " wins")}: ${REASON[r.reason] || r.reason || ""}`.slice(0, 80), 66, 212);
+    // the stamp
+    x.save(); x.translate(1010, 118); x.rotate(-0.14);
+    const ink = r.won ? "#11706d" : "#a3241a";
+    x.strokeStyle = ink; x.fillStyle = ink; x.globalAlpha = .88; x.lineWidth = 6; x.strokeRect(-110, -44, 220, 88);
+    x.lineWidth = 2; x.strokeRect(-100, -34, 200, 68);
+    x.font = `700 50px ${D1}`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(r.won ? "WON" : "LOST", 0, 3);
+    x.restore();
+    // the table
+    x.textBaseline = "alphabetic";
+    const cols = [66, 470, 580, 700, 820, 930];
+    x.font = `700 15px ${MONO}`; x.fillStyle = "#4a3a20";
+    ["TRAVELLER", "CP", "RELICS", "ENERGY", "GOLD", "CENTURY"].forEach((h, i) => x.fillText(h, cols[i], 262));
+    r.final.slice(0, 6).forEach((f, i) => {
+      const y = 306 + i * 50, col = (r.table.find((t) => t.n === f.n) || {}).c || "#888";
+      if (f.n === r.me) { x.fillStyle = "rgba(21,16,10,.08)"; x.fillRect(56, y - 32, 1090, 44); }
+      x.fillStyle = col; x.fillRect(66, y - 22, 18, 18); x.lineWidth = 2; x.strokeStyle = INK; x.strokeRect(66, y - 22, 18, 18);
+      x.fillStyle = INK; x.font = `italic 700 28px ${D1}`;
+      x.fillText((f.n === r.me ? `${f.n} (you)` : f.n).toUpperCase().slice(0, 24) + (f.n === r.winner ? "  ★" : ""), 96, y);
+      x.font = `italic 700 28px ${D1}`;
+      [f.cp, f.rel, f.e, f.g, f.c === 0 ? "YEAR ZERO" : roman(f.c)].forEach((v, k) => x.fillText(String(v), cols[k + 1], y));
+    });
+    // the moments worth a headline: your deliveries, milestones, wrecks, the Herald
+    const top = [];
+    for (const [h, , lines] of r.h) for (const [c, t] of lines) if (/^(deliver|cp|herald)$/.test(c) || (c === "danger" && /terminated/.test(t))) top.push(`HOUR ${h} · ${t}`);
+    const y0 = 316 + Math.min(6, r.final.length) * 50;
+    if (top.length && y0 < 560) {
+      x.fillStyle = INK; x.fillRect(66, y0 - 6, 1070, 2);
+      x.font = `500 16px ${MONO}`; x.fillStyle = "#3a2c16";
+      top.slice(0, Math.floor((590 - y0) / 26)).forEach((t, i) => x.fillText(t.length > 96 ? t.slice(0, 95) + "..." : t, 66, y0 + 22 + i * 26));
+    }
+    x.font = `500 14px ${MONO}`; x.fillStyle = "#4a3a20";
+    const got = r.earned.mis.length + r.earned.qst.length + r.earned.rec.length;
+    const pl = (n, w) => `${n} ${w}${n === 1 ? "" : "S"}`;
+    x.fillText(`${got ? `${pl(r.earned.mis.length, "ORDER")} · ${pl(r.earned.qst.length, "QUEST")} · ${pl(r.earned.rec.length, "RECORD")} EARNED · ` : ""}KEPT BY HELA ON THIS DEVICE`, 66, 618);
+    const blob = await new Promise((res) => cv.toBlob(res, "image/png"));
+    if (!blob) return false;
+    saveBlob(blob, fileName(r, "png"));
+    return true;
+  } catch (e) { return false; }
+}
+
+// the Chronicle page's list of past matches (renderPage calls it)
+function pastMatchesHtml() {
+  const list = loadMatches().slice().reverse();
+  if (!list.length) return `<p class="chr-note">No match filed yet. Every match you finish against the AI, and Learn to Play, is kept here.</p>`;
+  return `<ul class="chr-past">${list.map((r) => {
+    const me = r.final.find((f) => f.n === r.me) || { cp: 0 };
+    return `<li data-match="${esc(r.id)}">
+      <span class="chp-res ${r.won ? "won" : "lost"}">${r.won ? "Won" : "Lost"}</span>
+      <span class="chp-what"><b>${esc(recTitle(r))}</b><span>${esc(whenText(r.start))} · ${r.hours} Hours · ${me.cp} CP</span></span>
+      <span class="chp-acts">
+        <button class="btn btn-ghost btn-sm chp-view" type="button">View</button>
+        <button class="btn btn-ghost btn-sm chp-print" type="button">Print</button>
+        <button class="btn btn-ghost btn-sm chp-dl" type="button">Download</button>
+        <button class="btn btn-ghost btn-sm chp-del" type="button" aria-label="Delete this match record">Delete</button>
+        <span class="chp-ask">Delete for good? <button class="btn btn-danger btn-sm chp-del-yes" type="button">Delete</button> <button class="btn btn-ghost btn-sm chp-del-no" type="button">Keep</button></span>
+      </span></li>`;
+  }).join("")}</ul>
+  <p class="chr-note">The last ${MATCH_KEEP} matches are kept; the oldest goes first. Print makes a PDF through your browser's print dialog; Download saves one page you can open anywhere.</p>`;
+}
+function onPastClick(t) {
+  const li = t.closest(".chr-past li"); if (!li) return false;
+  const id = li.dataset.match;
+  if (t.closest(".chp-view")) { openMatch(id); return true; }
+  if (t.closest(".chp-print")) { openMatch(id); printMatch(); return true; }
+  if (t.closest(".chp-dl")) { const r = findMatch(id); if (r) downloadMatchHtml(r); return true; }
+  if (t.closest(".chp-del")) { li.classList.add("is-asking"); const k = li.querySelector(".chp-del-no"); if (k) k.focus(); return true; }
+  if (t.closest(".chp-del-no")) { li.classList.remove("is-asking"); return true; }
+  if (t.closest(".chp-del-yes")) { deleteMatch(id); renderPage(); return true; }
+  return false;
+}
+
 /* ───────────────────────────── the snapshot ───────────────────────────── */
 function snapshot() {
   if (!D) load();
@@ -1415,6 +1856,7 @@ load();
 window.__pdxChronicle = {
   event: (k, p, g) => { try { onEvent(k, p, g); } catch (e) { console.warn("chronicle:", e); } },
   missions, snapshot, open, close: () => close(), tutorialDone, colourPicker, colourWish,
+  matches: () => loadMatches(), openMatch, printMatch,
   day: () => dayKey(),
   onChange: (cb) => { listeners.add(cb); return () => listeners.delete(cb); },
   // for tests and the harness: the pool, the definitions and a given day's pick

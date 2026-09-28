@@ -7320,6 +7320,15 @@ html.pdx-phone #timeline-rail > :is(.cplot, .cplot-sing, .cplot-ori) { bottom: a
   aspect-ratio: var(--pdx-chart-ar, 1.6); }
 html.pdx-phone #timeline-rail .sheet-ext { display: none !important; }
 html.pdx-phone #timeline-rail :is(.cplot, .cplot-sing, .cplot-ori) :is(.cm-hit, .cc-hit, .sea-hit) { r: 40px; }
+/* the pieces on a phone are tokens standing on their centuries (board_draft.js
+   __pdxPhonePlace / __pdxPhoneToken), drawn above everything on the chart; a finger on a
+   token still lands on the century under it (the chart's own tap areas answer) */
+html.pdx-phone #timeline-rail .pc-ph { pointer-events: none; }
+/* ...and the chart's decoration steps back a little under them (the Itinerarium's walls,
+   trees and dragon; the Sea's waves, sharks and foam; the sky's nebulae, dust and belt
+   rocks), never the centuries, the road, the lit ports, the names or the Merchant */
+html.pdx-phone #timeline-rail .ph-deco { opacity: .62; }
+html.pdx-phone #timeline-rail .ph-deco.ph-deco-soft { opacity: .78; }
 
 /* ═══ THE ERA TURNS LIKE A COMIC PAGE (board_draft.js window.__pdxChartTurn) ════════════
    Replaces the iris shutter. A slab of ink, halftone and speed lines, edged on both sides
@@ -8125,3 +8134,12 @@ body.pdx-help-hold #timeline-rail .pc-tag-plain { display: none; }
 body:not(.pdx-help-hold) #timeline-rail .pc-mhud-key,
 body:not(.pdx-help-hold) #timeline-rail .pc-mhud-pill { visibility: hidden !important; opacity: 0 !important; }
 body:not(.pdx-help-hold) #hela-brain-full .hb-hint { display: none; }
+
+/* ═══ OVERLOAD, QUIET OUTSIDE THE TUTORIAL (the owner, 28/09, phone and desktop) ═══════════
+   In a normal match the only sign of a shut function is the red bar across its row while he
+   places dice (.fn-shut during allocation). The standby screen carries no SHUT plate, no idle
+   SHUT line and no SHUT words (game.js _shutMark, .shut-idle, cabin.js .ms-shut); the tutorial
+   (body.tut) keeps all of them to teach it. */
+body.cabin-on:not(.tut):not(.allocating) #hull-console .matrix-wrap .fn-shut,
+body.cabin-on:not(.tut) #hull-console .shut-idle,
+body.cabin-on:not(.tut) :is(#hull, #cursor-plane) .mano-standby .ms-shut { display: none !important; }

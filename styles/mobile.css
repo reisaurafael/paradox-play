@@ -690,3 +690,34 @@ html.pdx-m-on.pdx-chart-pick .he-window, html.pdx-m-on.pdx-chart-pick .doc-inpla
 #pdx-bin.mc-binbtn { position: static; width: auto; min-height: 50px; grid-template-columns: auto 1fr; grid-template-rows: auto auto; justify-items: start;
   column-gap: 8px; padding: 5px 8px; box-shadow: 3px 3px 0 var(--cx-ink, #15100a); }
 #pdx-bin.mc-binbtn svg { grid-row: span 2; width: 26px; height: 26px; }
+/* the bin in the rail's action slot (with PASS / FIRE when both apply): the view keys give room */
+#pdx-mrail #pdx-bin.mr-bin { position: static; width: auto; min-height: 58px; padding: 4px 2px; box-shadow: 2px 3px 0 var(--cx-ink, #15100a);
+  grid-template-columns: 1fr; gap: 1px; flex: 0 0 auto; }
+#pdx-mrail #pdx-bin.mr-bin svg { width: 22px; height: 22px; }
+#pdx-mrail #pdx-bin.mr-bin .pb-word { font-size: .62rem; }
+#pdx-mrail #pdx-bin.mr-bin .pb-sub { font-size: .5rem; line-height: 1.05; }
+#pdx-mrail:has(#pdx-bin:not([hidden])) button[data-view], #pdx-mrail:has(.mr-act:not([hidden])) button[data-view] { flex: 0 1 54px; min-height: 40px; }
+#pdx-mrail:has(#pdx-bin:not([hidden])) button[data-view] svg { width: 20px; height: 20px; }
+/* the Wanted star behind the column's eye: centred on the eye itself, the header's size */
+#pdx-mcol .mc-eye.mc-wanted { background: none !important; isolation: isolate; }
+#pdx-mcol .mc-eye.mc-wanted::before { content: ""; position: absolute; left: -3px; top: -4px; width: 52px; height: 48px; z-index: -1;
+  background: var(--mc-star) center / contain no-repeat; pointer-events: none; }
+#pdx-mcol .mc-eye.mc-wanted svg { transform: scale(.72); }
+/* the relics to file, as manila folders on the Records page during a Delivery */
+#pdx-rtray { position: fixed; z-index: 60160; padding: 8px 10px 10px; border: 3px solid var(--cx-ink, #15100a); border-radius: 6px;
+  background: #d9c08a; box-shadow: 5px 5px 0 var(--cx-ink, #15100a); box-sizing: border-box; }
+#pdx-rtray[hidden] { display: none; }
+#pdx-rtray .rt-head { margin: 0 0 7px; font: 600 .82rem/1.2 var(--f-display, "Oswald", sans-serif); color: var(--cx-ink, #15100a); letter-spacing: .03em; }
+#pdx-rtray .rt-row { display: flex; gap: 10px; flex-wrap: wrap; }
+#pdx-rtray .rt-folder { position: relative; min-width: 140px; min-height: 64px; padding: 16px 12px 8px; text-align: left; display: grid; gap: 2px;
+  border: 2px solid #6b4f1f; border-radius: 3px 6px 4px 4px; background: linear-gradient(180deg, #f0d99c, #e2c47c); color: var(--cx-ink, #15100a);
+  box-shadow: 3px 3px 0 rgba(21, 16, 10, .6); }
+#pdx-rtray .rt-folder .rt-tab { position: absolute; left: 10px; top: -12px; padding: 1px 8px; border: 2px solid #6b4f1f; border-bottom: 0; border-radius: 4px 4px 0 0;
+  background: #f0d99c; font: 700 .7rem/1.2 var(--f-mono, monospace); font-style: normal; }
+#pdx-rtray .rt-folder b { font: 700 .92rem/1.1 var(--f-display, "Oswald", sans-serif); }
+#pdx-rtray .rt-folder span { font: 600 .66rem/1 var(--f-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: #6b4f1f; }
+#pdx-rtray .rt-folder.rt-done { opacity: .55; }
+#pdx-rtray .rt-folder:not(.rt-done) { animation: txBeckon 1.2s ease-in-out infinite; }
+/* the simple market page hides the Secret Market (its curtain belongs to the second page) */
+html.pdx-m-on[data-pdx-view="merchant"]:not(.pdx-secret) #market-zone .secret-stage,
+html.pdx-m-on[data-pdx-view="merchant"]:not(.pdx-secret) #market-zone .secret-bg { visibility: hidden; }

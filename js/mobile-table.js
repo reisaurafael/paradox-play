@@ -206,8 +206,11 @@ function frameRect(v) {
   if (v === "merchant") {
     // the shelf, its wooden signs and the Secret Market's curtain, framed close: the cards
     // are read here (the wagon's arch around them is cropped at the edges)
-    if (secretOn) { const u2 = unionRect(["#market-zone .secret-stage"], 40); if (u2) return u2; }
-    const u = unionRect(["#market-zone .market-row", "#market-zone .market-side-signs", "#market-zone .secret-stage", "#market-sign"], 36);
+    // the SIMPLE market: his shelf, his signs, his sign-board; the Secret Market's page (the
+    // second tap) is BOTH markets side by side (the owner, 28/09)
+    const sels = ["#market-zone .market-row", "#market-zone .market-side-signs", "#market-sign"];
+    if (secretOn) sels.push("#market-zone .secret-stage");
+    const u = unionRect(sels, 36);
     return u || planeRectOf(document.getElementById("market-zone")) || { x: 300, y: -560, w: 1100, h: 560 };
   }
   if (v === "records") return planeRectOf(document.getElementById("drawer-zone")) || { x: -1066, y: 0, w: 1066, h: 1200 };
@@ -256,6 +259,7 @@ function frame(v, animate) {
     if (slab && slab.trim()) D.style.setProperty("--pdx-wood", slab.trim());
   }
   D.classList.toggle("pdx-chart", v === "chart");
+  D.classList.toggle("pdx-secret", v === "merchant" && secretOn);
   D.style.setProperty("--pdx-dur", animate && !calm() ? paceMs() + "ms" : "0ms");
   D.style.setProperty("--pdx-s", S.toFixed(5));
   D.style.setProperty("--pdx-ox", O.x.toFixed(2) + "px");
@@ -413,6 +417,7 @@ function wireFiles() {
     const f = e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio");
     if (!f) return;
     if (f.classList.contains("pcard-choose")) return;      // a target to choose: the game's own tap
+    if (e.target.closest(".targetable")) return;          // an item of his to pick (destroy, steal): the game's own tap
     e.stopPropagation();
     if (view !== "machine" || e.pointerType === "mouse" && e.button !== 0) return;
     const zr = planeRectOf(document.getElementById("players-zone"));
@@ -453,7 +458,7 @@ function wireFiles() {
   document.addEventListener("click", (e) => {
     if (!on()) return;
     const f = e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio");
-    if (f && f.classList.contains("pcard-choose")) return;  // choosing a target: the game's own tap
+    if (f && (f.classList.contains("pcard-choose") || (e.target.closest && e.target.closest(".targetable")))) return;  // choosing a target: the game's own tap
     if (f) {
       e.preventDefault(); e.stopPropagation();
       if (performance.now() < eatUntil) return;
@@ -685,6 +690,10 @@ function paintAction() {
   if (k === "market") {
     const sign = [...document.querySelectorAll("#market-zone .market-side-signs > *")].find((n) => /^\s*Pass\s*$/i.test(n.textContent));
     if (sign) { label = "Pass"; fn = () => sign.click(); }
+  } else if (k === "deliver" && g._deliverState) {
+    // the Delivery: done with what is filed (nothing filed: nothing delivered this Hour)
+    const n = g._deliverState.chosen.size;
+    label = n ? "Done" : "Skip"; fn = () => { try { g._finishDeliver(); } catch (e) {} };
   } else if (k === "activation" && g._actStaged) {
     // the Activation phase: the items tapped in the case are fired with this key (or none: pass)
     const n = g._actStaged.length;
@@ -760,7 +769,12 @@ function wantedView() {
   const k = req.kind, o = req.options || {};
   if (k === "allocate" || k === "matrix_buff") return "machine";
   if (k === "travel" || k === "merchant_century") return "chart";
-  if (k === "market" || k === "steal_target" || k === "destroy_target" || k === "secret_deal") return "merchant";
+  if (k === "steal_target" || k === "destroy_target") {
+    // the cards to pick lie where they are: on the Merchant's shelf, or on a rival's file (the table)
+    const z = (o.candidates || []).map((c) => c && c.zone);
+    return z.includes("market") || z.includes("secret") ? "merchant" : "machine";
+  }
+  if (k === "market" || k === "secret_deal") return "merchant";
   if (k === "reward_category") return "records";               // the contracts drawer holds the three kinds
   if (k === "deliver" || k === "recycle" || k === "capacity" || k === "activation") return "case";
   if (k === "target") {
@@ -818,9 +832,11 @@ let bin = null;
 function buildBin() {
   bin = document.createElement("button");
   bin.type = "button"; bin.id = "pdx-bin";
-  bin.className = "mc-binbtn";
+  bin.className = "mr-bin";
   bin.innerHTML = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 10h16l-1.6 17H9.6z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M6 10h20M13 6h6v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M13 14v9M16 14v9M19 14v9" stroke="currentColor" stroke-width="1.8"/></svg><span class="pb-word"></span><span class="pb-sub"></span>`;
-  (col && col.querySelector(".mc-extra") || document.body).appendChild(bin);
+  // it lives in the rail's action slot, where PASS sits (the owner): they share that slot,
+  // stacked when both apply; nothing of it is ever over the case or the cat
+  if (rail) rail.insertBefore(bin, rail.querySelector(".mr-act")); else document.body.appendChild(bin);
 }
 function binState() {
   const g = game(); if (!g) return { mode: "idle" };
@@ -844,7 +860,7 @@ function paintExtra() {
   let sig = view, html = "";
   if (view === "merchant" && me) {
     html = `<div class="mx-gold"><i></i><span>YOUR GOLD</span><b>${me.gold}</b></div>`
-      + `<p class="mx-hint">${secretOn ? "<b>SHELF</b> takes you back to his shelf." : "Tap <b>SECRET</b> on the right for the Secret Market."}</p>`;
+      + `<p class="mx-hint">${secretOn ? "<b>SHELF</b> returns to his shelf alone." : "Tap <b>SECRET</b> on the right: his shelf and the Secret Market together."}</p>`;
     sig += me.gold + ":" + secretOn;
   } else if (view === "case") {
     const n = ownedTickets().reduce((a, t) => a + t.count, 0);
@@ -853,19 +869,17 @@ function paintExtra() {
   }
   if (sig !== lastExtra) {
     lastExtra = sig;
-    const keepBin = bin && bin.parentElement === ex ? bin : null;
     ex.innerHTML = html;
-    if (keepBin) ex.appendChild(keepBin);
     const tk = ex.querySelector(".mx-tickets");
     if (tk) tk.addEventListener("click", (e) => { e.stopPropagation(); ticketSheet(null); });
   }
-  ex.hidden = !(view === "merchant" || view === "case");
+  ex.hidden = !html;
 }
 function paintBin() {
   if (!bin) buildBin();
   const g = game(), me = g && g._self ? g._self() : null;
   const has = !!(me && (me.hand || me.equipment || []).length);
-  if (col && bin.parentElement !== col.querySelector(".mc-extra")) col.querySelector(".mc-extra").appendChild(bin);
+  if (rail && bin.parentElement !== rail) rail.insertBefore(bin, rail.querySelector(".mr-act"));
   bin.hidden = !(on() && view === "case" && has);
   if (bin.hidden) return;
   const b = binState();
@@ -927,6 +941,41 @@ function wireBin() {
   };
   window.addEventListener("pointerup", up, true);
   window.addEventListener("pointercancel", up, true);
+}
+
+/* ══ DELIVERY IN THE RECORDS (the owner): during a Delivery, the Records page shows the relics
+   he carries for this century as manila folders on the cabinet; a tap files one there, no
+   carrying between scenes. The bin-as-drawer in the case does the same. ══ */
+let rtray = null, lastTray = "";
+function paintRecordsTray() {
+  const g = game(), st = g && g._deliverState;
+  const show = on() && view === "records" && !!st && st.names && st.names.size > 0;
+  if (!rtray) {
+    rtray = document.createElement("div"); rtray.id = "pdx-rtray";
+    rtray.addEventListener("click", (e) => {
+      const f = e.target.closest && e.target.closest(".rt-folder:not(.rt-done)");
+      if (!f) return;
+      e.stopPropagation(); e.preventDefault();
+      const gg = game(); if (gg && gg._fileDeliver) gg._fileDeliver(f.dataset.name);
+      lastTray = ""; paintRecordsTray();
+    }, true);
+    document.body.appendChild(rtray);
+  }
+  rtray.hidden = !show;
+  if (!show) return;
+  const me = g._self && g._self();
+  const cards = me ? (me.hand || me.equipment || []) : [];
+  const names = [...st.names];
+  const sig = names.join("|") + "#" + [...st.chosen].join("|") + "#" + st.century;
+  if (sig !== lastTray) {
+    lastTray = sig;
+    rtray.innerHTML = `<p class="rt-head">In your case, for century <b>${roman(st.century)}</b>: tap a folder to file it</p><div class="rt-row">`
+      + names.map((n) => { const c = cards.find((x) => x.name === n) || { name: n }; const done = st.chosen.has(n);
+        return `<button type="button" class="rt-folder${done ? " rt-done" : ""}" data-name="${esc(n)}"><i class="rt-tab">${roman(c.delivery_century != null ? c.delivery_century : st.century)}</i><b>${esc(c.name)}</b><span>${done ? "FILED" : "tap to file"}</span></button>`; }).join("")
+      + `</div>`;
+  }
+  rtray.style.left = (stage.x + 10) + "px"; rtray.style.width = (stage.w - 20) + "px";
+  rtray.style.bottom = Math.max(10, innerHeight - (stage.y + stage.h) + 10) + "px";
 }
 
 /* ══ VOUCHERS on a phone: a ticket is used where it lies (the case) or from the pip-boy's
@@ -1112,7 +1161,7 @@ function start() {
   addEventListener("orientationchange", () => setTimeout(onResize, 60));
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
-  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintSecretKey(); paintCol(); paintAction(); paintLife(); paintTutLink(); paintExtra(); paintBin(); paintGold(); paintTicketSlot(); } }); };
+  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintSecretKey(); paintCol(); paintAction(); paintLife(); paintTutLink(); paintExtra(); paintRecordsTray(); paintBin(); paintGold(); paintTicketSlot(); } }); };
   setInterval(() => {
     if (!on()) { if (life) life.style.display = "none"; return; }
     // the tutorial starting or ending moves the stage's top edge
