@@ -85,20 +85,31 @@ function build() {
   col = document.createElement("aside");
   col.id = "pdx-mcol";
   col.setAttribute("aria-label", "HELA and the log");
+  // HER COLUMN, calm (the owner, 28/09): one thing at a time, top to bottom:
+  //   her eye (a tap opens her memory, the Hours) with the Hour and its phase;
+  //   his LIFE, big, with its cells (the same number as the thread round the screen);
+  //   ONE slot for her line (the turn, a direction, an event; the tutorial's lines dock here);
+  //   the log folded to its last two lines (a tap unfolds it over the slot);
+  //   the "?" and the gear, small, at the foot.
   col.innerHTML = `
     <header class="mc-head">
-      <span class="mc-eye">${EYE}</span>
-      <span class="mc-id"><b>HELA</b><span class="mc-hour"></span></span>
-      <span class="mc-phases" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <span class="mc-life" title="Your life (energy)">LIFE <b>-</b></span>
-      <span class="mc-tools">
-        <button type="button" class="mc-btn pdx-helpkey mc-q" aria-label="Tips; press and hold for the table's reference"><b>?</b></button>
-        <button type="button" class="mc-btn mc-fs" aria-label="Play full screen">${ICON.fs}</button>
-        <button type="button" class="mc-btn mc-gear" aria-label="Settings">${ICON.gear}</button>
-      </span>
+      <button type="button" class="mc-eye" aria-label="HELA's memory: every Hour">${EYE}<i class="mc-eye-lbl">HOURS</i></button>
+      <span class="mc-id"><span class="mc-hour"></span><span class="mc-phase"></span>
+        <span class="mc-phases" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
     </header>
-    <div class="mc-says" aria-live="polite"></div>
-    <div class="mc-log"><p class="mc-log-h">LOG</p><ol class="mc-log-l"></ol></div>`;
+    <div class="mc-life" aria-live="polite"><span class="mc-life-h">LIFE</span><b>-</b><span class="mc-cells"></span></div>
+    <div class="mc-slot"><div class="mc-says" aria-live="polite"></div></div>
+    <div class="mc-log"><p class="mc-log-h">LOG <span>tap to open</span></p><ol class="mc-log-l"></ol></div>
+    <div class="mc-tools">
+      <button type="button" class="mc-btn pdx-helpkey mc-q" aria-label="Tips; press and hold for the table's reference"><b>?</b></button>
+      <button type="button" class="mc-btn mc-fs" aria-label="Play full screen">${ICON.fs}</button>
+      <button type="button" class="mc-btn mc-gear" aria-label="Settings">${ICON.gear}</button>
+    </div>`;
+  col.querySelector(".mc-log").addEventListener("click", (e) => {
+    e.stopPropagation();
+    col.classList.toggle("mc-log-open");
+    lastLog = ""; paintCol();
+  });
   document.body.appendChild(col);
   col.querySelector(".pdx-helpkey").addEventListener("click", (e) => {
     e.stopPropagation();
@@ -230,7 +241,16 @@ function frame(v, animate) {
   const cx0 = (stage.x - O.x) / S, cy0 = (stage.y - O.y) / S;
   const top = Math.max(f.y, cy0), left = Math.max(f.x, cx0);
   const right = Math.min(f.x + f.w, cx0 + vw), bottom = Math.min(f.y + f.h, cy0 + vh);
-  D.style.setProperty("--pdx-clip", `inset(${top.toFixed(1)}px ${(PLANE_W - right).toFixed(1)}px ${(PLANE_H - bottom).toFixed(1)}px ${left.toFixed(1)}px)`);
+  // only the chart is cut out of its sheet; every other page lies on its own backdrop (the
+  // walnut or the wallpaper, one continuous surface drawn by the stage, mobile.css), so no edge
+  // of the desk ever shows
+  D.style.setProperty("--pdx-clip", v === "chart" ? `inset(${top.toFixed(1)}px ${(PLANE_W - right).toFixed(1)}px ${(PLANE_H - bottom).toFixed(1)}px ${left.toFixed(1)}px)` : "none");
+  D.style.setProperty("--pdx-tile-s", S.toFixed(4));
+  if (!D.style.getPropertyValue("--pdx-wood")) {
+    const cam = document.getElementById("cam");
+    const slab = cam && getComputedStyle(cam).getPropertyValue("--pdx-slab");
+    if (slab && slab.trim()) D.style.setProperty("--pdx-wood", slab.trim());
+  }
   D.classList.toggle("pdx-chart", v === "chart");
   D.style.setProperty("--pdx-dur", animate && !calm() ? paceMs() + "ms" : "0ms");
   D.style.setProperty("--pdx-s", S.toFixed(5));
@@ -476,32 +496,51 @@ function paintCol() {
     d0.className = p ? (p.classList.contains("on") ? "on" : p.classList.contains("done") ? "done" : "") : "";
     d0.title = p ? p.textContent : "";
   });
+  // the Wanted mark (and the Wanted theme) puts her sheriff's star behind her eye, here
+  const eyeEl = col.querySelector(".mc-eye");
+  const wanted = document.body.classList.contains("vz-wanted") || document.body.classList.contains("pdx-th-wanted");
+  if (wanted && !eyeEl.style.getPropertyValue("--mc-star")) {
+    const he = document.getElementById("hela-eye");
+    const bg = he && getComputedStyle(he, "::before").backgroundImage;
+    if (bg && bg !== "none") eyeEl.style.setProperty("--mc-star", bg);
+  }
+  eyeEl.classList.toggle("mc-wanted", wanted && !!eyeEl.style.getPropertyValue("--mc-star"));
   const T = window.__pdxTouch;
   col.querySelector(".mc-fs").hidden = !T || T.isFs() || T.standalone();
-  // her line: the turn first, then the event, then the chapter of the Hour
+  // the phase in words beside the Hour
+  const onPh = ph.find((p) => p.classList.contains("on"));
+  col.querySelector(".mc-phase").textContent = onPh ? onPh.textContent.trim() : "";
+  // HER ONE LINE: a direction when he is needed elsewhere, else his move, else the last event.
+  // The Hour's chapter is the header's own; nothing else stacks here.
   const caps = document.querySelector("#hela-eye .he-caps");
-  let says = "";
-  if (caps) {
-    const order = [".cx-slot-turn", ".cx-slot-event", ".cx-slot-chapter"];
-    for (const sel of order) {
-      const c = caps.querySelector(sel + ".on");
-      if (c) says += capHTML(c);
-    }
-  }
+  const pick = (sel) => (caps ? caps.querySelector(sel + ".on") : null);
+  const turn = pick(".cx-slot-turn"), ev = pick(".cx-slot-event");
   const want = D.dataset.pdxWant;
-  if (want && VIEWS[want]) says = `<div class="mc-go">Go to <b>${esc(VIEWS[want].label.toUpperCase())}</b></div>` + says;
+  let says = "";
+  if (want && VIEWS[want]) {
+    const t = turn ? capHTML(turn).replace(/<span class="mc-tag">[^<]*<\/span>/, "") : "";
+    says = `<div class="mc-cap mc-you mc-goto"><span class="mc-tag mc-go">GO TO ${esc(VIEWS[want].label.toUpperCase())}</span>`
+      + (t ? t.replace(/^<div class="mc-cap[^"]*">/, "").replace(/<\/div>$/, "") : "") + `</div>`;
+  } else if (turn) says = capHTML(turn);
+  else if (ev) says = capHTML(ev);
   if (says !== lastSays) { lastSays = says; col.querySelector(".mc-says").innerHTML = says; }
-  // (the phase dividers, "- main -", are the desktop log's rulers, not events)
+  // the tutorial's line takes the slot itself (mobile.css docks it on the slot's box)
+  const sr = col.querySelector(".mc-slot").getBoundingClientRect();
+  D.style.setProperty("--mc-slot-top", Math.round(sr.top) + "px");
+  D.style.setProperty("--mc-slot-h", Math.max(60, Math.round(sr.height)) + "px");
+  col.style.setProperty("--mc-log-top", Math.round(sr.top) + "px");
+  // the log: folded to the last two lines, or open over the slot
+  const open = col.classList.contains("mc-log-open");
   const items = [...document.querySelectorAll("#log-list > li")]
     .filter((li) => !/^\s*-\s.*\s-\s*$/.test((li.querySelectorAll(":scope > span")[1] || li).textContent))
-    .slice(-7).reverse();
+    .slice(open ? -40 : -2).reverse();
   const log = items.map((li, i) => {
     const sp = li.querySelectorAll(":scope > span");
     const time = sp[0] ? sp[0].textContent : "";
     const body = sp[1] ? sp[1].innerHTML : li.innerHTML;
     return `<li class="${i ? "" : "mc-new"}"><b>${esc(time)}</b><span>${body}</span></li>`;
   }).join("");
-  if (log !== lastLog) { lastLog = log; col.querySelector(".mc-log-l").innerHTML = log; }
+  if (log !== lastLog) { lastLog = log; col.querySelector(".mc-log-l").innerHTML = log; col.querySelector(".mc-log-h span").textContent = open ? "tap to fold" : "tap to open"; }
 }
 function paintRail() {
   if (!rail) return;
@@ -662,6 +701,9 @@ function paintLife() {
     lifeNow = e;
     const n = col && col.querySelector(".mc-life b");
     if (n) n.textContent = String(e);
+    const cells = col && col.querySelector(".mc-cells");
+    if (cells) { let h = ""; for (let i = 0; i < Math.max(12, e); i++) h += `<i class="${i < e ? "on" : ""}"></i>`; cells.innerHTML = h; }
+    if (col) col.querySelector(".mc-life").classList.toggle("mc-low", e <= 6);
   }
 }
 window.__pdxLifeAnchor = () => (on() && life && life._end ? { x: life._end.x, y: life._end.y } : null);

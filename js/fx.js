@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609280143";
-import { roman } from "./util.js?202609280143";
+import { audio } from "./audio.js?202609280157";
+import { roman } from "./util.js?202609280157";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -804,39 +804,67 @@ class Fx {
       const b = me ? Math.max(0, Math.min(12, +me.booms || 0)) : 0;
       const lv = this.storedLevel();
       const step = b <= 0 || lv === "off" || (me && (me.statuses || []).includes("awaiting_respawn")) ? 0 : b >= 9 ? 3 : b >= 5 ? 2 : 1;
-      let el = document.getElementById("fx-heat");
-      if (!step) { if (el) el.remove(); return; }
+      let back = document.getElementById("fx-heat"), front = document.getElementById("fx-heat-edge");
       const gauge = document.getElementById("mano-boomg");
       const svg = gauge && gauge.ownerSVGElement;
-      if (!svg) { if (el) el.remove(); return; }
-      if (!el || el.ownerSVGElement !== svg) {
-        if (el) el.remove();
-        el = this._heatMarks();
-        gauge.parentNode.insertBefore(el, gauge.nextSibling);   // beside the gauge, under the machine's own controls
+      if (!step || !svg) { if (back) back.remove(); if (front) front.remove(); return; }
+      // the chassis: the top-level group of the device that holds the gauge. The smoke is
+      // drawn BEFORE it (so the casing paints over the smoke's roots and it rises from
+      // behind); the gauge's inked edge stays in front, right after the gauge.
+      let chassis = gauge;
+      while (chassis.parentNode && chassis.parentNode !== svg) chassis = chassis.parentNode;
+      if (!back || back.ownerSVGElement !== svg || back.nextSibling !== chassis) {
+        if (back) back.remove();
+        back = back && back.ownerSVGElement === svg ? back : this._heatSmoke();
+        svg.insertBefore(back, chassis);
       }
-      const cls = `fx-heat fh${step}` + (lv === "light" || document.body.classList.contains("gfx-low") ? " fx-still" : "");
-      if (el.getAttribute("class") !== cls) el.setAttribute("class", cls);
-      el.setAttribute("data-booms", String(b));
+      if (!front || front.ownerSVGElement !== svg) {
+        if (front) front.remove();
+        front = this._heatEdge();
+        gauge.parentNode.insertBefore(front, gauge.nextSibling);
+      }
+      // still in Light, and under Low graphics on a desktop (a phone's saved Full choice moves it)
+      const still = lv === "light" || (document.body.classList.contains("gfx-low") && !document.documentElement.classList.contains("pdx-phone"));
+      const cls = `fx-heat fh${step}` + (still ? " fx-still" : "");
+      for (const el of [back, front]) if (el.getAttribute("class") !== cls) el.setAttribute("class", cls);
+      back.setAttribute("data-booms", String(b));
     } catch (e) {}
   }
-  _heatMarks() {
+  // THE HEAT, shy: a few thin wavy wisps of heat shimmer and faint steam rising from the
+  // heat mechanism itself (the boom gauge in the casing's right side, x 500..532 in the
+  // machine's own SVG), emerging from behind the casing's top edge above it, curling up a
+  // short way and fading. Warm two faint wisps, hot three a little taller, danger five with
+  // a faint orange tint at their base and one tiny spark (fx.css). Never a cloud.
+  _heatSmoke() {
     const NS = "http://www.w3.org/2000/svg";
     const g = document.createElementNS(NS, "g");
     g.id = "fx-heat";
     g.setAttribute("aria-hidden", "true");
     g.setAttribute("pointer-events", "none");
-    // the gauge's inked edge (a wide faint stroke under a thin one: a glow without filters)
+    const wisp = "M0 0 C -5 -7 5 -13 0 -20 C -5 -27 4 -32 0 -40";
+    // [x, the first step that shows it, height scale]
+    const W = [[512, 1, 1], [523, 1, .85], [503, 2, 1.1], [531, 3, 1], [517, 3, 1.25]];
+    g.innerHTML =
+      '<defs><radialGradient id="fxhBase"><stop offset="0" stop-color="#ff8a3a" stop-opacity=".55"/>'
+      + '<stop offset="1" stop-color="#ff8a3a" stop-opacity="0"/></radialGradient></defs>'
+      + '<ellipse class="fxh-base" cx="517" cy="156" rx="26" ry="10" fill="url(#fxhBase)"/>'
+      + W.map(([x, st, k], i) => `<g transform="translate(${x} 166) scale(${k})"><g class="fxh-wisp fxh-s${st} fxh-w${i + 1}">`
+        + `<path class="fxh-steam" d="${wisp}"/><path class="fxh-shim" d="${wisp}"/></g></g>`).join("")
+      + '<g transform="translate(520 158)"><circle class="fxh-spark" r="1.6"/></g>';
+    return g;
+  }
+  // in front, small: the gauge's inked edge in the step's colour, and at danger a sweat drop
+  // on the casing's right wall (never on the screen)
+  _heatEdge() {
+    const NS = "http://www.w3.org/2000/svg";
+    const g = document.createElementNS(NS, "g");
+    g.id = "fx-heat-edge";
+    g.setAttribute("aria-hidden", "true");
+    g.setAttribute("pointer-events", "none");
     g.innerHTML =
       '<rect class="fxh-glow" x="496" y="186" width="40" height="146" rx="8"/>' +
       '<rect class="fxh-edge" x="497.5" y="187.5" width="37" height="143" rx="7"/>' +
-      // four heat-wobble lines rising off the casing above the gauge
-      [490, 504, 518, 532].map((x, i) => `<g transform="translate(${x} 178)"><g class="fxh-w fxh-w${i + 1}">` +
-        '<path class="fxh-ink" d="M0 0 q-6 -9 0 -18 q6 -9 0 -18 q-5 -8 0 -14"/>' +
-        '<path class="fxh-col" d="M0 0 q-6 -9 0 -18 q6 -9 0 -18 q-5 -8 0 -14"/></g></g>').join("") +
-      // steam puffs off the gauge's side, and the sweat drop of the danger step
-      '<g transform="translate(548 212)"><circle class="fxh-puff fxh-p1" r="7"/></g>' +
-      '<g transform="translate(550 246)"><circle class="fxh-puff fxh-p2" r="6"/></g>' +
-      '<g transform="translate(486 204) scale(1.4)"><path class="fxh-drop" d="M0 -9 C 3 -3 5 0 5 3 A 5 5 0 0 1 -5 3 C -5 0 -3 -3 0 -9 Z"/></g>';
+      '<g transform="translate(552 176) scale(1.4)"><path class="fxh-drop" d="M0 -9 C 3 -3 5 0 5 3 A 5 5 0 0 1 -5 3 C -5 0 -3 -3 0 -9 Z"/></g>';
     return g;
   }
 

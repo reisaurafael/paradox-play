@@ -87,38 +87,50 @@ html[data-fx="full"] body:not(.gfx-low) .card-fly.tone-deliver::before { content
           mask: radial-gradient(circle, transparent 0 34%, #000 40%, transparent 68%); }
 @media (prefers-reduced-motion: reduce) { .card-fly.tone-deliver::before { display: none; } }
 
-/* THE MOTOR HEATS (fx.js heatSync): inside the wrist machine's SVG, beside the boom
-   gauge. Three steps by the engine's booms: fh1 warm 1..4, fh2 hot 5..8, fh3 danger 9..11.
-   Only transform/opacity loops on a few small nodes; no filters. The strokes carry the
-   ink first and the colour on top (the comic line). */
-#fx-heat { --fxh: #f7c65a; --fxh-t: calc(2.8s * var(--pdx-pace, 1)); pointer-events: none; }
-#fx-heat.fh2 { --fxh: #ff8a3a; }
-#fx-heat.fh3 { --fxh: #ff4a36; --fxh-t: calc(1.9s * var(--pdx-pace, 1)); }
-#fx-heat .fxh-edge { fill: none; stroke: var(--fxh); stroke-width: 2.2; opacity: .55; }
-#fx-heat .fxh-glow { fill: none; stroke: var(--fxh); stroke-width: 7; opacity: .12; }
-#fx-heat.fh2 .fxh-edge { opacity: .75; } #fx-heat.fh2 .fxh-glow { opacity: .2; }
-#fx-heat.fh3 .fxh-edge { opacity: .95; stroke-width: 2.6; } #fx-heat.fh3 .fxh-glow { opacity: .3; }
-#fx-heat .fxh-ink { fill: none; stroke: #15100a; stroke-width: 4.6; stroke-linecap: round; }
-#fx-heat .fxh-col { fill: none; stroke: var(--fxh); stroke-width: 2.4; stroke-linecap: round; }
-#fx-heat .fxh-w { opacity: 0; animation: fxHeatRise var(--fxh-t) ease-out infinite; }
+/* THE MOTOR HEATS (fx.js heatSync), shy: thin wavy wisps of heat shimmer and faint steam
+   rising from the heat mechanism (the boom gauge), from behind the casing's top edge
+   (#fx-heat is drawn before the chassis in the machine's SVG), a short way, fading. In
+   front only the gauge's inked edge and the danger sweat drop (#fx-heat-edge).
+   Steps by the engine's booms: fh1 warm 1..4 two faint wisps, fh2 hot 5..8 three a little
+   taller and warmer, fh3 danger 9..11 five, an orange tint at the base, one tiny spark.
+   Transform/opacity loops only (six at most); no filters. */
+.fx-heat { --fxh: #f7c65a; --fxh-t: calc(3.4s * var(--pdx-pace, 1)); --fxh-steam: rgba(246, 242, 234, .42);
+  --fxh-shim: rgba(255, 250, 240, .8); pointer-events: none; }
+.fx-heat.fh2 { --fxh: #ff8a3a; --fxh-t: calc(3s * var(--pdx-pace, 1)); --fxh-steam: rgba(250, 232, 214, .46); --fxh-shim: rgba(255, 226, 196, .85); }
+.fx-heat.fh3 { --fxh: #ff4a36; --fxh-t: calc(2.5s * var(--pdx-pace, 1)); --fxh-steam: rgba(252, 222, 200, .5); --fxh-shim: rgba(255, 196, 150, .9); }
+/* a wisp: a soft wide stroke of steam under a thin shimmer line */
+#fx-heat .fxh-steam { fill: none; stroke: var(--fxh-steam); stroke-width: 5; stroke-linecap: round; }
+#fx-heat .fxh-shim { fill: none; stroke: var(--fxh-shim); stroke-width: 1.4; stroke-linecap: round; }
+#fx-heat .fxh-wisp { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%;
+  animation: fxWisp var(--fxh-t) ease-out infinite; }
 #fx-heat .fxh-w2 { animation-delay: calc(var(--fxh-t) * -.5); }
 #fx-heat .fxh-w3 { animation-delay: calc(var(--fxh-t) * -.25); }
 #fx-heat .fxh-w4 { animation-delay: calc(var(--fxh-t) * -.75); }
-#fx-heat.fh1 .fxh-w3, #fx-heat.fh1 .fxh-w4, #fx-heat.fh2 .fxh-w4 { display: none; }
-#fx-heat .fxh-puff { fill: #f4e6b0; stroke: #15100a; stroke-width: 2; opacity: 0; display: none;
-  animation: fxHeatPuff calc(var(--fxh-t) * 1.3) ease-out infinite; }
-#fx-heat.fh2 .fxh-p1, #fx-heat.fh3 .fxh-puff { display: inline; }
-#fx-heat .fxh-p2 { animation-delay: calc(var(--fxh-t) * -.65); }
-#fx-heat .fxh-drop { fill: #bfe6ff; stroke: #15100a; stroke-width: 1.5; display: none; }
-#fx-heat.fh3 .fxh-drop { display: inline; }
-@keyframes fxHeatRise { 0% { transform: translateY(5px); opacity: 0; } 30% { opacity: .9; } 100% { transform: translateY(-26px); opacity: 0; } }
-@keyframes fxHeatPuff { 0% { transform: translate(0, 4px) scale(.6); opacity: 0; } 30% { opacity: .85; } 100% { transform: translate(10px, -22px) scale(1.25); opacity: 0; } }
-/* Light, Low graphics, calm motion: a still inked mark; the nap holds the loops still */
-#fx-heat.fx-still .fxh-w, #fx-heat.fx-still .fxh-puff { animation: none; opacity: .8; transform: translateY(-6px); }
-#fx-heat.fx-still .fxh-puff { opacity: .7; }
+#fx-heat .fxh-w5 { animation-delay: calc(var(--fxh-t) * -.6); }
+#fx-heat .fxh-base, #fx-heat .fxh-spark { display: none; }
+#fx-heat.fh3 .fxh-base { display: inline; opacity: .8; }
+#fx-heat.fh3 .fxh-spark { display: inline; fill: #ffd24a; transform-box: fill-box; transform-origin: 50% 50%;
+  animation: fxSpark calc(var(--fxh-t) * 1.2) ease-out infinite; }
+/* how many wisps show at each step */
+.fx-heat.fh1 .fxh-s2, .fx-heat.fh1 .fxh-s3, .fx-heat.fh2 .fxh-s3 { display: none; }
+@keyframes fxWisp { 0% { transform: translateY(6px) scaleY(.7); opacity: 0; } 25% { opacity: 1; }
+  70% { opacity: .6; } 100% { transform: translateY(-22px) scaleY(1.1); opacity: 0; } }
+@keyframes fxSpark { 0% { transform: translate(0, 4px); opacity: 0; } 15% { opacity: 1; }
+  100% { transform: translate(5px, -36px); opacity: 0; } }
+/* in front: the gauge's edge and the sweat drop */
+#fx-heat-edge .fxh-edge { fill: none; stroke: var(--fxh); stroke-width: 2.2; opacity: .55; }
+#fx-heat-edge .fxh-glow { fill: none; stroke: var(--fxh); stroke-width: 7; opacity: .12; }
+#fx-heat-edge.fh2 .fxh-edge { opacity: .75; } #fx-heat-edge.fh2 .fxh-glow { opacity: .2; }
+#fx-heat-edge.fh3 .fxh-edge { opacity: .95; stroke-width: 2.6; } #fx-heat-edge.fh3 .fxh-glow { opacity: .3; }
+#fx-heat-edge .fxh-drop { fill: #bfe6ff; stroke: #15100a; stroke-width: 1.5; display: none; }
+#fx-heat-edge.fh3 .fxh-drop { display: inline; }
+/* Light, Low graphics, calm motion: the smoke stands still, half risen; the nap holds the loops */
+#fx-heat.fx-still .fxh-wisp { animation: none; opacity: .75; transform: translateY(-6px); }
+#fx-heat.fx-still .fxh-spark { animation: none; opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
-  #fx-heat .fxh-w, #fx-heat .fxh-puff { animation: none; opacity: .8; transform: translateY(-6px); } }
-body.pdx-nap #fx-heat .fxh-w, body.pdx-nap #fx-heat .fxh-puff { animation-play-state: paused; }
+  #fx-heat .fxh-wisp { animation: none; opacity: .75; transform: translateY(-6px); }
+  #fx-heat .fxh-spark { animation: none; opacity: 0; } }
+body.pdx-nap #fx-heat .fxh-wisp, body.pdx-nap #fx-heat .fxh-spark { animation-play-state: paused; }
 
 /* OVERLOAD ON MY MACHINE (fx.js overload): the burst's inked sparks, and the SHUT stamp
    slamming across the row; both one-shot and removed when done */
