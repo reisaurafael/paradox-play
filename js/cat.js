@@ -424,7 +424,7 @@ const UX = 2133 / 100, UY = 1200 / 100;
 // third of it): a real cat's scale against the briefcase and the files. setSize()
 // changes it; SIZES.phone is the size for the phone's case scene.
 const SIZE = 24;
-export const SIZES = { desk: 24, phone: 20 };
+export const SIZES = { desk: 24, phone: 22 };
 
 /* Her places (plane units, feet point). The paperwork desk is left of the plane's
    origin: HELA's core owns its left half and the cabinet its top, so she keeps to the
@@ -527,7 +527,7 @@ export class CatEngine {
         window.__pdxCat.setSize(units) and window.__pdxCat.setPlaces({ name: { x, y,
         lie, sit } }, home). Units are plane units (1% of the 2133x1200 plane); a
         place named "bed" carries her basket (she naps there), without one it hides.
-        SIZES (also on the engine as .sizes): desk 24, phone 20. ── */
+        SIZES (also on the engine as .sizes): desk 24, phone 22. ── */
   setSize(units) { if (units > 4 && units < 60) this._size(units); }
   setPlaces(places, home) {
     if (!places || !Object.keys(places).length) return;

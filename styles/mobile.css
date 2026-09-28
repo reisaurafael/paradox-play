@@ -670,3 +670,23 @@ html.pdx-m-on .gameover .gameover-actions .btn { min-height: 48px; font-size: 1r
 html.pdx-m-on .gameover .winner { font-size: 2rem !important; }
 /* while a pick is open on the chart, HELA's windows wait (they come back the moment it is made) */
 html.pdx-m-on.pdx-chart-pick .he-window, html.pdx-m-on.pdx-chart-pick .doc-inplace { visibility: hidden !important; pointer-events: none !important; }
+
+/* her line never cut: sized to the slot (mobile-table.js --mc-fs), the slot scrolls if needed */
+#pdx-mcol .mc-slot { overflow: hidden auto; touch-action: pan-y; }
+#pdx-mcol .mc-cap { font-size: var(--mc-fs, .86rem); }
+/* her column's tools for the page on screen */
+#pdx-mcol .mc-extra { flex: 0 0 auto; display: flex; flex-direction: column; gap: 5px; }
+#pdx-mcol .mc-extra[hidden] { display: none; }
+#pdx-mcol .mx-gold { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px; padding: 4px 7px;
+  border: 2px solid var(--cx-ink, #15100a); border-radius: 4px; background: var(--cx-paper, #f4e6b0); color: var(--cx-ink, #15100a); }
+#pdx-mcol .mx-gold i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--cx-ink, #15100a); background: radial-gradient(circle at 35% 30%, #fff1b8, #e2b23c 55%, #9a6d17); }
+#pdx-mcol .mx-gold span { font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .12em; }
+#pdx-mcol .mx-gold b { font: 700 1.25rem/1 var(--f-display, "Oswald", sans-serif); }
+#pdx-mcol .mx-hint { margin: 0; font: 500 .72rem/1.25 var(--f-body, "Inter", sans-serif); color: #cfe9df; }
+#pdx-mcol .mx-hint b { color: #c9a6ff; }
+#pdx-mcol .mx-tickets { min-height: 36px; border: 2px dashed #e2c078; border-radius: 4px; background: #2a1e10; color: #e2c078;
+  font: 700 .78rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .1em; }
+/* the bin in her column: one wide key */
+#pdx-bin.mc-binbtn { position: static; width: auto; min-height: 50px; grid-template-columns: auto 1fr; grid-template-rows: auto auto; justify-items: start;
+  column-gap: 8px; padding: 5px 8px; box-shadow: 3px 3px 0 var(--cx-ink, #15100a); }
+#pdx-bin.mc-binbtn svg { grid-row: span 2; width: 26px; height: 26px; }

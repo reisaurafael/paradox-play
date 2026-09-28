@@ -100,6 +100,7 @@ function build() {
     </header>
     <div class="mc-life" aria-live="polite"><span class="mc-life-h">LIFE</span><b>-</b><span class="mc-cells"></span></div>
     <div class="mc-slot"><div class="mc-says" aria-live="polite"></div></div>
+    <div class="mc-extra"></div>
     <div class="mc-log"><p class="mc-log-h">LOG <span>tap to open</span></p><ol class="mc-log-l"></ol></div>
     <div class="mc-tools">
       <button type="button" class="mc-btn pdx-helpkey mc-q" aria-label="Tips; press and hold for the table's reference"><b>?</b></button>
@@ -425,9 +426,10 @@ function wireFiles() {
     if (!dg.moved && Math.hypot(e.clientX - dg.sx, e.clientY - dg.sy) < 10) return;
     if (!dg.moved) { dg.moved = true; dg.f.classList.add("pdx-dragging"); dg.f.style.setProperty("--pdx-fz", "45"); }
     e.preventDefault();
-    // clamped to the machine's page (its frame): the file stays whole on it
+    // clamped to the WHOLE table he sees on the machine's page (its top band too), never
+    // under the column or the rail: the stage's own box, in the table's units
     const k = PILE.k, fw = (dg.f.offsetWidth || 250) * k, fh = (dg.f.offsetHeight || 330) * k;
-    const F = frameRect("machine");
+    const F = { x: (stage.x - O.x) / S, y: (stage.y - O.y) / S, w: stage.w / S, h: stage.h / S };
     const x = Math.max(F.x, Math.min(F.x + F.w - fw, dg.x0 + dx)), y = Math.max(F.y, Math.min(F.y + F.h - fh, dg.y0 + dy));
     const zr = planeRectOf(document.getElementById("players-zone"));
     if (!zr) return;
@@ -537,7 +539,17 @@ function paintCol() {
       + (t ? t.replace(/^<div class="mc-cap[^"]*">/, "").replace(/<\/div>$/, "") : "") + `</div>`;
   } else if (turn) says = capHTML(turn);
   else if (ev) says = capHTML(ev);
-  if (says !== lastSays) { lastSays = says; col.querySelector(".mc-says").innerHTML = says; }
+  if (says !== lastSays) {
+    lastSays = says;
+    const sayEl = col.querySelector(".mc-says");
+    sayEl.innerHTML = says;
+    // her line is never cut: it takes a size that fits the slot (down to a readable floor) and
+    // the slot scrolls if even that is too long
+    const slot = col.querySelector(".mc-slot");
+    let fs = 0.86;
+    sayEl.style.setProperty("--mc-fs", fs + "rem");
+    while (sayEl.scrollHeight > slot.clientHeight + 1 && fs > 0.72) { fs = +(fs - 0.03).toFixed(2); sayEl.style.setProperty("--mc-fs", fs + "rem"); }
+  }
   // the tutorial's line takes the slot itself (mobile.css docks it on the slot's box)
   const sr = col.querySelector(".mc-slot").getBoundingClientRect();
   D.style.setProperty("--mc-slot-top", Math.round(sr.top) + "px");
@@ -806,8 +818,9 @@ let bin = null;
 function buildBin() {
   bin = document.createElement("button");
   bin.type = "button"; bin.id = "pdx-bin";
+  bin.className = "mc-binbtn";
   bin.innerHTML = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 10h16l-1.6 17H9.6z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M6 10h20M13 6h6v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M13 14v9M16 14v9M19 14v9" stroke="currentColor" stroke-width="1.8"/></svg><span class="pb-word"></span><span class="pb-sub"></span>`;
-  document.body.appendChild(bin);
+  (col && col.querySelector(".mc-extra") || document.body).appendChild(bin);
 }
 function binState() {
   const g = game(); if (!g) return { mode: "idle" };
@@ -820,10 +833,39 @@ function binState() {
   }
   return { mode: st && st.names && st.names.size ? "drawer" : "idle" };
 }
+// HER COLUMN'S TOOLS (the owner: "features we lack space for could live there"): what the page
+// on screen needs, under her line: the gold and the Secret Market's hint at the Merchant; the
+// bin (or drawer) and the tickets in the case
+let lastExtra = "";
+function paintExtra() {
+  if (!col) return;
+  const ex = col.querySelector(".mc-extra");
+  const g = game(), me = g && g._self ? g._self() : null;
+  let sig = view, html = "";
+  if (view === "merchant" && me) {
+    html = `<div class="mx-gold"><i></i><span>YOUR GOLD</span><b>${me.gold}</b></div>`
+      + `<p class="mx-hint">${secretOn ? "<b>SHELF</b> takes you back to his shelf." : "Tap <b>SECRET</b> on the right for the Secret Market."}</p>`;
+    sig += me.gold + ":" + secretOn;
+  } else if (view === "case") {
+    const n = ownedTickets().reduce((a, t) => a + t.count, 0);
+    html = n ? `<button type="button" class="mx-tickets">TICKETS <b>\u00d7${n}</b></button>` : "";
+    sig += ":" + n;
+  }
+  if (sig !== lastExtra) {
+    lastExtra = sig;
+    const keepBin = bin && bin.parentElement === ex ? bin : null;
+    ex.innerHTML = html;
+    if (keepBin) ex.appendChild(keepBin);
+    const tk = ex.querySelector(".mx-tickets");
+    if (tk) tk.addEventListener("click", (e) => { e.stopPropagation(); ticketSheet(null); });
+  }
+  ex.hidden = !(view === "merchant" || view === "case");
+}
 function paintBin() {
   if (!bin) buildBin();
   const g = game(), me = g && g._self ? g._self() : null;
   const has = !!(me && (me.hand || me.equipment || []).length);
+  if (col && bin.parentElement !== col.querySelector(".mc-extra")) col.querySelector(".mc-extra").appendChild(bin);
   bin.hidden = !(on() && view === "case" && has);
   if (bin.hidden) return;
   const b = binState();
@@ -1070,7 +1112,7 @@ function start() {
   addEventListener("orientationchange", () => setTimeout(onResize, 60));
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
-  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintSecretKey(); paintCol(); paintAction(); paintLife(); paintTutLink(); paintBin(); paintGold(); paintTicketSlot(); } }); };
+  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintSecretKey(); paintCol(); paintAction(); paintLife(); paintTutLink(); paintExtra(); paintBin(); paintGold(); paintTicketSlot(); } }); };
   setInterval(() => {
     if (!on()) { if (life) life.style.display = "none"; return; }
     // the tutorial starting or ending moves the stage's top edge

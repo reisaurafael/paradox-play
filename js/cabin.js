@@ -149,7 +149,10 @@
 
   // gradients of the hand, prefixed per drawing so two hands can share a document
   function handDefs(p){
-    return `<linearGradient id="${p}Brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d08a"/><stop offset=".45" stop-color="#b08640"/><stop offset="1" stop-color="#5e4420"/></linearGradient>`;
+    // pebbled leather: faint irregular dots in the leather's own dark tone
+    const dots=[[1.2,1.6,.8],[5.4,.9,.6],[8.1,3.2,.7],[3.1,4.6,.9],[6.8,6.1,.6],[1.6,7.8,.7],[4.7,8.9,.8],[8.6,8.2,.5],[2.6,2.9,.4],[7.4,4.9,.45]];
+    return `<pattern id="${p}Grain" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(17)">${dots.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" style="fill:var(--glove-dk,#2c4166)"/>`).join("")}</pattern>
+  <linearGradient id="${p}Brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d08a"/><stop offset=".45" stop-color="#b08640"/><stop offset="1" stop-color="#5e4420"/></linearGradient>`;
   }
 
   /* ── THE HAND, inked like the case files and the briefcase: one silhouette under a
@@ -297,16 +300,23 @@
       ${ink(H.glove,H.cuff)}
       <path d="${H.glove}" style="fill:var(--glove,#4a6fa8)"/>
       ${inClip("g", `
-        <path d="M 576 318 Q 594 326 612 322 Q 634 318 650 322 Q 662 318 674 312 L 676 360 L 570 360 Z" style="fill:var(--glove-dk,#2c4166)"/>
-        ${hatch("M 588 344 l 8 -9 M 597 346 l 8 -9 M 606 347 l 8 -9 M 615 348 l 8 -9")}
-        <path d="M 604 282 l 10 -2 M 620 296 l 6 4 M 596 304 l 7 -3 M 634 270 l 5 3" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
-        <path d="M 612 312 l 6 -2 M 640 290 l 4 4" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.8" stroke-linecap="round"/>
+        <!-- matte leather: grain, a rubbed patch over the knuckles, soft creases where it
+             bends, the shadow side, darker worn edges, stitching with its thread holes -->
+        <path d="${H.glove}" fill="url(#${p}Grain)" opacity=".38"/>
+        <path d="M 622 262 Q 646 258 660 272 Q 666 292 660 310 Q 646 300 634 288 Q 620 276 622 262 Z" fill="#fff" opacity=".07"/>
+        <path d="M 576 318 Q 594 326 612 322 Q 634 318 650 322 Q 662 318 674 312 L 676 360 L 570 360 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".85"/>
+        <path d="M 640 258 Q 654 276 652 300 Q 650 318 640 334" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
+        <path d="M 596 262 Q 612 290 606 322" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+        <path d="${H.glove}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="7" opacity=".55"/>
         <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" stroke="${LINE}" stroke-width="1.5" stroke-dasharray="0 7" stroke-dashoffset="-5.5" stroke-linecap="round" opacity=".7"/>
         <path d="M 590 257 Q 616 251 640 255" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3"/>
-        <path d="M 646 256 q 6 -3 10 2 M 652 280 q 6 -2 9 3 M 654 306 q 6 -2 9 3" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="2.2"/>`)}
+        <path d="M 590 257 Q 616 251 640 255" fill="none" stroke="${LINE}" stroke-width="1.4" stroke-dasharray="0 7" stroke-dashoffset="-5.5" stroke-linecap="round" opacity=".7"/>`)}
       <path d="${H.cuff}" style="fill:var(--glove-trim,#d8c8a0)"/>
       ${inClip("c", `
         <path d="M 560 324 Q 574 330 586 326 Q 594 324 600 320 L 600 350 L 560 350 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".45"/>
+        <path d="M 572 256 Q 578 296 574 338" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".45"/>
+        <path d="${H.cuff}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="5" opacity=".4"/>
         <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-dasharray="3 3"/>`)}
       <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;
     // the feminine hand: the same drawing, smaller and slimmer, from the wrist
@@ -444,9 +454,17 @@
   <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"
         style="fill:var(--glove,#4a6fa8)" stroke="${INK}" stroke-width="2.8"/>
   <g pointer-events="none">
+    <clipPath id="mnStrap"><path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z"/></clipPath>
+    <g clip-path="url(#mnStrap)">
+      <!-- matte leather: grain, the shadow side, a soft crease where it wraps the arm,
+           darker worn cut edges, stitching with its thread holes -->
+      <rect x="160" y="240" width="60" height="130" fill="url(#mnGrain)" opacity=".38"/>
+      <path d="M 169 328 Q 190 338 215 332 L 215 354 Q 215 362 207 362 L 176 361 Q 169 361 169 354 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".85"/>
+      <path d="M 170 272 Q 190 278 212 272 M 171 338 Q 190 344 213 338" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+      <path d="M 172 246 L 206 246 Q 214 246 214 254 L 216 354 Q 216 363 207 363 L 176 362 Q 168 362 168 354 L 166 254 Q 166 247 172 246 Z" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="6" opacity=".55"/>
+    </g>
     <path d="M 174 256 L 208 255 M 176 352 L 208 352" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3" fill="none"/>
-    <path d="M 169 328 Q 190 338 215 332 L 215 354 Q 215 362 207 362 L 176 361 Q 169 361 169 354 Z" style="fill:var(--glove-dk,#2c4166)"/>
-    <path d="M 176 280 l 7 -2 M 196 318 l 6 3 M 186 300 l 5 -2" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+    <path d="M 174 256 L 208 255 M 176 352 L 208 352" stroke="${INK}" stroke-width="1.4" stroke-dasharray="0 7" stroke-dashoffset="-5.5" stroke-linecap="round" opacity=".7" fill="none"/>
     <g fill="url(#mnBrass)" stroke="${INK}" stroke-width="1.2"><circle cx="175" cy="263" r="2.6"/><circle cx="175" cy="346" r="2.6"/></g>
   </g>
   <path d="M 218 310 Q 208 310 202 306" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>
