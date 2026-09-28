@@ -19,7 +19,7 @@
    window.__pdxHelp = { isHeld, onHold, hold, isOpen, onOpen, open, close,
      toggle, note, overload, panel, placer } (the tutorial teaches Tab through it).
    ========================================================================= */
-import { FUNCTIONS } from "./util.js?202609280157";
+import { FUNCTIONS } from "./util.js?202609280601";
 
 const HOLD_MS = 250;        // a press held this long is a hold; shorter is a tap
 const NOTES_MAX = 3;        // HELA's notes shown on the hold view, newest first
@@ -34,7 +34,7 @@ const PHASES = [
 const TIPS = [
   ["Why did I move?", "Only your Travel modules move you: module 8 up to the die, module 9 up to twice it, to the century you pick on the chart. A few relics move you too; your log (L) says which."],
   ["Why did I lose energy?", "A rival's paradox (it hits everyone ahead of, beside or behind its maker), sailing to the past, a motor explosion at 12 heat (-2), the escape valve while a function is shut, or a weapon in the Activation phase."],
-  ["What does overload do?", "Three dice in one function overload it: that function is shut for the whole next Hour and takes no dice."],
+  ["What does overload do?", "Three dice in one function overload it: that function is shut for the whole next Hour and takes no dice. It pays first: the third Travel die sails twice its value, and the third Paradox die, the Past, hits for twice its value."],
   ["What is the escape valve?", "A slot for one spare die. While one of your functions is shut it drains energy, your life, equal to that die; otherwise it charges, and every 10 points buys a permanent +1 on a module."],
   ["When does the Merchant move?", "At the end of every Market phase: he rolls 1 to 3 dice and sails toward the richest traveler who is not in his century. Hold TAB to see where he is headed and where he can stop."],
   ["How do I buy?", "Stand on the Merchant's century during the Market phase, or on XI once the Secret Market opens, and pay the relic's price in gold."],
@@ -150,7 +150,7 @@ const holdSubs = new Set(), openSubs = new Set();
    note whose subject is not on screen is not shown. ── */
 const MOD_SHORT = {
   energy: "+energy", gold: "+gold", both: "+energy and gold",
-  future: "hits everyone ahead", paradox: "hits your century", past: "hits everyone behind",
+  future: "hits everyone ahead", paradox: "hits your century", past: "hits everyone behind for 2x the die",
   booms: "+heat (12 explodes)", travel: "sail up to the die", travel2: "sail up to 2x the die",
 };
 const PHASE_SHORT = {
@@ -223,7 +223,7 @@ function annotations(g) {
       const me = g && g._self ? g._self() : null;
       const charge = me && me.valve_charge != null ? ` Charge ${me.valve_charge} of 10.` : "";
       return `<p><b>Escape valve:</b> one spare die. While a function is shut it drains that much energy; otherwise it charges, +1 on a module every 10.${charge}</p>`
-        + `<p>Three dice in one function overload it: shut next Hour.</p>`;
+        + `<p>Three dice in one function overload it: shut next Hour. Paradox pays first: its Past die hits for double.</p>`;
     } });
   out.push({ k: "seals", pri: 6, sides: ["right", "above", "left", "below"], cls: "ha-seals",
     anchor: () => (voyage || !onDesk ? null : visRect(document.querySelector("#hull-manopla #mano-seals"))),
@@ -471,6 +471,7 @@ function overload(rows, opt) {
   node.className = "pdx-ovl";
   node.innerHTML = opt.first
     ? `<p><b>${name}</b> overloaded: you set three dice in it, so it is <b>shut for the next Hour</b>. No die can go there until that Hour is over.</p>`
+      + (rows.includes(1) ? `<p>The price buys something: the third Paradox die, the <b>Past</b>, strikes everyone behind you for <b>double</b> its value.</p>` : "")
       + `<p>A die with nowhere else to go can take the <b>escape valve</b>, but while a function is shut the valve <b>drains your energy, your life</b>: as much as that die, 1 to 3.</p>`
     : `<p><b>${name}</b> overloaded: <b>shut for the next Hour</b>. The escape valve can take a spare die, and it drains that die in energy.</p>`;
   node.innerHTML += `<p class="pdx-ack">Click anywhere or press any key</p>`;

@@ -160,6 +160,7 @@ function layout() {
   const bar = document.body.classList.contains("tut") ? 40 : 0;
   stage = { x: colW, y: ins.t + bar, w: W - colW - railW, h: H - ins.t - ins.b - bar };
   D.classList.toggle("pdx-m-tut", !!bar);
+  D.style.setProperty("--pdx-stage-y", stage.y + "px");
 }
 
 /* ── the camera: one transform for the plane and the pip-boy ── */
@@ -203,6 +204,7 @@ function frameRect(v) {
   if (v === "merchant") {
     // the shelf, its wooden signs and the Secret Market's curtain, framed close: the cards
     // are read here (the wagon's arch around them is cropped at the edges)
+    if (secretOn) { const u2 = unionRect(["#market-zone .secret-stage"], 40); if (u2) return u2; }
     const u = unionRect(["#market-zone .market-row", "#market-zone .market-side-signs", "#market-zone .secret-stage", "#market-sign"], 36);
     return u || planeRectOf(document.getElementById("market-zone")) || { x: 300, y: -560, w: 1100, h: 560 };
   }
@@ -340,8 +342,17 @@ function land(v) {
   if (pingView === v) pingView = null;
   frame(v, false);
   reframeSoon();
+  if (v === "machine") requestAnimationFrame(nudgeSeals);
   paintRail();
   requestAnimationFrame(pile);
+}
+// THE SEALS' LETTERS: SVG text laid out while its page was hidden (display none) is not
+// painted again when the page comes back, so the O / A / S came up as empty rings. A tiny
+// change of their size makes the browser lay them out and paint them on every landing.
+let sealFlip = false;
+function nudgeSeals() {
+  sealFlip = !sealFlip;
+  document.querySelectorAll("#hull .mano-seal .ms-glyph").forEach((t) => { t.style.fontSize = sealFlip ? "11px" : "11.02px"; });
 }
 // a scene of the real camera holds more than one phone view
 // (the case is looked at with the records, as on the desktop's paperwork desk: a delivery
@@ -399,6 +410,7 @@ function wireFiles() {
     if (!on()) return;
     const f = e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio");
     if (!f) return;
+    if (f.classList.contains("pcard-choose")) return;      // a target to choose: the game's own tap
     e.stopPropagation();
     if (view !== "machine" || e.pointerType === "mouse" && e.button !== 0) return;
     const zr = planeRectOf(document.getElementById("players-zone"));
@@ -438,6 +450,7 @@ function wireFiles() {
   document.addEventListener("click", (e) => {
     if (!on()) return;
     const f = e.target && e.target.closest && e.target.closest("#players-zone .pcard.cfolio");
+    if (f && f.classList.contains("pcard-choose")) return;  // choosing a target: the game's own tap
     if (f) {
       e.preventDefault(); e.stopPropagation();
       if (performance.now() < eatUntil) return;
@@ -560,6 +573,11 @@ function paintRail() {
     } else if (badge) badge.remove();
   });
   D.dataset.pdxWant = want || "";
+  // a pick on the chart is open: HELA's windows (the Herald above all) wait off the chart page,
+  // so they never lie over the centuries and swallow the tap (ENGINE's browser runs)
+  const k = req && req.kind, o = (req && req.options) || {};
+  const chartPick = view === "chart" && (k === "travel" || k === "merchant_century" || (k === "target" && o.target_type === "century"));
+  D.classList.toggle("pdx-chart-pick", !!chartPick);
 }
 
 function stagePt(x, y) { return { x: (x - O.x) / S, y: (y - O.y) / S }; }
@@ -651,6 +669,10 @@ function paintAction() {
   if (k === "market") {
     const sign = [...document.querySelectorAll("#market-zone .market-side-signs > *")].find((n) => /^\s*Pass\s*$/i.test(n.textContent));
     if (sign) { label = "Pass"; fn = () => sign.click(); }
+  } else if (k === "activation" && g._actStaged) {
+    // the Activation phase: the items tapped in the case are fired with this key (or none: pass)
+    const n = g._actStaged.length;
+    label = n ? `Fire ${n}` : "Pass"; fn = () => { try { g._passActivation(); } catch (e) {} };
   } else if (k === "travel" && view === "chart") {
     const anchor = document.querySelector("#timeline-rail .cc-anchor, #timeline-rail .sea-anchor, #timeline-rail .cm-anchor");
     if (anchor) { label = "Stay"; fn = () => anchor.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); }
@@ -739,6 +761,7 @@ function wireRailCapture() {
     if (!on()) return;
     const b = e.target && e.target.closest && e.target.closest("#pdx-mrail button[data-view]");
     if (!b) return;
+    if (b.dataset.view === "merchant" && view === "merchant") return;   // the Secret Market's key (wireSecretKey)
     e.stopPropagation(); e.preventDefault();
     manualAt = performance.now();
     go(b.dataset.view);
@@ -769,6 +792,227 @@ function paintTutLink() {
   tutLink.querySelectorAll("path").forEach((p) => p.setAttribute("d", d));
   const dot = tutLink.querySelector("circle"); dot.setAttribute("cx", x1); dot.setAttribute("cy", y1);
 }
+/* ══ THE BIN (the owner's idea): bottom right of the CASE page. A card is picked up with a tap
+   (or dragged by a finger) and put in the bin: it is recycled for energy. In a Delivery phase,
+   while he holds a relic that can be filed here, the bin is a DRAWER: the same tap files it
+   (no change of scene). Never by accident: a card must be picked up first. ══ */
+let bin = null;
+function buildBin() {
+  bin = document.createElement("button");
+  bin.type = "button"; bin.id = "pdx-bin";
+  bin.innerHTML = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 10h16l-1.6 17H9.6z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M6 10h20M13 6h6v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M13 14v9M16 14v9M19 14v9" stroke="currentColor" stroke-width="1.8"/></svg><span class="pb-word"></span><span class="pb-sub"></span>`;
+  document.body.appendChild(bin);
+}
+function binState() {
+  const g = game(); if (!g) return { mode: "idle" };
+  const c = g._carry, st = g._deliverState;
+  if (c && st && st.names && st.names.has(c.name)) return { mode: "file", name: c.name };
+  if (c) {
+    const me = g._self && g._self();
+    const card = me && (me.hand || me.equipment || []).find((x) => x.name === c.name);
+    return { mode: "recycle", name: c.name, gain: card ? card.recycle_value : null };
+  }
+  return { mode: st && st.names && st.names.size ? "drawer" : "idle" };
+}
+function paintBin() {
+  if (!bin) buildBin();
+  const g = game(), me = g && g._self ? g._self() : null;
+  const has = !!(me && (me.hand || me.equipment || []).length);
+  bin.hidden = !(on() && view === "case" && has);
+  if (bin.hidden) return;
+  const b = binState();
+  bin.dataset.mode = b.mode;
+  const word = { idle: "BIN", drawer: "DRAWER", file: "FILE IT", recycle: "RECYCLE" }[b.mode];
+  const sub = b.mode === "recycle" ? (b.gain != null ? `+${b.gain} energy` : "") : b.mode === "file" ? "deliver here" : b.mode === "drawer" ? "tap a relic, then here" : "tap a card, then here";
+  if (bin.querySelector(".pb-word").textContent !== word) bin.querySelector(".pb-word").textContent = word;
+  if (bin.querySelector(".pb-sub").textContent !== sub) bin.querySelector(".pb-sub").textContent = sub;
+}
+function binAct() {
+  const g = game(); if (!g) return false;
+  const b = binState();
+  if (b.mode === "file") { g._dropCard(true); g._fileDeliver(b.name); return true; }
+  if (b.mode === "recycle") { g._dropCard(true); g.recycleCard(b.name); return true; }
+  return false;
+}
+function overBin(x, y) {
+  if (!bin || bin.hidden) return false;
+  const r = bin.getBoundingClientRect();
+  return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8;
+}
+function wireBin() {
+  // the bin's tap is taken before the game's own "a click anywhere drops the carried card"
+  window.addEventListener("click", (e) => {
+    if (!on() || !bin || bin.hidden) return;
+    if (!(e.target.closest && e.target.closest("#pdx-bin"))) return;
+    e.preventDefault(); e.stopPropagation();
+    binAct(); paintBin();
+  }, true);
+  // a finger drags a card of the case onto the bin
+  let dg = null;
+  window.addEventListener("pointerdown", (e) => {
+    if (!on() || view !== "case" || e.pointerType !== "touch") return;
+    const c = e.target.closest && e.target.closest("#rucksack-zone .ruck-card");
+    if (!c) return;
+    dg = { c, id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+  }, true);
+  window.addEventListener("pointermove", (e) => {
+    if (!dg || e.pointerId !== dg.id) return;
+    if (!dg.moved) {
+      if (Math.hypot(e.clientX - dg.x, e.clientY - dg.y) < 10) return;
+      dg.moved = true;
+      const g = game();
+      if (!(g && g._carry && g._carry.name === dg.c.dataset.name)) dg.c.click();   // picked up, as a tap would
+    }
+    e.preventDefault();
+    try { window.dispatchEvent(new MouseEvent("mousemove", { clientX: e.clientX, clientY: e.clientY, bubbles: true })); } catch (err) {}
+    if (bin) bin.classList.toggle("pb-hot", overBin(e.clientX, e.clientY));
+  }, { capture: true, passive: false });
+  const up = (e) => {
+    if (!dg || e.pointerId !== dg.id) return;
+    const d = dg; dg = null;
+    if (bin) bin.classList.remove("pb-hot");
+    if (!d.moved) return;
+    const g = game();
+    if (overBin(e.clientX, e.clientY)) binAct();
+    else if (g && g._carry) g._dropCard(false);          // let go elsewhere: back in the case
+    paintBin();
+  };
+  window.addEventListener("pointerup", up, true);
+  window.addEventListener("pointercancel", up, true);
+}
+
+/* ══ VOUCHERS on a phone: a ticket is used where it lies (the case) or from the pip-boy's
+   ticket slot, never carried between scenes. A small inked sheet asks once. ══ */
+const TICKETS = [["solo", "SOLO PHASE", "an extra generators hour"], ["market", "MARKET WINDOW", "the Merchant sees you, wherever you are"], ["item", "ITEM WINDOW", "an extra activation window"]];
+function ownedTickets() {
+  const g = game(), me = g && g._self ? g._self() : null;
+  if (!me) return [];
+  return TICKETS.map(([k, n, d]) => ({ k, n, d, count: me[k + "_voucher"] || 0 })).filter((t) => t.count > 0);
+}
+function ticketSheet(only) {
+  closeSheet();
+  const list = ownedTickets().filter((t) => !only || t.k === only);
+  if (!list.length) return;
+  sheet = document.createElement("div");
+  sheet.className = "pdx-sheet pdx-tickets";
+  sheet.innerHTML = `<div class="ps-card card-pop"><div class="cp-name">C.R.O.N.O.S. TICKETS</div><div class="cp-kind">ADMIT ONE, used at once, it takes effect at the end of this phase</div>`
+    + list.map((t) => `<button type="button" class="pt-ticket" data-k="${t.k}"><b>${esc(t.n)}</b><span>${esc(t.d)}</span><i>×${t.count}</i></button>`).join("")
+    + `</div><div class="ps-keys"><button type="button" class="ps-close">Back</button></div>`;
+  sheet.querySelector(".ps-close").addEventListener("click", (e) => { e.stopPropagation(); closeSheet(); });
+  sheet.querySelectorAll(".pt-ticket").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const g = game(); closeSheet();
+    if (g && g.useVoucher) g.useVoucher(b.dataset.k);
+  }));
+  document.body.appendChild(sheet);
+  requestAnimationFrame(() => sheet && sheet.classList.add("on"));
+}
+function wireTickets() {
+  window.addEventListener("click", (e) => {
+    if (!on()) return;
+    const v = e.target.closest && e.target.closest("#rucksack-zone .ruck-voucher[data-voucher]");
+    const slot = e.target.closest && e.target.closest("#ticket-drop, #pdx-tslot");
+    if (!v && !slot) return;
+    const kind = v && v.dataset.voucher;
+    if (kind && kind.indexOf("lot:") === 0) return;         // the Auction's lot tickets keep their own path
+    e.preventDefault(); e.stopPropagation();
+    ticketSheet(kind || null);
+  }, true);
+}
+// the pip-boy's ticket slot, lit and tappable on a phone while he holds tickets
+let tslot = null;
+function paintTicketSlot() {
+  const td = document.getElementById("ticket-drop");
+  if (!td) return;
+  const n = ownedTickets().reduce((a, t) => a + t.count, 0);
+  td.classList.toggle("pdx-has-tickets", on() && n > 0);
+  td.dataset.n = n ? String(n) : "";
+}
+
+/* ══ THE SECRET MARKET: in the Merchant's page his key turns into the Secret Market's; a tap
+   frames the curtain (and its card), another tap the shelf again ══ */
+let secretOn = false;
+function wireSecretKey() {
+  window.addEventListener("click", (e) => {
+    if (!on() || view !== "merchant") return;
+    const b = e.target.closest && e.target.closest('#pdx-mrail button[data-view="merchant"]');
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    secretOn = !secretOn; manualAt = performance.now();
+    swapTo("merchant");
+  }, true);
+}
+function paintSecretKey() {
+  if (!rail) return;
+  const b = rail.querySelector('button[data-view="merchant"]');
+  if (!b) return;
+  const inM = view === "merchant";
+  if (!inM) secretOn = false;
+  const label = inM ? (secretOn ? "Shelf" : "Secret") : "Merchant";
+  const sp = b.querySelector("span");
+  if (sp && sp.textContent !== label) sp.textContent = label;
+  b.classList.toggle("mr-secret", inM && !secretOn);
+}
+
+/* ══ GOLD at the Merchant ══ */
+let goldEl = null;
+function paintGold() {
+  if (!goldEl) {
+    goldEl = document.createElement("div"); goldEl.id = "pdx-gold";
+    goldEl.innerHTML = `<i></i><span class="pg-h">YOUR GOLD</span><b></b>`;
+    document.body.appendChild(goldEl);
+  }
+  const g = game(), me = g && g._self ? g._self() : null;
+  goldEl.hidden = !(on() && view === "merchant" && me);
+  if (goldEl.hidden) return;
+  const t = String(me.gold);
+  if (goldEl.querySelector("b").textContent !== t) goldEl.querySelector("b").textContent = t;
+  goldEl.style.left = (stage.x + 10) + "px"; goldEl.style.top = (stage.y + 10) + "px";
+}
+
+/* ══ HELA's notes (the held "?") on a phone: each note beside its subject, kept on the stage
+   and off each other; the notes of subjects on another page wait ══ */
+function placeNotes(list) {
+  if (!on()) return false;
+  const placed = [];
+  const inStage = (A) => A.right > stage.x && A.left < stage.x + stage.w && A.bottom > stage.y && A.top < stage.y + stage.h;
+  list.sort((a, b) => a.anchor.top - b.anchor.top);
+  for (const it of list) {
+    const A = it.anchor;
+    if (!inStage(A)) { it.el.hidden = true; continue; }
+    const w = Math.min(it.el.offsetWidth || 200, stage.w * 0.46), h = it.el.offsetHeight || 60;
+    it.el.style.maxWidth = w + "px";
+    const cands = [
+      { x: A.right + 10, y: A.top }, { x: A.left - w - 10, y: A.top },
+      { x: A.left, y: A.bottom + 8 }, { x: A.left, y: A.top - h - 8 },
+    ];
+    let best = null;
+    for (const c of cands) {
+      const x = Math.max(stage.x + 6, Math.min(stage.x + stage.w - w - 6, c.x));
+      const y = Math.max(stage.y + 6, Math.min(stage.y + stage.h - h - 6, c.y));
+      const r = { left: x, top: y, right: x + w, bottom: y + h };
+      const hit = placed.some((p) => !(r.right < p.left || r.left > p.right || r.bottom < p.top || r.top > p.bottom));
+      if (!hit) { best = r; break; }
+    }
+    if (!best) { it.el.hidden = true; continue; }
+    it.el.style.left = best.left + "px"; it.el.style.top = best.top + "px";
+    placed.push(best);
+  }
+  return true;
+}
+// a tap on "?" shows her notes (a tap again, or anywhere, puts them away); in the tutorial the
+// tap keeps opening the tips her lesson expects
+function wireNotesKey() {
+  window.addEventListener("click", (e) => {
+    if (!on() || document.body.classList.contains("tut")) return;
+    const k = e.target.closest && e.target.closest("#pdx-tabkey, .pdx-helpkey");
+    const H = window.__pdxHelp;
+    if (!H || !H.hold) return;
+    if (k) { e.preventDefault(); e.stopImmediatePropagation(); H.hold(!H.isHeld()); return; }
+    if (H.isHeld() && !(e.target.closest && e.target.closest("#pdx-help"))) H.hold(false);
+  }, true);
+}
+
 /* ── mount / unmount with the table ── */
 let mounted = false;
 function wanted() {
@@ -785,7 +1029,9 @@ function sync() {
     layout();
     view = "machine";
     go(followScene(), false);
+    setTimeout(nudgeSeals, 400); setTimeout(nudgeSeals, 1500);
     catHome(true);
+    if (window.__pdxHelp) window.__pdxHelp.notePlacer = placeNotes;
     paintCol();
   } else if (!w && mounted) {
     mounted = false;
@@ -794,6 +1040,7 @@ function sync() {
     closeFiles();
     files().forEach((f) => f.classList.remove("pdx-piled"));
     catHome(false);
+    if (window.__pdxHelp && window.__pdxHelp.notePlacer === placeNotes) window.__pdxHelp.notePlacer = null;
   }
 }
 function followScene() {
@@ -806,6 +1053,7 @@ function start() {
   wireFiles();
   wireSheet();
   wireRailCapture();
+  wireBin(); wireTickets(); wireSecretKey(); wireNotesKey();
   const obs = new MutationObserver(sync);
   obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
   const sg = document.getElementById("screen-game");
@@ -817,7 +1065,7 @@ function start() {
   addEventListener("orientationchange", () => setTimeout(onResize, 60));
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
-  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintCol(); paintAction(); paintLife(); paintTutLink(); } }); };
+  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintSecretKey(); paintCol(); paintAction(); paintLife(); paintTutLink(); paintBin(); paintGold(); paintTicketSlot(); } }); };
   setInterval(() => {
     if (!on()) { if (life) life.style.display = "none"; return; }
     // the tutorial starting or ending moves the stage's top edge

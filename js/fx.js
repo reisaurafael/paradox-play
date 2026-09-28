@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609280157";
-import { roman } from "./util.js?202609280157";
+import { audio } from "./audio.js?202609280601";
+import { roman } from "./util.js?202609280601";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -640,7 +640,7 @@ class Fx {
         }
       };
       const val = m[1][col] || 0;
-      if (val > 0) add(col, val);
+      if (val > 0) add(col, col === 2 ? val * 2 : val);   // the Past (module 6, an overload) hits for double
       if (col === 0 && val > 0 && holds(c, "Spear of Destiny")) add(2, val);   // a future paradox also fires a past one
     }
     // a hit no pair explains still gets its zap, last

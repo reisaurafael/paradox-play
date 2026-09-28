@@ -200,7 +200,7 @@
   }
   // the four fingertips' nails (the feminine hand): [x, y, angle, length, width]
   const FINGER_NAILS=[[704,266.5,8,12,8.5],[728,296.5,16,12.5,9],[734,324,12,12.5,9],[723,342.5,4,12,8.5]];
-  const THUMB=thumbGeo([612,340],[638,367],[667,380],15.5,14.5,13);
+  const THUMB=thumbGeo([612,337],[636,360],[662,370],14.5,13.5,12);
   const FIST_THUMB=thumbGeo([612,306],[640,318],[668,332],14,13.5,12.5);
   const HAND_PATHS={
     wrist: "M 530 250 Q 556 252 566 256 Q 574 260 574 270 L 575 332 Q 574 342 566 344 Q 552 348 530 350 Z",
@@ -237,8 +237,8 @@
     const nail=([x,y,a,l,w])=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M ${-l/2} ${-w/2} L ${l*.18} ${-w/2} Q ${l/2} ${-w/2} ${l/2} 0 Q ${l/2} ${w/2} ${l*.18} ${w/2} L ${-l/2} ${w/2} Q ${-l/2-1.6} 0 ${-l/2} ${-w/2} Z" style="fill:var(--hela-seat,#6fae6a)" stroke="${LINE}" stroke-width="1.3" stroke-linejoin="round"/><path d="M ${-l/2+1.2} ${-w/2+1.4} Q ${-l/2-.4} 0 ${-l/2+1.2} ${w/2-1.4}" fill="none" style="stroke:${sk(3)}" stroke-width="1.2" stroke-linecap="round"/></g>`;
     const nails=(list)=>`<g pointer-events="none">${list.map(nail).join("")}</g>`;
     const thumbArt=(G,n)=>{
-      const f=(v)=>v.toFixed(1), ang=Math.atan2(G.d2[1],G.d2[0])*180/Math.PI;
-      const pad=G.pad, tipNail=[G.T[0]+G.d2[0]*2-G.n2[0]*G.out*G.w2*.18, G.T[1]+G.d2[1]*2-G.n2[1]*G.out*G.w2*.18, ang, G.w2*1.25, G.w2*1.05];
+      const f=(v)=>v.toFixed(1);
+      const pad=G.pad;
       return `${flat(G.d)}
       ${inClip(n, `
         ${warm(`M ${f(pad[0]-8)} ${f(pad[1])} a 8 7 0 1 0 16 0 a 8 7 0 1 0 -16 0`,.32)}
@@ -251,7 +251,7 @@
         ${fine(G.wrinkle,1.3,.6)}
         ${contour(G.knuckle,1.3,.55)}
       </g>
-      ${m ? "" : nails([tipNail])}`;
+      `;
     };
     const open=`<g class="${cls}-open">
       ${clip("f",H.fingers)}${clip("t",H.thumb)}${clip("w",H.wrist)}

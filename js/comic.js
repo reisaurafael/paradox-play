@@ -28,8 +28,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609280157";
-import { mend } from "./mend.js?202609280157";
+import { roman } from "./util.js?202609280601";
+import { mend } from "./mend.js?202609280601";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -611,7 +611,7 @@ class Comic {
     else if (kind === "traveled" && p.to < p.from)
       this.note("past", "Sailing to the past costs 1 energy per century, 2 per century below X. The future is free.");
     else if (kind === "paradox_resolved" && (p.hits || []).length)
-      this.note("paradox", "A paradox never hurts its maker. Future hits everyone ahead of you, Present everyone beside you, Past everyone behind.");
+      this.note("paradox", "A paradox never hurts its maker. Future hits everyone ahead of you, Present everyone beside you, Past everyone behind you for double: it is the third die, an overload.");
     else if (kind === "wanted")
       this.note("wanted", "A Wanted traveler carries a 4 gold bounty. Paying 4 gold at a Market (Declare) clears it.");
     else if (kind === "card_bought" && p.seat === me && !p.stolen)
@@ -643,7 +643,8 @@ class Comic {
       const hit = others.filter(PX[c][1]);
       const parts = [{ b: "PARADOX " + PX[c][0] + ": " }];
       if (!hit.length) parts.push("no one in reach");
-      else { hit.forEach((t, i) => parts.push(i ? ", " : "", { name: t.name })); parts.push(` lose ${v}`); }
+      // the Past (module 6) takes a die only when the row is overloaded, and it hits for DOUBLE
+      else { hit.forEach((t, i) => parts.push(i ? ", " : "", { name: t.name })); parts.push(c === 2 ? ` lose ${v * 2} (double: the third die)` : ` lose ${v}`); }
       rows.push({ row: 1, parts });
     }
     const gain = (m[0][0] || 0) + (m[0][2] || 0);
@@ -664,7 +665,7 @@ class Comic {
     }
     // three dice in one function: say it BEFORE Confirm, not after
     m.forEach((row, r) => { if (row.length && row.every((v) => v)) rows.push({ row: r, tone: "danger",
-      parts: [{ b: "OVERLOAD: " }, `${["Recharge", "Paradox", "Travel"][r]} gets three dice, so it will be shut for the next Hour.`] }); });
+      parts: [{ b: "OVERLOAD: " }, `${["Recharge", "Paradox", "Travel"][r]} gets three dice, so it will be shut for the next Hour.${r === 1 ? " Its Past die hits for double first." : ""}`] }); });
     if (dist || heat || gain) {
       if (after <= 0) rows.push({ row: 2, tone: "danger", parts: [{ b: "! " }, "The full trip back costs more energy than you have: you would stop short."] });
       else if (after <= 6) rows.push({ row: 2, tone: "danger", parts: [{ b: "! " }, `This plan can leave you at ${after} energy: critical.`] });

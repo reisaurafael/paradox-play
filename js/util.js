@@ -35,7 +35,7 @@ export const FUNCTIONS = [
   { key: "recharge", name: "Recharge", cls: "fn-recharge",
     mods: [["energy", "Energy"], ["gold", "Gold"], ["both", "Energy + Gold"]] },
   { key: "paradox", name: "Paradox", cls: "fn-paradox",
-    mods: [["future", "Future"], ["paradox", "Present"], ["past", "Past"]] },
+    mods: [["future", "Future"], ["paradox", "Present"], ["past", "Past 2×"]] },   // module 6 hits for double (28/09)
   { key: "travel", name: "Travel", cls: "fn-travel",
     mods: [["booms", "Heat"], ["travel", "Move 1×"], ["travel2", "Move 2×"]] },
 ];

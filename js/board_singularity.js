@@ -599,7 +599,7 @@
   }
   function commandText(){
     if(!mode) return "";
-    if(mode.kind==="travel"){ const hasF=[...(travelCandidates()||[])].some(c=>c>mode.self&&c!==0); const clause=mode.ppc===0?` · <b class="cg">Compass, this past drift is FREE</b>`:hasF?"":` · <b class="cn">you're at the newest century, only the PAST is open</b>`; return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + `PLOT A DRIFT: up to ${mode.max} ${mode.max===1?"century":"centuries"} · <b class="cg">green = future, free (with the drift)</b> · <b class="cc">amber = past, costs energy</b>${clause} · <span class="cc-anchor">HOLD at ${rom(mode.self)}</span>`; }
+    if(mode.kind==="travel"){ const hasF=[...(travelCandidates()||[])].some(c=>c>mode.self&&c!==0); const clause=mode.ppc===0?` · <b class="cg">the Compass makes this drift FREE</b>`:hasF?"":` · <b class="cn">you're at the newest century, only the PAST is open</b>`; return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + `PLOT A DRIFT: up to ${mode.max} ${mode.max===1?"century":"centuries"} · <b class="cg">green = future, free (with the drift)</b> · <b class="cc">amber = past, costs energy</b>${clause} · <span class="cc-anchor">HOLD at ${rom(mode.self)}</span>`; }
     if(mode.kind==="merchant") return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + "RELOCATE THE HAULER: choose its new century";
     return `<span class="vz-sigil cmd-sigil">${window.__helaSigil||""}</span><span class="vz-name">HELA</span>` + "CHOOSE A TARGET CENTURY";
   }

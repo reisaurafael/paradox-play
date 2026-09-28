@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609280157";
-import { Game } from "./game.js?202609280157";
-import { icon } from "./icons.js?202609280157";
-import { roman } from "./util.js?202609280157";
-import { profile } from "./profile.js?202609280157";
+import { api, Connection } from "./net.js?202609280601";
+import { Game } from "./game.js?202609280601";
+import { icon } from "./icons.js?202609280601";
+import { roman } from "./util.js?202609280601";
+import { profile } from "./profile.js?202609280601";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
@@ -78,7 +78,7 @@ const L = {
   paradox: "So I am giving you the function. PARADOX reaches across the years and tears into another traveller. Ahead of you with the first module, in your own century with the second. A third function earns a third generator too, and yours read as high as III from here on. I want you armed when you answer.",
   mod3: "Your machine grows again. A third module on every function, and a fourth generator to feed them. That is the whole machine, traveller. Everything a real rival brings to a table, you are now holding.",
   // FIXED: the third module is the PAST (module 6), the second the present
-  paradoxAim: "Your paradox has its third module now, and that one is the PAST: it strikes whoever is standing behind you. First ahead of you, second right on top of you, third behind you. Three modules, three directions. Pick the one they are standing in.",
+  paradoxAim: "Your paradox has its third module now, and that one is the PAST: it strikes whoever is standing behind you, for DOUBLE the die. First ahead of you, second right on top of you, third behind you. A die only reaches the third after the first two, and three dice overload the function, so the Past hits twice as hard to pay for the shut Hour. Pick the module they are standing in.",
   // FIXED: the century is wherever the real wagon rolls in
   merchantArrives: "Something new on your chart, traveller. A wagon has rolled into {c}, at the far end of the only era you can see.",
   merchantWho: "The MERCHANT. He carries relics and he trades with one man only: whoever is standing in his own year. That wagon crawls the centuries on its own business, never on yours, so do not sit there waiting on it. If you want what he has, you cross the years and you stand in front of him.",
@@ -808,7 +808,7 @@ class Coach {
         const holds = (n, card) => { const t = ((this.game.view || {}).travelers || []).find((x) => x.name === n) || {};
           return (t.hand || t.equipment || []).some((c) => c && c.name === card); };
         const sword = mineHit.map((h) => h.seat).find((n) => holds(n, "Laser Sword"));
-        if (byMe.length) parts.push(`-${onMe.damage} energy for you: ${byMe.join(" and ")}'s ${nm} ${byMe.length > 1 ? "dice" : "die"} hit you. You stood ${dir} them.`);
+        if (byMe.length) parts.push(`-${onMe.damage} energy for you: ${byMe.join(" and ")}'s ${nm} ${byMe.length > 1 ? "dice" : "die"} hit you${col === 2 ? " for double" : ""}. You stood ${dir} them.`);
         else if (sword) parts.push(`-${onMe.damage} energy for you: ${sword}'s Laser Sword threw your paradox back at you.`);
         else parts.push(`-${onMe.damage} energy for you from this paradox.`);
         key = "hit";
@@ -818,7 +818,7 @@ class Coach {
         const names = mineHit.map((h) => h.seat).join(" and ");
         const where = col === 1 ? (mc ? `in ${R(mc)}, your own century` : "in your own century")
           : col === 0 ? "ahead of you, in a later century" : "behind you, in an earlier century";
-        parts.unshift(`Your paradox landed: ${names} stood ${where}, so your ${nm} die hit them.`);
+        parts.unshift(`Your paradox landed: ${names} stood ${where}, so your ${nm} die hit them${col === 2 ? " for double" : ""}.`);
         key = "p" + col;
       }
       if (!parts.length && hits.length && this.scripted && this.once("rival-paradox")) {
@@ -1327,7 +1327,7 @@ class Coach {
       } else if (s.r === 1) {
         text = [`Drag a ${R(v)} onto <b>Paradox 1</b>: everyone ahead of you loses ${v} energy.`,
           `Drag a ${R(v)} onto <b>Paradox 2</b>: everyone in your own century loses ${v}.`,
-          `Drag a ${R(v)} onto <b>Paradox 3</b>: everyone behind you loses ${v}.`][s.c];
+          `Drag a ${R(v)} onto <b>Paradox 3</b>: everyone behind you loses ${v * 2}, double.`][s.c];
         if (s.c === 0) sub = "Ahead means a higher century.";
         if (s.c === 0 && lesson === "valve" && !this.reach().ahead.length) sub = `No one stands ahead of you, so it hits no one: it goes here because ${FN[((this.me() || {}).overloaded_functions || [0])[0]] || "Recharge"} is shut and Travel holds the pair.`;
         if (lesson === "strike" && s.c < 2) {
@@ -1336,6 +1336,7 @@ class Coach {
           if (who && who.length) sub = `${who.map((t) => t.name).join(" and ")} ${who.length > 1 ? "stand" : "stands"} in ${R(who[0].century)}${s.c === 1 ? ", with you" : ""}. It lands this Hour, before anyone travels.`;
           else if (s.c === 0 && P[1][1]) sub = "No one stands ahead of you, so this die hits no one. It opens the way to the second module: they fill left to right.";
         }
+        if (s.c === 2) { sub = "A third die OVERLOADS Paradox: the Past hits for double now, and the function shuts for the next Hour."; this.markTrack("overload"); }
         this.markTrack("paradox");
       } else {
         text = [`Drag a ${R(v)} onto <b>Travel 1</b>: +${v} heat.`,

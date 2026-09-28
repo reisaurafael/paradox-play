@@ -398,7 +398,7 @@ html.pdx-tablet #pdx-mrail button span { font-size: .72rem; }
 #pdx-mcol:has(#pdx-tabkey:not([hidden])) .mc-q { display: none; }
 
 /* the era seals on the casing (O / A / S): their letters read at phone scale */
-html.pdx-m-on #hull .mano-seal .ms-glyph { fill: #f0d49a; font-size: 11px; font-family: var(--f-display, "Oswald"), Arial, sans-serif; }
+html.pdx-m-on #hull .mano-seal .ms-glyph { fill: #f0d49a; font-size: 11px; font-family: Arial, "Helvetica Neue", Roboto, sans-serif !important; font-weight: 700; }
 html.pdx-m-on #hull .mano-seal.mended .ms-glyph { fill: #fff4dc; }
 
 /* ══ PHASE 2, round 3 (the owner, 27/09 evening): no panning, no zoom, a page swap ══ */
@@ -426,8 +426,8 @@ html.pdx-m-on #timeline-rail .cc-hit, html.pdx-m-on #timeline-rail .sea-hit, htm
   color: var(--cx-ink, #15100a); text-shadow: 3px 3px 0 var(--hela-seat, #f2a93b); transform: rotate(-2deg); }
 
 /* THE COMPLETE FILE on a phone: the desktop's dossier, readable, over the arm and the table */
-html.pdx-m-on .panel-detail.dossier { left: calc(var(--pdx-colw, 160px) + 10px) !important; top: 8px !important; bottom: auto !important;
-  width: min(440px, calc(100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px) - 20px)) !important; max-height: calc(100vh - 16px) !important;
+html.pdx-m-on .panel-detail.dossier { left: calc(var(--pdx-colw, 160px) + 10px) !important; top: calc(var(--pdx-stage-y, 0px) + 8px) !important; bottom: auto !important;
+  width: min(440px, calc(100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px) - 20px)) !important; max-height: calc(100vh - var(--pdx-stage-y, 0px) - 16px) !important;
   z-index: 60180 !important; transform: none !important; box-shadow: 8px 8px 0 rgba(0, 0, 0, .55) !important; }
 html.pdx-m-on .do-attach { display: none !important; }
 
@@ -620,3 +620,53 @@ html[data-pdx-view="brain"] #pdx-mcol .mc-eye-lbl { color: var(--hela-seat, #f2a
 html.pdx-m-on #tut-callout { top: var(--mc-slot-top, 150px) !important; max-height: var(--mc-slot-h, 160px) !important;
   left: max(7px, env(safe-area-inset-left, 0px)) !important; width: calc(var(--pdx-colw, 160px) - 14px) !important; overflow: hidden auto !important; }
 html.pdx-m-on body:has(#tut-callout.on) #pdx-mcol .mc-says { visibility: hidden; }
+
+/* ── THE BIN / DRAWER (case page, bottom right of the stage) ── */
+#pdx-bin { position: fixed; z-index: 60160; right: calc(var(--pdx-railw, 64px) + 10px); bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  width: 92px; min-height: 84px; padding: 6px 4px; display: grid; justify-items: center; align-content: center; gap: 2px;
+  border: 3px solid var(--cx-ink, #15100a); border-radius: 8px; background: #6d5a45; color: var(--cx-paper, #f4e6b0);
+  box-shadow: 4px 4px 0 var(--cx-ink, #15100a); touch-action: manipulation; -webkit-touch-callout: none; }
+#pdx-bin[hidden] { display: none; }
+#pdx-bin svg { width: 30px; height: 30px; }
+#pdx-bin .pb-word { font: 700 .82rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; }
+#pdx-bin .pb-sub { font: 500 .6rem/1.1 var(--f-body, "Inter", sans-serif); opacity: .85; text-align: center; }
+#pdx-bin[data-mode="idle"], #pdx-bin[data-mode="drawer"] { opacity: .8; }
+#pdx-bin[data-mode="recycle"] { background: #3f8a5a; animation: txBeckon 1.1s ease-in-out infinite; }
+#pdx-bin[data-mode="file"] { background: var(--hela-seat, #f2a93b); color: var(--cx-ink, #15100a); animation: txBeckon 1.1s ease-in-out infinite; }
+#pdx-bin[data-mode="drawer"] { background: #7a5a2c; }
+#pdx-bin.pb-hot { transform: scale(1.08); }
+
+/* ── GOLD at the Merchant ── */
+#pdx-gold { position: fixed; z-index: 60160; display: grid; grid-template-columns: auto auto; align-items: center; gap: 0 8px;
+  padding: 5px 10px 6px 8px; border: 2px solid var(--cx-ink, #15100a); border-radius: 6px; background: var(--cx-paper, #f4e6b0);
+  box-shadow: 3px 3px 0 var(--cx-ink, #15100a); pointer-events: none; }
+#pdx-gold[hidden] { display: none; }
+#pdx-gold i { grid-row: span 2; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--cx-ink, #15100a);
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #e2b23c 55%, #9a6d17); }
+#pdx-gold .pg-h { font: 700 .56rem/1 var(--f-mono, monospace); letter-spacing: .14em; color: #6b5a3a; }
+#pdx-gold b { font: 700 1.3rem/1 var(--f-display, "Oswald", sans-serif); color: var(--cx-ink, #15100a); }
+
+/* ── the Secret Market's key (the Merchant's key while in his page) ── */
+#pdx-mrail button.mr-secret { background: #3a2250; color: #e8d6ff; }
+#pdx-mrail button.mr-secret svg { color: #c9a6ff; }
+
+/* ── tickets: the pip-boy's slot lights while he holds any; the ticket sheet ── */
+html.pdx-m-on #ticket-drop.pdx-has-tickets { pointer-events: auto !important; outline: 2.5px dashed #e2c078; outline-offset: 2px; border-radius: 4px; }
+html.pdx-m-on #ticket-drop.pdx-has-tickets::after { content: "TICKETS \00D7 " attr(data-n); position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  font: 700 11px/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .08em; color: #e2c078; }
+.pdx-tickets .pt-ticket { display: grid; grid-template-columns: 1fr auto; gap: 1px 10px; width: 100%; margin: 6px 0 0; padding: 8px 10px; text-align: left;
+  border: 2px dashed #7a5330; border-radius: 4px; background: #fff6d8; color: var(--cx-ink, #15100a); min-height: 44px; }
+.pdx-tickets .pt-ticket b { font: 700 .95rem/1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; }
+.pdx-tickets .pt-ticket span { grid-column: 1; font: 500 .8rem/1.2 var(--f-body, "Inter", sans-serif); }
+.pdx-tickets .pt-ticket i { grid-column: 2; grid-row: 1 / span 2; align-self: center; font: 700 1rem/1 var(--f-mono, monospace); font-style: normal; }
+
+/* ── THE END OF THE MATCH on a phone: the card fits the stage and scrolls; its keys never
+      leave the screen (the owner was trapped on it) ── */
+html.pdx-m-on .gameover { position: fixed !important; left: var(--pdx-colw, 160px) !important; right: var(--pdx-railw, 64px) !important; top: 0 !important; bottom: 0 !important;
+  display: flex !important; align-items: flex-start !important; justify-content: center !important; padding: 8px !important; z-index: 60190 !important; }
+html.pdx-m-on .gameover .gameover-card { max-height: calc(100vh - 16px); overflow: hidden auto; padding: 14px 16px 0 !important; touch-action: pan-y; box-sizing: border-box; }
+html.pdx-m-on .gameover .gameover-actions { position: sticky; bottom: 0; padding: 8px 0 10px; background: inherit; display: flex; gap: 8px; justify-content: center; }
+html.pdx-m-on .gameover .gameover-actions .btn { min-height: 48px; font-size: 1rem; }
+html.pdx-m-on .gameover .winner { font-size: 2rem !important; }
+/* while a pick is open on the chart, HELA's windows wait (they come back the moment it is made) */
+html.pdx-m-on.pdx-chart-pick .he-window, html.pdx-m-on.pdx-chart-pick .doc-inplace { visibility: hidden !important; pointer-events: none !important; }

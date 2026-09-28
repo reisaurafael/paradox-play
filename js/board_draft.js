@@ -1941,13 +1941,17 @@
     if (req.kind === "travel") {
       const o = req.options || {};
       mode = { kind: "travel", req, max: o.max, self: o.century != null ? o.century : self.century,
-        energy: self.energy, locked: o.direction_locked != null ? o.direction_locked : null };
+        energy: self.energy, locked: o.direction_locked != null ? o.direction_locked : null,
+        ppc: o.energy_per_past_century != null ? o.energy_per_past_century : 1 };   // 0: the Compass rides free
       scheduleLive();
     } else if (req.kind === "merchant_century") {
       mode = { kind: "merchant", req, centuries: new Set(req.options.centuries || []) };
       scheduleLive();
     } else if (req.kind === "target" && req.options && req.options.target_type === "century") {
-      mode = { kind: "century", req, centuries: new Set((req.options.candidates || []).map(Number)) };
+      // candidates arrive as {century: n} objects (Astrolabe): Number() of an object is
+      // NaN, which left the chart with no target and the match waiting forever
+      mode = { kind: "century", req, centuries: new Set((req.options.candidates || [])
+        .map((x) => Number(x && typeof x === "object" ? x.century : x)).filter((c) => c >= 0)) };
       scheduleLive();
     } else if (mode) { mode = null; scheduleLive(); }
   }
@@ -1986,7 +1990,7 @@
         const d = Math.abs(c - mode.self);
         if (d === 0 || d > mode.max) continue;
         if (mode.locked != null && Math.sign(c - mode.self) !== mode.locked) continue;
-        if (c > mode.self) { ring(c, "glow-go", `sail with the current to ${rom(c)}, free`); g += costTag(c, 0, "free"); }
+        if (c > mode.self || mode.ppc === 0) { ring(c, "glow-go", c > mode.self ? `sail with the current to ${rom(c)}, free` : `the Compass carries you to ${rom(c)}, free`); g += costTag(c, 0, "free"); }
         else {
           const cost = stepCost(mode.self, d);
           const risky = cost >= mode.energy;
