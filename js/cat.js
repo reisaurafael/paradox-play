@@ -101,7 +101,7 @@ function body(name, parts, before = "", after = "") {
   for (const p of parts) {
     const wrap = (inner) => {
       let g = inner;
-      if (p.cls) g = `<g class="${p.cls}">${g}</g>`;
+      for (const c of [].concat(p.cls || []).reverse()) g = `<g class="${c}">${g}</g>`;
       if (p.tr) g = `<g transform="${p.tr}">${g}</g>`;
       return g;
     };
@@ -223,6 +223,33 @@ const glow = (d) => `<path class="cw-glow" d="${d}" fill="url(#cwGlow)"/>`;
 
 /* ── the poses. Every pose stands on the same ground (y 690) and faces left;
       the engine mirrors the whole drawing when she faces right. ── */
+/* A limb segment: a rounded capsule from joint A to joint B (radii rA, rB), as outline
+   points for fur(); the fur weight w roughens its outer (+n) side. */
+function capsule(A, B, rA, rB, w = 0) {
+  const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy), d = [dx / L, dy / L], n = [-d[1], d[0]];
+  const at = (P, r, u, v) => [P[0] + d[0] * r * u + n[0] * r * v, P[1] + d[1] * r * u + n[1] * r * v];
+  const M = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2], rM = (rA + rB) / 2;
+  return [at(A, rA, 0, 1).concat(w), at(M, rM, 0, 1.02).concat(w), at(B, rB, 0, 1), at(B, rB, .72, .72), at(B, rB, 1, 0), at(B, rB, .72, -.72),
+    at(B, rB, 0, -1), at(M, rM, 0, -1.02), at(A, rA, 0, -1), at(A, rA, -.72, -.72), at(A, rA, -1, 0), at(A, rA, -.72, .72)];
+}
+/* The raised fore limb of the sitting cat, jointed like a cat's: the upper arm grows out
+   of the chest at the shoulder (SH) and is drawn under the torso, so the torso's own
+   contour covers its root; the forearm (from the elbow, EL) and the paw (from the wrist,
+   WR) ride it, each turning about its own joint (app.css: cw-uarm, cw-farm, cw-wrist).
+   All three share the body's ink, so the limb and the body are one silhouette. */
+const SH = [378, 468], EL = [344, 418], WR = [322, 366];
+function armParts() {
+  const dir = [(WR[0] - EL[0]) / 56.5, (WR[1] - EL[1]) / 56.5], tip = [WR[0] + dir[0] * 22, WR[1] + dir[1] * 22];
+  const upper = { seed: 42, cls: ["cw-uarm"], vol: true, pts: capsule(SH, EL, 31, 25, .3),
+    detail: line("M 366 452 C 358 440 350 430 344 420", LIGHT, 3, .5) };
+  const fore = { seed: 43, cls: ["cw-uarm", "cw-farm"], soft: true, pts: capsule(EL, WR, 23, 19, .25),
+    detail: line("M 336 414 C 330 400 324 386 318 372", LIGHT, 2.6, .55) };
+  const paw = { seed: 41, cls: ["cw-uarm", "cw-farm", "cw-wrist"], soft: true, sock: [270, 320, 100, 80], pts: capsule(WR, tip, 20, 23),
+    detail: `<g fill="#e99a94"><ellipse cx="316" cy="354" rx="7" ry="6"/><circle cx="302" cy="350" r="3.4"/><circle cx="306" cy="340" r="3.4"/><circle cx="316" cy="336" r="3.4"/><circle cx="326" cy="339" r="3.2"/></g>`
+      + claws("M 300 346 q -8 -4 -6 -12 M 305 336 q -5 -7 0 -13 M 316 332 q -2 -8 4 -12") };
+  return { upper, fore, paw };
+}
+
 function sitParts(raised) {
   // front-facing sit: a bell of a body, the haunches bulging at its feet, straight
   // front legs under the chest, a ruff where the head meets the shoulders
@@ -239,10 +266,10 @@ function sitParts(raised) {
     { seed: 35, fill: WHT, pts: [[534, 684], [542, 671], [566, 669], [590, 677], [592, 692], [570, 698], [540, 696]], detail: toes("M 556 697 v -8 M 572 697 v -8") },
     { seed: 36, pts: [[372, 378], [400, 360], [450, 352], [500, 358], [530, 376], [542, 404, .9], [528, 432, .9], [500, 448, .9], [450, 454, .9], [402, 448, .9], [374, 432, .9], [360, 404, .8]],
       detail: marks([[372, 404, 20, 18, 7], [530, 404, 160, 18, 7]]) + `<ellipse cx="450" cy="362" rx="60" ry="12" fill="#7a300c" opacity=".3"/>` },
-    { seed: 38, fill: FUR_S, sock: 632, soft: true, pts: [[454, 480], [504, 480], [503, 560], [502, 640], [502, 672], [496, 690], [480, 697], [462, 695], [454, 684], [452, 640], [452, 560]],
+    { seed: 38, cls: "cw-legR", fill: FUR_S, sock: 632, soft: true, pts: [[454, 480], [504, 480], [503, 560], [502, 640], [502, 672], [496, 690], [480, 697], [462, 695], [454, 684], [452, 640], [452, 560]],
       detail: toes("M 472 695 v -9 M 486 694 v -9") },
   ];
-  if (!raised) parts.push({ seed: 39, sock: 628, soft: true, pts: [[398, 480], [448, 480], [448, 560], [448, 640], [446, 672], [440, 690], [424, 697], [406, 695], [398, 684], [398, 640], [399, 560]],
+  if (!raised) parts.push({ seed: 39, cls: "cw-legL", sock: 628, soft: true, pts: [[398, 480], [448, 480], [448, 560], [448, 640], [446, 672], [440, 690], [424, 697], [406, 695], [398, 684], [398, 640], [399, 560]],
     detail: line("M 412 490 L 411 612", LIGHT, 3, .6) + toes("M 418 695 v -9 M 432 695 v -9") });
   parts.push({ seed: 37, fill: WHT, ink: false, pts: [[420, 380], [450, 372], [482, 380], [500, 420], [500, 470], [490, 520, .7], [470, 556, .7], [450, 566, .7], [430, 556, .7], [410, 520, .7], [400, 470], [402, 420]],
       detail: `<path d="M 470 390 Q 494 400 498 440 Q 496 500 476 548 Q 488 480 470 390 Z" fill="${WHITE_S}" opacity=".7"/>` });
@@ -256,34 +283,35 @@ function poseSit() {
 }
 // sitting up with a paw raised: batting at HELA's Hours, holding the hand to nibble it, grooming
 function poseBat() {
-  const paw = { seed: 41, cls: "cw-paw", soft: true, sock: [296, 330, 80, 70],
-    pts: [[392, 500], [372, 460], [346, 414], [326, 382], [316, 360], [326, 346], [344, 344], [358, 360], [380, 396], [408, 440], [432, 480]],
-    detail: `<g fill="#e99a94"><ellipse cx="336" cy="362" rx="7" ry="6"/><circle cx="322" cy="356" r="3.4"/><circle cx="328" cy="348" r="3.4"/><circle cx="338" cy="346" r="3.4"/></g>`
-      + line("M 392 470 C 376 440 356 408 340 384", LIGHT, 3, .6) + claws("M 318 354 q -8 -4 -6 -12 M 324 345 q -5 -7 0 -13 M 335 342 q -2 -8 4 -12") };
-  return body("bat", [...sitParts(true), headPart("translate(456 294) rotate(7)", ["focused", "open", "happy"]), paw],
+  const A = armParts();
+  return body("bat", [A.upper, ...sitParts(true), headPart("translate(456 294) rotate(7)", ["focused", "open", "happy"]), A.fore, A.paw],
     shadow(468, 170));
 }
 
 function poseStand() {
   const legs = {
-    farF: { fill: FUR_S, sock: 634, pts: [[370, 500], [420, 500], [416, 560], [413, 620], [414, 668], [404, 690], [386, 693], [376, 684], [376, 640], [372, 580]], j: [394, 520], s: -1 },
-    farH: { fill: FUR_S, sock: 634, pts: [[560, 500], [596, 504], [606, 540, .6], [602, 600], [600, 668], [590, 690], [572, 693], [562, 680], [561, 610], [552, 560]], j: [590, 520], s: 1 },
-    nearF: { sock: 628, soft: true, pts: [[322, 490], [384, 490], [378, 560], [376, 620], [376, 666], [366, 690], [344, 695], [330, 684], [330, 630], [324, 560]], j: [352, 510], s: 1 },
-    nearH: { sock: 632, soft: true, pts: [[604, 500], [648, 500], [668, 530, .7], [664, 570, .8], [656, 620, .5], [656, 668], [646, 690], [624, 695], [612, 684], [611, 630], [606, 600], [594, 560]], j: [630, 500], s: -1 },
+    farF: { fill: FUR_S, sock: 634, pts: [[372, 468], [422, 468], [420, 500], [416, 560], [413, 620], [414, 668], [404, 690], [386, 693], [376, 684], [376, 640], [372, 580]], j: [394, 520], s: -1 },
+    farH: { fill: FUR_S, sock: 634, pts: [[558, 470], [598, 470], [596, 504], [606, 540, .6], [602, 600], [600, 668], [590, 690], [572, 693], [562, 680], [561, 610], [552, 560]], j: [590, 520], s: 1 },
+    nearF: { sock: 628, pts: [[324, 462], [386, 462], [384, 490], [378, 560], [376, 620], [376, 666], [366, 690], [344, 695], [330, 684], [330, 630], [324, 560]], j: [352, 510], s: 1 },
+    nearH: { sock: 632, pts: [[602, 470], [648, 468], [648, 500], [668, 530, .7], [664, 570, .8], [656, 620, .5], [656, 668], [646, 690], [624, 695], [612, 684], [611, 630], [606, 600], [594, 560]], j: [630, 500], s: -1 },
   };
-  // a step is the same legs swung about the shoulder and the hip
-  const frames = (keys) => [["cw-fN", 0], ["cw-fA", 13], ["cw-fB", -13]].flatMap(([f, a]) => keys.map((k, i) => ({
-    ...legs[k], seed: 40 + i, cls: "cw-frame " + f, tr: a ? `rotate(${a * legs[k].s} ${legs[k].j[0]} ${legs[k].j[1]})` : undefined })));
+  // walking swings each leg about its shoulder or hip (app.css cw-step-*), the diagonal
+  // pairs together, like a cat's walk
+  const frames = (keys) => keys.map((k, i) => ({ ...legs[k], seed: 40 + i, cls: "cw-step-" + k }));
+  const bone = (x, y, w, cls, seed) => ({ seed, cls, vol: false, amp: 6,
+    pts: [[x - w, y + 20], [x - w * .8, y + 2, .4], [x - w * .3, y - 8, .5], [x + w * .3, y - 8, .5], [x + w * .8, y + 2, .4], [x + w, y + 20], [x, y + 30]] });
   return body("stand", [
     { seed: 44, cls: "cw-tail", pts: [[664, 432], [690, 410], [712, 380], [722, 340], [728, 300], [742, 268], [764, 252], [786, 258], [792, 278], [778, 292], [764, 290, .6], [758, 312, .6], [756, 350, .6], [750, 392, .5], [732, 432], [706, 460], [678, 474]],
       detail: marks([[710, 384, 8, 26, 8], [720, 334, 4, 24, 8], [730, 292, -8, 22, 8]]) + line("M 700 420 C 716 400 724 370 724 330", LIGHT, 3, .6) },
     ...frames(["farF", "farH"]),
+    bone(404, 406, 42, "cw-blade", 47), bone(606, 408, 44, "cw-hipb", 48),
+    // the near legs too are drawn under the body: its contour covers their roots
+    ...frames(["nearF", "nearH"]),
     { seed: 45, pts: [[330, 440], [352, 414], [396, 404], [450, 407], [510, 409], [566, 405], [614, 407], [656, 421], [682, 450], [688, 490], [674, 528], [642, 552, .7], [600, 561, .8], [530, 563, .8], [460, 563, .8], [410, 561, .7], [368, 552], [334, 532, .6], [318, 500, .6], [320, 466]],
       detail: marks([[452, 408, 94, 40, 11], [502, 410, 92, 42, 11], [552, 408, 90, 40, 11], [602, 410, 86, 38, 11], [646, 428, 70, 34, 10]])
         + line("M 356 430 C 410 416 520 420 620 418", LIGHT, 3.6, .75) + line("M 596 476 C 640 462 680 496 672 546", EDGE, 2.4, .55)
         + `<path d="M 420 540 C 480 552 560 552 640 540 C 620 556 560 562 500 562 C 460 562 430 556 420 540 Z" fill="#fff1d8" opacity=".35"/>` },
     { seed: 46, fill: WHT, ink: false, vol: false, pts: [[316, 440], [352, 434], [362, 468], [358, 498, .6], [340, 514, .6], [322, 506, .5], [312, 474]] },
-    ...frames(["nearF", "nearH"]),
     headPart("translate(300 352) scale(.9)", ["open", "relaxed", "scared"]),
   ], shadow(490, 220, .22));
 }
@@ -308,16 +336,16 @@ function poseCrouch() {
 // mid-air, reaching for the hand
 function poseLeap() {
   return body("leap", [
-    { seed: 61, fill: FUR_S, pts: [[312, 410], [286, 420], [258, 430], [230, 432], [208, 426], [212, 410], [232, 408], [258, 406], [282, 398], [300, 386]] },
-    { seed: 62, fill: FUR_S, pts: [[660, 480], [700, 510], [736, 546], [764, 580], [778, 600], [766, 608], [750, 610], [740, 596], [714, 562], [684, 530], [648, 500]] },
+    { seed: 61, cls: "cw-reach", fill: FUR_S, pts: [[312, 410], [286, 420], [258, 430], [230, 432], [208, 426], [212, 410], [232, 408], [258, 406], [282, 398], [300, 386]] },
+    { seed: 62, cls: "cw-push", fill: FUR_S, pts: [[660, 480], [700, 510], [736, 546], [764, 580], [778, 600], [766, 608], [750, 610], [740, 596], [714, 562], [684, 530], [648, 500]] },
     { seed: 63, cls: "cw-tail", pts: [[690, 494], [740, 500], [800, 506], [860, 496], [882, 494], [886, 508], [880, 522], [862, 524, .5], [800, 532, .5], [740, 532, .5], [684, 542]],
       detail: marks([[760, 502, 90, 26, 9], [820, 500, 90, 26, 9]]) },
     { seed: 64, pts: [[286, 398], [316, 356], [396, 354], [468, 376], [556, 402], [628, 438], [680, 478], [712, 506], [708, 548], [668, 566, .6], [618, 572, .7], [556, 540, .7], [478, 510, .7], [402, 482, .6], [330, 468], [298, 448], [280, 420]],
       detail: `<path d="M 296 440 C 330 470 420 486 490 512 C 560 540 610 560 650 566 C 600 574 540 548 470 524 C 400 500 330 482 296 440 Z" fill="${WHT}"/>`
         + marks([[470, 378, 104, 44, 11], [526, 394, 106, 44, 11], [580, 416, 110, 42, 11], [630, 444, 116, 36, 10]])
         + line("M 324 384 C 400 372 520 404 636 458", LIGHT, 3.6, .75) },
-    { seed: 65, soft: true, sock: [690, 626, 60, 50], pts: [[640, 500], [676, 540], [700, 590], [726, 636], [738, 660], [722, 668], [702, 672], [696, 650], [676, 606], [648, 566], [612, 532]] },
-    { seed: 66, soft: true, sock: [186, 452, 44, 50], pts: [[330, 430], [300, 452], [262, 478], [222, 490], [196, 494], [194, 480], [196, 468], [214, 462], [250, 454], [282, 432], [306, 408]],
+    { seed: 65, cls: "cw-push", soft: true, sock: [690, 626, 60, 50], pts: [[640, 500], [676, 540], [700, 590], [726, 636], [738, 660], [722, 668], [702, 672], [696, 650], [676, 606], [648, 566], [612, 532]] },
+    { seed: 66, cls: "cw-reach", soft: true, sock: [186, 452, 44, 50], pts: [[330, 430], [300, 452], [262, 478], [222, 490], [196, 494], [194, 480], [196, 468], [214, 462], [250, 454], [282, 432], [306, 408]],
       detail: claws("M 196 472 q -9 -1 -12 -8 M 195 483 q -9 1 -14 -3 M 204 492 q -6 5 -13 3") },
     headPart("translate(256 366) rotate(-10) scale(.9)", ["focused"]),
   ], shadow(470, 150, .14));
@@ -441,7 +469,7 @@ const PLACES = {
 };
 const ROAM = { x0: -14, x1: 6 };           // how far a leap may carry her (never into her core)
 
-const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat", knead: "bat", turn: "stand", belly: "sleep",
+const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat", knead: "sit", turn: "stand", belly: "sleep",
   walk: "stand", flee: "stand", crouch: "crouch", scared: "crouch", pounce: "leap", sleep: "sleep", curl: "curl" };
 // her face in each state: relaxed at rest, curious when she watches, focused on the hunt
 const EXPR = { sit: "relaxed", watch: "open", walk: "open", flee: "scared", pet: "happy", groom: "happy", knead: "happy", turn: "relaxed", belly: "sleepy",

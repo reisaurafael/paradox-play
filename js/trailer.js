@@ -35,7 +35,7 @@
    Costs: transforms and opacities only, no filters; one panel in the page at a
    time (two during a wipe); every timer and sound is dropped on each turn.
    ========================================================================= */
-import { audio } from "./audio.js?202609280647";
+import { audio } from "./audio.js?202609280700";
 
 // THE SCRIPT: the owner's panels go here, in order.
 const PANELS = [];

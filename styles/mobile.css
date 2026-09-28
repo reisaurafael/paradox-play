@@ -721,3 +721,6 @@ html.pdx-m-on.pdx-chart-pick .he-window, html.pdx-m-on.pdx-chart-pick .doc-inpla
 /* the simple market page hides the Secret Market (its curtain belongs to the second page) */
 html.pdx-m-on[data-pdx-view="merchant"]:not(.pdx-secret) #market-zone .secret-stage,
 html.pdx-m-on[data-pdx-view="merchant"]:not(.pdx-secret) #market-zone .secret-bg { visibility: hidden; }
+#pdx-rtray { padding: 6px 10px 8px; }
+#pdx-rtray .rt-head { font-size: .74rem; margin-bottom: 12px; }
+#pdx-rtray .rt-folder { min-height: 52px; padding: 12px 12px 6px; }

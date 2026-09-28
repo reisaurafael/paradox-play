@@ -4601,7 +4601,7 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being.face-right .catw-svg { transform: scaleX(-1); }
 
 /* one drawing at a time */
-.cat-being .cw-pose, .cat-being .cw-frame { display: none; }
+.cat-being .cw-pose { display: none; }
 .cat-being.pose-sit .cw-sit, .cat-being.pose-bat .cw-bat, .cat-being.pose-stand .cw-stand,
 .cat-being.pose-crouch .cw-crouch, .cat-being.pose-leap .cw-leap,
 .cat-being.pose-sleep .cw-sleep, .cat-being.pose-curl .cw-curl { display: inline; }
@@ -4627,7 +4627,7 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 
 /* the parts that move, each about its own joint */
 .cat-being .cw-earL, .cat-being .cw-earR, .cat-being .cw-headin, .cat-being .cw-tail,
-.cat-being .cw-paw, .cat-being .cw-rump, .cat-being .cw-zzz path { transform-box: fill-box; }
+.cat-being .cw-rump, .cat-being .cw-zzz path { transform-box: fill-box; }
 .cat-being .cw-earL { transform-origin: 70% 92%; transition: rotate .3s ease, translate .3s ease; }
 .cat-being .cw-earR { transform-origin: 30% 92%; transition: rotate .3s ease, translate .3s ease; }
 .cat-being.ears-back .cw-earL, .cat-being.mood-afraid .cw-earL { rotate: -42deg; translate: 6px 22px; }
@@ -4652,25 +4652,73 @@ body.cam-on #market-zone > .secret-curtain.closed .sc-panel { transform: none; }
 .cat-being .cw-curl .cw-tail { transform-origin: 100% 0%; }
 .cat-being.flick .cw-tail { animation: cwFlick .9s ease-in-out 1; }
 @keyframes cwFlick { 30% { rotate: -5deg; } 65% { rotate: 3deg; } }
-.cat-being .cw-paw { transform-origin: 100% 100%; transition: rotate .35s ease; }
-.cat-being.grooming .cw-paw { rotate: 24deg; }
-.cat-being.biting .cw-paw { rotate: -18deg; }
-.cat-being.batting .cw-paw { animation: cwSwipe .6s ease-in-out 3; }
+/* the raised fore limb (cat.js armParts): each segment turns about its own joint, in the
+   drawing's own coordinates, and the body answers each move */
+.cat-being .cw-uarm, .cat-being .cw-farm, .cat-being .cw-wrist, .cat-being .cw-legL, .cat-being .cw-legR,
+.cat-being [class^="cw-step-"], .cat-being .cw-blade, .cat-being .cw-hipb, .cat-being .cw-reach, .cat-being .cw-push,
+.cat-being .cw-bat, .cat-being .cw-sit, .cat-being .cw-stand { transform-box: view-box; }
+.cat-being .cw-uarm { transform-origin: 378px 468px; transition: rotate .35s ease; }
+.cat-being .cw-farm { transform-origin: 344px 418px; transition: rotate .35s ease; }
+.cat-being .cw-wrist { transform-origin: 322px 366px; transition: rotate .35s ease; }
+/* grooming: the elbow folds, the paw comes to the mouth, the head bows to it, a lick loop */
+.cat-being.grooming .cw-uarm { rotate: 34deg; }
+.cat-being.grooming .cw-farm { rotate: 40deg; animation: cwLickArm .5s ease-in-out infinite alternate; }
+.cat-being.grooming .cw-wrist { rotate: 22deg; }
+@keyframes cwLickArm { from { rotate: 34deg; } to { rotate: 46deg; } }
+/* holding the hand to nibble it: the paw reaches forward and hooks */
+.cat-being.biting .cw-uarm { rotate: -10deg; }
+.cat-being.biting .cw-farm { rotate: -22deg; }
+.cat-being.biting .cw-wrist { rotate: 24deg; }
+/* the swipe: shoulder, elbow and wrist in sequence; the chest shifts its weight away from
+   the paw, the head counter-tilts, the tail balances */
+.cat-being.batting .cw-uarm { animation: cwSwipeU .6s ease-in-out 3; }
+.cat-being.batting .cw-farm { animation: cwSwipeF .6s ease-in-out 3; }
+.cat-being.batting .cw-wrist { animation: cwSwipeW .6s ease-in-out 3; }
+.cat-being.batting .cw-bat { transform-origin: 470px 690px; animation: cwSwipeBody .6s ease-in-out 3; }
+@keyframes cwSwipeU { 0%,100% { rotate: 0deg; } 35% { rotate: -16deg; } 70% { rotate: 10deg; } }
+@keyframes cwSwipeF { 0%,100% { rotate: 0deg; } 35% { rotate: 12deg; } 70% { rotate: -14deg; } }
+@keyframes cwSwipeW { 0%,100% { rotate: 0deg; } 35% { rotate: -20deg; } 70% { rotate: 16deg; } }
+@keyframes cwSwipeBody { 0%,100% { rotate: 0deg; translate: 0 0; } 35% { rotate: 1.6deg; translate: 3px 0; } 70% { rotate: -.8deg; translate: -1px 0; } }
+.cat-being.batting .cw-bat .cw-headin { animation: cwSwipeHead .6s ease-in-out 3; }
+@keyframes cwSwipeHead { 0%,100% { rotate: 0deg; } 35% { rotate: 3deg; } 70% { rotate: -2deg; } }
 /* treading the cushion (her basket, or a hand she loves) */
-.cat-being.kneading .cw-paw { animation: cwKnead .55s ease-in-out infinite; }
-@keyframes cwKnead { 0%,100% { rotate: 22deg; translate: 0 0; } 50% { rotate: 34deg; translate: 0 10px; } }
-.cat-being.kneading { animation: cwKneadBob .55s ease-in-out infinite; }
-@keyframes cwKneadBob { 50% { translate: 0 2px; } }
-@keyframes cwSwipe { 0%,100% { rotate: 0deg; } 35% { rotate: -16deg; } 70% { rotate: 12deg; } }
+/* kneading: the two front paws tread in turn, each lifted from its shoulder and pressed
+   down again; the chest rolls onto the standing leg, the head counter-tilts */
+.cat-being .cw-legL { transform-origin: 423px 480px; }
+.cat-being .cw-legR { transform-origin: 478px 480px; }
+.cat-being.kneading .cw-legL { animation: cwTread 1.1s ease-in-out infinite; }
+.cat-being.kneading .cw-legR { animation: cwTread 1.1s ease-in-out -.55s infinite; }
+@keyframes cwTread { 0%,55%,100% { translate: 0 0; scale: 1 1; } 20% { translate: 0 -16px; scale: 1 .94; } 38% { translate: 0 -4px; scale: 1 .98; } }
+.cat-being.kneading .cw-sit { transform-origin: 468px 690px; animation: cwTreadBody 1.1s ease-in-out infinite; }
+@keyframes cwTreadBody { 0%,100% { rotate: -1.2deg; } 50% { rotate: 1.2deg; } }
+.cat-being.kneading .cw-sit .cw-headin { animation: cwTreadHead 1.1s ease-in-out infinite; }
+@keyframes cwTreadHead { 0%,100% { rotate: 2deg; } 50% { rotate: -2deg; } }
 
 /* walking: two step drawings alternate and the whole body lopes (his own layer) */
-.cat-being.pose-stand .cw-fN { display: inline; }
-.cat-being.pose-stand.walking .cw-fN { display: none; }
-.cat-being.pose-stand.walking .cw-fA, .cat-being.pose-stand.walking .cw-fB { display: inline; }
-.cat-being.walking .cw-fA { animation: cwStepA .52s step-end infinite; }
-.cat-being.walking .cw-fB { animation: cwStepB .52s step-end infinite; }
-@keyframes cwStepA { 0% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes cwStepB { 0% { opacity: 0; } 50% { opacity: 1; } }
+/* walking: each leg swings about its shoulder or hip, the diagonal pairs together; the
+   shoulder blade and the hip bone roll on the back line in step, the spine sways and
+   the head counter-sways */
+.cat-being .cw-step-nearF { transform-origin: 352px 510px; }
+.cat-being .cw-step-farH { transform-origin: 590px 520px; }
+.cat-being .cw-step-farF { transform-origin: 394px 520px; }
+.cat-being .cw-step-nearH { transform-origin: 630px 500px; }
+.cat-being.walking :is(.cw-step-nearF, .cw-step-farH) { animation: cwStride 1.04s ease-in-out infinite; }
+.cat-being.walking :is(.cw-step-farF, .cw-step-nearH) { animation: cwStride 1.04s ease-in-out -.52s infinite; }
+@keyframes cwStride { 0%,100% { rotate: 13deg; } 50% { rotate: -13deg; } }
+.cat-being.walking .cw-blade { animation: cwBlade 1.04s ease-in-out infinite; }
+.cat-being.walking .cw-hipb { animation: cwBlade 1.04s ease-in-out -.52s infinite; }
+@keyframes cwBlade { 0%,100% { translate: 0 2px; } 50% { translate: 0 -7px; } }
+.cat-being.walking .cw-stand { transform-origin: 500px 560px; animation: cwSpine 1.04s ease-in-out infinite; }
+@keyframes cwSpine { 0%,100% { rotate: -.9deg; } 50% { rotate: .9deg; } }
+.cat-being.walking .cw-stand .cw-headin { animation: cwHeadSway 1.04s ease-in-out infinite; }
+@keyframes cwHeadSway { 0%,100% { rotate: 2deg; } 50% { rotate: -2deg; } }
+/* the pounce: the front legs reach from the shoulders, the hind legs push from the hips */
+.cat-being .cw-reach { transform-origin: 318px 404px; }
+.cat-being .cw-push { transform-origin: 652px 494px; }
+.cat-being.pose-leap .cw-reach { animation: cwReach .46s cubic-bezier(.3,.6,.4,1) 1 both; }
+.cat-being.pose-leap .cw-push { animation: cwPush .46s cubic-bezier(.3,.6,.4,1) 1 both; }
+@keyframes cwReach { from { rotate: 26deg; } to { rotate: -6deg; } }
+@keyframes cwPush { from { rotate: -24deg; } to { rotate: 12deg; } }
 .cat-being.walking { animation: cwBob .52s ease-in-out infinite; }
 @keyframes cwBob { 0%,100% { translate: 0 0; } 25%,75% { translate: 0 -5px; } }
 

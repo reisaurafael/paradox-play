@@ -974,7 +974,7 @@ function paintRecordsTray() {
         return `<button type="button" class="rt-folder${done ? " rt-done" : ""}" data-name="${esc(n)}"><i class="rt-tab">${roman(c.delivery_century != null ? c.delivery_century : st.century)}</i><b>${esc(c.name)}</b><span>${done ? "FILED" : "tap to file"}</span></button>`; }).join("")
       + `</div>`;
   }
-  rtray.style.left = (stage.x + 10) + "px"; rtray.style.width = (stage.w - 20) + "px";
+  rtray.style.left = (stage.x + 10) + "px"; rtray.style.maxWidth = (stage.w - 20) + "px"; rtray.style.width = "auto";
   rtray.style.bottom = Math.max(10, innerHeight - (stage.y + stage.h) + 10) + "px";
 }
 
