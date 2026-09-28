@@ -212,7 +212,7 @@ function frameRect(v) {
     if (secretOn) sels.push("#market-zone .secret-stage");
     // the simple market is a whole scene too: the wagon's arch and some wall around the shelf,
     // centred on his shelf; both markets get a little wall around them as well
-    const u = unionRect(sels, secretOn ? 150 : 210);
+    const u = unionRect(sels, secretOn ? 90 : 210);
     const row = !secretOn && (unionRect(["#market-zone > .portal-bg"], 0)
       || unionRect(["#market-zone .market-row"], 0));
     if (u && row) { const half = Math.max(row.x + row.w / 2 - u.x, u.x + u.w - (row.x + row.w / 2)); u.x = row.x + row.w / 2 - half; u.w = half * 2; }
