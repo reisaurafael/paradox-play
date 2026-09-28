@@ -49,10 +49,10 @@
      window.__pdxChronicle.snapshot()   the stable shape above
      window.__pdxChronicle.tutorialDone()     Learn to Play finished
    ========================================================================= */
-import { profile } from "./profile.js?202609280800";
-import { audio } from "./audio.js?202609280800";
-import { roman, esc, seatColor } from "./util.js?202609280800";
-import { THEMES, THEME_BY_ID, TIER_NAME, applyTheme } from "./theme.js?202609280800";
+import { profile } from "./profile.js?202609280810";
+import { audio } from "./audio.js?202609280810";
+import { roman, esc, seatColor } from "./util.js?202609280810";
+import { THEMES, THEME_BY_ID, TIER_NAME, applyTheme } from "./theme.js?202609280810";
 
 const PANEL = (() => {
   try { return parseInt(new URLSearchParams(location.search).get("panel")) || 0; } catch (e) { return 0; }
@@ -808,16 +808,19 @@ function nextStamp() {
     return;
   }
   const n = document.createElement("div");
-  n.className = `chr-stamp chr-stamp-${s.tone}`;
+  // on a phone the stage is all play (the case, the shelf, the rail): the stamp is
+  // pressed in HELA's column instead, under her line, and the log makes room
+  const col = document.documentElement.classList.contains("pdx-m-on") && document.querySelector("#pdx-mcol .mc-slot");
+  n.className = `chr-stamp chr-stamp-${s.tone}` + (col ? " chr-stamp-col" : "");
   n.setAttribute("role", "status");
   n.innerHTML = `<span class="cs-word">${esc(s.word)}</span><b class="cs-title">${esc(s.title)}</b><span class="cs-sub">${esc(s.sub)}</span>`;
-  document.body.appendChild(n);
+  if (col) col.insertAdjacentElement("afterend", n); else document.body.appendChild(n);
   try { audio.play("chart_stamp"); } catch (e) {}
   const calm = document.documentElement.classList.contains("pdx-a11y")
     || !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const dur = 4600;
-  const frames = calm
-    ? [{ opacity: 0 }, { opacity: 1, offset: .06 }, { opacity: 1, offset: .88 }, { opacity: 0 }]
+  const frames = calm || col
+    ? [{ opacity: 0 }, { opacity: 1, offset: .06 }, { opacity: 1, offset: .9 }, { opacity: 0 }]
     : [{ opacity: 0, transform: "translateX(-50%) rotate(-4deg) scale(1.5)", easing: "cubic-bezier(.2,.8,.3,1)" },
        { opacity: 1, transform: "translateX(-50%) rotate(-4deg) scale(1)", offset: .05 },
        { opacity: 1, transform: "translateX(-50%) rotate(-4deg) scale(1)", offset: .88 },

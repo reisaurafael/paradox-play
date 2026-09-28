@@ -9,7 +9,7 @@
   // before the first paint.
   window.PARADOX_DEMO = true;
   document.documentElement.classList.add("pdx-demo");
-  const worker = new Worker("play-worker.js?202609280800", { type: "module" });
+  const worker = new Worker("play-worker.js?202609280810", { type: "module" });
   let nextId = 1;
   const httpWaiters = new Map();
   const sockets = new Map();

@@ -75,6 +75,13 @@ html[data-ts="2"] .chb-line, html[data-ts="3"] .chb-line { white-space: normal; 
   color: var(--ink); text-transform: uppercase; }
 .chr-stamp .cs-sub { padding: 0 1.1rem .6rem .9rem; font: 600 .74rem/1.2 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #4a3a20; }
 .chr-stamp-quest { border-left-color: #8f6fd6; }
+/* on a phone: a slim card in HELA's column, under her line (never over the stage) */
+.chr-stamp.chr-stamp-col { position: relative; left: auto; top: auto; z-index: auto; flex: 0 0 auto;
+  min-width: 0; max-width: none; margin: 8px 3px 0 0; transform: rotate(-1.5deg);
+  border-width: 2px; border-left-width: 6px; box-shadow: 3px 3px 0 var(--ink); }
+.chr-stamp-col .cs-word { margin: -10px 0 0 8px; padding: .14rem .4rem .1rem; font-size: .56rem; letter-spacing: .14em; }
+.chr-stamp-col .cs-title { padding: .3rem .5rem .1rem .45rem; font-size: 1rem; line-height: 1.05; overflow-wrap: anywhere; }
+.chr-stamp-col .cs-sub { padding: 0 .5rem .4rem .45rem; font-size: .56rem; letter-spacing: .06em; line-height: 1.25; }
 .chr-stamp-quest .cs-word { background: #3a2470; }
 
 /* ═════════════════════════ THE RESULTS CARD ═════════════════════════ */
