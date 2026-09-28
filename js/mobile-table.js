@@ -59,11 +59,16 @@ let catSaved = null;
 /* ── the safe-area insets, read once per layout from a probe ── */
 function insets() {
   const p = document.createElement("div");
-  p.style.cssText = "position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;"
+  // the probe spans the box every fixed piece is laid in (left/top/right/bottom 0): its size is the
+  // screen the column, the stage, the rail and the thread share (never 100vw / innerWidth, which
+  // can disagree with it under the browser bars or a zoomed page)
+  p.style.cssText = "position:fixed;left:0;top:0;right:0;bottom:0;visibility:hidden;pointer-events:none;box-sizing:border-box;"
     + "padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)";
   document.body.appendChild(p);
   const cs = getComputedStyle(p);
-  const r = { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+  const box = p.getBoundingClientRect();
+  const r = { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0,
+    w: box.width || innerWidth, h: box.height || innerHeight };
   p.remove();
   return r;
 }
@@ -88,7 +93,7 @@ function build() {
   col.setAttribute("aria-label", "HELA and the log");
   // HER COLUMN, calm (the owner, 28/09): one thing at a time, top to bottom:
   //   her eye (a tap opens her memory, the Hours) with the Hour and its phase;
-  //   his LIFE, big, with its cells (the same number as the thread round the screen);
+  //   his ENERGY, big, with its cells (the same number as the thread round the screen);
   //   ONE slot for her line (the turn, a direction, an event; the tutorial's lines dock here);
   //   the log folded to its last two lines (a tap unfolds it over the slot);
   //   the "?" and the gear, small, at the foot.
@@ -98,7 +103,7 @@ function build() {
       <span class="mc-id"><span class="mc-hour"></span><span class="mc-phase"></span>
         <span class="mc-phases" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
     </header>
-    <div class="mc-life" aria-live="polite"><span class="mc-life-h">LIFE</span><b>-</b><span class="mc-cells"></span></div>
+    <div class="mc-life" aria-live="polite"><span class="mc-life-h">ENERGY</span><b>-</b><span class="mc-cells"></span></div>
     <div class="mc-slot"><div class="mc-says" aria-live="polite"></div></div>
     <div class="mc-extra"></div>
     <div class="mc-log"><p class="mc-log-h">LOG <span>tap to open</span></p><ol class="mc-log-l"></ol></div>
@@ -151,17 +156,23 @@ function build() {
 /* ── layout: the stage is what the column and the rail leave ── */
 function layout() {
   const ins = insets();
-  const W = innerWidth, H = innerHeight;
+  const W = ins.w, H = ins.h;
   const tab = D.classList.contains("pdx-tablet");
   const colW = Math.round(tab ? Math.max(190, Math.min(250, W * 0.2)) : Math.max(138, Math.min(176, W * 0.18))) + ins.l;
   const railW = Math.round(tab ? 84 : Math.max(58, Math.min(70, W * 0.075))) + ins.r;
   D.style.setProperty("--pdx-colw", colW + "px");
+  // ONE measure for everything laid in the column: its inner box starts after the left cut-out
+  // (a camera notch on that side) and ends at its own right edge; her cards take exactly that
+  D.style.setProperty("--pdx-insl", ins.l + "px");
+  D.style.setProperty("--pdx-insr", ins.r + "px");
+  D.style.setProperty("--pdx-colin", Math.max(80, colW - ins.l - 14) + "px");
   D.style.setProperty("--pdx-railw", railW + "px");
-  // the stage keeps clear of the notch and of the home bar (the table's art runs on under them)
-  // the tutorial's lesson bar rides the stage's top edge: the views start under it
-  const bar = document.body.classList.contains("tut") ? 40 : 0;
+  // the stage keeps clear of the notch and of the home bar (the table's art runs on under them);
+  // the tutorial's lesson bar lives in HELA's column (the owner, 28/09: she talks only from
+  // there), so the stage keeps its whole height in the tutorial too
+  const bar = 0;
   stage = { x: colW, y: ins.t + bar, w: W - colW - railW, h: H - ins.t - ins.b - bar };
-  D.classList.toggle("pdx-m-tut", !!bar);
+  D.classList.toggle("pdx-m-tut", document.body.classList.contains("tut"));
   D.style.setProperty("--pdx-stage-y", stage.y + "px");
 }
 
@@ -331,10 +342,13 @@ function swapTo(v) {
     if (swapNext && swapNext !== view) { const n = swapNext; swapNext = null; swapTo(n); } else swapNext = null;
   }, dur + 30);
 }
+let secretNext = false;
 function land(v) {
   if (v !== view) prevView = view;
   view = v;
-  closeSheet();
+  if (v === "merchant" && secretNext) secretOn = true;
+  secretNext = false;
+  closeSheet(); clearConfirm();
   const g = game(), cam = g && g.camera;
   const want = VIEWS[v].scene;
   if (cam && cam.scene !== want) {
@@ -395,6 +409,17 @@ function pile() {
     f.style.setProperty("--pdx-fy", (at.y - zr.y).toFixed(1) + "px");
     f.style.setProperty("--pdx-fk", k.toFixed(3));
     f.style.setProperty("--pdx-fz", String(20 + i));
+    // HIS CONTRACT POINTS on the file's tab, read at a glance (the owner, 28/09)
+    const g = game(), t = g && g.view && g.view.travelers.find((x) => x.name === f.dataset.seat);
+    if (t) {
+      let cp = t.contract_points || 0;
+      try { cp = g._resolvedCP(t.name, cp); } catch (e) {}
+      let b = f.querySelector(":scope > .pdx-cp");
+      if (!b) { b = document.createElement("b"); b.className = "pdx-cp"; f.appendChild(b); }
+      const txt = cp + " CP";
+      if (b.textContent !== txt) b.textContent = txt;
+      b.classList.toggle("pdx-cp-0", !cp);
+    }
   });
 }
 // a tap opens the COMPLETE file, the desktop's own dossier (game.showPanelDetail), drawn
@@ -405,10 +430,58 @@ function openFile(f) {
   if (!t) return;
   outFile = f;
   g.showPanelDetail(t, f);
+  layDossier();
   // her paper lesson waits for a file to be lifted and let go: on a phone a tap is that
   f.classList.add("dk-held"); setTimeout(() => f.classList.remove("dk-held"), 320);
 }
+// THE COMPLETE FILE, smaller on a phone (the owner, 28/09), by the text size he chose (Normal the
+// smallest), at the stage's left; beside it, what earned him his contract points: the contracts
+// stapled to his file (their count) and the Herald's clippings of his feats
+function layDossier() {
+  const g = game(), fly = g && g.panelDetail;
+  if (!fly) return;
+  const ts = +(D.dataset.ts || 1) || 1;
+  const k = D.classList.contains("pdx-a11y") || ts >= 3 ? 1 : ts === 2 ? 0.9 : 0.78;
+  D.style.setProperty("--pdx-do-k", String(k));
+  requestAnimationFrame(() => {
+    const fr = fly.getBoundingClientRect();
+    if (!(fr.width > 0)) return;
+    const x = fr.right + 12, right = stage.x + stage.w - 8, room = right - x;
+    let y = stage.y + 8;
+    const cons = [...document.querySelectorAll(".do-contract")];
+    const clips = [...document.querySelectorAll(".do-attach")];
+    // the contracts, fanned at the top of the column beside the file, their count on the first
+    const ck = Math.max(0.5, Math.min(0.8, room / 190));
+    cons.forEach((c, i) => {
+      c.classList.add("pdx-do-side");
+      c.style.left = (x + i * 16) + "px"; c.style.top = (y + i * 4) + "px";
+      c.style.scale = String(ck); c.style.transformOrigin = "0 0";
+      c.style.zIndex = String(60186 + cons.length - i);
+    });
+    if (cons.length) {
+      let tag = document.getElementById("pdx-do-cp");
+      if (!tag) { tag = document.createElement("div"); tag.id = "pdx-do-cp"; document.body.appendChild(tag); }
+      const t = g.view && g.view.travelers.find((v) => v.name === fly.dataset.seat);
+      let cp = t ? t.contract_points || 0 : cons.length;
+      try { if (t) cp = g._resolvedCP(t.name, cp); } catch (e) {}
+      tag.textContent = cp + (cp === 1 ? " CONTRACT POINT" : " CONTRACT POINTS");
+      tag.style.left = x + "px"; tag.style.top = (y + 132 * ck + 8 + (cons.length - 1) * 4) + "px";
+      y += 132 * ck + (cons.length - 1) * 4 + 30;
+    }
+    // the clippings, stacked under them, each headline showing
+    const ak = Math.max(0.55, Math.min(0.85, room / 172));
+    const left = stage.y + stage.h - 8 - y;
+    const step = clips.length > 1 ? Math.min(100 * ak, (left - 90 * ak) / (clips.length - 1)) : 0;
+    clips.forEach((a, i) => {
+      a.classList.add("pdx-do-side");
+      a.style.left = x + "px"; a.style.top = (y + i * Math.max(34, step)) + "px";
+      a.style.scale = String(ak); a.style.transformOrigin = "0 0";
+      a.style.zIndex = String(60186 + i);
+    });
+  });
+}
 function closeFiles() {
+  const tag = document.getElementById("pdx-do-cp"); if (tag) tag.remove();
   if (!outFile) return;
   outFile = null;
   const g = game(); if (g && g.hidePanelDetail) g.hidePanelDetail();
@@ -500,7 +573,7 @@ function capHTML(cap) {
   const kind = cap.classList.contains("cx-you") ? " mc-you" : cap.classList.contains("cx-danger") ? " mc-danger" : cap.classList.contains("cx-good") ? " mc-good" : "";
   return `<div class="mc-cap${kind}">${tag ? `<span class="mc-tag">${esc(tag.textContent)}</span>` : ""}<span class="mc-txt">${t.innerHTML}</span></div>`;
 }
-let lastSays = "", lastLog = "";
+let lastSays = "", lastLog = "", lastTutFit = "";
 // help.js's own TAB key moves into HELA's column (the tutorial rings THAT key, and touch.js
 // makes a press held on it the held reference); it goes back to the body off the phone layout
 function dockTabKey(inCol) {
@@ -510,9 +583,17 @@ function dockTabKey(inCol) {
   if (inCol && k.parentElement !== tools) tools.insertBefore(k, tools.firstChild);
   else if (!inCol && k.parentElement === tools) document.body.appendChild(k);
 }
+// the tutorial's lesson bar (LEARN n/9, the lesson, Leave) lives in her column on a phone
+function dockTrack(inCol) {
+  const t = document.getElementById("tut-track");
+  if (!t || !col) return;
+  const tools = col.querySelector(".mc-tools");
+  if (inCol && t.parentElement !== col) col.insertBefore(t, tools);
+  else if (!inCol && t.parentElement === col) document.body.appendChild(t);
+}
 function paintCol() {
   if (!col) return;
-  dockTabKey(true);
+  dockTabKey(true); dockTrack(true);
   const hh = document.getElementById("hud-hour");
   col.querySelector(".mc-hour").textContent = hh ? "Hour " + hh.textContent.trim() : "";
   const ph = [...document.querySelectorAll("#vz-phases .vz-ph")];
@@ -542,13 +623,19 @@ function paintCol() {
   const pick = (sel) => (caps ? caps.querySelector(sel + ".on") : null);
   const turn = pick(".cx-slot-turn"), ev = pick(".cx-slot-event");
   const want = D.dataset.pdxWant;
+  const pl = pickText();
+  const turnHTML = pl ? `<div class="mc-cap mc-you"><span class="mc-tag">YOUR MOVE</span><span class="mc-txt">${pl}</span></div>` : turn ? capHTML(turn) : "";
   let says = "";
   if (want && VIEWS[want]) {
-    const t = turn ? capHTML(turn).replace(/<span class="mc-tag">[^<]*<\/span>/, "") : "";
+    const t = turnHTML ? turnHTML.replace(/<span class="mc-tag">[^<]*<\/span>/, "") : "";
     says = `<div class="mc-cap mc-you mc-goto"><span class="mc-tag mc-go">GO TO ${esc(VIEWS[want].label.toUpperCase())}</span>`
       + (t ? t.replace(/^<div class="mc-cap[^"]*">/, "").replace(/<\/div>$/, "") : "") + `</div>`;
-  } else if (turn) says = capHTML(turn);
-  else if (ev) says = capHTML(ev);
+  } else if (turnHTML) says = turnHTML;
+  else if (document.querySelector(".he-window.he-news.open")) {
+    // a Herald edition lies on the stage: the paper is the Herald's, the words about it are hers
+    const who = document.querySelector(".he-window.he-news.open .bn-who");
+    says = `<div class="mc-cap"><span class="mc-tag">THE HERALD</span><span class="mc-txt">${who ? `<b>${esc((who.querySelector("b") || {}).textContent || "")}</b> ${esc((who.querySelector("span") || {}).textContent || "")}. ` : "A new edition of the Temporal Herald. "}Tap the paper to put it away.</span></div>`;
+  } else if (ev) says = capHTML(ev);
   if (says !== lastSays) {
     lastSays = says;
     const sayEl = col.querySelector(".mc-says");
@@ -562,6 +649,18 @@ function paintCol() {
   }
   // the tutorial's line takes the slot itself (mobile.css docks it on the slot's box)
   const sr = col.querySelector(".mc-slot").getBoundingClientRect();
+  const tc = document.getElementById("tut-callout");
+  if (tc && tc.classList.contains("on")) {
+    const key = tc.textContent + "#" + Math.round(sr.height) + "#" + (D.dataset.ts || "");
+    if (key !== lastTutFit) {
+      lastTutFit = key;
+      let fs = 0.8;
+      tc.style.setProperty("--pdx-tfs", fs + "rem");
+      while (tc.scrollHeight > tc.clientHeight + 1 && fs > 0.66) { fs = +(fs - 0.02).toFixed(2); tc.style.setProperty("--pdx-tfs", fs + "rem"); }
+      if (!tc.querySelector(".pdx-tmore")) { const m = document.createElement("div"); m.className = "pdx-tmore"; m.textContent = "MORE \u25BE scroll"; tc.appendChild(m); }
+      tc.classList.toggle("pdx-more", tc.scrollHeight > tc.clientHeight + 1);
+    }
+  }
   D.style.setProperty("--mc-slot-top", Math.round(sr.top) + "px");
   D.style.setProperty("--mc-slot-h", Math.max(60, Math.round(sr.height)) + "px");
   col.style.setProperty("--mc-log-top", Math.round(sr.top) + "px");
@@ -584,7 +683,7 @@ function paintRail() {
   // what waits where: his decision first, then what the game or the tutorial asked for
   const need = wantedView();
   const want = need && need !== view ? need : (pingView && pingView !== view ? pingView : null);
-  const word = want && need === want && req ? (PING_WORD[req.kind] || "!") : "!";
+  const word = want && need === want && req ? (req.kind === "target" && (req.options || {}).target_type === "card" ? "PICK" : PING_WORD[req.kind] || "!") : "!";
   rail.querySelectorAll("button[data-view]").forEach((b) => {
     b.classList.toggle("is-on", b.dataset.view === view);
     const pinged = !!want && b.dataset.view === want;
@@ -600,7 +699,9 @@ function paintRail() {
   // so they never lie over the centuries and swallow the tap (ENGINE's browser runs)
   const k = req && req.kind, o = (req && req.options) || {};
   const chartPick = view === "chart" && (k === "travel" || k === "merchant_century" || (k === "target" && o.target_type === "century"));
-  D.classList.toggle("pdx-chart-pick", !!chartPick);
+  // a card pick on the page he is on (the shelf, his records): a Herald edition never lies over it
+  const cardPick = !!need && need === view && (k === "destroy_target" || k === "steal_target" || k === "secret_deal" || (k === "target" && o.target_type === "card"));
+  D.classList.toggle("pdx-chart-pick", !!(chartPick || cardPick));
 }
 
 function stagePt(x, y) { return { x: (x - O.x) / S, y: (y - O.y) / S }; }
@@ -627,6 +728,15 @@ function roman(n) {
   return n === 0 ? "0" : R[n] || String(n);
 }
 function actOf(node) {
+  const g0 = game();
+  // Edison's Lamp: the Secret Market's card, a deal of his own (buy it, or steal it)
+  if (g0 && g0.secretDeal && node.closest(".secret-stage, .secret-card-wrap")) {
+    const o = g0.secretDeal.options || {}, me = g0._self ? g0._self() : null;
+    if (o.action === "steal") return "Steal (Wanted)";
+    return o.affordable === false ? null : `Buy · ${o.cost} gold` + (me ? ` (you have ${me.gold})` : "");
+  }
+  // a pick in place (read with a long press): the key names the pick itself
+  if (g0 && g0.selectReq) return node.classList.contains("is-actionable") ? pickVerb(g0.pendingReq) : null;
   if (!node.classList.contains("is-actionable")) return null;
   const c = node.classList;
   if (c.contains("can-buy")) {
@@ -656,7 +766,7 @@ function openSheet(node) {
         <span class="cp-stat">Deliver ${d.delivery_century != null ? roman(d.delivery_century) : "?"}</span>
         <span class="cp-stat">Recycle ${d.recycle_value != null ? d.recycle_value : "?"}</span></div>
     </div>
-    <div class="ps-keys">${act ? `<button type="button" class="ps-act">${esc(act)}</button>` : `<p class="ps-note">Not yours to take now.</p>`}
+    <div class="ps-keys">${act ? `<button type="button" class="ps-act">${esc(act)}</button>` : `<p class="ps-note">${game() && game().selectReq ? "Not one you can pick now." : "Not yours to take now."}</p>`}
       <button type="button" class="ps-close">Back</button></div>`;
   sheet.querySelector(".ps-close").addEventListener("click", (e) => { e.stopPropagation(); closeSheet(); });
   const a = sheet.querySelector(".ps-act");
@@ -681,10 +791,214 @@ function wireSheet() {
   document.addEventListener("click", (e) => {
     if (!on() || letThrough) return;
     const card = e.target && e.target.closest && e.target.closest("#market-zone .card");
+    const g = game(), sel = g && g.selectReq;
+    // A PICK IN PLACE (the owner, 28/09: "it's just opening the Merchant and selecting"): the lit
+    // cards are picked by a tap, the game's own click; no sheet. Only a steal (he becomes Wanted)
+    // asks once more, on the card itself. A card that is not a choice does nothing (a long
+    // press reads any card).
+    if (card && sel) {
+      closeSheet();
+      if (!card.classList.contains("is-actionable")) { e.preventDefault(); e.stopImmediatePropagation(); clearConfirm(); return; }
+      const steal = sel.mode === "steal" || card.classList.contains("can-steal");
+      if (steal && !(confirmFor && confirmFor.name === card.dataset.name && performance.now() < confirmFor.until)) {
+        e.preventDefault(); e.stopImmediatePropagation(); armConfirm(card, "Steal it? You become Wanted"); return;
+      }
+      clearConfirm();
+      return;                                                   // the game's own click picks it
+    }
     if (card) { e.preventDefault(); e.stopImmediatePropagation(); openSheet(card); return; }
+    if (confirmFor) clearConfirm();
     if (sheet && !(e.target.closest && e.target.closest(".pdx-sheet, #pdx-mrail, #pdx-mcol"))) closeSheet();
   }, true);
+  // a long press (touch.js turns it into a hover) READS a card during a pick: the Merchant's sheet,
+  // its key named by the pick (Swap, Steal, Copy, Destroy)
+  document.addEventListener("mouseover", (e) => {
+    if (e.isTrusted || !on()) return;
+    const g = game();
+    if (!g || !g.selectReq) return;
+    const card = e.target && e.target.closest && e.target.closest("#market-zone .card");
+    if (card) { clearConfirm(); openSheet(card); }
+  }, true);
 }
+
+/* ══ PICKS IN PLACE ══
+   A card pick lives where its cards lie: the rail pings that scene, HELA's column says what to
+   pick, the valid cards glow there and a tap picks one. A steal asks once more on the card. ══ */
+const PICK_WHAT = {
+  "Mona Lisa": "swap it for one of his cards",
+  "Niépce's Heliograph": "steal one of his cards (you become Wanted)",
+  "Woodblock Print": "copy the ability of one of his active cards",
+  "Refrigerator": "use the ability of a relic you filed",
+  "Eyeglasses": "take back a recycled card",
+  "Object Teleporter": "swap it for a card a rival carries",
+};
+const PICK_VERB = { "Mona Lisa": "Swap for this", "Niépce's Heliograph": "Steal (Wanted)", "Woodblock Print": "Copy its ability",
+  "Fishing Reel": "Reel it in (Wanted)", "Object Teleporter": "Swap for this" };
+function pickVerb(req) {
+  if (!req) return "Choose";
+  if (req.kind === "destroy_target") return "Destroy";
+  if (req.kind === "steal_target") return "Steal (Wanted)";
+  const o = req.options || {};
+  return PICK_VERB[o.card] || (o.select_mode === "steal" ? "Steal (Wanted)" : o.select_mode === "destroy" ? "Destroy" : "Choose");
+}
+function zonesOf(req) { return ((req && req.options && req.options.candidates) || []).map((c) => c && c.zone).filter(Boolean); }
+// the line in HELA's column while a card pick waits: what the item does, and where to tap
+function pickText() {
+  const g = game(), req = g && g.pendingReq;
+  if (!req) return "";
+  const k = req.kind, o = req.options || {}, z = zonesOf(req);
+  const onShelf = z.includes("market"), inSecret = z.includes("secret"), onFile = z.includes("equipment");
+  const hold = onShelf || inSecret ? " Hold one to read it." : "";
+  if (k === "destroy_target") return `<b>Destroy one card</b>: tap a lit card on his shelf${inSecret ? " or in the Secret Market" : ""}${onFile ? ", or on a rival's file (MACHINE)" : ""}.${hold}`;
+  if (k === "steal_target") return `<b>Steal one of his cards</b> (you become Wanted): tap a lit card on his shelf.${hold}`;
+  if (k === "secret_deal") return o.action === "steal" ? "<b>The Secret Market</b>: tap its card to steal it (you become Wanted), or Pass." : "<b>The Secret Market</b>, shown only to you: tap its card to buy it, or Pass.";
+  if (k === "capacity") {
+    const inc = o.incoming || {}, inName = esc(inc.display_name || inc.name || "a card");
+    return o.room ? `<b>Agnes's Cauldron</b>: ${inName} was just recycled. Take it or decline it, on the sheet.`
+      : `<b>No room for ${inName}</b>: recycle one of yours to make room, on the sheet.`;
+  }
+  if (k !== "target" || o.target_type !== "card") return "";
+  const name = esc(o.card_display || o.card || "");
+  let what = PICK_WHAT[o.card] || "";
+  if (o.card === "Fishing Reel") { const m = /(\d+)/.exec(o.prompt || ""); what = `steal a card costing ${m ? m[1] + " gold" : "the roll"} or less (you become Wanted)`; }
+  if (!what) what = esc(String(o.prompt || "choose a card").replace(/^./, (c) => c.toLowerCase()));
+  if (z.includes("receptor")) return `<b>${name}</b>: ${what}. Tap its folder on the Records page.`;
+  if (z.includes("recycled")) return `<b>${name}</b>: ${what}. Choose it on the sheet.`;
+  const where = onShelf ? "on his shelf" : inSecret ? "in the Secret Market" : onFile ? "on a rival's file" : "";
+  return `<b>${name}</b>: ${what}. Tap a lit card ${where}.${hold}`;
+}
+// the in-place confirm of a steal: a small inked stamp over the card itself (never a window)
+let confirmFor = null, confirmEl = null;
+function armConfirm(card, word) {
+  clearConfirm();
+  const r = card.getBoundingClientRect();
+  confirmEl = document.createElement("div");
+  confirmEl.id = "pdx-confirm";
+  confirmEl.innerHTML = `<b>${esc(word)}</b><span>tap it again</span>`;
+  document.body.appendChild(confirmEl);
+  const w = Math.max(110, Math.min(170, r.width + 20));
+  confirmEl.style.width = w + "px";
+  confirmEl.style.left = Math.round(r.left + r.width / 2 - w / 2) + "px";
+  confirmEl.style.top = Math.round(r.top + r.height / 2 - confirmEl.offsetHeight / 2) + "px";
+  card.classList.add("pdx-confirming");
+  confirmFor = { name: card.dataset.name, until: performance.now() + 6000 };
+}
+function clearConfirm() {
+  if (confirmEl) { confirmEl.remove(); confirmEl = null; }
+  document.querySelectorAll(".pdx-confirming").forEach((n) => n.classList.remove("pdx-confirming"));
+  confirmFor = null;
+}
+// only the Secret Market holds the cards of this decision: the Merchant's key opens both markets
+function needsSecret() {
+  const g = game(), req = g && g.pendingReq;
+  if (!req) return false;
+  if (req.kind === "secret_deal") return true;
+  const z = zonesOf(req);
+  return z.length > 0 && z.every((x) => x === "secret");
+}
+
+/* ══ THE PICKS WITH NO HOME ON THE TABLE (the owner: only these keep a picker): the recycled
+   pile (Eyeglasses) and a card that comes to him with no room or from another's recycle
+   (Agnes's Cauldron, a steal into a full pack). The Merchant's card sheet, several cards in a
+   row, one big key. A relic in his own Records (Refrigerator) is picked on the Records page. ══ */
+let psheet = null, psReq = null, psSel = null;
+function cardTile(c, cls, tag) {
+  const kind = (c.kind_label || (c.ability_type || "").replace(/_/g, " ")).trim();
+  return `<button type="button" class="ps-card card-pop pp-tile${cls || ""}" data-name="${esc(c.name)}" style="--era-c:${c.delivery_century || 0}">`
+    + (tag ? `<i class="pp-tag">${esc(tag)}</i>` : "")
+    + `<span class="cp-name">${esc(c.display_name || c.name)}</span><span class="cp-kind">${esc(kind)}</span>`
+    + `<span class="cp-desc">${c.description || "--"}</span>`
+    + `<span class="cp-stats"><span class="cp-stat">${c.gold_cost != null ? c.gold_cost + " gold" : ""}</span>`
+    + `<span class="cp-stat">Deliver ${c.delivery_century != null ? roman(c.delivery_century) : "?"}</span>`
+    + `<span class="cp-stat">Recycle ${c.recycle_value != null ? c.recycle_value : "?"}</span></span></button>`;
+}
+function closePickSheet() {
+  if (psheet) psheet.remove();
+  psheet = null; psReq = null; psSel = null;
+}
+function pickSheetFor(req) {
+  closeSheet(); closePickSheet();
+  const g = game(); if (!g) return;
+  psReq = req;
+  const o = req.options || {};
+  psheet = document.createElement("div");
+  psheet.className = "pdx-sheet pdx-pick";
+  let head = "", row = "", keys = "";
+  const answer = (data) => { const gg = game(); closePickSheet(); if (gg && gg.pendingReq === req) gg.respond(data); paintAll(); };
+  if (req.kind === "capacity") {
+    const inc = o.incoming || {};
+    const inName = esc(inc.display_name || inc.name || "the card");
+    if (o.room) {
+      head = `<b>${inName}</b> was recycled: take it into your free slot?`;
+      row = cardTile(inc, " pp-in", "INCOMING");
+      keys = `<button type="button" class="ps-act" data-a="take">Take it</button><button type="button" class="ps-close" data-a="decline">Decline</button>`;
+    } else {
+      const destroys = o.destroy_on_decline !== false;
+      head = `<b>No room for ${inName}</b>: recycle one of yours to make room, or ${destroys ? "it is destroyed" : "decline it"}.`;
+      row = cardTile(inc, " pp-in", "INCOMING") + `<span class="pp-gap" aria-hidden="true">recycle one:</span>`
+        + (o.recycle_choices || []).map((c) => cardTile(c, " pp-pick", `+${c.recycle_value} energy`)).join("");
+      keys = `<button type="button" class="ps-act" data-a="recycle" disabled>Pick one of yours</button>`
+        + `<button type="button" class="ps-close" data-a="refuse">${destroys ? "Let it be destroyed" : "Decline it"}</button>`;
+    }
+  } else {
+    const nm = esc(o.card_display || o.card || "");
+    head = `<b>${nm}</b>: ${PICK_WHAT[o.card] || "choose a card"}. The recycled pile:`;
+    row = (o.candidates || []).map((c) => cardTile(c, " pp-pick")).join("");
+    keys = `<button type="button" class="ps-act" data-a="choice" disabled>Pick a card</button>`;
+  }
+  psheet.innerHTML = `<div class="pp-body"><p class="pp-head">${head}</p><div class="pp-row">${row}</div></div>`
+    + `<div class="ps-keys">${keys}<button type="button" class="pp-fold" aria-label="Look at the table">Look at the table</button></div>`;
+  const act = psheet.querySelector('.ps-act[data-a="recycle"], .ps-act[data-a="choice"]');
+  psheet.querySelectorAll(".pp-pick").forEach((t) => t.addEventListener("click", (e) => {
+    e.stopPropagation();
+    psSel = t.dataset.name;
+    psheet.querySelectorAll(".pp-pick").forEach((n) => n.classList.toggle("pp-on", n === t));
+    if (act) {
+      act.disabled = false;
+      const c = (o.recycle_choices || o.candidates || []).find((x) => x.name === psSel) || { name: psSel };
+      act.textContent = act.dataset.a === "recycle" ? `Recycle ${c.display_name || c.name}` : `Take ${c.display_name || c.name}`;
+    }
+  }));
+  psheet.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const a = b.dataset.a;
+    if (a === "take") answer({ take: true });
+    else if (a === "decline") answer({ take: false });
+    else if (a === "refuse") answer({ recycle: null });
+    else if (a === "recycle" && psSel) answer({ recycle: psSel });
+    else if (a === "choice" && psSel) answer({ choice: psSel });
+  }));
+  // folded, the sheet is a slim tab at the stage's foot: he looks at his table and comes back
+  psheet.querySelector(".pp-fold").addEventListener("click", (e) => { e.stopPropagation(); psheet.classList.add("pp-folded"); });
+  psheet.addEventListener("click", (e) => { if (psheet.classList.contains("pp-folded")) { e.stopPropagation(); psheet.classList.remove("pp-folded"); } });
+  document.body.appendChild(psheet);
+  requestAnimationFrame(() => psheet && psheet.classList.add("on"));
+}
+// the decision the pick sheet answers is gone (answered, or the server moved on): it goes too
+function paintPickSheet() {
+  const g = game();
+  const tg = document.getElementById("pdx-do-cp"); if (tg && !(g && g.panelDetail)) tg.remove();
+  if (psheet && (!on() || !g || g.pendingReq !== psReq)) closePickSheet();
+  if (confirmFor && !(g && g.selectReq)) clearConfirm();
+}
+// a relic of his own Records to use (Refrigerator): the pick waits on the Records page
+function receptorPick() {
+  const g = game(), req = g && g.pendingReq;
+  if (!req || req.kind !== "target" || (req.options || {}).target_type !== "card") return null;
+  const z = zonesOf(req);
+  return z.length && z.every((x) => x === "receptor") ? req : null;
+}
+window.__pdxDecide = (req) => {
+  if (!on() || !req) return false;
+  const o = req.options || {}, z = zonesOf(req);
+  if (req.kind === "target" && o.target_type === "card" && z.length && z.every((x) => x === "receptor")) {
+    closePickSheet(); lastTray = ""; paintAll(); return true;
+  }
+  if ((req.kind === "target" && o.target_type === "card" && z.length && z.every((x) => x === "recycled")) || req.kind === "capacity") {
+    pickSheetFor(req); paintAll(); return true;
+  }
+  return false;
+};
 
 /* ── the rail's action key: the one answer that has no big key of its own on a phone ── */
 function paintAction() {
@@ -703,6 +1017,9 @@ function paintAction() {
     // the Activation phase: the items tapped in the case are fired with this key (or none: pass)
     const n = g._actStaged.length;
     label = n ? `Fire ${n}` : "Pass"; fn = () => { try { g._passActivation(); } catch (e) {} };
+  } else if (k === "secret_deal" && view === "merchant") {
+    // Edison's Lamp: the deal is refused with the rail's key (the bay's own Pass is tiny here)
+    label = "Pass"; fn = () => { try { g.secretDeal = null; g.respond({ take: false }); g.renderMarket(); } catch (e) {} };
   } else if (k === "travel" && view === "chart") {
     const anchor = document.querySelector("#timeline-rail .cc-anchor, #timeline-rail .sea-anchor, #timeline-rail .cm-anchor");
     if (anchor) { label = "Stay"; fn = () => anchor.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true })); }
@@ -723,8 +1040,10 @@ function buildLife() {
   document.body.appendChild(life);
 }
 function lifePath() {
-  const ins = insets(), W = innerWidth, H = innerHeight, m = 2.5;
-  const x0 = ins.l + m, y0 = ins.t + m, x1 = W - ins.r - m, y1 = H - ins.b - m;
+  // the thread runs round the TRUE edge of the screen (a camera cut-out only hides a short piece of
+  // it); drawn inside the safe area it stood as a bar through the table on the notch's side
+  const ins = insets(), W = ins.w, H = ins.h, m = 2.5;
+  const x0 = m, y0 = m, x1 = W - m, y1 = H - m;
   // from the top-left corner, round the screen clockwise
   return `M ${x0} ${y0} H ${x1} V ${y1} H ${x0} Z`;
 }
@@ -781,12 +1100,17 @@ function wantedView() {
   }
   if (k === "market" || k === "secret_deal") return "merchant";
   if (k === "reward_category") return "records";               // the contracts drawer holds the three kinds
-  if (k === "deliver" || k === "recycle" || k === "capacity" || k === "activation") return "case";
+  // the full-pack choice and Agnes's Cauldron come as a card sheet over any page: no scene waits
+  if (k === "capacity") return null;
+  if (k === "deliver" || k === "recycle" || k === "activation") return "case";
   if (k === "target") {
     if (o.target_type === "century") return "chart";
     if (o.target_type === "traveler") return "machine";      // the rivals' files lie there
     const z = (o.candidates || []).map((c) => c && c.zone);
     if (z.includes("market") || z.includes("secret")) return "merchant";
+    if (z.includes("equipment")) return "machine";           // a card a rival carries: on his file
+    if (z.includes("receptor")) return "records";            // a relic he filed (Refrigerator)
+    if (z.includes("recycled")) return null;                 // the recycled pile: the sheet, on any page
     return "case";
   }
   return null;
@@ -801,6 +1125,7 @@ function wireRailCapture() {
     // the SECOND tap on the Merchant's key, once his page is up, opens the Secret Market (and
     // back): decided here, in the one handler, from the page already on screen
     if (b.dataset.view === "merchant" && view === "merchant" && !swapping) { secretOn = !secretOn; if (calm()) land("merchant"); else swapTo("merchant"); return; }
+    secretNext = b.dataset.view === "merchant" && needsSecret();
     go(b.dataset.view);
   }, true);
 }
@@ -877,12 +1202,16 @@ function paintExtra() {
   let sig = view, html = "";
   if (view === "merchant" && me) {
     html = `<div class="mx-gold"><i></i><span>YOUR GOLD</span><b>${me.gold}</b></div>`
-      + `<p class="mx-hint">${secretOn ? "Tap <b>SHELF</b> on the right for his shelf alone." : "Tap <b>SECRET</b> on the right: his shelf and the Secret Market together."}</p>`;
-    sig += me.gold + ":" + secretOn;
+      + (pickText() && !needsSecret() ? "" : `<p class="mx-hint">${secretOn ? "Tap <b>SHELF</b> on the right for his shelf alone." : "Tap <b>SECRET</b> on the right: his shelf and the Secret Market together."}</p>`);
+    sig += me.gold + ":" + secretOn + ":" + !!pickText();
   } else if (view === "case") {
     const n = ownedTickets().reduce((a, t) => a + t.count, 0);
-    html = n ? `<button type="button" class="mx-tickets">TICKETS <b>\u00d7${n}</b></button>` : "";
-    sig += ":" + n;
+    let cp = me ? me.contract_points || 0 : 0;
+    try { if (me) cp = game()._resolvedCP(me.name, cp); } catch (e) {}
+    html = (me ? `<div class="mx-gold"><i></i><span>YOUR GOLD</span><b>${me.gold}</b></div>` : "")
+      + (n ? `<button type="button" class="mx-tickets">TICKETS <b>\u00d7${n}</b></button>` : "")
+      + (me ? `<div class="mx-cp"><span>CONTRACTS</span><b>${cp}</b></div>` : "");
+    sig += ":" + n + ":" + (me ? me.gold : "") + ":" + cp;
   }
   if (sig !== lastExtra) {
     lastExtra = sig;
@@ -894,7 +1223,11 @@ function paintExtra() {
 }
 function paintBin() {
   if (!bin) buildBin();
-  document.querySelectorAll("#rucksack-zone .ruck-card").forEach((n) => n.classList.toggle("pdx-picked", n.dataset.name === picked));
+  if (on() && view === "case") paintCaseCards();
+  document.querySelectorAll("#rucksack-zone .ruck-card").forEach((n) => {
+    n.classList.toggle("pdx-picked", n.dataset.name === picked);
+    if (n.getAttribute("draggable") === "true") n.setAttribute("draggable", "false");
+  });
   const g = game(), me = g && g._self ? g._self() : null;
   const has = !!(me && (me.hand || me.equipment || []).length);
   if (rail && bin.parentElement !== rail) rail.insertBefore(bin, rail.querySelector(".mr-act"));
@@ -923,11 +1256,15 @@ function wireBin() {
   window.addEventListener("click", (e) => {
     if (!on() || view !== "case") return;
     const c = e.target.closest && e.target.closest("#rucksack-zone .ruck-card");
-    if (!c || c.classList.contains("act-ready") || c.classList.contains("act-used")) return;
-    if (e.target.closest(".ruck-recycle")) return;
+    // ON A PHONE ONLY THE BIN RECYCLES (the owner: players recycled by mistake with a double tap):
+    // the card's own quick-recycle key never answers a finger here
+    // A TAP READS THE CARD (the owner, 28/09: "it should be easy to read and understand the cards
+    // in your case"): the Merchant's card sheet, with what can be done with it now (fire it, file
+    // it, put it in the bin); recycling itself stays the bin's
+    if (!c || letThrough) return;
     e.preventDefault(); e.stopPropagation();
     if (performance.now() < binDragEat) return;
-    pick(c.dataset.name);
+    caseSheet(c);
   }, true);
   // the bin's tap is taken before the game's own "a click anywhere drops the carried card"
   window.addEventListener("click", (e) => {
@@ -936,38 +1273,161 @@ function wireBin() {
     e.preventDefault(); e.stopPropagation();
     binAct(); paintBin();
   }, true);
-  // a finger drags a card of the case onto the bin
+  // A FINGER DRAGS A CARD OF THE CASE (the owner: "I like dragging them into the bin and into the
+  // Records"): the card itself follows the finger, lifted above it; the places it can go glow
+  // (the bin, always; the RECORDS key while it can be filed this Delivery, and the bin then reads
+  // FILE IT); let go anywhere else and it flies back to its place in the case.
   let dg = null;
+  const recKey = () => rail && rail.querySelector('button[data-view="records"]');
+  const overEl = (n, x, y, pad) => { if (!n || n.hidden) return false; const r = n.getBoundingClientRect(); return r.width > 0 && x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad; };
+  const fileable = (name) => { const st = game() && game()._deliverState; return !!(st && st.names && st.names.has(name) && !st.chosen.has(name)); };
+  // held up and to the left of the finger (the bin and the keys lie on the right): what is under
+  // the finger stays in sight
+  const ghostAt = (d, x, y) => { d.gx = x - d.gw - 16; d.gy = y - d.gh * 0.72; d.ghost.style.transform = `translate(${d.gx.toFixed(1)}px, ${d.gy.toFixed(1)}px) rotate(-4deg)`; };
+  function lift(d, x, y) {
+    const r = d.c.getBoundingClientRect();
+    const w0 = d.c.offsetWidth || r.width, h0 = d.c.offsetHeight || r.height;
+    const k = Math.max(0.2, Math.min(3, (S || 1) * 0.95));
+    const ghost = document.createElement("div");
+    ghost.id = "pdx-drag";
+    const cl = d.c.cloneNode(true);
+    cl.classList.remove("pdx-picked", "card-lifted");
+    cl.querySelectorAll(".ruck-recycle").forEach((n) => n.remove());
+    cl.style.cssText = `width:${w0}px;height:${h0}px;transform:scale(${k});transform-origin:0 0;margin:0;position:absolute;left:0;top:0;visibility:visible;`;
+    ghost.appendChild(cl);
+    ghost.style.width = (w0 * k) + "px"; ghost.style.height = (h0 * k) + "px";
+    document.body.appendChild(ghost);
+    Object.assign(d, { ghost, gw: w0 * k, gh: h0 * k, home: { x: r.left + r.width / 2, y: r.top + r.height / 2 } });
+    d.c.classList.add("pdx-dragsrc");
+    D.classList.add("pdx-dragging-card");
+    const rk = recKey();
+    if (rk) rk.classList.toggle("pdx-drop-ok", fileable(d.name));
+    if (bin) bin.classList.add("pdx-drop-ok");
+    ghostAt(d, x, y);
+  }
+  function settle(d, home) {
+    D.classList.remove("pdx-dragging-card");
+    const rk = recKey(); if (rk) rk.classList.remove("pdx-drop-ok", "pdx-drop-hot");
+    if (bin) bin.classList.remove("pdx-drop-ok", "pb-hot");
+    const done = () => { if (d.ghost) d.ghost.remove(); if (d.c) d.c.classList.remove("pdx-dragsrc"); };
+    if (!home || !d.ghost || calm()) { done(); return; }
+    // back to its place in the case
+    const tx = d.home.x - d.gw / 2, ty = d.home.y - d.gh / 2;
+    try {
+      const an = d.ghost.animate([{ transform: d.ghost.style.transform, opacity: 1 }, { transform: `translate(${tx}px, ${ty}px) rotate(0deg)`, opacity: .6 }],
+        { duration: 200, easing: "cubic-bezier(.3,.8,.3,1)", fill: "forwards" });
+      an.onfinish = done; setTimeout(done, 400);
+    } catch (e) { done(); }
+  }
   window.addEventListener("pointerdown", (e) => {
     if (!on() || view !== "case" || e.pointerType !== "touch") return;
     const c = e.target.closest && e.target.closest("#rucksack-zone .ruck-card");
     if (!c) return;
-    dg = { c, id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+    dg = { c, name: c.dataset.name, id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
   }, true);
   window.addEventListener("pointermove", (e) => {
     if (!dg || e.pointerId !== dg.id) return;
     if (!dg.moved) {
       if (Math.hypot(e.clientX - dg.x, e.clientY - dg.y) < 10) return;
       dg.moved = true;
-      const g = game();
-      if (picked !== dg.c.dataset.name) pick(dg.c.dataset.name);   // picked, as a tap would
+      if (picked !== dg.name) pick(dg.name);                // picked, as a tap would (the bin names it)
+      lift(dg, e.clientX, e.clientY);
     }
     e.preventDefault();
-    try { window.dispatchEvent(new MouseEvent("mousemove", { clientX: e.clientX, clientY: e.clientY, bubbles: true })); } catch (err) {}
-    if (bin) bin.classList.toggle("pb-hot", overBin(e.clientX, e.clientY));
+    ghostAt(dg, e.clientX, e.clientY);
+    const rk = recKey(), hotRec = fileable(dg.name) && overEl(rk, e.clientX, e.clientY, 10);
+    if (rk) rk.classList.toggle("pdx-drop-hot", hotRec);
+    if (bin) bin.classList.toggle("pb-hot", !hotRec && overBin(e.clientX, e.clientY));
   }, { capture: true, passive: false });
   const up = (e) => {
     if (!dg || e.pointerId !== dg.id) return;
     const d = dg; dg = null;
-    if (bin) bin.classList.remove("pb-hot");
     if (!d.moved) return;
-    binDragEat = performance.now() + 400;
-    if (overBin(e.clientX, e.clientY)) binAct();
-    else pick(null);                                       // let go elsewhere: back in the case
+    binDragEat = performance.now() + 450;
+    const g = game();
+    if (e.type === "pointerup" && fileable(d.name) && overEl(recKey(), e.clientX, e.clientY, 10)) {
+      // dropped on the RECORDS key in a Delivery: filed in its drawer, as the tray's folder would
+      picked = null; settle(d, false);
+      try { g._fileDeliver(d.name); } catch (err) {}
+    } else if (e.type === "pointerup" && overBin(e.clientX, e.clientY)) {
+      picked = d.name; settle(d, false); binAct();
+    } else {
+      pick(null); settle(d, true);                        // let go elsewhere: back in the case
+    }
     paintBin();
   };
   window.addEventListener("pointerup", up, true);
   window.addEventListener("pointercancel", up, true);
+}
+
+/* ══ THE CASE'S CARDS, READABLE: laid out large over the open case (a grid sized by how many he
+   holds), each with its kind and its text; a tap opens its sheet with the acts that apply now ══ */
+function paintCaseCards() {
+  const pocket = document.querySelector("#rucksack-zone .ruck-pocket");
+  if (!pocket) return;
+  const g = game(), me = g && g._self ? g._self() : null;
+  const mine = me ? (me.hand || me.equipment || []) : [];
+  const cards = [...pocket.querySelectorAll(".ruck-card")];
+  const n = cards.length;
+  const cols = n <= 2 ? 2 : n <= 6 ? 3 : 4;
+  const ts = D.classList.contains("pdx-a11y") ? 3 : (+(D.dataset.ts || 1) || 1);
+  const cf = (n <= 2 ? 30 : n === 3 ? 25 : n <= 6 ? 21 : 17) * (ts >= 3 ? 1.22 : ts === 2 ? 1.1 : 1);
+  pocket.style.setProperty("--pdx-cc", String(cols));
+  pocket.style.setProperty("--pdx-cf", cf.toFixed(1) + "px");
+  pocket.classList.toggle("pdx-cc-wide", n <= 2);
+  cards.forEach((c) => {
+    const d = mine.find((x) => x.name === c.dataset.name);
+    if (!d) return;
+    let t = c.querySelector(":scope > .pdx-cdesc");
+    if (!t) { t = document.createElement("div"); t.className = "pdx-cdesc"; c.insertBefore(t, c.querySelector(".card-foot")); }
+    const kind = (d.kind_label || (d.ability_type || "").replace(/_/g, " ")).trim();
+    const html = `<b>${esc(kind)}</b><span>${d.description || ""}</span>`;
+    if (t.innerHTML !== html) t.innerHTML = html;
+  });
+}
+function caseSheet(node) {
+  closeSheet();
+  const g = game(); if (!g) return;
+  const name = node.dataset.name;
+  const me = g._self ? g._self() : null;
+  const d = (me ? (me.hand || me.equipment || []) : []).find((x) => x.name === name) || cardData(name) || { name };
+  const st = g._deliverState;
+  const keys = [];
+  // the only item ready: it fires at once; with others ready it joins them and the rail's FIRE n fires all
+  const others = [...document.querySelectorAll("#rucksack-zone .ruck-card.act-ready")].some((n) => n !== node);
+  if (node.classList.contains("act-ready")) keys.push(["fire", others ? "Ready it (then FIRE)" : "Fire it"]);
+  if (st && st.names && st.names.has(name) && !st.chosen.has(name)) keys.push(["file", `File it (${roman(d.delivery_century)})`]);
+  keys.push(["bin", "Put it in the bin"]);
+  const note = node.classList.contains("act-used") ? "Fired this phase." : node.classList.contains("act-notarget") ? "Nothing in reach to use it on now." : "";
+  sheet = document.createElement("div");
+  sheet.className = "pdx-sheet pdx-casesheet";
+  const kind = (d.kind_label || (d.ability_type || "").replace(/_/g, " ")).trim();
+  sheet.innerHTML = `<div class="ps-card card-pop">
+      <div class="cp-name">${esc(d.display_name || d.name)}</div>
+      <div class="cp-kind">${esc(kind)}</div>
+      <div class="cp-desc">${d.description || "--"}</div>
+      <div class="cp-stats"><span class="cp-stat">Deliver at ${d.delivery_century != null ? roman(d.delivery_century) : "?"}</span>
+        <span class="cp-stat">Recycle for ${d.recycle_value != null ? d.recycle_value : "?"} energy</span>
+        <span class="cp-stat">${d.gold_cost != null ? "Worth " + d.gold_cost + " gold" : ""}</span></div>
+    </div>
+    <div class="ps-keys">${note ? `<p class="ps-note">${esc(note)}</p>` : ""}${keys.map(([a, l], i) => `<button type="button" class="${i === 0 && a !== "bin" ? "ps-act" : "ps-close ps-bin"}" data-a="${a}">${esc(l)}</button>`).join("")}
+      <button type="button" class="ps-close" data-a="back">Back</button></div>`;
+  sheet.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const a = b.dataset.a, gg = game();
+    closeSheet();
+    if (!gg) return;
+    if (a === "fire") {
+      const live = [...document.querySelectorAll("#rucksack-zone .ruck-card")].find((n) => n.dataset.name === name);
+      if (live && gg._stageActivation) gg._stageActivation(name, live);
+      // nothing else ready to fire: it fires at once; otherwise the rail's FIRE n fires them together
+      if (!document.querySelector("#rucksack-zone .ruck-card.act-ready")) { try { gg._passActivation(); } catch (err) {} }
+    } else if (a === "file") { try { gg._fileDeliver(name); } catch (err) {} }
+    else if (a === "bin") { picked = null; pick(name); }
+    paintAll();
+  }));
+  document.body.appendChild(sheet);
+  requestAnimationFrame(() => sheet && sheet.classList.add("on"));
 }
 
 /* ══ DELIVERY IN THE RECORDS (the owner): during a Delivery, the Records page shows the relics
@@ -976,20 +1436,41 @@ function wireBin() {
 let rtray = null, lastTray = "";
 function paintRecordsTray() {
   const g = game(), st = g && g._deliverState;
-  const show = on() && view === "records" && !!st && st.names && st.names.size > 0;
+  const rp = receptorPick();
+  const show = on() && view === "records" && (!!rp || (!!st && st.names && st.names.size > 0));
   if (!rtray) {
     rtray = document.createElement("div"); rtray.id = "pdx-rtray";
     rtray.addEventListener("click", (e) => {
       const f = e.target.closest && e.target.closest(".rt-folder:not(.rt-done)");
       if (!f) return;
       e.stopPropagation(); e.preventDefault();
-      const gg = game(); if (gg && gg._fileDeliver) gg._fileDeliver(f.dataset.name);
+      const gg = game();
+      // Refrigerator: the relic tapped is the one whose ability he uses
+      if (f.dataset.use && gg && gg.pendingReq && receptorPick()) gg.respond({ choice: f.dataset.name });
+      else if (gg && gg._fileDeliver) gg._fileDeliver(f.dataset.name);
       lastTray = ""; paintRecordsTray();
     }, true);
     document.body.appendChild(rtray);
   }
   rtray.hidden = !show;
   if (!show) return;
+  rtray.style.left = (stage.x + 10) + "px"; rtray.style.maxWidth = (stage.w - 20) + "px"; rtray.style.width = "auto";
+  rtray.style.bottom = Math.max(10, innerHeight - (stage.y + stage.h) + 10) + "px";
+  if (rp) {
+    // THE RELICS HE FILED that have an ability to use, as the folders they lie in
+    const o = rp.options || {};
+    const sig = "use#" + (o.candidates || []).map((c) => c.name).join("|");
+    rtray.classList.add("rt-use");
+    if (sig !== lastTray) {
+      lastTray = sig;
+      rtray.innerHTML = `<p class="rt-head"><b>${esc(o.card_display || o.card || "")}</b>: tap a relic you filed to use its ability</p><div class="rt-row">`
+        + (o.candidates || []).map((c) => `<button type="button" class="rt-folder" data-use="1" data-name="${esc(c.name)}"><i class="rt-tab">${roman(c.delivery_century)}</i>`
+          + `<b>${esc(c.display_name || c.name)}</b><em class="rt-desc">${c.description || ""}</em><span>tap to use</span></button>`).join("")
+        + `</div>`;
+    }
+    return;
+  }
+  rtray.classList.remove("rt-use");
   const me = g._self && g._self();
   const cards = me ? (me.hand || me.equipment || []) : [];
   const names = [...st.names];
@@ -1001,8 +1482,6 @@ function paintRecordsTray() {
         return `<button type="button" class="rt-folder${done ? " rt-done" : ""}" data-name="${esc(n)}"><i class="rt-tab">${roman(c.delivery_century != null ? c.delivery_century : st.century)}</i><b>${esc(c.name)}</b><span>${done ? "FILED" : "tap to file"}</span></button>`; }).join("")
       + `</div>`;
   }
-  rtray.style.left = (stage.x + 10) + "px"; rtray.style.maxWidth = (stage.w - 20) + "px"; rtray.style.width = "auto";
-  rtray.style.bottom = Math.max(10, innerHeight - (stage.y + stage.h) + 10) + "px";
 }
 
 /* ══ VOUCHERS on a phone: a ticket is used where it lies (the case) or from the pip-boy's
@@ -1138,6 +1617,7 @@ function wireNotesKey() {
 
 /* ── mount / unmount with the table ── */
 let mounted = false;
+let paintAll = () => {};
 function wanted() {
   const sg = document.getElementById("screen-game");
   return D.classList.contains("pdx-touch") && document.body.classList.contains("cabin-on")
@@ -1159,8 +1639,8 @@ function sync() {
   } else if (!w && mounted) {
     mounted = false;
     D.classList.remove("pdx-m-on", "pdx-file-out");
-    dockTabKey(false);
-    closeFiles();
+    dockTabKey(false); dockTrack(false);
+    closeFiles(); closePickSheet(); clearConfirm();
     files().forEach((f) => f.classList.remove("pdx-piled"));
     catHome(false);
     if (window.__pdxHelp && window.__pdxHelp.notePlacer === placeNotes) window.__pdxHelp.notePlacer = null;
@@ -1182,13 +1662,16 @@ function start() {
   const sg = document.getElementById("screen-game");
   if (sg) obs.observe(sg, { attributes: true, attributeFilter: ["class"] });
   const cam = document.getElementById("cam");
-  const onResize = () => { if (on()) { layout(); frame(view, false); pile(); reframeSoon(); } };
+  const onResize = () => { if (on()) { if (window.__pdxUnzoom) window.__pdxUnzoom(); layout(); frame(view, false); pile(); reframeSoon(); paintLife(); } };
   addEventListener("resize", onResize);
   if (window.visualViewport) visualViewport.addEventListener("resize", onResize);
   addEventListener("orientationchange", () => setTimeout(onResize, 60));
+  document.addEventListener("fullscreenchange", () => setTimeout(onResize, 120));
+  if (window.visualViewport) visualViewport.addEventListener("scroll", () => { if (on() && window.__pdxUnzoom && window.__pdxUnzoom()) setTimeout(onResize, 80); });
   // the column reads the game's own readouts; light, and only while the table is on
   let raf = 0;
-  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (on()) { paintRail(); paintSecretKey(); paintCol(); paintAction(); paintLife(); paintTutLink(); paintExtra(); paintRecordsTray(); paintBin(); paintGold(); paintTicketSlot(); } }); };
+  const soon = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; paintPickSheet(); if (on()) { paintRail(); paintSecretKey(); paintCol(); paintAction(); paintLife(); paintTutLink(); paintExtra(); paintRecordsTray(); paintBin(); paintGold(); paintTicketSlot(); } }); };
+  paintAll = soon;
   setInterval(() => {
     if (!on()) { if (life) life.style.display = "none"; return; }
     // the tutorial starting or ending moves the stage's top edge

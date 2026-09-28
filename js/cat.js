@@ -30,6 +30,7 @@ const WHT = "url(#cwWht)", WHT_H = "url(#cwWhtH)", WHITE_S = "#dccbb0";
 const STRIPE = "#b0501a", EDGE = "#94410f", LIGHT = "#ffd08f", PINK = "#e58f8a";
 
 const n1 = (v) => Math.round(v * 10) / 10;
+const fillOnly = (d, fill, op = 1) => `<path d="${d}" fill="${fill}"${op < 1 ? ` opacity="${op}"` : ""}/>`;
 const pt = (p) => `${n1(p[0])} ${n1(p[1])}`;
 const line = (d, col = INK, w = 2, op = 1) =>
   `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"${op < 1 ? ` opacity="${op}"` : ""}/>`;
@@ -101,7 +102,10 @@ function body(name, parts, before = "", after = "") {
   for (const p of parts) {
     const wrap = (inner) => {
       let g = inner;
-      for (const c of [].concat(p.cls || []).reverse()) g = `<g class="${c}">${g}</g>`;
+      for (const c of [].concat(p.cls || []).reverse()) {
+        const o = p.origin && p.origin[c];
+        g = `<g class="${c}"${o ? ` style="transform-box:view-box;transform-origin:${o[0]}px ${o[1]}px"` : ""}>${g}</g>`;
+      }
       if (p.tr) g = `<g transform="${p.tr}">${g}</g>`;
       return g;
     };
@@ -232,40 +236,105 @@ function capsule(A, B, rA, rB, w = 0) {
   return [at(A, rA, 0, 1).concat(w), at(M, rM, 0, 1.02).concat(w), at(B, rB, 0, 1), at(B, rB, .72, .72), at(B, rB, 1, 0), at(B, rB, .72, -.72),
     at(B, rB, 0, -1), at(M, rM, 0, -1.02), at(A, rA, 0, -1), at(A, rA, -.72, -.72), at(A, rA, -1, 0), at(A, rA, -.72, .72)];
 }
-/* The raised fore limb of the sitting cat, drawn as a cat's is seen from the front:
-   the shoulder is a soft bulge of the torso's own outline, the upper arm is hidden in
-   the chest fur, the forearm comes out of that bulge tapering to the wrist, and the paw
-   bends at the wrist, its toes curled over (its beans show only when it swipes at us).
-   The limb is drawn under the torso, so the torso's contour covers its root; it turns
-   about its real joints (app.css: cw-uarm at the shoulder SH, cw-farm at the elbow EL,
-   cw-wrist at the wrist WR) and shares the body's ink: one silhouette. */
-const SH = [370, 462], EL = [336, 438], WR = [308, 384];
-function pawParts(wr, dir, cls, seed) {
-  const tip = [wr[0] + dir[0] * 20, wr[1] + dir[1] * 20], n = [-dir[1], dir[0]];
-  const T = (a, b) => `${(wr[0] + dir[0] * a + n[0] * b).toFixed(1)} ${(wr[1] + dir[1] * a + n[1] * b).toFixed(1)}`;
-  return { seed, cls, pts: capsule(wr, tip, 15, 18.5), sock: [wr[0] - 40, wr[1] - 40, 80, 80],
-    detail: `<g class="cw-toes">${line(`M ${T(26, -9)} Q ${T(30, -8)} ${T(31, -4)} M ${T(29, 1)} Q ${T(33, 2)} ${T(33, 6)} M ${T(26, 9)} Q ${T(30, 10)} ${T(30, 14)}`, "#b39a7c", 1.8)}</g>`
-      + `<g class="cw-beans" fill="#e99a94"><ellipse cx="${T(16, 0).split(" ")[0]}" cy="${T(16, 0).split(" ")[1]}" rx="7" ry="6"/>`
-      + [[28, -9], [32, 0], [28, 9], [22, 14]].map(([a, b]) => { const [x, y] = T(a, b).split(" "); return `<circle cx="${x}" cy="${y}" r="3.3"/>`; }).join("") + `</g>`
-      + claws(`M ${T(34, -8)} q -2 -8 3 -12 M ${T(37, 1)} q 0 -8 6 -11 M ${T(33, 10)} q 2 -8 8 -9`) };
+/* THE TAIL: thick where it leaves the rump, tapering to a rounded tip, its edge furry
+   like her outline, tabby rings wrapping round it (curved bands) and a darker tip. It is
+   built along a centreline C (points from the root) with half-widths w0 at the root and
+   w1 at the tip, as a chain of five overlapping segments nested in each other: each turns
+   about its own joint (cw-tail at the root, then cw-t1..cw-t4), so a sway bends it along
+   its length and the tip lags behind (app.css: the tail's moods). Drawn under the body
+   where it leaves it, so no seam shows. */
+function tailOutline(C, w0, w1, t0, t1, capStart) {
+  const N = C.length, L = [0];
+  for (let i = 1; i < N; i++) L.push(L[i - 1] + Math.hypot(C[i][0] - C[i - 1][0], C[i][1] - C[i - 1][1]));
+  const tot = L[N - 1], at = (t) => {       // point, unit tangent and half-width at t (0..1)
+    const d = t * tot; let i = 1; while (i < N - 1 && L[i] < d) i++;
+    const k = (d - L[i - 1]) / ((L[i] - L[i - 1]) || 1), a = C[i - 1], b = C[i];
+    const P = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+    const i0 = Math.max(0, i - 2), i1 = Math.min(N - 1, i + 1), tx = C[i1][0] - C[i0][0], ty = C[i1][1] - C[i0][1], tl = Math.hypot(tx, ty) || 1;
+    return { P, T: [tx / tl, ty / tl], w: w0 + (w1 - w0) * Math.pow(t, .85) };
+  };
+  const M = 9, left = [], right = [];
+  for (let k = 0; k <= M; k++) {
+    const t = t0 + (t1 - t0) * k / M, { P, T, w } = at(t), n = [-T[1], T[0]], f = t > .08 ? .28 : 0;
+    left.push([P[0] + n[0] * w, P[1] + n[1] * w, f]); right.push([P[0] - n[0] * w, P[1] - n[1] * w, f]);
+  }
+  const e = at(t1), cap = [];
+  if (t1 >= .999) for (const a of [-.6, 0, .6]) {     // the rounded tip
+    const c = Math.cos(a), sn = Math.sin(a), n = [-e.T[1], e.T[0]];
+    cap.push([e.P[0] + (e.T[0] * c - n[0] * sn) * e.w * 1.1, e.P[1] + (e.T[1] * c - n[1] * sn) * e.w * 1.1, .4]);
+  }
+  return { pts: [...left, ...cap, ...right.reverse()], at };
 }
+let tailN = 0;
+function tailParts(C, w0, w1, seed, extra = {}) {
+  const at = tailOutline(C, w0, w1, 0, 1).at, root = C[0];
+  const rings = (t0, t1, ts) => {
+    const id = "cwT" + (++tailN) + "_" + t0;
+    let g = "";
+    for (const t of ts.filter((t) => t >= t0 && t <= t1)) {
+      const a = at(t), b = at(t + .045), na = [-a.T[1], a.T[0]], nb = [-b.T[1], b.T[0]], wa = a.w * 1.4, wb = b.w * 1.4, bow = a.w * .5;
+      const f = (v) => v.toFixed(1);
+      g += `M ${f(a.P[0] + na[0] * wa)} ${f(a.P[1] + na[1] * wa)} Q ${f(a.P[0] + a.T[0] * bow)} ${f(a.P[1] + a.T[1] * bow)} ${f(a.P[0] - na[0] * wa)} ${f(a.P[1] - na[1] * wa)} `
+        + `L ${f(b.P[0] - nb[0] * wb)} ${f(b.P[1] - nb[1] * wb)} Q ${f(b.P[0] + b.T[0] * bow)} ${f(b.P[1] + b.T[1] * bow)} ${f(b.P[0] + nb[0] * wb)} ${f(b.P[1] + nb[1] * wb)} Z `;
+    }
+    return { id, g };
+  };
+  const RINGS = [.14, .27, .4, .53, .66, .76];
+  // five segments, each nested in the one before, so the tail bends progressively
+  const CUTS = [0, .2, .4, .6, .8, 1], CLS = ["cw-tail", "cw-t1", "cw-t2", "cw-t3", "cw-t4"];
+  const origin = {}; CLS.forEach((c, k) => { origin[c] = k ? at(CUTS[k]).P : root; });
+  const mk = (O, t0, t1, cls, sd, isTip) => {
+    const f = fur(O.pts, sd, 7), r = rings(t0, t1, RINGS);
+    let tipDark = "";
+    if (isTip) { const a = at(.84), n = [-a.T[1], a.T[0]], w = a.w * 1.6;
+      tipDark = `<path d="M ${(a.P[0] + n[0] * w).toFixed(1)} ${(a.P[1] + n[1] * w).toFixed(1)} Q ${(a.P[0] + a.T[0] * a.w * .5).toFixed(1)} ${(a.P[1] + a.T[1] * a.w * .5).toFixed(1)} ${(a.P[0] - n[0] * w).toFixed(1)} ${(a.P[1] - n[1] * w).toFixed(1)} L ${(a.P[0] - n[0] * w + a.T[0] * 60).toFixed(1)} ${(a.P[1] - n[1] * w + a.T[1] * 60).toFixed(1)} L ${(a.P[0] + n[0] * w + a.T[0] * 60).toFixed(1)} ${(a.P[1] + n[1] * w + a.T[1] * 60).toFixed(1)} Z" fill="${STRIPE}"/>`; }
+    return { ...extra, seed: sd, d: f.d, cls, origin,
+      detail: `<clipPath id="${r.id}"><path d="${f.d}"/></clipPath><g clip-path="url(#${r.id})"><path d="${r.g}" fill="${STRIPE}"/>${tipDark}</g>`
+        + `<path d="${f.strands}" fill="none" stroke="${EDGE}" stroke-width="1.5" stroke-linecap="round" opacity=".45"/>` };
+  };
+  return CLS.map((c, k) => mk(tailOutline(C, w0, w1, Math.max(0, CUTS[k] - .03), k === 4 ? 1 : CUTS[k + 1] + .03), CUTS[k], CUTS[k + 1], CLS.slice(0, k + 1), seed + k * 100, k === 4));
+}
+
+/* PAWS: rounded and chunky, a hint of toes (small bumps on the front edge and two light
+   toe lines), white socks. footSide: a paw seen from the side on the ground at (x, y),
+   toes toward dir (-1 left, 1 right); footFront: a paw seen from the front. */
+function footSide(x, y, len, h, dir = -1, fill = WHT, extra = {}) {
+  const X = (u) => x + dir * u;
+  const pts = [[X(len * .5), y - h * .9], [X(len * .56), y - 3], [X(len * .45), y + 1], [X(0), y + 2], [X(-len * .36), y + 1],
+    [X(-len * .5), y - 2], [X(-len * .53), y - h * .28], [X(-len * .47), y - h * .5], [X(-len * .5), y - h * .62], [X(-len * .4), y - h * .86], [X(-len * .2), y - h * 1.02], [X(len * .15), y - h * 1.08]];
+  const tl = (u, k) => `M ${X(-len * u).toFixed(1)} ${(y - h * k).toFixed(1)} q ${(dir * 3).toFixed(1)} 2 ${(dir * 6).toFixed(1)} 2`;
+  return { ...extra, fill, pts, vol: false, detail: line(`${tl(.47, .28)} ${tl(.46, .56)}`, "#b39a7c", 1.6, .9) };
+}
+function footFront(cx, g, w, fill = WHT, extra = {}) {
+  const pts = [[cx - w / 2, g - 20], [cx - w / 2 - 1, g - 7], [cx - w / 2 + 3, g], [cx - w / 3, g + 2], [cx - w / 6, g - 1], [cx, g + 2], [cx + w / 6, g - 1], [cx + w / 3, g + 2], [cx + w / 2 - 3, g], [cx + w / 2 + 1, g - 7], [cx + w / 2, g - 20], [cx, g - 24]];
+  return { ...extra, fill, pts, vol: false, detail: line(`M ${cx - w / 6} ${g - 1} l 0 -8 M ${cx + w / 6} ${g - 1} l 0 -8`, "#b39a7c", 1.6, .9) };
+}
+// an open paw reaching forward (the leap): a round paw, its toes spread toward dir
+function pawOpen(cx, cy, r, dir = -1, fill = WHT, extra = {}) {
+  const pts = [];
+  for (let k = 0; k < 14; k++) {
+    const a = Math.PI * 2 * k / 14, fx = Math.cos(a) * dir, toe = fx > .35 && k % 2 === 0;
+    pts.push([cx + Math.cos(a) * r * (toe ? 1.3 : 1), cy + Math.sin(a) * r * (toe ? 1.3 : 1)]);
+  }
+  return { ...extra, fill, pts, vol: false, detail: claws(`M ${cx + dir * r * 1.2} ${cy - r * .7} l ${dir * 8} -5 M ${cx + dir * r * 1.3} ${cy} l ${dir * 9} 0 M ${cx + dir * r * 1.2} ${cy + r * .7} l ${dir * 8} 5`) };
+}
+
+/* The raised fore limb of the sitting cat, jointed like a cat's: the upper arm grows out
+   of the chest at the shoulder (SH) and is drawn under the torso, so the torso's own
+   contour covers its root; the forearm (from the elbow, EL) and the paw (from the wrist,
+   WR) ride it, each turning about its own joint (app.css: cw-uarm, cw-farm, cw-wrist).
+   All three share the body's ink, so the limb and the body are one silhouette. */
+const SH = [378, 468], EL = [344, 418], WR = [322, 366];
 function armParts() {
-  const d = [(WR[0] - EL[0]) / 61.4, (WR[1] - EL[1]) / 61.4];
-  const upper = { seed: 42, cls: ["cw-uarm"], pts: capsule(SH, EL, 26, 22, .25) };
-  const fore = { seed: 43, cls: ["cw-uarm", "cw-farm"], pts: capsule(EL, WR, 21, 14.5, .3),
-    detail: line("M 326 426 C 320 410 314 398 306 388", LIGHT, 2.4, .5) };
-  // the wrist bends: the paw leans forward of the forearm's line
-  const pd = [d[0] * .8 - .45, d[1] * .8 - .1], pl = Math.hypot(pd[0], pd[1]);
-  const paw = pawParts(WR, [pd[0] / pl, pd[1] / pl], ["cw-uarm", "cw-farm", "cw-wrist"], 41);
+  const dir = [(WR[0] - EL[0]) / 56.5, (WR[1] - EL[1]) / 56.5], tip = [WR[0] + dir[0] * 22, WR[1] + dir[1] * 22];
+  const upper = { seed: 42, cls: ["cw-uarm"], vol: true, pts: capsule(SH, EL, 31, 25, .3),
+    detail: line("M 366 452 C 358 440 350 430 344 420", LIGHT, 3, .5) };
+  const fore = { seed: 43, cls: ["cw-uarm", "cw-farm"], soft: true, pts: capsule(EL, WR, 23, 19, .25),
+    detail: line("M 336 414 C 330 400 324 386 318 372", LIGHT, 2.6, .55) };
+  const paw = { seed: 41, cls: ["cw-uarm", "cw-farm", "cw-wrist"], soft: true, sock: [270, 320, 100, 80], pts: capsule(WR, tip, 20, 23),
+    detail: `<g fill="#e99a94"><ellipse cx="316" cy="354" rx="7" ry="6"/><circle cx="302" cy="350" r="3.4"/><circle cx="306" cy="340" r="3.4"/><circle cx="316" cy="336" r="3.4"/><circle cx="326" cy="339" r="3.2"/></g>`
+      + claws("M 300 346 q -8 -4 -6 -12 M 305 336 q -5 -7 0 -13 M 316 332 q -2 -8 4 -12") };
   return { upper, fore, paw };
-}
-/* Grooming: the elbow stays down at the chest, the forearm rises behind the chest fur
-   and the paw comes up to the mouth from below the cheek, its pads toward the tongue. */
-function groomParts() {
-  const e = [396, 470], w = [404, 392];
-  const fore = { seed: 44, cls: ["cw-lick"], pts: capsule(e, w, 20, 14.5, .3) };
-  const paw = { ...pawParts(w, [.28, -.96], ["cw-lick"], 45), soft: true };
-  return { fore, paw };
 }
 
 function sitParts(raised, beforeBib = []) {
@@ -273,7 +342,7 @@ function sitParts(raised, beforeBib = []) {
   // front legs under the chest, a ruff where the head meets the shoulders
   const parts = [
     { seed: 31, pts: [[450, 352], [500, 358], [540, 380], [562, 420], [572, 480, -.5], [578, 540, -.5], [574, 600], [540, 650], [470, 672], [400, 668], [352, 640], [336, 590], [340, 530, .6],
-      ...(raised === "bat" ? [[336, 480, .5], [326, 456, .4], [332, 430], [354, 408]] : [[346, 470, .6], [360, 416]]), [396, 374]],
+      [346, 470, .6], [360, 416], [396, 374]],
       detail: marks([[346, 500, 8, 26, 9], [342, 560, 4, 26, 9], [570, 470, 176, 26, 9], [576, 530, 178, 26, 9]])
         + line("M 366 420 C 350 470 344 530 346 590", LIGHT, 3.2, .65) + line("M 560 440 C 572 500 574 560 566 610", "#ffcf8a", 2.4, .4)
         + glow("M 396 374 C 360 416 344 480 340 540 C 336 600 344 640 360 650 C 356 560 364 470 404 380 Z") },
@@ -281,20 +350,21 @@ function sitParts(raised, beforeBib = []) {
       detail: marks([[592, 594, 160, 34, 10], [606, 642, 180, 30, 10]]) },
     { seed: 33, soft: true, pts: [[394, 560], [362, 570], [336, 600, .7], [326, 644, .6], [336, 676], [362, 692], [410, 694], [428, 660], [420, 600]],
       detail: marks([[336, 620, 8, 26, 9]]) },
-    { seed: 34, fill: WHT, pts: [[338, 684], [346, 671], [368, 669], [388, 677], [390, 692], [370, 698], [344, 696]], detail: toes("M 356 697 v -8 M 370 697 v -8") },
-    { seed: 35, fill: WHT, pts: [[534, 684], [542, 671], [566, 669], [590, 677], [592, 692], [570, 698], [540, 696]], detail: toes("M 556 697 v -8 M 572 697 v -8") },
+    // the hind feet, long, their toes toward us
+    { ...footFront(364, 696, 54), seed: 34 },
+    { ...footFront(563, 696, 58), seed: 35 },
     { seed: 36, pts: [[372, 378], [400, 360], [450, 352], [500, 358], [530, 376], [542, 404, .9], [528, 432, .9], [500, 448, .9], [450, 454, .9], [402, 448, .9], [374, 432, .9], [360, 404, .8]],
       detail: marks([[372, 404, 20, 18, 7], [530, 404, 160, 18, 7]]) + `<ellipse cx="450" cy="362" rx="60" ry="12" fill="#7a300c" opacity=".3"/>` },
     { seed: 38, cls: "cw-legR", fill: FUR_S, sock: 632, soft: true, pts: [[454, 480], [504, 480], [503, 560], [502, 640], [502, 672], [496, 690], [480, 697], [462, 695], [454, 684], [452, 640], [452, 560]],
       detail: toes("M 472 695 v -9 M 486 694 v -9") },
+    { ...footFront(478, 697, 54, WHITE_S), seed: 58, cls: "cw-legR" },
   ];
   if (!raised) parts.push({ seed: 39, cls: "cw-legL", sock: 628, soft: true, pts: [[398, 480], [448, 480], [448, 560], [448, 640], [446, 672], [440, 690], [424, 697], [406, 695], [398, 684], [398, 640], [399, 560]],
-    detail: line("M 412 490 L 411 612", LIGHT, 3, .6) + toes("M 418 695 v -9 M 432 695 v -9") });
+    detail: line("M 412 490 L 411 612", LIGHT, 3, .6) }, { ...footFront(423, 697, 54), seed: 59, cls: "cw-legL" });
   parts.push(...beforeBib);
   parts.push({ seed: 37, fill: WHT, ink: false, pts: [[420, 380], [450, 372], [482, 380], [500, 420], [500, 470], [490, 520, .7], [470, 556, .7], [450, 566, .7], [430, 556, .7], [410, 520, .7], [400, 470], [402, 420]],
       detail: `<path d="M 470 390 Q 494 400 498 440 Q 496 500 476 548 Q 488 480 470 390 Z" fill="${WHITE_S}" opacity=".7"/>` });
-  parts.push({ seed: 40, cls: "cw-tail", soft: true, pts: [[596, 650], [620, 672], [616, 696, .5], [580, 706, .5], [500, 708, .5], [420, 706, .5], [370, 700], [352, 688], [362, 680], [380, 688], [420, 692], [500, 694], [570, 690], [590, 676]],
-    detail: marks([[560, 694, 90, 12, 8], [500, 696, 90, 12, 8], [440, 695, 90, 12, 8], [366, 690, 40, 14, 8]]) });
+  parts.push(...tailParts([[586, 652], [614, 684], [592, 702], [520, 706], [440, 706], [376, 700], [344, 684], [338, 664]], 21, 9, 40, { soft: true }));
   return parts;
 }
 function poseSit() {
@@ -304,13 +374,7 @@ function poseSit() {
 // sitting up with a paw raised: batting at HELA's Hours, holding the hand to nibble it, grooming
 function poseBat() {
   const A = armParts();
-  return body("bat", [A.upper, A.fore, A.paw, ...sitParts("bat"), headPart("translate(456 294) rotate(7)", ["focused", "open", "happy"])],
-    shadow(468, 170));
-}
-// licking a paw: the paw comes up to the mouth from below the cheek
-function poseGroom() {
-  const G = groomParts();
-  return body("groom", [...sitParts("groom", [G.fore]), headPart("translate(452 292) rotate(-4)", ["happy"]), G.paw],
+  return body("bat", [A.upper, ...sitParts(true), headPart("translate(456 294) rotate(7)", ["focused", "open", "happy"]), A.fore, A.paw],
     shadow(468, 170));
 }
 
@@ -323,12 +387,13 @@ function poseStand() {
   };
   // walking swings each leg about its shoulder or hip (app.css cw-step-*), the diagonal
   // pairs together, like a cat's walk
-  const frames = (keys) => keys.map((k, i) => ({ ...legs[k], seed: 40 + i, cls: "cw-step-" + k }));
+  const FEET = { farF: [395, 691, 42, 15, WHITE_S], farH: [581, 691, 52, 15, WHITE_S], nearF: [353, 694, 46, 16, WHT], nearH: [634, 694, 58, 16, WHT] };
+  const frames = (keys) => keys.flatMap((k, i) => { const [x, y, l, h, f] = FEET[k];
+    return [{ ...legs[k], seed: 40 + i, cls: "cw-step-" + k }, { ...footSide(x, y, l, h, -1, f), seed: 90 + i, cls: "cw-step-" + k }]; });
   const bone = (x, y, w, cls, seed) => ({ seed, cls, vol: false, amp: 6,
     pts: [[x - w, y + 20], [x - w * .8, y + 2, .4], [x - w * .3, y - 8, .5], [x + w * .3, y - 8, .5], [x + w * .8, y + 2, .4], [x + w, y + 20], [x, y + 30]] });
   return body("stand", [
-    { seed: 44, cls: "cw-tail", pts: [[664, 432], [690, 410], [712, 380], [722, 340], [728, 300], [742, 268], [764, 252], [786, 258], [792, 278], [778, 292], [764, 290, .6], [758, 312, .6], [756, 350, .6], [750, 392, .5], [732, 432], [706, 460], [678, 474]],
-      detail: marks([[710, 384, 8, 26, 8], [720, 334, 4, 24, 8], [730, 292, -8, 22, 8]]) + line("M 700 420 C 716 400 724 370 724 330", LIGHT, 3, .6) },
+    ...tailParts([[668, 446], [700, 420], [718, 380], [722, 334], [730, 296], [748, 268], [772, 256], [788, 264], [790, 282]], 22, 9, 44),
     ...frames(["farF", "farH"]),
     bone(404, 406, 42, "cw-blade", 47), bone(606, 408, 44, "cw-hipb", 48),
     // the near legs too are drawn under the body: its contour covers their roots
@@ -346,42 +411,125 @@ function poseStand() {
 function poseCrouch() {
   return body("crouch", [
     { seed: 51, fill: FUR_S, sock: [270, 668, 80, 30], pts: [[380, 612], [360, 640], [330, 662], [298, 670], [278, 682], [284, 693], [336, 693], [366, 686], [390, 664], [410, 616]] },
-    { seed: 52, cls: "cw-rump cw-tail", pts: [[692, 590], [740, 600, .4], [790, 610, .4], [830, 606], [850, 596], [853, 580], [842, 571], [832, 579], [834, 588], [800, 594], [760, 588], [726, 582], [694, 572]],
-      detail: marks([[742, 592, 90, 12, 8], [792, 598, 90, 12, 8]]) },
+    { ...footSide(286, 691, 44, 15, -1, WHITE_S), seed: 56 },
+    ...tailParts([[694, 584], [742, 596], [792, 602], [830, 596], [850, 580], [852, 564]], 20, 8, 52),
     { seed: 53, cls: "cw-rump", pts: [[296, 600], [308, 572], [346, 552], [410, 550], [490, 549], [560, 524], [620, 516], [672, 512], [700, 540], [702, 590], [690, 630], [660, 652, .6], [624, 657, .7], [520, 660, .7], [400, 662, .6], [336, 660], [302, 640]],
       detail: `<path d="M 330 640 C 380 628 470 632 560 646 C 590 650 610 652 624 656 C 520 662 420 664 336 658 Z" fill="${WHT}"/>`
         + marks([[470, 550, 96, 34, 10], [520, 540, 96, 36, 10], [572, 526, 96, 36, 10], [626, 518, 100, 34, 10]])
         + line("M 350 566 C 420 558 540 540 636 528", LIGHT, 3.2, .5) },
     { seed: 54, cls: "cw-rump", soft: true, sock: [530, 664, 80, 32], pts: [[560, 562], [590, 540], [640, 538], [690, 560, .6], [700, 610, .6], [686, 660], [652, 688], [600, 691], [556, 691], [540, 683], [552, 670], [600, 666], [580, 640], [562, 604]],
       detail: marks([[640, 544, 110, 34, 10], [680, 580, 150, 30, 10]]) },
+    { ...footSide(574, 691, 60, 16), seed: 60, cls: "cw-rump" },
     { seed: 55, soft: true, sock: [232, 666, 70, 30], pts: [[350, 610], [330, 640], [300, 662], [262, 672], [240, 682], [242, 693], [300, 693], [330, 688], [352, 668], [372, 648], [384, 612]] },
+    { ...footSide(266, 691, 48, 16), seed: 57 },
     headPart("translate(262 566) scale(.9)", ["focused", "scared"]),
   ], shadow(480, 250));
 }
 
 // mid-air, reaching for the hand
+/* The leap: the body stretched in a long S (chest low and forward, the back arched, the
+   hips high behind), both front legs reaching forward together from the chest with the
+   paws open, the hind legs thrown back from the hips with the feet trailing, the tail
+   out behind as a counterbalance, ears forward, a few speed lines. The legs are drawn
+   under the body, so its contour covers their roots: one silhouette. */
 function poseLeap() {
   return body("leap", [
-    { seed: 61, cls: "cw-reach", fill: FUR_S, pts: [[318, 400], [300, 420], [282, 436], [262, 444], [240, 446], [220, 442], [212, 432], [222, 424], [242, 426], [262, 422], [280, 410], [296, 392]] },
-    { seed: 66, cls: "cw-reach", sock: [186, 452, 44, 50], pts: [[334, 424], [318, 448], [300, 466], [276, 480], [248, 488], [220, 490], [198, 488], [194, 476], [204, 466], [228, 466], [256, 462], [280, 450], [298, 432], [312, 408]],
-      detail: claws("M 196 472 q -9 -1 -12 -8 M 195 483 q -9 1 -14 -3 M 204 492 q -6 5 -13 3") },
-    { seed: 62, cls: "cw-push", fill: FUR_S, pts: [[660, 480], [700, 510], [736, 546], [764, 580], [778, 600], [766, 608], [750, 610], [740, 596], [714, 562], [684, 530], [648, 500]] },
-    { seed: 63, cls: "cw-tail", pts: [[690, 494], [740, 500], [800, 506], [860, 496], [882, 494], [886, 508], [880, 522], [862, 524, .5], [800, 532, .5], [740, 532, .5], [684, 542]],
-      detail: marks([[760, 502, 90, 26, 9], [820, 500, 90, 26, 9]]) },
-    { seed: 64, pts: [[286, 398], [316, 356], [396, 354], [468, 376], [556, 402], [628, 438], [680, 478], [712, 506], [708, 548], [668, 566, .6], [618, 572, .7], [556, 540, .7], [478, 510, .7], [402, 482, .6], [330, 468], [298, 448], [280, 420]],
-      detail: `<path d="M 296 440 C 330 470 420 486 490 512 C 560 540 610 560 650 566 C 600 574 540 548 470 524 C 400 500 330 482 296 440 Z" fill="${WHT}"/>`
-        + marks([[470, 378, 104, 44, 11], [526, 394, 106, 44, 11], [580, 416, 110, 42, 11], [630, 444, 116, 36, 10]])
-        + line("M 324 384 C 400 372 520 404 636 458", LIGHT, 3.6, .75) },
-    { seed: 65, cls: "cw-push", soft: true, sock: [690, 626, 60, 50], pts: [[640, 500], [676, 540], [700, 590], [726, 636], [738, 660], [722, 668], [702, 672], [696, 650], [676, 606], [648, 566], [612, 532]] },
-    headPart("translate(256 366) rotate(-10) scale(.9)", ["focused"]),
-  ], shadow(470, 150, .14));
+    // the far legs, a shade darker: shoulder, elbow, wrist; hip, knee, hock
+    { seed: 61, cls: "cw-reach", fill: FUR_S, pts: capsule([366, 452], [300, 474], 23, 17) },
+    { seed: 71, cls: "cw-reach", fill: FUR_S, pts: capsule([300, 474], [218, 484], 16, 12) },
+    { ...pawOpen(200, 486, 15, -1, WHITE_S), seed: 67, cls: "cw-reach" },
+    { seed: 62, cls: "cw-push", fill: FUR_S, pts: capsule([662, 428], [724, 482], 34, 21) },
+    { seed: 68, cls: "cw-push", fill: FUR_S, pts: capsule([724, 482], [790, 488], 18, 12) },
+    { seed: 72, cls: "cw-push", fill: FUR_S, pts: capsule([790, 488], [828, 512], 11, 10) },
+    { ...footSide(848, 516, 46, 13, 1, WHITE_S), seed: 78, cls: "cw-push" },
+    // the tail streaming back, a counterbalance
+    ...tailParts([[704, 418], [752, 400], [800, 390], [844, 382], [878, 366], [894, 346]], 20, 8, 63),
+    // the body in a long S: the chest low and forward, the back arched, the hips high
+    { seed: 64, pts: [[318, 422], [346, 390], [406, 366], [478, 352], [556, 354], [626, 370], [680, 390], [714, 418], [718, 452], [694, 474], [646, 474, .6], [586, 464, .8], [522, 466, .8], [458, 478, .8], [402, 490, .7], [352, 486], [322, 462]],
+      detail: fillOnly("M 330 470 C 380 494 440 490 500 476 C 560 462 620 462 690 474 C 660 482 600 480 540 486 C 470 494 400 504 350 494 Z", FUR_S, .55)
+        + `<path d="M 334 462 C 350 486 380 494 412 488 C 440 482 452 470 446 452 C 430 474 396 478 366 470 Z" fill="${WHT}"/>`
+        + `<path d="M 404 488 C 450 480 500 470 548 466 C 594 462 630 466 660 472 C 620 470 580 472 540 478 C 490 486 440 494 404 488 Z" fill="${WHT}"/>`
+        + line("M 420 484 l -4 7 M 452 478 l -3 7 M 484 472 l -3 7 M 516 468 l -2 7 M 548 466 l -2 7", WHITE_S, 2.2, .9)
+        + marks([[470, 354, 98, 32, 11], [524, 352, 94, 34, 11], [578, 358, 100, 34, 11], [630, 372, 110, 32, 10], [676, 392, 122, 30, 9], [420, 364, 104, 26, 9]])
+        + line("M 356 394 C 430 362 540 350 664 388", LIGHT, 3.6, .75)
+        + line("M 700 430 C 708 446 704 460 690 470", "#ffcf8a", 2.4, .45) },
+    // the near legs: the haunch thrown back (thigh, shin to the hock, the foot trailing),
+    // the foreleg reaching from the chest (upper arm, elbow, forearm, wrist, the open paw)
+    { seed: 65, cls: "cw-push", pts: capsule([650, 440], [716, 500], 40, 24), detail: line("M 640 420 C 668 424 690 440 704 462", LIGHT, 3, .5) },
+    { seed: 69, cls: "cw-push", pts: capsule([716, 500], [790, 510], 20, 13) },
+    { seed: 73, cls: "cw-push", soft: true, pts: capsule([790, 510], [832, 538], 12, 11) },
+    { ...footSide(856, 542, 50, 14, 1), seed: 79, cls: "cw-push" },
+    { seed: 66, cls: "cw-reach", pts: capsule([382, 468], [304, 500], 27, 19), detail: line("M 360 460 C 340 468 320 478 306 488", LIGHT, 3, .5) },
+    { seed: 74, cls: "cw-reach", soft: true, pts: capsule([304, 500], [206, 512], 18, 13), detail: line("M 290 494 C 260 500 236 504 214 506", LIGHT, 2.6, .5) },
+    { ...pawOpen(186, 514, 17), seed: 70, cls: "cw-reach" },
+    headProfile("translate(254 398) rotate(4) scale(1.32)"),
+  ], shadow(500, 200, .12), `<g class="cw-streak" fill="none" stroke="#f6ecd4" stroke-width="2" stroke-linecap="round" opacity=".32">
+      <path d="M 580 312 L 690 304"/><path d="M 630 330 L 770 324"/><path d="M 780 450 L 880 458"/></g>`);
+}
+
+/* Her head in profile, turned toward what she pounces on (facing left): eyes locked
+   forward, ears pricked forward, mouth closed; the same fur, stripes and ink as her face. */
+function headProfile(tr) {
+  const H = fur([[-72, -4], [-66, -22], [-46, -44], [-10, -64], [30, -62], [62, -44], [80, -12, .8], [80, 20, .9], [60, 46, .8], [22, 58], [-18, 52], [-44, 38], [-60, 22], [-72, 10]], 91, 9);
+  const earN = fur([[-30, -50], [-62, -100], [-56, -108], [2, -62]], 92, 5), earF = fur([[8, -60], [-2, -110], [8, -112], [42, -56]], 93, 5);
+  const ink = `<path d="${earF.d}"/><path d="${H.d}"/><path d="${earN.d}"/>`;
+  const paint = `<path d="${earF.d}" fill="${FUR_S}"/><path d="M 14 -64 L 4 -100 L 34 -60 Z" fill="#cf7f76" opacity=".8"/>
+    <path d="${H.d}" fill="${FUR_H}"/><path d="${H.d}" fill="url(#cwVol)"/>
+    <path d="${H.strands}" fill="none" stroke="${EDGE}" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
+    ${fillOnly("M 50 -50 C 70 -34 82 -10 80 14 C 76 36 60 50 30 58 C 50 40 60 16 56 -10 C 54 -28 52 -40 50 -50 Z", FUR_S, .6)}
+    ${fillOnly("M -44 38 C -20 52 20 58 50 48 C 30 60 -10 60 -40 48 Z", FUR_S, .5)}
+    ${line("M -56 -34 C -40 -54 -12 -64 20 -62", LIGHT, 4, .8)}
+    ${line("M 62 -8 l 10 2 M 64 8 l 11 3 M 58 24 l 10 5 M 48 38 l 8 6", EDGE, 1.6, .5)}
+    ${marks([[-8, -64, 100, 26, 8], [14, -62, 94, 24, 8], [34, -56, 86, 22, 7], [72, -6, 176, 26, 8], [70, 16, 178, 22, 7]])}
+    <path d="M -74 -2 Q -64 -16 -46 -10 Q -24 0 -20 26 Q -24 50 -46 46 Q -64 36 -72 12 Z" fill="${WHT_H}"/>
+    <path d="M -64 -18 Q -56 -44 -38 -60 Q -44 -40 -50 -18 Z" fill="${WHT_H}"/>
+    <path d="${earN.d}" fill="${FUR_H}"/><path d="M -32 -58 L -56 -98 L -10 -64 Z" fill="#f2b0a2"/>
+    ${line("M -34 -64 q -6 -12 -14 -20 M -26 -64 q -4 -10 -10 -18", "#fff6e6", 1.8, .85)}
+    <path d="M -50 -22 Q -38 -40 -12 -34 Q -12 -14 -30 -9 Q -46 -10 -50 -22 Z" fill="url(#cwIris)"/>
+    <path d="M -50 -22 Q -38 -40 -12 -34 Q -30 -30 -50 -22 Z" fill="#2c4a0e" opacity=".45"/>
+    <ellipse cx="-29" cy="-23" rx="3.2" ry="11" fill="#130f08"/>
+    <circle cx="-36" cy="-29" r="3.6" fill="#fff"/><circle cx="-22" cy="-15" r="1.6" fill="#fff" opacity=".8"/>
+    ${line("M -54 -21 Q -38 -44 -8 -36", INK, 5)}${line("M -46 -10 Q -30 -6 -14 -14", INK, 1.5, .7)}${line("M -54 -21 l -8 -2", INK, 2.2)}
+    ${marks([[-44, -46, -16, 30, 6]], EDGE, .85)}
+    <path d="M -76 -6 Q -70 -12 -64 -8 Q -66 0 -72 2 Z" fill="${PINK}" stroke="${INK}" stroke-width="1.8"/>
+    ${line("M -70 4 Q -66 12 -56 14 Q -50 14 -46 10", INK, 2.2)}
+    <ellipse cx="-50" cy="8" rx="11" ry="8" fill="#fffaf0"/>
+    <g fill="#b89a7c"><circle cx="-54" cy="6" r="1.7"/><circle cx="-48" cy="2" r="1.7"/><circle cx="-46" cy="10" r="1.7"/></g>
+    <ellipse cx="-22" cy="4" rx="10" ry="5" fill="#f08a8a" opacity=".35"/>
+    <g fill="none" stroke="#fffaf0" stroke-width="1.8" stroke-linecap="round" opacity=".95">
+      <path d="M -52 6 Q -100 -4 -140 -10 M -50 10 Q -100 8 -136 8 M -48 14 Q -94 22 -128 28"/></g>`;
+  return { tr, cls: "cw-head", raw: { ink: `<g class="cw-headin">${ink}</g>`, paint: `<g class="cw-headin">${paint}</g>` } };
 }
 
 // asleep on her side, belly to the room, paws curled
 function poseSleep() {
   return body("sleep", [
-    { seed: 71, cls: "cw-tail", pts: [[640, 640], [700, 626], [770, 632], [820, 652], [844, 664], [838, 682], [824, 690], [806, 680, .5], [766, 660, .5], [712, 656, .5], [660, 664]],
-      detail: marks([[720, 630, 90, 26, 9], [772, 636, 96, 24, 9], [818, 654, 110, 20, 8]]) },
+    // the front paws, forward under her chin (drawn under the body and the head)
+    { seed: 72, fill: FUR_S, sock: [170, 660, 60, 40], pts: capsule([380, 668], [206, 674], 18, 15) },
+    { seed: 77, sock: [150, 668, 60, 40], pts: capsule([392, 682], [196, 688], 19, 15) },
+    { ...footSide(200, 677, 40, 14, -1, WHITE_S), seed: 85 },
+    { ...footSide(184, 691, 44, 15), seed: 86 },
+    // her body on its side, a soft rounded back
+    { seed: 74, pts: [[318, 642], [330, 598], [370, 566, .3], [440, 544, .3], [520, 538, .3], [592, 550], [648, 580], [684, 620], [690, 660], [668, 686], [620, 696], [540, 698], [460, 698], [388, 694], [340, 680]],
+      detail: marks([[430, 546, 92, 34, 10], [480, 540, 90, 36, 10], [530, 540, 90, 36, 10], [580, 548, 84, 34, 10], [626, 566, 70, 30, 10]])
+        + line("M 350 590 C 400 558 480 544 580 552", LIGHT, 3.2, .6)
+        + `<path d="M 330 664 C 350 640 390 634 420 644 C 440 660 430 690 400 694 C 370 694 340 686 330 664 Z" fill="${WHT}"/>`
+        + glow("M 318 642 C 316 596 360 562 440 544 C 380 570 340 600 336 650 Z") + purr(700, 560, true) },
+    // the hind leg: the thigh a round mass inside her outline, the foot tucked under
+    { seed: 75, ink: false, amp: 5, pts: [[560, 640], [570, 610], [604, 596], [640, 606, .4], [664, 636, .4], [660, 666], [630, 680], [596, 678], [566, 664]],
+      detail: line("M 572 660 C 590 680 626 684 652 668", EDGE, 2.2, .35) + line("M 580 614 C 596 600 620 598 640 608", LIGHT, 3, .4) },
+    headPart("translate(300 616) rotate(-10) scale(.86)", ["sleepy"], false),
+    // the tail wrapped round in front of her
+    ...tailParts([[686, 650], [676, 684], [620, 700], [540, 705], [460, 705], [400, 700], [370, 690]], 19, 8, 71, { soft: true }),
+  ], shadow(470, 250, .22), `<g class="cw-zzz" fill="#f6ecd4" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
+      <path class="z1" d="M 190 470 h 22 l -16 20 h 18 v 6 h -30 l 16 -20 h -10 Z"/>
+      <path class="z2" d="M 158 424 h 30 l -22 28 h 24 v 8 h -40 l 22 -28 h -14 Z"/></g>`);
+}
+
+// rolled onto her side for a belly rub, her belly to the room
+function poseBelly() {
+  return body("belly", [
+    ...tailParts([[648, 646], [710, 630], [772, 636], [820, 654], [840, 676], [832, 694]], 18, 8, 71),
     { seed: 72, fill: FUR_S, pts: [[330, 600], [300, 590], [270, 590], [246, 596], [230, 606], [236, 616], [258, 618], [282, 612], [306, 614], [332, 620]] },
     { seed: 73, fill: FUR_S, pts: [[600, 620], [640, 612], [690, 614], [722, 624], [740, 634], [732, 644], [706, 644], [676, 634], [636, 634], [600, 640]] },
     // the hind paw and the front paw tucked under her: the body's contour covers the legs,
@@ -399,9 +547,7 @@ function poseSleep() {
     { seed: 75, ink: false, amp: 5, pts: [[556, 640], [566, 612], [600, 600], [634, 612, .4], [650, 640, .4], [642, 668], [612, 678], [582, 674], [560, 660]],
       detail: line("M 566 656 C 578 676 616 682 642 666", EDGE, 2.2, .35) + line("M 572 618 C 588 604 612 602 630 612", LIGHT, 3, .45) },
     headPart("translate(262 606) rotate(-18) scale(.88)", ["sleepy"], false),
-  ], shadow(480, 270, .22), `<g class="cw-zzz" fill="#f6ecd4" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
-      <path class="z1" d="M 150 470 h 22 l -16 20 h 18 v 6 h -30 l 16 -20 h -10 Z"/>
-      <path class="z2" d="M 118 424 h 30 l -22 28 h 24 v 8 h -40 l 22 -28 h -14 Z"/></g>`);
+  ], shadow(480, 270, .22));
 }
 
 // the croissant: nose under the tail
@@ -414,8 +560,7 @@ function poseCurl() {
     { seed: 82, fill: WHT, pts: [[334, 684], [336, 668], [354, 664], [374, 670], [378, 684], [366, 694], [344, 694]] },
     { seed: 83, fill: WHT, pts: [[380, 688], [384, 672], [402, 670], [420, 676], [422, 688], [410, 697], [390, 697]] },
     headPart("translate(390 606) rotate(-12) scale(.74)", ["sleepy"], false),
-    { seed: 84, cls: "cw-tail", soft: true, pts: [[618, 630], [628, 660], [612, 686, .5], [570, 700, .6], [460, 704, .6], [390, 700, .5], [330, 694], [316, 678], [340, 684], [400, 688], [460, 688], [548, 688], [598, 672], [606, 640]],
-      detail: marks([[560, 700, -90, 14, 9], [500, 702, -90, 14, 9], [440, 702, -90, 14, 9], [330, 690, -30, 16, 9]]) },
+    ...tailParts([[608, 630], [628, 664], [610, 690], [560, 702], [480, 706], [400, 702], [340, 692], [320, 676]], 19, 8, 84, { soft: true }),
   ], shadow(460, 200, .22), `<g class="cw-zzz" fill="#f6ecd4" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round">
       <path class="z1" d="M 280 520 h 22 l -16 20 h 18 v 6 h -30 l 16 -20 h -10 Z"/>
       <path class="z2" d="M 248 474 h 30 l -22 28 h 24 v 8 h -40 l 22 -28 h -14 Z"/></g>`);
@@ -435,7 +580,7 @@ export function catSVG() {
   <radialGradient id="cwIris" cx=".5" cy=".62" r=".7"><stop offset="0" stop-color="#eef59a"/><stop offset=".45" stop-color="#a6d24a"/><stop offset="1" stop-color="#4d7f1c"/></radialGradient>
   ${eyeDefs()}
 </defs>
-${poseSit()}${poseBat()}${poseGroom()}${poseStand()}${poseCrouch()}${poseLeap()}${poseSleep()}${poseCurl()}
+${poseSit()}${poseBat()}${poseStand()}${poseCrouch()}${poseLeap()}${poseSleep()}${poseBelly()}${poseCurl()}
 </svg>`;
 }
 
@@ -482,7 +627,7 @@ const UX = 2133 / 100, UY = 1200 / 100;
 // third of it): a real cat's scale against the briefcase and the files. setSize()
 // changes it; SIZES.phone is the size for the phone's case scene.
 const SIZE = 24;
-export const SIZES = { desk: 24, phone: 22 };
+export const SIZES = { desk: 24, phone: 22, visit: 15 };
 
 /* Her places (plane units, feet point). The paperwork desk is left of the plane's
    origin: HELA's core owns its left half and the cabinet its top, so she keeps to the
@@ -499,7 +644,7 @@ const PLACES = {
 };
 const ROAM = { x0: -14, x1: 6 };           // how far a leap may carry her (never into her core)
 
-const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "groom", bat: "bat", bite: "bat", knead: "sit", turn: "stand", belly: "sleep",
+const POSE_OF = { sit: "sit", pet: "sit", watch: "sit", groom: "bat", bat: "bat", bite: "bat", knead: "sit", turn: "stand", belly: "belly",
   walk: "stand", flee: "stand", crouch: "crouch", scared: "crouch", pounce: "leap", sleep: "sleep", curl: "curl" };
 // her face in each state: relaxed at rest, curious when she watches, focused on the hunt
 const EXPR = { sit: "relaxed", watch: "open", walk: "open", flee: "scared", pet: "happy", groom: "happy", knead: "happy", turn: "relaxed", belly: "sleepy",
@@ -547,6 +692,7 @@ export class CatEngine {
     window.addEventListener("pointercancel", this._onUp, { passive: true });
     this._watchScene();
     this._watchCore();
+    this._watchPhoneBrain();
     this._think(4 + Math.random() * 6);
   }
   stop() {
@@ -651,8 +797,8 @@ export class CatEngine {
     this._applyPose(state);
     // in her basket her lying body is centred on the cushion, whichever way she faces
     const bed = this.places.bed;
-    if (this.place === "bed" && bed && !this._moveT && state !== "walk" && state !== "flee") {
-      const off = ({ sleep: 85, belly: 85, curl: 15 }[state] || 0) / VB_W * this.sizeUnits;
+    if (this.place === "bed" && bed && !this._moveT && !this._playing && !this._visit && state !== "walk" && state !== "flee") {
+      const off = ({ sleep: 55, belly: 85, curl: 15 }[state] || 0) / VB_W * this.sizeUnits;
       const x = bed.x + this.face * off;
       if (Math.abs(x - this.pos.x) > 0.01) { this.pos = { x, y: bed.y }; this._place(0); }
     }
@@ -665,7 +811,7 @@ export class CatEngine {
     const extra = { walk: "walking", flee: "walking ears-back", pet: "petted purring", groom: "grooming", crouch: "hunting", knead: "kneading", turn: "turning", belly: "sleeping",
       scared: "ears-back", bite: "biting", bat: "batting", watch: "pupils-wide", sleep: "sleeping", curl: "sleeping" }[state] || "";
     const petOnly = ["petted", "purring", "ears-soft", "bunt"];
-    const keep = ["mood-afraid", "by-core", "offstage", "face-right", "jolt", ...petOnly].filter((c) => this.root.classList.contains(c)
+    const keep = ["mood-afraid", "by-core", "offstage", "face-right", "jolt", "cat-visit", ...petOnly].filter((c) => this.root.classList.contains(c)
       && (!petOnly.includes(c) || state === "pet" || this._petting));
     const x = "x-" + (this.mood === "afraid" && pose === "crouch" ? "scared" : (EXPR[state] || "relaxed"));
     this.root.className = ["cat-being", "pose-" + pose, x, extra, ...keep].filter(Boolean).join(" ");
@@ -678,7 +824,9 @@ export class CatEngine {
     }
     this._pose = pose;
     this._rect = null;
-    if (state !== "pet" && !this._petting) this._setPurr(false);
+    this.root.style.setProperty("--tP", (-3 - Math.random() * 4).toFixed(2) + "s");
+    // asleep she purrs softly (while she is in view); petted she purrs aloud
+    if (state !== "pet" && !this._petting) this._setPurr(this._asleep() && !!this._seen, true);
   }
   // after anything, she goes back to being a cat in her place. Her naps belong to her
   // basket: arriving there she treads the cushion, turns round and curls up
@@ -706,10 +854,15 @@ export class CatEngine {
     }, 1800 + Math.random() * 900);
   }
 
-  _setPurr(on) {
-    if (on === !!this._purring) return;
-    this._purring = on;
-    try { const a = window.__audio; if (a && a.purrLoop) a.purrLoop(on); } catch (err) {}
+  _asleep() { return this.state === "sleep" || this.state === "curl"; }
+  _setPurr(on, soft = false) {
+    const lvl = on ? (soft ? "soft" : "full") : "";
+    if (lvl === (this._purring || "")) return;
+    try {
+      const a = window.__audio;
+      if (a && a.purrLoop) { if (this._purring) a.purrLoop(false); if (on) a.purrLoop(true, soft ? .03 : .085); }
+    } catch (err) {}
+    this._purring = lvl;
     if (this.root) this.root.classList.toggle("purring", on);
   }
 
@@ -721,7 +874,7 @@ export class CatEngine {
   _decide() {
     if (!this._running || !this.root) return;
     const busy = ["walk", "crouch", "pounce", "bite", "bat", "pet", "scared", "knead", "turn", "belly"].includes(this.state);
-    if (busy || this._petting) { this._think(6); return; }
+    if (busy || this._petting || this._playing) { this._think(6); return; }
     if (!this._seen) { this._think(20 + Math.random() * 20); return; }   // nobody is watching: she naps on
     if (this.mood === "afraid") { this._think(12); return; }
     const r = Math.random();
@@ -732,6 +885,10 @@ export class CatEngine {
       if (!this.places[this.place].sit) { this._goTo(this._otherPlace()); return; }
       this._enter("sit", 0); this._flick();
       this._think(8 + Math.random() * 8);
+      return;
+    }
+    if (r < 0.1 && performance.now() > (this._playCool || 0) && this._brainPlay()) {
+      this._playCool = performance.now() + 150000 + Math.random() * 120000;
       return;
     }
     if (r < 0.3) {
@@ -818,7 +975,8 @@ export class CatEngine {
       this._seen = seen;
       this._rect = null;
       if (this.root) this.root.classList.toggle("offstage", !seen);
-      if (!seen) { this._petEnd(); }
+      if (!seen) { this._petEnd(); this._abortPlay(); }
+      if (!this._petting) this._setPurr(this._asleep() && seen, true);
     };
     upd();
     if (cam && window.MutationObserver) {
@@ -918,7 +1076,7 @@ export class CatEngine {
     this._petting = false; this._petMs = 0; this._hold = false;
     clearTimeout(this._petT);
     document.body.classList.remove("cat-petting");
-    this._setPurr(false);
+    this._setPurr(this._asleep() && !!this._seen, true);
     if (!this.root) return;
     this.root.classList.remove("petted", "ears-soft", "bunt");
     this.root.style.removeProperty("--rub");
@@ -981,6 +1139,183 @@ export class CatEngine {
         }, hand ? 1100 : 300);
       };
     }, 1300);
+  }
+
+  /* ── PLAY WITH HELA'S MEMORY. Now and then, when the paperwork desk is in view and
+        nobody is using the brain, she walks in between its rings (the front halves of
+        the rings are drawn over her, the back halves under her), stalks an Hour ball,
+        bats it, carries it off in her mouth, drops it, pounces on it and rolls on her
+        back holding it, then lets it go and it springs home. The ball is only moved by
+        its CSS `translate` (the brain writes `transform`), so its place, its page and
+        its clicks never change; any touch of the brain ends the game at once and every
+        ball springs home. Not on touch screens (the brain is a sheet there). ── */
+  _brainEl() { const r = document.getElementById("hela-brain-full"); return r && r.getBoundingClientRect().width > 0 ? r : null; }
+  _playOK(touch) {
+    const b = document.body, g = window.__game, core = this._brainEl();
+    if (!core || !this._seen || this._petting || this.mood === "afraid" || this._playing) return false;
+    if ((!touch && document.documentElement.classList.contains("pdx-touch")) || b.classList.contains("tut")) return false;
+    if (core.classList.contains("grabbing") || core.matches(":hover") || core.querySelector(".hb-page.on, .hb-node.pinned") || document.querySelector(".hb-read")) return false;
+    const req = g && g.pendingReq;
+    if (req && g.camera && g.camera.sceneForDecision && g.camera.sceneForDecision(req.kind, req.options || req) === "drawer") return false;
+    try { if (window.__pdxHelp && window.__pdxHelp.isOpen && window.__pdxHelp.isOpen()) return false; } catch (err) {}
+    return true;
+  }
+  _scale() { const r = this.root.getBoundingClientRect(); return (r.width / this.boxW) || 1; }
+  _toPlane(vx, vy) {
+    const r = this.root.getBoundingClientRect(), k = this._scale(), tx = this.pos.x * UX - this.boxW / 2, ty = this.pos.y * UY - this.boxH;
+    return { x: (tx + (vx - r.left) / k) / UX, y: (ty + (vy - r.top) / k) / UY };
+  }
+  // her mouth (or her paws when she holds something lying down), in viewport px
+  _mouth(pose = this._pose, at = this.pos, face = this.face) {
+    const M = { stand: [296, 400], sit: [450, 336], bat: [456, 336], crouch: [256, 612], leap: [168, 424], belly: [250, 650], sleep: [300, 650], curl: [390, 650] }[pose] || [450, 336];
+    const k = this._scale(), r = this.root.getBoundingClientRect();
+    const fx = face > 0 ? VB_W - M[0] : M[0];
+    return { x: r.left + (at.x - this.pos.x) * UX * k + fx * this.boxW / VB_W * k, y: r.top + (at.y - this.pos.y) * UY * k + M[1] * this.boxH / VB_H * k };
+  }
+  _ballTo(el, vx, vy, secs, ease = "ease-out") {
+    const r = el.getBoundingClientRect(), k = this._scale(), o = el._catOff || { x: 0, y: 0 };
+    const n = { x: o.x + (vx - (r.left + r.width / 2)) / k, y: o.y + (vy - (r.top + r.height / 2)) / k };
+    el._catOff = n;
+    el.style.transition = `translate ${secs}s ${ease}`;
+    el.style.translate = `${n.x.toFixed(1)}px ${n.y.toFixed(1)}px`;
+  }
+  _ballHome(el, secs = 2.6) {
+    if (!el || !el._catOff) return;
+    el._catOff = null;
+    el.style.transition = `translate ${secs}s cubic-bezier(.34,1.56,.64,1)`;
+    el.style.translate = "0px 0px";
+    setTimeout(() => { if (!el._catOff) { el.style.removeProperty("translate"); el.style.removeProperty("transition"); } }, secs * 1000 + 60);
+  }
+  _walkPt(pt, speedMul = 1, state = "walk") {
+    const dx = pt.x - this.pos.x, dy = pt.y - this.pos.y, secs = Math.max(.3, Math.hypot(dx, dy * UY / UX) / (WALK_SPEED * speedMul));
+    if (Math.abs(dx) > .3) this.face = dx > 0 ? 1 : -1;
+    this._enter(state, 0);
+    this.pos = { x: pt.x, y: pt.y };
+    this._place(secs);
+    return secs;
+  }
+  _faceTo(vx) { const r = this.root.getBoundingClientRect(), want = vx > r.left + r.width / 2 ? 1 : -1; if (want !== this.face) { this.face = want; this._place(0); } }
+  // she is inside the brain: the brain is drawn under her (as always); over her go copies
+  // of the rings' front halves and of the near Hour balls, so she is between them
+  _weave(on) {
+    if (this._front) { this._front.remove(); this._front = null; }
+    const core = on && this._brainEl();
+    if (!core) return;
+    const arm = core.querySelector(".hb-armature"); if (!arm) return;
+    const a = arm.getBoundingClientRect(), C = this._toPlane(a.left, a.top), k = this._scale(), f = (v) => v.toFixed(1);
+    let g = "";
+    core.querySelectorAll(".hb-ring").forEach((ring) => {
+      const cs = getComputedStyle(ring); if (cs.display === "none") return;
+      const m = new DOMMatrixReadOnly(cs.transform === "none" ? undefined : cs.transform), rot = Math.atan2(m.b, m.a) * 180 / Math.PI;
+      const w = ring.offsetWidth / 2, h = ring.offsetHeight / 2, col = cs.borderTopColor, sw = parseFloat(cs.borderTopWidth) || 1.5;
+      const arc = `M ${f(-w)} 0 A ${f(w)} ${f(h)} 0 0 0 ${f(w)} 0`;      // the near (lower) half
+      g += `<g transform="rotate(${f(rot)})" opacity="${cs.opacity}"><path d="${arc}" fill="none" stroke="${col}" stroke-width="${f(sw * 5)}" opacity=".2"/><path d="${arc}" fill="none" stroke="${col}" stroke-width="${f(sw * 1.2)}"/></g>`;
+    });
+    core.querySelectorAll(".hb-node").forEach((n) => {
+      if ((+n.style.zIndex || 0) < 24 || n === (this._playing && this._playing.ball)) return;
+      const r = n.getBoundingClientRect(); if (!r.width) return;
+      const x = (r.left + r.width / 2 - a.left) / k, y = (r.top + r.height / 2 - a.top) / k, col = n.style.color || "#e2c078";
+      g += `<g opacity="${n.style.opacity || 1}"><circle cx="${f(x)}" cy="${f(y)}" r="${f(r.width / k * .4)}" fill="${col}" opacity=".3"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(r.width / k * .2)}" fill="${col}"/></g>`;
+    });
+    const el = document.createElementNS(NS, "svg");
+    el.id = "cat-brainfront"; el.setAttribute("aria-hidden", "true");
+    el.setAttribute("width", "1"); el.setAttribute("height", "1");
+    el.style.cssText = `position:absolute;left:${f(C.x * UX)}px;top:${f(C.y * UY)}px;overflow:visible;z-index:9;pointer-events:none`;
+    el.innerHTML = g;
+    this.root.parentNode.appendChild(el);
+    this._front = el;
+  }
+  _abortPlay() {
+    const P = this._playing; if (!P) return;
+    this._playing = null;
+    P.timers.forEach(clearTimeout);
+    P.core.removeEventListener("pointerenter", P.stop); P.core.removeEventListener("pointerdown", P.stop, true);
+    this._ballHome(P.ball, .35);
+    this._weave(false);
+    if (!this.root) return;
+    if (P.onEnd) P.onEnd(true); else this._goTo(this.place);
+  }
+  _brainPlay(opts = {}) {
+    if (!this._playOK(opts.touch)) return false;
+    const core = this._brainEl(), nodes = [...core.querySelectorAll(".hb-node.hb-turn")].filter((n) => n.getBoundingClientRect().width > 0);
+    if (!nodes.length) return false;
+    const ball = nodes.sort((x, y) => (+y.style.zIndex || 0) - (+x.style.zIndex || 0))[0];
+    const arm = core.querySelector(".hb-armature").getBoundingClientRect(), C = this._toPlane(arm.left, arm.top);
+    const P = this._playing = { ball, core, timers: [], onEnd: opts.onEnd };
+    P.stop = () => this._abortPlay();
+    core.addEventListener("pointerenter", P.stop); core.addEventListener("pointerdown", P.stop, true);
+    const at = (fn, ms) => { const t = setTimeout(() => { if (this._playing === P) fn(); }, ms); P.timers.push(t); };
+    const bc = () => { const r = ball.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+    this._cancelMove(); clearTimeout(this._thinkT);
+    // 1. in between the rings
+    this._weave(true);
+    let T = this._walkPt({ x: C.x + 2.5, y: C.y + 6 }, .9) * 1000 + 80;
+    // 2. she spots the ball and watches it
+    at(() => { this._enter("watch", 0); this._faceTo(bc().x); }, T); T += 1400;
+    // 3. the hunt: low, the tip of the tail flicking
+    at(() => { this._enter("crouch", 0); this._faceTo(bc().x); }, T); T += 1300;
+    // 4. the bat: the ball rolls a little along its orbit
+    at(() => { this._enter("bat", 0); this.root.classList.add("batting"); const c = bc();
+      this._ballTo(ball, c.x - this.face * -70, c.y + 14, .55, "cubic-bezier(.2,.9,.3,1.25)"); }, T); T += 1100;
+    // 5. she takes it in her mouth and trots off with it, out of the brain
+    at(() => { const c = bc(), pt = this._toPlane(c.x, c.y);
+      const secs = this._walkPt({ x: pt.x + (this.face > 0 ? -5 : 5), y: this.pos.y }, 1.3);
+      P.t5 = secs; }, T); T += 900;
+    at(() => { this._enter("sit", 0); const m = this._mouth(); this._ballTo(ball, m.x, m.y, .25); }, T); T += 700;
+    at(() => { const home = opts.home || this.places.core, dest = home ? { x: home.x, y: home.y } : { x: this.pos.x + 8, y: this.pos.y };
+      if (!opts.home && this.places.core) this.place = "core";
+      const face = dest.x > this.pos.x ? 1 : -1, m = this._mouth("stand", dest, face);
+      const secs = this._walkPt(dest, 1.3);
+      this._ballTo(ball, m.x, m.y, secs, "linear");
+      P.trot = secs; }, T); T += 2600;
+    // 6. she drops it, pounces on it, rolls on her back holding it
+    at(() => { this._weave(false); this._enter("sit", 0); const m = this._mouth(); this._ballTo(ball, m.x + this.face * 40, m.y + 60, .45, "cubic-bezier(.3,1.6,.5,1)"); }, T); T += 900;
+    at(() => { this._enter("crouch", 0); }, T); T += 900;
+    at(() => { this._enter("pounce", 0); this.root.animate([{ translate: "0 0" }, { translate: "0 -30px" }, { translate: "0 0" }], { duration: 420, easing: "ease-out" }); }, T); T += 450;
+    at(() => { this._enter("belly", 0); this.root.classList.remove("sleeping"); const m = this._mouth(); this._ballTo(ball, m.x, m.y, .3); }, T); T += 2400;
+    // 7. she lets it go: it springs home; she sits up, pleased, her tail tall
+    at(() => { this._ballHome(ball, 2.6); this._enter("sit", 0); this.root.classList.remove("x-relaxed"); this.root.classList.add("x-happy"); this._flick(); }, T); T += 2800;
+    at(() => { P.core.removeEventListener("pointerenter", P.stop); P.core.removeEventListener("pointerdown", P.stop, true);
+      this._playing = null; if (P.onEnd) P.onEnd(); else this._settle(); }, T);
+    return true;
+  }
+
+  /* ── on a phone, HELA's memory is a page of its own: about one visit in three she walks
+        in from the page's edge, plays with the Hours and weaves through the rings as on
+        the desk, then walks out; a tap on the brain sends her away at once. ── */
+  _watchPhoneBrain() {
+    const d = document.documentElement;
+    if (!d.classList.contains("pdx-touch") || !window.MutationObserver) return;
+    let last = d.dataset.pdxView;
+    this._viewObs = new MutationObserver(() => {
+      const v = d.dataset.pdxView; if (v === last) return; last = v;
+      if (v === "brain" && !this._playing && !this._visit && Math.random() < 1 / 3) this._later(() => { if (d.dataset.pdxView === "brain") this._brainVisit(); }, 900);
+      else if (v !== "brain" && this._visit) { this._abortPlay(); this._endVisit(true); }
+    });
+    this._viewObs.observe(d, { attributes: true, attributeFilter: ["data-pdx-view"] });
+  }
+  _brainVisit() {
+    const core = this._brainEl(); if (!core || this._playing || this._petting || this._visit) return;
+    this._visit = { place: this.place, pos: { ...this.pos }, places: this.places, size: this.sizeUnits };
+    this.root.classList.add("cat-visit");
+    this._cancelMove();
+    this._size(SIZES.visit);
+    const r = core.getBoundingClientRect();
+    const inside = this._toPlane(r.right - r.width * .22, r.top + r.height * .8), edge = this._toPlane(r.right + r.width * .15, r.top + r.height * .8);
+    this.places = { visit: { x: inside.x, y: inside.y, lie: true, sit: true } }; this.place = "visit";
+    this.face = -1; this.pos = edge; this._place(0);
+    const secs = this._walkPt(inside, 1), V = this._visit;
+    this._later(() => { if (this._visit !== V) return;
+      if (!this._brainPlay({ touch: true, home: inside, onEnd: (hurry) => this._endVisit(false, hurry) })) this._endVisit(false); }, secs * 1000 + 100);
+  }
+  _endVisit(now, hurry) {
+    const V = this._visit; if (!V) return;
+    const finish = () => { if (this._visit !== V) return; this._visit = null;
+      this.root.classList.remove("cat-visit"); this.places = V.places; this.place = V.place; this._size(V.size); this.pos = V.pos; this._place(0); this._settle(); };
+    const core = this._brainEl(), r = core && core.getBoundingClientRect();
+    if (now || !r) { finish(); return; }
+    const secs = this._walkPt(this._toPlane(r.right + r.width * .2, r.top + r.height * .8), hurry ? 2.6 : 1.3);
+    this._later(finish, secs * 1000 + 60);
   }
 
   /* ── HELA's core: she watches her spin and bats at the Hours; she is never touched ── */

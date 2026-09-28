@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609281046";
-import { Game } from "./game.js?202609281046";
-import { icon } from "./icons.js?202609281046";
-import { roman } from "./util.js?202609281046";
-import { profile } from "./profile.js?202609281046";
+import { api, Connection } from "./net.js?202609281350";
+import { Game } from "./game.js?202609281350";
+import { icon } from "./icons.js?202609281350";
+import { roman } from "./util.js?202609281350";
+import { profile } from "./profile.js?202609281350";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
@@ -99,6 +99,21 @@ const MERCHANT_ERA_LOW = 20;     // the chart grows to the whole Singularity whe
 
 const cardName = (c) => (c && (c.display_name || c.name)) || "the card";
 
+// what a tap may press without moving her waiting line on: every control, and the whole screen
+// while Settings is open; only the table's free area (or her line itself) takes her "tap anywhere"
+// (the owner: changing scenes and opening or closing the rivals' files are free, even between lines)
+const HOLD_LINE = "#settings-backdrop, #btn-settings, #tut-track, #pdx-mrail, #pdx-scenes, #pdx-swap, #pdx-mcol .mc-tools, #pdx-mcol .mc-eye, #pdx-mcol .mc-log,"
+  + " #pdx-tabkey, .pdx-helpkey, .pdx-sheet, .panel-detail, .do-attach, .do-contract, #pdx-help, #pdx-hx, .menu-sheet,"
+  + " #players-zone .pcard, button, input, select, textarea, a[href], [role=button], label";
+function holdsLine(t) {
+  const sb = document.getElementById("settings-backdrop");
+  if (sb && !sb.hidden) return true;
+  // while a file, a card sheet or a page turn is open, the tap only closes it (or lands in it)
+  if (document.querySelector(".panel-detail, .pdx-sheet.on, #pdx-swap.on")) return true;
+  if (!t || !t.closest || t.closest("#tut-callout")) return false;
+  return !!t.closest(HOLD_LINE);
+}
+
 /* ─────────────────────────────── the stage ───────────────────────────────
    Three things drawn over the real game, all pointer-transparent except the
    callout itself: a callout (HELA's sigil, one line, an optional Next), rings
@@ -130,7 +145,7 @@ class Stage {
       if (!this._next || !this._armed) return;
       if (e.key === "Enter" || e.key === " ") {
         const t = e.target || {};
-        if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || "")) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || "") || holdsLine(t)) return;
         e.preventDefault(); e.stopImmediatePropagation(); this._fireNext();
       }
     };
@@ -138,6 +153,9 @@ class Stage {
     const eat = (e) => { if (this._eating) { e.preventDefault(); e.stopImmediatePropagation(); } };
     this._down = (e) => {
       if (!this._next || !this._armed) return;
+      // a control never moves her line on (the owner, 28/09: players lost lines adjusting the sound):
+      // Settings and anything while it is open, her keys, the lesson bar, sheets and files, the rail
+      if (holdsLine(e.target)) return;
       e.preventDefault(); e.stopImmediatePropagation();
       this._eating = true; setTimeout(() => { this._eating = false; }, 350);
       this._fireNext();
@@ -780,7 +798,7 @@ class Coach {
       (p.effects || []).forEach((e) => { if (e.seat === self) mine(0, c); else rival(e.seat, 0, c); });
       const e = (p.effects || []).find((x) => x.seat === self);
       if (e) {
-        text = [`+${e.energy} energy: your <b>Recharge 1</b> die fed your life.`,
+        text = [`+${e.energy} energy: your <b>Recharge 1</b> die fed your energy.`,
           `+${e.gold} gold: your <b>Recharge 2</b> die minted it.`,
           `+${e.energy} energy and +${e.gold} gold: your <b>Recharge 3</b> die.`][c];
         key = "r" + c;
@@ -1321,7 +1339,7 @@ class Coach {
         text = [`Drag a ${R(v)} onto <b>Recharge 1</b>: +${v} energy.`,
           `Drag a ${R(v)} onto <b>Recharge 2</b>: +${v} gold.`,
           `Drag a ${R(v)} onto <b>Recharge 3</b>: +${v} energy and gold.`][s.c];
-        if (s.c === 0 && first) sub = "Energy is your life.";
+        if (s.c === 0 && first) sub = "At 0 energy you are terminated.";
         if (s.c === 1) sub = "Gold buys the Merchant's cards.";
         if (s.c === 2) { sub = "A third die in one function OVERLOADS it: it pays now, and shuts for the next Hour."; this.markTrack("overload"); }
       } else if (s.r === 1) {
@@ -1366,7 +1384,7 @@ class Coach {
       const sealed = (this.game.alloc && [...this.game.alloc.unavailable]) || [];
       const what = sealed.length ? FN[sealed[0]] : "A function";
       this.guide("#dice-body .escape-drop",
-        `${what} is shut this Hour, so this ${R(s.v)} fits nowhere. Drop it in the <b>escape valve</b>. While a function is shut, the valve drains life: this die costs you ${s.v} energy.`,
+        `${what} is shut this Hour, so this ${R(s.v)} fits nowhere. Drop it in the <b>escape valve</b>. While a function is shut, the valve drains energy: this die costs you ${s.v} energy.`,
         { rings: ["#dice-body .escape-drop", die(s.v)], avoid: MACHINE });
       return;
     }

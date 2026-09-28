@@ -706,7 +706,8 @@ class AudioEngine {
       o.start(t); o.stop(t + 0.4);
     }
   }
-  purrLoop(on) {
+  // level: the purr's loudness (a sleeping cat purrs softer than a petted one)
+  purrLoop(on, level = 0.085) {
     if (!this.ctx || !this.master) return;
     if (on) {
       if (this._purrN) return;
@@ -719,7 +720,7 @@ class AudioEngine {
       lfo.connect(lg); lg.connect(g.gain);
       osc.connect(lp); lp.connect(g); g.connect(this.master);
       osc.start(); lfo.start();
-      g.gain.linearRampToValueAtTime(0.085, c.currentTime + 0.7);
+      g.gain.linearRampToValueAtTime(level, c.currentTime + 0.7);
       this._purrN = { osc, lfo, g };
     } else if (this._purrN) {
       const n = this._purrN; this._purrN = null;

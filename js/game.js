@@ -11,20 +11,20 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609281046";
-import { audio } from "./audio.js?202609281046";
+import { icon } from "./icons.js?202609281350";
+import { audio } from "./audio.js?202609281350";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609281046";
-import { comic } from "./comic.js?202609281046";
-import { fx } from "./fx.js?202609281046";
-import { CatEngine } from "./cat.js?202609281046";
-import { tutorials } from "./tutorial.js?202609281046";
-import { profile } from "./profile.js?202609281046";
-import { Camera } from "./camera.js?202609281046";
+import { juice } from "./juice.js?202609281350";
+import { comic } from "./comic.js?202609281350";
+import { fx } from "./fx.js?202609281350";
+import { CatEngine } from "./cat.js?202609281350";
+import { tutorials } from "./tutorial.js?202609281350";
+import { profile } from "./profile.js?202609281350";
+import { Camera } from "./camera.js?202609281350";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609281046";
+} from "./util.js?202609281350";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -3098,6 +3098,10 @@ export class Game {
     this.selectReq = null; this.secretDeal = null;
     if (hadInline) this.renderMarket();
     this.renderPlayers();
+    // a phone resolves the picks with no home on the table in its own scenes (mobile-table.js:
+    // receptor relics on the Records page, the recycled pile and the full-pack choice in a card
+    // sheet); undefined on a desktop, and it answers false for every other decision
+    try { if (window.__pdxDecide && window.__pdxDecide(req)) return; } catch (e) { console.error("[phone pick]", e); }
     if (k === "allocate") return this.startAllocation(req);
     if (k === "travel") {
       // Voyages are plotted ON THE CHART: the sea arms click-to-travel and the anchor.
@@ -3920,7 +3924,10 @@ export class Game {
          none counts the popup comes in. */
       const targets = [...document.querySelectorAll(
         ".card.can-steal, .card.can-destroy, .mc.targetable, .pcard-choose,"
-        + " .prompt .card.is-actionable, .secret-card-wrap .card.can-select")];
+        + " .prompt .card.is-actionable, .secret-card-wrap .card.can-select,"
+        // a neutral pick on his shelf (Mona Lisa, Woodblock Print) counts too: without it the
+        // lit shelf was never found and the popup replaced the pick 350 ms later
+        + " .market-row .card.is-actionable.can-select")];
       const reachable = targets.some((el) => {
         const b = el.getBoundingClientRect();
         if (b.width < 6 || b.height < 6) return false;

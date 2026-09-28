@@ -201,8 +201,10 @@
       hatch: (seg)=>{ const [o,dd,nn,w,k0,k1]= seg===1?[B,d1,n1,w1,20,32]:[J,d2,n2,w2,6,24]; let h="";
         for(let k=k0;k<=k1;k+=6){ const a=P(P(o,dd,k),nn,out*w*.95), b=P(P(o,dd,k+3),nn,out*w*.45); h+=` M ${f(a[0])} ${f(a[1])} L ${f(b[0])} ${f(b[1])}`; } return h; } };
   }
-  // the four fingertips' nails (the feminine hand): [x, y, angle, length, width]
-  const FINGER_NAILS=[[707,267,8,15.5,9.5],[733,296.5,16,16,10],[738.5,323.5,12,16,10],[726.5,343.5,4,15,9.5]];
+  // the four fingertips' nails (the feminine hand), each on its own finger, pinky to index
+  // (top to bottom): [fingertip x, y, the finger's direction near its tip, nail length,
+  // width]; each about 55-60% of its fingertip's width, centred on the finger's top plane
+  const FINGER_NAILS=[[716.5,268,5,15.5,8.2],[740.3,297.8,15,17.5,9.4],[746.5,324.5,12,19.5,10.2],[736.5,340.5,5,18.5,8.8]];
   const THUMB=thumbGeo([612,337],[636,360],[662,370],14.5,13.5,12);
   const FIST_THUMB=thumbGeo([612,306],[640,318],[668,332],14,13.5,12.5);
   const HAND_PATHS={
@@ -237,7 +239,14 @@
     const soft=(d)=>m ? "" : `<path d="${d}" style="fill:${sk(3)}" opacity=".32"/>`;
     const contour=(d,w=1.2,o=.55)=>`<path d="${d}" fill="none" stroke="${LINE}" stroke-width="${w}" stroke-linecap="round" opacity="${o}"/>`;
     // painted nails (the feminine hand): the player's colour, matte, a thin ink edge
-    const nail=([x,y,a,l,w])=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M ${-l/2} ${-w/2} L ${l*.02} ${-w/2} C ${l*.34} ${-w/2} ${l/2+.6} ${-w*.36} ${l/2+.6} 0 C ${l/2+.6} ${w*.36} ${l*.34} ${w/2} ${l*.02} ${w/2} L ${-l/2} ${w/2} Q ${-l/2-1.6} 0 ${-l/2} ${-w/2} Z" style="fill:var(--hela-seat,#6fae6a)" stroke="${LINE}" stroke-width="1.3" stroke-linejoin="round"/><path d="M ${-l/2+1.2} ${-w/2+1.4} Q ${-l/2-.4} 0 ${-l/2+1.2} ${w/2-1.4}" fill="none" style="stroke:${sk(3)}" stroke-width="1.2" stroke-linecap="round"/></g>`;
+    // a slim oval nail bed tapering to a soft almond point that ends just past the fingertip;
+    // placed from the fingertip back along the finger's own direction, a hair toward its lit side
+    const nail=([tx,ty,a,l,w])=>{ const r=a*Math.PI/180, c=Math.cos(r), s2=Math.sin(r), k=l/2-1.8;
+      const x=tx-c*k+s2*.5, y=ty-s2*k-c*.5, b=-l/2, t=l/2, h=w/2, n=(v)=>v.toFixed(2);
+      const base=`M ${n(b+l*.3)} ${n(-h)} C ${n(b+l*.1)} ${n(-h)} ${n(b)} ${n(-h*.8)} ${n(b)} 0 C ${n(b)} ${n(h*.8)} ${n(b+l*.1)} ${n(h)} ${n(b+l*.3)} ${n(h)}`;
+      const free=`M ${n(b+l*.3)} ${n(-h)} C ${n(b+l*.7)} ${n(-h)} ${n(t-l*.1)} ${n(-h*.42)} ${n(t)} 0 C ${n(t-l*.1)} ${n(h*.42)} ${n(b+l*.7)} ${n(h)} ${n(b+l*.3)} ${n(h)}`;
+      // the ink runs only along the free edge; the base tucks under the skin (a soft cuticle line)
+      return `<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${a.toFixed(1)})"><path d="${base} C ${n(b+l*.7)} ${n(h)} ${n(t-l*.1)} ${n(h*.42)} ${n(t)} 0 C ${n(t-l*.1)} ${n(-h*.42)} ${n(b+l*.7)} ${n(-h)} ${n(b+l*.3)} ${n(-h)} Z" style="fill:var(--hela-seat,#6fae6a)"/><path d="${free}" fill="none" stroke="${LINE}" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/><path d="${base}" fill="none" style="stroke:${sk(3)}" stroke-width="1.3" stroke-linecap="round"/></g>`; };
     const nails=(list)=>`<g pointer-events="none">${list.map(nail).join("")}</g>`;
     const thumbArt=(G,n)=>{
       const f=(v)=>v.toFixed(1);

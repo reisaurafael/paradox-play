@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609281046";
-import { roman } from "./util.js?202609281046";
+import { audio } from "./audio.js?202609281350";
+import { roman } from "./util.js?202609281350";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -140,14 +140,14 @@ class Fx {
   storedLevel() {
     const v = lsGet(LEVEL_KEY);
     if (LEVELS[v]) return v;
-    return document.documentElement.classList.contains("pdx-phone") ? "light" : "full";   // phones are weak: Light unless chosen
+    return "full";   // Full everywhere unless the player chose otherwise (phones too, the owner's call)
   }
   setLevel(v) { if (LEVELS[v]) lsSet(LEVEL_KEY, v); this._markLevel(); this.heatSync(); }
   _markLevel() { try { document.documentElement.dataset.fx = this.storedLevel(); } catch (e) {} }
   // what plays now: Low graphics caps it at Light
   level() {
     const v = this.storedLevel();
-    if (document.documentElement.classList.contains("pdx-phone")) return v;   // a phone keeps its own choice (Light by default)
+    if (document.documentElement.classList.contains("pdx-phone")) return v;   // a phone keeps its own choice (Full by default)
     if (v === "full" && document.body.classList.contains("gfx-low")) return "light";
     return v;
   }

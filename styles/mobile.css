@@ -333,7 +333,7 @@ html.pdx-m-on #cam, html.pdx-m-on #hull, html.pdx-m-on #pdx-life { touch-action:
 #pdx-mcol .mc-life b { font: 700 1.05rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .02em; color: var(--hela-seat, #f2a93b); margin-left: 3px; }
 
 /* ── THE LIFETHREAD round the screen ── */
-#pdx-life { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 60250; pointer-events: none; overflow: visible; }
+#pdx-life { position: fixed; left: 0; top: 0; right: 0; bottom: 0; width: auto; height: auto; z-index: 60250; pointer-events: none; overflow: visible; }
 html:not(.pdx-m-on) #pdx-life { display: none; }
 #pdx-life path { fill: none; }
 #pdx-life .lt-bed { stroke: rgba(0, 0, 0, .35); stroke-width: 3; }
@@ -429,7 +429,7 @@ html.pdx-m-on #timeline-rail .cc-hit, html.pdx-m-on #timeline-rail .sea-hit, htm
 html.pdx-m-on .panel-detail.dossier { left: calc(var(--pdx-colw, 160px) + 10px) !important; top: calc(var(--pdx-stage-y, 0px) + 8px) !important; bottom: auto !important;
   width: min(440px, calc(100vw - var(--pdx-colw, 160px) - var(--pdx-railw, 64px) - 20px)) !important; max-height: calc(100vh - var(--pdx-stage-y, 0px) - 16px) !important;
   z-index: 60180 !important; transform: none !important; box-shadow: 8px 8px 0 rgba(0, 0, 0, .55) !important; }
-html.pdx-m-on .do-attach { display: none !important; }
+/* (the clippings and the contracts ride beside the file on a phone: see "THE COMPLETE FILE, smaller") */
 
 /* HELA'S TUTORIAL LINES, native to her column: her comic caption (paper, ink, her tag), sized to
    the column, and an inked thread from the caption to what she rings (mobile-table.js #pdx-tutlink) */
@@ -731,3 +731,183 @@ html.pdx-m-on #rucksack-zone .ruck-card.pdx-picked { outline: 4px solid var(--he
    (the second tap on the key brings it back beside the shelf) */
 html.pdx-m-on[data-pdx-view="merchant"]:not(.pdx-secret) #market-zone :is(.secret-curtain, .secret-bg, .secret-stage, .secret-brief-sign) {
   visibility: hidden; }
+
+/* ══ PICKS IN PLACE (28/09): the lit cards of a pick glow where they lie, the rest step back ══ */
+html.pdx-m-on #market-zone.selecting .market-row .card:not(.is-actionable),
+html.pdx-m-on #market-zone.selecting .secret-card-wrap .card:not(.is-actionable) { opacity: .45; }
+html.pdx-m-on #market-zone .card.is-actionable.can-select { outline: 7px solid #ffc34a; outline-offset: 5px;
+  animation: pdxPickGlow 1.2s ease-in-out infinite; --pick-c: rgba(242, 169, 59, .75); }
+html.pdx-m-on #market-zone .card.is-actionable.can-steal,
+html.pdx-m-on #market-zone .card.is-actionable.can-destroy { outline: 7px solid #e0483a; outline-offset: 5px;
+  animation: pdxPickGlow 1.2s ease-in-out infinite; --pick-c: rgba(224, 72, 58, .8); }
+@keyframes pdxPickGlow { 0%, 100% { box-shadow: 0 0 0 0 var(--pick-c); } 50% { box-shadow: 0 0 0 16px transparent, 0 0 30px 6px var(--pick-c); } }
+html.pdx-m-on #market-zone .card.pdx-confirming { outline-color: #fff4dc; animation: none; }
+@media (prefers-reduced-motion: reduce) { html.pdx-m-on #market-zone .card.is-actionable { animation: none !important; } }
+/* the steal's own confirm: an inked stamp over the card (the tap goes through it to the card) */
+#pdx-confirm { position: fixed; z-index: 60270; pointer-events: none; box-sizing: border-box; padding: 6px 8px; text-align: center;
+  border: 3px solid var(--cx-ink, #15100a); border-radius: 5px; background: #e0483a; color: #fff4dc; box-shadow: 3px 3px 0 var(--cx-ink, #15100a);
+  rotate: -4deg; display: grid; gap: 2px; }
+#pdx-confirm b { font: 700 .82rem/1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .04em; text-transform: uppercase; }
+#pdx-confirm span { font: 600 .62rem/1 var(--f-mono, monospace); letter-spacing: .12em; text-transform: uppercase; }
+
+/* ══ THE PICK SHEET (only the recycled pile and a card with no room): the Merchant's sheet, cards in a row ══ */
+.pdx-sheet.pdx-pick { top: max(10px, env(safe-area-inset-top, 0px)); align-items: stretch; grid-template-columns: minmax(0, 1fr) 150px; }
+.pdx-pick .pp-body { min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 6px; padding: 8px 10px 10px;
+  border: 3px solid var(--cx-ink, #15100a); border-radius: 6px; background: #2a2016; box-shadow: 5px 5px 0 var(--cx-ink, #15100a); }
+.pdx-pick .pp-head { margin: 0; font: 500 .86rem/1.3 var(--f-body, "Inter", sans-serif); color: var(--cx-paper, #f4e6b0); }
+.pdx-pick .pp-head b { font-family: var(--f-display, "Oswald", sans-serif); letter-spacing: .03em; color: var(--hela-seat, #f2a93b); }
+.pdx-pick .pp-row { display: flex; gap: 10px; align-items: stretch; overflow-x: auto; overflow-y: hidden; padding: 12px 4px 6px; touch-action: pan-x;
+  scroll-snap-type: x proximity; overscroll-behavior: contain; }
+.pdx-pick .pp-tile.ps-card.card-pop { position: relative; flex: 0 0 190px; width: 190px; max-height: none; overflow: hidden; display: flex; flex-direction: column;
+  text-align: left; cursor: pointer; scroll-snap-align: start; padding: 10px 11px; font: inherit; color: var(--paper-ink, #2a2114); }
+.pdx-pick .pp-tile .cp-name { display: block; font-size: .98rem !important; line-height: 1.1; }
+.pdx-pick .pp-tile .cp-kind { display: block; font-size: .62rem !important; margin-top: 2px; }
+.pdx-pick .pp-tile .cp-desc { display: block; flex: 1; font-size: .78rem !important; line-height: 1.32; margin: 6px 0 !important; overflow: auto; }
+.pdx-pick .pp-tile .cp-stats { display: flex; }
+.pdx-pick .pp-tile .cp-stat { font-size: .64rem !important; }
+.pdx-pick .pp-tile.pp-on { outline: 5px solid var(--hela-seat, #f2a93b); outline-offset: 3px; translate: 0 -6px; }
+.pdx-pick .pp-tile.pp-in { cursor: default; border-color: #b58a2a; box-shadow: 5px 5px 0 var(--cx-ink, #15100a), 0 0 0 3px #e2c078; }
+.pdx-pick .pp-tag { position: absolute; right: 6px; top: 6px; padding: 1px 6px; border: 2px solid var(--cx-ink, #15100a); border-radius: 3px;
+  background: var(--hela-seat, #f2a93b); color: var(--cx-ink, #15100a); font: 700 .58rem/1.3 var(--f-mono, monospace); font-style: normal; letter-spacing: .08em; }
+.pdx-pick .pp-in .pp-tag { background: #e2c078; }
+.pdx-pick .pp-gap { flex: 0 0 auto; align-self: center; writing-mode: vertical-rl; rotate: 180deg; font: 700 .68rem/1 var(--f-mono, monospace);
+  letter-spacing: .14em; text-transform: uppercase; color: var(--cx-paper, #f4e6b0); opacity: .8; }
+.pdx-pick .ps-keys { justify-content: flex-end; }
+.pdx-pick .ps-act { min-width: 0; width: 100%; font-size: 1rem; }
+.pdx-pick .ps-act:disabled { background: #6d6352; color: #d9ccb0; box-shadow: 2px 2px 0 var(--cx-ink, #15100a); }
+.pdx-pick .ps-close { width: 100%; min-width: 0; font-size: .8rem; line-height: 1.1; }
+.pdx-pick .pp-fold { min-height: 38px; border: 2px dashed var(--cx-paper, #f4e6b0); border-radius: 6px; background: transparent; color: var(--cx-paper, #f4e6b0);
+  font: 700 .66rem/1.1 var(--f-mono, monospace); letter-spacing: .08em; text-transform: uppercase; }
+/* folded: a slim tab at the stage's foot, a tap unfolds it */
+.pdx-sheet.pdx-pick.pp-folded { top: auto; grid-template-columns: 1fr; cursor: pointer; }
+.pdx-pick.pp-folded .pp-row, .pdx-pick.pp-folded .ps-keys { display: none; }
+.pdx-pick.pp-folded .pp-body { grid-template-rows: auto; }
+.pdx-pick.pp-folded .pp-head::after { content: "  TAP TO CHOOSE"; font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .1em; color: var(--hela-seat, #f2a93b); }
+
+/* the relics he filed, to use one (Refrigerator): the folders on the Records page carry their text */
+#pdx-rtray.rt-use .rt-folder { max-width: 230px; }
+#pdx-rtray .rt-folder .rt-desc { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  font: 500 .66rem/1.25 var(--f-body, "Inter", sans-serif); font-style: normal; color: #3a3122; }
+
+/* ══ THE CASE ON A PHONE (the owner, 28/09): only the bin recycles; a finger drags the cards ══ */
+html.pdx-touch #rucksack-zone .ruck-recycle, html.pdx-touch .panel-detail .pd-recycle { display: none !important; }
+html.pdx-m-on #rucksack-zone .ruck-card { -webkit-user-drag: none; user-select: none; -webkit-touch-callout: none; }
+html.pdx-m-on #rucksack-zone .ruck-card.pdx-dragsrc { opacity: .25; }
+#pdx-drag { position: fixed; left: 0; top: 0; z-index: 60300; pointer-events: none; will-change: transform; }
+#pdx-drag > .card { box-shadow: 10px 16px 0 rgba(21, 16, 10, .45) !important; }
+/* the places a dragged card can go glow; the one under the finger lights up */
+#pdx-mrail #pdx-bin.pdx-drop-ok, #pdx-mrail button[data-view].pdx-drop-ok { box-shadow: 0 0 0 3px var(--hela-seat, #f2a93b), 0 0 16px 4px rgba(242, 169, 59, .6); }
+#pdx-mrail #pdx-bin.pb-hot, #pdx-mrail button[data-view].pdx-drop-hot { transform: scale(1.1); background: #fff4dc; color: var(--cx-ink, #15100a);
+  box-shadow: 0 0 0 4px #fff4dc, 0 0 22px 8px rgba(255, 244, 220, .7); }
+#pdx-mrail button[data-view].pdx-drop-ok::before { content: "FILE"; position: absolute; left: -6px; top: -8px; padding: 1px 4px; border: 2px solid var(--cx-ink, #15100a);
+  border-radius: 3px; background: var(--hela-seat, #f2a93b); color: var(--cx-ink, #15100a); font: 700 .55rem/1.2 var(--f-mono, monospace); }
+
+/* ══ THE TUTORIAL ON A PHONE (the owner, 28/09): HELA talks ONLY from her column; what she
+   points at is ringed in her colour, blinking, where it lies ══ */
+/* her line takes the column's room: the log and the page's extras step aside while she teaches */
+html.pdx-m-on body.tut #pdx-mcol .mc-log, html.pdx-m-on body.tut #pdx-mcol .mc-extra { display: none !important; }
+/* the lesson bar, docked in her column (mobile-table.js dockTrack): LEARN n/9, the lesson, Leave */
+html.pdx-m-on #pdx-mcol #tut-track { position: static !important; left: auto !important; top: auto !important; transform: none !important;
+  flex: 0 0 auto; display: flex !important; flex-wrap: wrap; align-items: center; gap: 3px 5px; margin: 0; padding: 4px 6px; max-width: none;
+  border: 2px solid var(--cx-paper, #f4e6b0) !important; border-radius: 5px; background: var(--cx-ink, #15100a) !important; box-shadow: none !important;
+  font: 600 .64rem/1.2 var(--f-mono, monospace); opacity: 1; }
+html.pdx-m-on #pdx-mcol #tut-track.gone { display: none !important; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-title { font-size: 0; margin: 0; letter-spacing: .14em; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-title::before { content: "LEARN"; font-size: .64rem; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-chip:not(.now) { display: none; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-chip.now { padding: 1px 6px; font-size: .64rem; white-space: normal; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-leave { margin-left: auto; min-height: 24px; padding: 0 7px; font-size: .62rem; }
+/* no floating arrow over the stage: her ring in her own colour is the pointer */
+html.pdx-m-on #tut-point { display: none !important; }
+html.pdx-m-on .tut-ring, html.pdx-m-on .he-ring { border: 3px solid var(--hela-seat, #6fae6a) !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, .35), 0 0 16px 4px var(--hela-seat, #6fae6a) !important; animation: pdxHelaBlink .9s steps(2, jump-none) infinite !important; }
+@keyframes pdxHelaBlink { 0% { opacity: 1; } 100% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { html.pdx-m-on .tut-ring, html.pdx-m-on .he-ring { animation: none !important; } }
+/* HER OVERLOAD WORDS (help.js's window) take her line's slot in the column, never the stage */
+html.pdx-m-on .he-window.he-ovl { left: calc(var(--pdx-insl, 0px) + 7px) !important; top: var(--mc-slot-top, 150px) !important;
+  width: var(--pdx-colin, 146px) !important; transform: none !important; z-index: 60210 !important; }
+html.pdx-m-on .he-window.he-ovl .he-pane { max-width: none !important; min-width: 0 !important; width: 100% !important; max-height: var(--mc-slot-h, 160px) !important; overflow: hidden auto !important;
+  box-sizing: border-box; padding: 6px 7px !important; transform: none !important; font-size: .76rem !important; line-height: 1.28 !important; }
+html.pdx-m-on .he-window.he-ovl .he-pane p { margin: 0 0 5px !important; }
+html.pdx-m-on .he-window.he-ovl .he-pane::before { font-size: .62rem !important; margin-bottom: 4px !important; }
+html.pdx-m-on body:has(.he-window.he-ovl.open) #tut-callout { visibility: hidden !important; }
+/* the Herald's paper is a document on the table; her words about it (put it away) are said in the column */
+html.pdx-m-on .he-window .hb-newshint, html.pdx-m-on .he-window .he-wirelbl, html.pdx-m-on .he-window .bn-who { display: none !important; }
+html.pdx-m-on body:has(.he-window.he-news.open) #pdx-mcol .mc-says { visibility: visible; }
+
+/* ══ THE COMPLETE FILE, smaller (the owner, 28/09): scaled by the text size (Normal the smallest),
+   with the contracts and the Herald's clippings that earned his points beside it ══ */
+html.pdx-m-on .panel-detail.dossier { scale: var(--pdx-do-k, .78); transform-origin: 0 0 !important;
+  max-height: calc((100vh - var(--pdx-stage-y, 0px) - 16px) / var(--pdx-do-k, .78)) !important; }
+html.pdx-m-on .do-attach:not(.pdx-do-side), html.pdx-m-on .do-contract:not(.pdx-do-side) { visibility: hidden !important; }
+html.pdx-m-on .do-attach.pdx-do-side { position: fixed; }
+#pdx-do-cp { position: fixed; z-index: 60195; padding: 3px 8px; border: 2px solid var(--cx-ink, #15100a); border-radius: 4px; background: var(--cx-paper, #f4e6b0);
+  color: var(--cx-ink, #15100a); box-shadow: 3px 3px 0 var(--cx-ink, #15100a); font: 700 .74rem/1.1 var(--f-display, "Oswald", sans-serif); letter-spacing: .06em; pointer-events: none; }
+/* his contract points on the file's tab, on the table */
+html.pdx-m-on #players-zone .pcard.cfolio > .pdx-cp { position: absolute; right: 10px; top: -14px; z-index: 5; padding: 3px 12px; border: 4px solid var(--cx-ink, #15100a);
+  border-radius: 8px; background: #ffd24a; color: var(--cx-ink, #15100a); box-shadow: 4px 4px 0 var(--cx-ink, #15100a);
+  font: 700 30px/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .04em; pointer-events: none; }
+html.pdx-m-on #players-zone .pcard.cfolio > .pdx-cp.pdx-cp-0 { background: #e9dcb4; color: #6b5a3a; }
+#players-zone .pcard.cfolio > .pdx-cp { display: none; }
+html.pdx-m-on #players-zone .pcard.cfolio > .pdx-cp { display: block; }
+
+/* ══ THE WHOLE SCREEN, ALWAYS (the owner's phone, 28/09: the rail and the thread ended short of the
+   right edge): nothing in a match may make the page wider than the screen (Chrome would zoom the
+   page out to fit it); the thread is sized by the screen box, not by 100vw / 100vh ══ */
+html.pdx-m-on, html.pdx-m-on body { overflow: clip !important; max-width: 100%; }
+
+/* ══ THE CASE'S CARDS, READABLE (the owner, 28/09): large, flat, over the open case, a grid sized by
+   how many he holds (mobile-table.js paintCaseCards: --pdx-cc columns, --pdx-cf the face's type);
+   the gold, the tickets and the contracts they lie over are read in her column ══ */
+html.pdx-m-on #rucksack-zone .ruck-pocket { left: 14.5% !important; right: 17% !important; top: 13% !important; bottom: 14% !important; height: auto !important;
+  display: grid !important; grid-template-columns: repeat(var(--pdx-cc, 3), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 12px;
+  align-items: stretch; justify-items: stretch; perspective: none !important; z-index: 4; }
+html.pdx-m-on #rucksack-zone .ruck-pocket .ruck-slot { margin: 0 !important; transform: none !important; min-width: 0; min-height: 0; display: flex; }
+html.pdx-m-on #rucksack-zone .ruck-pocket .ruck-card.card { width: 100% !important; min-height: 0 !important; height: 100%; box-sizing: border-box; margin: 0;
+  padding: calc(var(--pdx-cf, 21px) * .45) calc(var(--pdx-cf, 21px) * .5) calc(var(--pdx-cf, 21px) * .35) !important; display: flex; flex-direction: column;
+  transform: none !important; rotate: none; overflow: hidden; box-shadow: 4px 5px 0 rgba(21, 16, 10, .55); }
+html.pdx-m-on #rucksack-zone .ruck-card .card-name { font-size: var(--pdx-cf, 21px) !important; line-height: 1.05 !important; min-height: 0 !important;
+  padding-left: calc(var(--pdx-cf, 21px) * 1.2) !important; flex: 0 0 auto; }
+html.pdx-m-on #rucksack-zone .ruck-card .card-cost { width: calc(var(--pdx-cf, 21px) * 1.25) !important; height: calc(var(--pdx-cf, 21px) * 1.25) !important;
+  font-size: calc(var(--pdx-cf, 21px) * .8) !important; top: -6px !important; left: -6px !important; }
+html.pdx-m-on #rucksack-zone .ruck-card .card-type { display: none !important; }
+html.pdx-m-on #rucksack-zone .ruck-card .pdx-cdesc { flex: 1 1 auto; min-height: 0; overflow: hidden; margin: calc(var(--pdx-cf, 21px) * .25) 0; display: flex; flex-direction: column; gap: 3px;
+  color: #3a3122; }
+html.pdx-m-on #rucksack-zone .ruck-card .pdx-cdesc b { font: 700 calc(var(--pdx-cf, 21px) * .56)/1.1 var(--f-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: #7a3d6b; }
+html.pdx-m-on #rucksack-zone .ruck-card .pdx-cdesc span { font: 500 calc(var(--pdx-cf, 21px) * .72)/1.25 var(--f-body, "Inter", sans-serif);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
+html.pdx-m-on #rucksack-zone .ruck-pocket:not(.pdx-cc-wide) .ruck-card .pdx-cdesc span { -webkit-line-clamp: 4; }
+html.pdx-m-on #rucksack-zone .ruck-card .card-foot { flex: 0 0 auto; margin-top: auto; font-size: calc(var(--pdx-cf, 21px) * .66) !important; }
+html.pdx-m-on #rucksack-zone .ruck-card .card-deliver .cd-cent, html.pdx-m-on #rucksack-zone .ruck-card .card-recycle { font-size: calc(var(--pdx-cf, 21px) * .66) !important; }
+html.pdx-m-on #rucksack-zone .ruck-card .card-foot svg { width: calc(var(--pdx-cf, 21px) * .7); height: calc(var(--pdx-cf, 21px) * .7); }
+html.pdx-m-on #rucksack-zone .ruck-card.pdx-picked { translate: 0 -8px; }
+/* the tickets' rack and the gold stacks under the cards: read in the column (TICKETS, YOUR GOLD) */
+html.pdx-m-on #rucksack-zone:has(.ruck-card) .ruck-vouchers { visibility: hidden; }
+#pdx-mcol .mx-cp { display: flex; align-items: center; justify-content: space-between; padding: 4px 7px; border: 2px solid var(--cx-ink, #15100a); border-radius: 4px;
+  background: #e9dcb4; color: var(--cx-ink, #15100a); font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .12em; }
+#pdx-mcol .mx-cp b { font: 700 1.1rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: 0; }
+.pdx-casesheet .ps-keys .ps-bin { min-height: 44px; }
+/* the cards lie ON the case's art (its coins and its lock plate stay under them) */
+html.pdx-m-on #rucksack-zone .ruck-body { z-index: 6 !important; }
+/* one or two cards: the lid holds them, the tray (and his gold) shows below */
+html.pdx-m-on #rucksack-zone .ruck-pocket.pdx-cc-wide { bottom: 42% !important; }
+
+/* ══ ONE MEASURE (the owner's phone, 28/09: with the camera notch on the left her card spilled over
+   the arm; on the right a strip of table showed past the rail): her card and her windows take the
+   column's inner box exactly (after the left cut-out), and the rail's own dark fills the cut-out on
+   its side down to the screen's edge ══ */
+html.pdx-m-on #tut-callout { left: calc(var(--pdx-insl, 0px) + 7px) !important; width: var(--pdx-colin, 146px) !important; max-width: var(--pdx-colin, 146px) !important;
+  box-sizing: border-box !important; overflow-wrap: anywhere; }
+html.pdx-m-on #tut-callout .tc-text, html.pdx-m-on #tut-callout .tc-sub { font-size: var(--pdx-tfs, .8rem) !important; }
+html.pdx-m-on #pdx-mrail { background: linear-gradient(90deg, rgba(20, 13, 7, 0) 0, rgba(20, 13, 7, .55) 18px,
+  rgba(20, 13, 7, .55) calc(100% - var(--pdx-insr, 0px)), #0d0a07 calc(100% - var(--pdx-insr, 0px))); }
+
+/* the lesson bar in two short rows (LEARN n/9 and Leave, then the lesson): her line keeps the room */
+html.pdx-m-on #pdx-mcol #tut-track .tt-title { order: 0; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-count { order: 1; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-leave { order: 2; margin-left: auto; min-height: 22px !important; padding: 0 6px !important; }
+html.pdx-m-on #pdx-mcol #tut-track .tt-chip.now { order: 3; flex: 1 1 100%; }
+/* a line longer than her slot says so at its foot (it scrolls inside the card, never cut silently) */
+html.pdx-m-on #tut-callout .pdx-tmore { display: none; }
+html.pdx-m-on #tut-callout.pdx-more .pdx-tmore { display: block; position: sticky; bottom: -7px; margin: 4px -8px -7px; padding: 10px 8px 3px; text-align: right;
+  background: linear-gradient(180deg, rgba(244, 230, 176, 0), var(--cx-paper, #f4e6b0) 45%); font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .1em; color: var(--cx-ink, #15100a); pointer-events: none; }
