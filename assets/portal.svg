@@ -400,9 +400,6 @@
 <path d="M 516 102 Q 550 70 584 102 Q 550 134 516 102 Z" fill="#121419" stroke="#121419" stroke-width="6" stroke-linejoin="round" transform="translate(1.4 2)"/>
 <path d="M 516 102 Q 550 70 584 102 Q 550 134 516 102 Z" fill="#7a5a26"/>
 <g clip-path="url(#pk62)"><path d="M 516 102 Q 550 70 584 102 Q 550 134 516 102 Z" fill="#b88a3e" transform="translate(6 6)"/></g>
-<circle cx="551" cy="103.4" r="14" fill="#121419"/><circle cx="550" cy="102" r="12" fill="#6fe0a0"/>
-<path d="M 560 108 a 12 12 0 0 1 -18 3 a 14 14 0 0 0 18 -3 Z" fill="#3aa56c"/>
-<circle cx="550" cy="102" r="5" fill="#121419"/><circle cx="545" cy="97" r="2.6" fill="#effff5"/>
-<path d="M 522 94 Q 550 66 578 94" stroke="#121419" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+
 </g>
 </svg>

@@ -51,10 +51,8 @@
 </g>
 <path d="M 145 69.8 L 381 69.8" stroke="#a14a5d" stroke-width="1.8" stroke-linecap="round" opacity=".85"/>
 <path d="M 142 72 L 384 72 L 376 212 L 152 212 Z" fill="none" stroke="#1c050a" stroke-width="2.6" stroke-linejoin="round"/>
-<text x="264" y="205.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">CONTRACTS</text>
-<text x="264" y="204" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#dcb467">CONTRACTS</text>
-<clipPath id="bc-sC1"><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z"/></clipPath><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="#7f5d3b"/><g clip-path="url(#bc-sC1)"><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="url(#bc-grainC)" opacity=".45"/><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="none" stroke="#3a2818" stroke-width="4" opacity=".55"/></g><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="none" stroke="#14100b" stroke-width="2.2" stroke-linejoin="round"/>
-<clipPath id="bc-sC2"><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z"/></clipPath><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="#7f5d3b"/><g clip-path="url(#bc-sC2)"><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="url(#bc-grainC)" opacity=".45"/><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="none" stroke="#3a2818" stroke-width="4" opacity=".55"/></g><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="none" stroke="#14100b" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="264" y="205.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">GOLD RESERVE</text>
+<text x="264" y="204" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#dcb467">GOLD RESERVE</text>
 <clipPath id="bc-pV"><path d="M 416 72 L 658 72 L 646 212 L 408 212 Z"/></clipPath>
 <path d="M 416 72 L 658 72 L 646 212 L 408 212 Z" fill="#551725"/>
 <g clip-path="url(#bc-pV)">
@@ -64,10 +62,8 @@
 </g>
 <path d="M 419 69.8 L 655 69.8" stroke="#a14a5d" stroke-width="1.8" stroke-linecap="round" opacity=".85"/>
 <path d="M 416 72 L 658 72 L 646 212 L 408 212 Z" fill="none" stroke="#1c050a" stroke-width="2.6" stroke-linejoin="round"/>
-<text x="530" y="205.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">VOUCHERS</text>
-<text x="530" y="204" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#dcb467">VOUCHERS</text>
-<path d="M 411 116 L 654 114" stroke="#24060d" stroke-width="6" opacity=".6"/><path d="M 411 112 L 654 110" stroke="#14100b" stroke-width="7.4"/><path d="M 411 112 L 654 110" stroke="#7d5632" stroke-width="4.4"/><path d="M 411 110.9 L 654 108.9" stroke="#b08352" stroke-width="1.1" opacity=".9"/>
-<path d="M 411 162 L 654 160" stroke="#24060d" stroke-width="6" opacity=".6"/><path d="M 411 158 L 654 156" stroke="#14100b" stroke-width="7.4"/><path d="M 411 158 L 654 156" stroke="#7d5632" stroke-width="4.4"/><path d="M 411 156.9 L 654 154.9" stroke="#b08352" stroke-width="1.1" opacity=".9"/>
+<text x="530" y="205.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">EQUIPMENT</text>
+<text x="530" y="204" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="11.5" letter-spacing="3" text-anchor="middle" fill="#dcb467">EQUIPMENT</text>
 <path d="M 112 26 L 148 26 L 142 58 L 104 56 L 101 38 Q 100 26 112 26 Z" fill="#c49544"/>
 <path d="M 104.5 50 L 143 52 L 142 58 L 104 56 Z" fill="#8a6326"/>
 <path d="M 108 30 L 144 30 L 143.4 34 L 104 34 Q 104 30 108 30 Z" fill="#f0d48e" opacity=".9"/>
@@ -113,9 +109,9 @@
 </g>
 <path d="M 135 297.8 L 313 297.8" stroke="#a14a5d" stroke-width="1.8" stroke-linecap="round" opacity=".85"/>
 <path d="M 132 300 L 316 300 L 324 384 L 118 384 Z" fill="none" stroke="#1c050a" stroke-width="2.6" stroke-linejoin="round"/>
-<text x="221" y="382.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">GOLD RESERVE</text>
-<text x="221" y="381" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#dcb467">GOLD RESERVE</text>
-<g transform="translate(222 343.2)" stroke="#a14a5d" stroke-width="2.6" fill="none" opacity=".4"><circle r="24"/><circle r="11"/><path d="M 0 -30 V -25 M 0 30 V 25 M -30 0 H -25 M 30 0 H 25 M -21 -21 l 3.4 3.4 M 21 21 l -3.4 -3.4 M 21 -21 l -3.4 3.4 M -21 21 l 3.4 -3.4"/><path d="M 0 0 L 9 -2.6"/></g><g transform="translate(222 342)" stroke="#24060d" stroke-width="3" fill="none" opacity=".85"><circle r="24"/><circle r="11"/><path d="M 0 -30 V -25 M 0 30 V 25 M -30 0 H -25 M 30 0 H 25 M -21 -21 l 3.4 3.4 M 21 21 l -3.4 -3.4 M 21 -21 l -3.4 3.4 M -21 21 l 3.4 -3.4"/><path d="M 0 0 L 9 -2.6"/></g>
+<text x="221" y="382.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">CONTRACTS</text>
+<text x="221" y="381" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#dcb467">CONTRACTS</text>
+<g transform="translate(264 141.2) scale(1.3)" stroke="#a14a5d" stroke-width="2.6" fill="none" opacity=".4"><circle r="24"/><circle r="11"/><path d="M 0 -30 V -25 M 0 30 V 25 M -30 0 H -25 M 30 0 H 25 M -21 -21 l 3.4 3.4 M 21 21 l -3.4 -3.4 M 21 -21 l -3.4 3.4 M -21 21 l 3.4 -3.4"/><path d="M 0 0 L 9 -2.6"/></g><g transform="translate(264 140) scale(1.3)" stroke="#24060d" stroke-width="3" fill="none" opacity=".85"><circle r="24"/><circle r="11"/><path d="M 0 -30 V -25 M 0 30 V 25 M -30 0 H -25 M 30 0 H 25 M -21 -21 l 3.4 3.4 M 21 21 l -3.4 -3.4 M 21 -21 l -3.4 3.4 M -21 21 l 3.4 -3.4"/><path d="M 0 0 L 9 -2.6"/></g>
 <clipPath id="bc-pE"><path d="M 344 300 L 662 300 L 678 384 L 354 384 Z"/></clipPath>
 <path d="M 344 300 L 662 300 L 678 384 L 354 384 Z" fill="#551725"/>
 <g clip-path="url(#bc-pE)">
@@ -125,8 +121,11 @@
 </g>
 <path d="M 347 297.8 L 659 297.8" stroke="#a14a5d" stroke-width="1.8" stroke-linecap="round" opacity=".85"/>
 <path d="M 344 300 L 662 300 L 678 384 L 354 384 Z" fill="none" stroke="#1c050a" stroke-width="2.6" stroke-linejoin="round"/>
-<text x="514" y="382.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">EQUIPMENT</text>
-<text x="514" y="381" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#dcb467">EQUIPMENT</text>
+<text x="514" y="382.3" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#1e050a" opacity=".9">VOUCHERS</text>
+<text x="514" y="381" font-family="Georgia,'Times New Roman',serif" font-weight="bold" font-size="10" letter-spacing="3" text-anchor="middle" fill="#dcb467">VOUCHERS</text>
+<g transform="translate(-10 226) scale(1 .8) translate(0 5)"><clipPath id="bc-sC1"><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z"/></clipPath><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="#7f5d3b"/><g clip-path="url(#bc-sC1)"><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="url(#bc-grainC)" opacity=".45"/><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="none" stroke="#3a2818" stroke-width="4" opacity=".55"/></g><path d="M 144 76 L 168 108 L 156 116 L 142 90 Z" fill="none" stroke="#14100b" stroke-width="2.2" stroke-linejoin="round"/></g>
+<g transform="translate(-68 226) scale(1 .8) translate(0 5)"><clipPath id="bc-sC2"><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z"/></clipPath><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="#7f5d3b"/><g clip-path="url(#bc-sC2)"><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="url(#bc-grainC)" opacity=".45"/><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="none" stroke="#3a2818" stroke-width="4" opacity=".55"/></g><path d="M 382 76 L 358 108 L 370 116 L 384 90 Z" fill="none" stroke="#14100b" stroke-width="2.2" stroke-linejoin="round"/></g>
+<path d="M 350 346 L 672 344" stroke="#24060d" stroke-width="6" opacity=".6"/><path d="M 350 342 L 672 340" stroke="#14100b" stroke-width="7.4"/><path d="M 350 342 L 672 340" stroke="#7d5632" stroke-width="4.4"/><path d="M 350 340.9 L 672 338.9" stroke="#b08352" stroke-width="1.1" opacity=".9"/>
 <path d="M 108 412 Q 96 412 98 400 L 103 368 L 140 372 L 134 412 Z" fill="#c49544"/>
 <path d="M 99 402 L 134.6 406 L 134 412 L 108 412 Q 98 412 99 402 Z" fill="#8a6326"/>
 <path d="M 103 368 L 140 372 L 139.4 377 L 102.2 373 Z" fill="#f0d48e" opacity=".9"/>
