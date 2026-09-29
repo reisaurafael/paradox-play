@@ -85,7 +85,12 @@
         <path d="M 572 256 Q 578 296 574 338" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".45"/>
         <path d="${H.cuff}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="5" opacity=".4"/>
         <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-dasharray="3 3"/>`)}
-      <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}>${open}${grab}${glove}</g></g>`}function celInk(ds){const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;return g("2.4 3.4",5.4)+g("-.3 .5",4.4)}function handArtSVG(p,cls){return`${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`}function handShadow(cls){const H=HAND_PATHS,sil=(...ds)=>ds.map(d=>`<path d="${d}"/>`).join("");return["m","f"].map(b=>{const m=b==="m";return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}><g class="${cls}-open">${sil(H.wrist,H.back,H.fingers,H.thumb,H.glove,H.cuff)}</g><g class="${cls}-grab">${sil(H.wrist,H.fist,H.fistThumb,H.glove,H.cuff)}</g></g></g>`}).join("")}const ERA_SEALS=[["Origins","O","#b98a45"],["Ascension","A","#3f9c7c"],["Singularity","S","#7d68c2"]];function sealSVG(cx,cy,i){const[key,g,col]=ERA_SEALS[i],arc=(r,a0,a1)=>{const P=t=>`${(cx+r*Math.cos(t*Math.PI/180)).toFixed(2)} ${(cy+r*Math.sin(t*Math.PI/180)).toFixed(2)}`;return`M ${P(a0)} A ${r} ${r} 0 0 1 ${P(a1)}`};return`<g class="gnt-seal" data-period="${key}">
+      <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}>${open}${grab}${glove}</g></g>`}function celInk(ds){const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;return g("2.4 3.4",5.4)+g("-.3 .5",4.4)}function handArtSVG(p,cls){return`${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`}function handShadow(cls){const H=HAND_PATHS,sil=(...ds)=>ds.map(d=>`<path d="${d}"/>`).join("");return["m","f"].map(b=>{const m=b==="m";return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}><g class="${cls}-open">${sil(H.wrist,H.back,H.fingers,H.thumb,H.glove,H.cuff)}</g><g class="${cls}-grab">${sil(H.wrist,H.fist,H.fistThumb,H.glove,H.cuff)}</g></g></g>`}).join("")}const ERA_SEALS=[["Origins","O","#b98a45"],["Ascension","A","#3f9c7c"],["Singularity","S","#7d68c2"]];function valveTagSVG(){const pt=(window.__pdxLang||document.documentElement.lang)==="pt",lines=pt?["VÁLVULA","DE","ESCAPE"]:["ESCAPE","VALVE"],fs=pt?5.4:6,lh=pt?6.2:6.9,top=299.4,h=lines.length*lh+3.2,mid=top+5.6,tag=`M 215 ${top} L 241 ${top} L 241 ${(top+h).toFixed(1)} L 215 ${(top+h).toFixed(1)} L 215 ${mid+4.6} L 209.4 ${mid} L 215 ${mid-4.6} Z`;return`<g class="gnt-vtag" pointer-events="none">
+    <path d="${tag}" transform="translate(1.2 1.6)" fill="${INK}" opacity=".55"/>
+    <path d="${tag}" fill="#e6d6ae" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/>
+    <path d="M 238.4 ${top+.6} l 2 0 l 0 2.6 Z M 215.6 ${(top+h-.6).toFixed(1)} l 3 0 l -3 -2 Z" fill="#4d575f"/>
+    <text x="228.4" y="${(top+fs+1.2).toFixed(1)}" text-anchor="middle" font-family="monospace" font-size="${fs}" font-weight="bold" letter-spacing=".2" fill="#2a2016">${lines.map((l,i)=>`<tspan x="228.4" dy="${i?lh:0}">${l}</tspan>`).join("")}</text>
+  </g>`}function sealSVG(cx,cy,i){const[key,g,col]=ERA_SEALS[i],arc=(r,a0,a1)=>{const P=t=>`${(cx+r*Math.cos(t*Math.PI/180)).toFixed(2)} ${(cy+r*Math.sin(t*Math.PI/180)).toFixed(2)}`;return`M ${P(a0)} A ${r} ${r} 0 0 1 ${P(a1)}`};return`<g class="gnt-seal" data-period="${key}">
     <circle cx="${cx+1.2}" cy="${cy+1.8}" r="11.2" fill="${INK}" pointer-events="none"/>
     <g class="seal-press">
     <circle cx="${cx}" cy="${cy}" r="10.5" fill="#c29a4e" stroke="${INK}" stroke-width="2.4"/>
@@ -238,7 +243,6 @@
     <path d="M 194.2 306.8 A 3.6 3.6 0 0 1 188.8 305.6" fill="none" stroke="#8a6a2c" stroke-width="1.4" pointer-events="none"/>
     </g>
     </g>
-    <text x="192" y="348" text-anchor="middle" font-family="monospace" font-size="7" letter-spacing="1.5" fill="#f0dcae">ESCAPE</text>
   </g>
 </g>
 
@@ -281,8 +285,8 @@
     </g>
     
     <g fill="none" stroke-linecap="round">
-      <path d="M 223.5 321 A 6 4.2 0 0 1 234.5 319" stroke="#262d33" stroke-width="2.2"/>
-      <path d="M 224 322.6 A 6 4.2 0 0 0 235 320.4" stroke="#aeb8bf" stroke-width="1.1"/>
+      <path d="M 223.5 334 A 6 4.2 0 0 1 234.5 332" stroke="#262d33" stroke-width="2.2"/>
+      <path d="M 224 335.6 A 6 4.2 0 0 0 235 333.4" stroke="#aeb8bf" stroke-width="1.1"/>
       <path d="M 533 366 A 4 6 0 0 1 537.6 356.4" stroke="#20272c" stroke-width="2"/>
       <path d="M 535 367.4 A 4 6 0 0 0 539.4 357.6" stroke="#8f9aa2" stroke-width="1"/>
     </g>
@@ -312,6 +316,7 @@
   <path d="M 222 192 A 7 7 0 0 1 226.6 189.2" fill="none" stroke="#eef2f4" stroke-width="1.4" stroke-linecap="round" opacity=".7" pointer-events="none"/>
   
   <g id="gnt-seals">${sealSVG(228,232,0)}${sealSVG(228,258,1)}${sealSVG(228,284,2)}</g>
+  ${valveTagSVG()}
   <g id="gnt-boomg">
     <rect x="500" y="190" width="32" height="138" rx="6" fill="#0e1216" stroke="${INK}" stroke-width="3"/>
     <rect class="bseg" data-z="g" x="504" y="313.4" width="24" height="8" rx="2"/>
