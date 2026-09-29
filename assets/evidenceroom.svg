@@ -1,28 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640"
      preserveAspectRatio="xMidYMax slice">
-<!-- ══════════════════════════════════════════════════════════════════════
-     SALA DE EVIDENCIAS SECRETAS: C.R.O.N.O.S.
-     O fundo do quarto que se ve pela janela. Autorado como a maleta e o
-     portal: materiais no defs, um grupo por parte fisica, profundidade por
-     luminosidade e nao por desenho maior.
-     Camadas, da parede para a frente: parede -> estantes -> gaiola de tela
-     -> luminarias -> escada -> carrinho.
 
-     O QUE MUDOU, E SO ISTO. As tres prateleiras estavam cheias de CAIXAS DE
-     PAPELAO, a mesma materia dos lotes que vao a leilao na frente delas: o
-     cenario competia com o jogo e a mesa inteira virava uma parede de
-     papelao. As caixas sairam. No lugar entraram tres familias que sao de
-     sala de evidencia e NAO sao caixa de papelao, cada prateleira com a sua:
-
-       nivel 3 (alto, escuro) -> tubos de documento e livros-razao de pe
-       nivel 2 (meio)         -> armarios de aco numerados e lacrados
-       nivel 1 (baixo, claro) -> sacos de apreensao pendurados e frascos
-
-     Tudo o mais desta sala continua onde estava, do jeito que estava: a
-     parede, o lambri, os montantes, a gaiola, as duas pendentes com o cone
-     quente, a escada encostada, o carrinho de arquivo, o estencil tarjado e
-     a poeira parada no ar.
-     ══════════════════════════════════════════════════════════════════════ -->
 <defs>
   <linearGradient id="rm-wall" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%" stop-color="#2b2015"/><stop offset="46%" stop-color="#231a11"/>
@@ -32,29 +10,29 @@
     <stop offset="0%" stop-color="#5b4930"/><stop offset="38%" stop-color="#42341f"/>
     <stop offset="100%" stop-color="#2a2013"/>
   </linearGradient>
-  <!-- ─── o aco das gavetas de apreensao: frio, para nao virar papelao ─── -->
+  
   <linearGradient id="rm-steel" x1="0" y1="0" x2=".3" y2="1">
     <stop offset="0%" stop-color="#4b565a"/><stop offset="48%" stop-color="#394347"/>
     <stop offset="100%" stop-color="#232b2e"/>
   </linearGradient>
-  <!-- ─── o plastico leitoso do saco de apreensao ─── -->
+  
   <linearGradient id="rm-bag" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%" stop-color="#b9c2bd" stop-opacity=".5"/>
     <stop offset="55%" stop-color="#8e9a95" stop-opacity=".42"/>
     <stop offset="100%" stop-color="#5f6a67" stop-opacity=".5"/>
   </linearGradient>
-  <!-- ─── o vidro dos frascos de deposito ─── -->
+  
   <linearGradient id="rm-glass" x1="0" y1="0" x2="1" y2="0">
     <stop offset="0%" stop-color="#3c4a48" stop-opacity=".8"/>
     <stop offset="34%" stop-color="#7e908c" stop-opacity=".6"/>
     <stop offset="100%" stop-color="#2b3634" stop-opacity=".85"/>
   </linearGradient>
-  <!-- ─── a lombada de couro dos livros-razao ─── -->
+  
   <linearGradient id="rm-ledger" x1="0" y1="0" x2="1" y2="0">
     <stop offset="0%" stop-color="#4a2f24"/><stop offset="45%" stop-color="#63402e"/>
     <stop offset="100%" stop-color="#2e1d15"/>
   </linearGradient>
-  <!-- a luz das pendentes, um cone quente por lampada -->
+  
   <radialGradient id="rm-glow" cx=".5" cy="0" r=".85">
     <stop offset="0%" stop-color="#ffd89a" stop-opacity=".5"/>
     <stop offset="55%" stop-color="#e8a94e" stop-opacity=".12"/>
@@ -64,29 +42,27 @@
     <stop offset="0%" stop-color="#d9b571"/><stop offset="50%" stop-color="#95733a"/>
     <stop offset="100%" stop-color="#5e4823"/>
   </linearGradient>
-  <!-- a tela de arame da gaiola -->
+  
   <pattern id="rm-mesh" width="18" height="18" patternUnits="userSpaceOnUse">
     <path d="M0 0 L18 18 M18 0 L0 18" stroke="#cbbf9e" stroke-opacity=".16"
           stroke-width="1.2" fill="none"/>
   </pattern>
-  <!-- a poeira que fica parada no ar de deposito -->
+  
   <radialGradient id="rm-dust" cx=".5" cy=".5" r=".5">
     <stop offset="0%" stop-color="#ffe9c0" stop-opacity=".5"/>
     <stop offset="100%" stop-color="#ffe9c0" stop-opacity="0"/>
   </radialGradient>
 
-  <!-- ══════ UMA GAVETA DE APREENSAO, para o nivel do meio ══════
-       Porta de aco com chapa de numero, porta-etiqueta e ferrolho. Tudo
-       trancado, lacrado, etiquetado e arquivado. -->
+  
   <g id="rm-drawer">
     <rect x="0" y="0" width="88" height="60" fill="#161c1e"/>
     <rect x="3" y="3" width="82" height="54" fill="url(#rm-steel)"/>
     <rect x="3" y="3" width="82" height="1.6" fill="#8ea0a4" opacity=".45"/>
     <rect x="3" y="55.4" width="82" height="1.6" fill="#000" opacity=".5"/>
-    <!-- o puxador embutido -->
+    
     <rect x="30" y="14" width="28" height="9" rx="2" fill="#101617"/>
     <rect x="30" y="14" width="28" height="2.5" rx="1" fill="#000" opacity=".5"/>
-    <!-- o porta-etiqueta com o cartao amarelado -->
+    
     <rect x="14" y="33" width="40" height="15" fill="#0d1112"/>
     <rect x="15.5" y="34.5" width="37" height="12" fill="#cdbf9a" opacity=".42"/>
     <g stroke="#3a3020" stroke-opacity=".4" stroke-width=".9">
@@ -94,15 +70,15 @@
     </g>
     <rect x="14" y="33" width="40" height="15" fill="none"
           stroke="url(#rm-brass)" stroke-width="1.2"/>
-    <!-- o ferrolho -->
+    
     <rect x="62" y="34" width="12" height="13" rx="1.5" fill="#131819"/>
     <rect x="63.5" y="35.5" width="9" height="4.5" rx="1" fill="#5a6a70"/>
   </g>
 </defs>
 
-<!-- ══════════ a parede ══════════ -->
+
 <rect width="1200" height="640" fill="url(#rm-wall)"/>
-<!-- o lambri de madeira, no rodape -->
+
 <rect y="556" width="1200" height="84" fill="#241a10"/>
 <g opacity=".5" stroke="#100b06" stroke-width="2">
   <path d="M60 556 V640"/><path d="M188 556 V640"/><path d="M316 556 V640"/>
@@ -111,27 +87,9 @@
 </g>
 <rect y="552" width="1200" height="6" fill="#6b5636" opacity=".45"/>
 
-<!-- ══════════════════════════════════════════════════════════════════════
-     A PAREDE EM TRES BAIAS, E NAO UMA GRADE.
 
-     A versao anterior repetia a MESMA gaveta de aco treze vezes por fileira,
-     tres fileiras, e ficou estupidamente repetitiva. O erro foi de
-     raciocinio: eu li "as gavetas cinzas ficaram boas" e conclui "entao so
-     gaveta cinza", quando a resposta certa era usar a gaveta boa no lugar
-     dela e deixar o resto da sala ser outra coisa.
 
-     Uma sala de apreensoes tem ZONAS, porque tem funcoes diferentes: o que
-     esta trancado, o que esta arquivado, o que espera processamento. Entao:
 
-       ESQUERDA  a gaiola de tela do chao ao teto, area restrita
-       CENTRO    as gavetas de aco em DUAS fileiras, com a bancada embaixo
-       DIREITA   estante aberta: livros-razao, tubos de mapa, casaco no gancho
-
-     E a parede ganha o que parede de reparticao tem: conduite no alto e o
-     quadro de avisos com papeis presos por tachinha.
-     ══════════════════════════════════════════════════════════════════════ -->
-
-<!-- ─── o conduite eletrico correndo no alto ─── -->
 <g id="rm-conduit">
   <rect x="0" y="74" width="1200" height="11" rx="5" fill="#2e2417"/>
   <rect x="0" y="74" width="1200" height="3" rx="1.5" fill="#5b4930" opacity=".8"/>
@@ -145,13 +103,13 @@
 
 
 
-<!-- ═══════════ BAIA CENTRAL: AS GAVETAS E A BANCADA ═══════════ -->
+
 <g id="rm-bank">
   <g fill="#1a1209">
     <rect x="368" y="96" width="15" height="460"/>
     <rect x="800" y="96" width="15" height="460"/>
   </g>
-  <!-- fileira de cima, mais escura -->
+  
   <g opacity=".5">
     <rect x="383" y="230" width="417" height="13" fill="url(#rm-shelf)"/>
     <g transform="translate(392,170)"><use href="#rm-drawer"/></g>
@@ -159,7 +117,7 @@
     <g transform="translate(596,170)"><use href="#rm-drawer"/></g>
     <g transform="translate(698,170)"><use href="#rm-drawer"/></g>
   </g>
-  <!-- fileira de baixo, na luz -->
+  
   <g opacity=".92">
     <rect x="383" y="368" width="417" height="14" fill="url(#rm-shelf)"/>
     <g transform="translate(392,308)"><use href="#rm-drawer"/></g>
@@ -167,11 +125,7 @@
     <g transform="translate(596,308)"><use href="#rm-drawer"/></g>
     <g transform="translate(698,308)"><use href="#rm-drawer"/></g>
   </g>
-  <!-- ─── A BANCADA DE TRABALHO, e o "martelo" desta casa ───
-       Nao existe martelo de leiloeiro num deposito: o que existe e o CARIMBO
-       DE BORRACHA com que o funcionario bate no processo quando o lote sai.
-       Ele fica aqui, na almofada de tinta, ao lado do livro de registro
-       aberto. E o elemento de leilao sutil e funcional, improvisado. -->
+  
   <g id="rm-bench">
     <rect x="383" y="452" width="417" height="16" fill="#5b4930"/>
     <rect x="383" y="452" width="417" height="4" fill="#8a6f42" opacity=".8"/>
@@ -196,7 +150,7 @@
     <rect x="704" y="422" width="56" height="8" rx="1" fill="#cdbf9a"
           opacity=".55"/>
   </g>
-  <!-- o quadro de avisos, com papeis presos por tachinha -->
+  
   <g id="rm-board">
     <rect x="404" y="100" width="180" height="66" rx="2" fill="#3a2c1c"/>
     <rect x="410" y="106" width="168" height="54" fill="#241a10"/>
@@ -215,7 +169,7 @@
   </g>
 </g>
 
-<!-- ═══════════ BAIA DIREITA: A ESTANTE ABERTA ═══════════ -->
+
 <g id="rm-openshelf">
   <g fill="#1a1209"><rect x="1160" y="96" width="15" height="460"/></g>
   <g fill="url(#rm-shelf)">
@@ -223,7 +177,7 @@
     <rect x="815" y="348" width="345" height="13"/>
     <rect x="815" y="470" width="345" height="13"/>
   </g>
-  <!-- livros-razao de pe, alturas irregulares -->
+  
   <g fill="url(#rm-ledger)">
     <rect x="828" y="158" width="19" height="54"/>
     <rect x="849" y="150" width="24" height="62"/>
@@ -239,7 +193,7 @@
     <rect x="828" y="176" width="133" height="2.5"/>
     <rect x="1044" y="178" width="64" height="2.5"/>
   </g>
-  <!-- o cesto com os tubos de mapa -->
+  
   <g id="rm-tubes">
     <path d="M840 348 h96 l-10 -74 h-76 Z" fill="#2f2619"/>
     <path d="M840 348 h96 l-2 -14 h-92 Z" fill="#453724"/>
@@ -256,7 +210,7 @@
       <ellipse cx="921" cy="249" rx="9" ry="4" transform="rotate(13 921 249)"/>
     </g>
   </g>
-  <!-- caixas de arquivo deitadas na prateleira do meio -->
+  
   <g>
     <rect x="990" y="292" width="86" height="56" fill="#4a3f2c"/>
     <rect x="990" y="292" width="86" height="9" fill="#63553b"/>
@@ -264,7 +218,7 @@
     <rect x="1082" y="300" width="70" height="48" fill="#443a29"/>
     <rect x="1082" y="300" width="70" height="8" fill="#5c4f38"/>
   </g>
-  <!-- o casaco esquecido no gancho: o unico objeto humano da sala -->
+  
   <g id="rm-coat">
     <rect x="1114" y="212" width="8" height="16" fill="#4a4133"/>
     <path d="M1118 228 q-26 10 -30 46 q-4 40 4 84 q22 8 52 0 q8 -44 4 -84
@@ -277,26 +231,11 @@
   </g>
 </g>
 
-<!-- ═══════════ BAIA ESQUERDA: A CELA ═══════════
-     A tela de arame nao deu certo e o motivo e simples: arame diz DEPOSITO,
-     e o que tem que estar ali e uma CELA. Sao duas ideias diferentes e a
-     segunda e muito mais forte, porque muda o que a sala inteira significa:
-     a corporacao nao guarda so objeto apreendido, guarda gente. Isso nao
-     precisa de uma linha de texto, precisa de uma silhueta sentada.
 
-     Entao aqui e cela de delegacia mesmo: barras redondas verticais em vez
-     de tela, batente de aco, porta com dobradicas e chapa de fechadura,
-     tijolo aparente atras, banco de pedra encostado no fundo, e a luz da
-     pendente entrando e riscando o chao em barras.
-
-     A cela fica VAZIA. O vulto de preso foi desenhado e saiu a pedido: o
-     banco vazio conta a mesma historia com menos ruido, porque uma cela com
-     cobertor dobrado e ninguem dentro deixa a pergunta em aberto.
-     ══════════════════════════════════════════════════════════════════════ -->
 <g id="rm-cell">
-  <!-- o vao da cela, escuro -->
+  
   <rect x="30" y="96" width="330" height="460" fill="#0a0806"/>
-  <!-- o tijolo aparente da parede do fundo, mal visto no escuro -->
+  
   <g fill="#1c1510" opacity=".85">
     <rect x="42" y="150" width="304" height="392"/>
   </g>
@@ -313,35 +252,34 @@
     <path d="M110 390 V430"/><path d="M212 390 V430"/><path d="M314 390 V430"/>
     <path d="M60 430 V470"/><path d="M162 430 V470"/><path d="M264 430 V470"/>
   </g>
-  <!-- o piso de concreto da cela, com o ralo -->
+  
   <rect x="42" y="470" width="304" height="86" fill="#191512"/>
   <ellipse cx="290" cy="516" rx="16" ry="6" fill="#0d0b09"/>
   <g stroke="#2a241e" stroke-width="1.4" opacity=".6">
     <path d="M278 512 H302"/><path d="M278 518 H302"/>
   </g>
 
-  <!-- o banco de pedra encostado no fundo -->
+  
   <g id="rm-bunk">
     <path d="M64 452 h150 l10 12 h-160 Z" fill="#3a342c"/>
     <rect x="64" y="464" width="150" height="16" fill="#2a251f"/>
     <rect x="64" y="452" width="150" height="4" fill="#4e463a" opacity=".8"/>
     <rect x="72" y="480" width="12" height="42" fill="#221e19"/>
     <rect x="194" y="480" width="12" height="42" fill="#221e19"/>
-    <!-- o cobertor dobrado na ponta -->
+    
     <path d="M176 440 q22 -6 38 2 l2 12 h-42 Z" fill="#3f3a44" opacity=".9"/>
   </g>
 
 
 
-  <!-- ─── A GRADE: barras redondas, nao tela ─── -->
+  
   <g id="rm-bars">
-    <!-- o batente de aco em volta do vao -->
+    
     <rect x="24" y="90" width="342" height="10" fill="#4a5257"/>
     <rect x="24" y="546" width="342" height="12" fill="#3c4348"/>
     <rect x="24" y="90" width="12" height="468" fill="#454d52"/>
     <rect x="354" y="90" width="12" height="468" fill="#333a3e"/>
-    <!-- as barras: um risco escuro e um fio de luz por barra, que e o que
-         faz cada uma parecer redonda em vez de reta -->
+    
     <g>
       <rect x="52" y="100" width="9" height="446" fill="#1b2124"/>
       <rect x="52" y="100" width="3" height="446" fill="#77848b"/>
@@ -362,7 +300,7 @@
       <rect x="322" y="100" width="9" height="446" fill="#1b2124"/>
       <rect x="322" y="100" width="3" height="446" fill="#77848b"/>
     </g>
-    <!-- as travessas horizontais -->
+    
     <g fill="#242b2f">
       <rect x="36" y="188" width="318" height="9"/>
       <rect x="36" y="418" width="318" height="9"/>
@@ -372,15 +310,15 @@
       <rect x="36" y="418" width="318" height="2.5"/>
     </g>
 
-    <!-- ─── A PORTA DA CELA ─── -->
+    
     <g id="rm-celldoor">
-      <!-- o batente da folha -->
+      
       <rect x="196" y="96" width="12" height="454" fill="#525a5f"/>
       <rect x="196" y="96" width="4" height="454" fill="#8a959b" opacity=".7"/>
-      <!-- as duas barras da folha, mais juntas -->
+      
       <rect x="202" y="100" width="9" height="446" fill="#1b2124"/>
       <rect x="202" y="100" width="3" height="446" fill="#77848b"/>
-      <!-- as dobradicas -->
+      
       <g fill="#3c4348">
         <rect x="190" y="160" width="24" height="20" rx="3"/>
         <rect x="190" y="330" width="24" height="20" rx="3"/>
@@ -391,7 +329,7 @@
         <rect x="190" y="330" width="24" height="4" rx="2"/>
         <rect x="190" y="490" width="24" height="4" rx="2"/>
       </g>
-      <!-- a chapa da fechadura e a portinhola de inspecao -->
+      
       <rect x="152" y="286" width="46" height="62" rx="3" fill="#39413f"/>
       <rect x="152" y="286" width="46" height="5" rx="2" fill="#79868a"
             opacity=".6"/>
@@ -401,7 +339,7 @@
     </g>
   </g>
 
-  <!-- a luz da pendente entrando e riscando o chao em barras -->
+  
   <g opacity=".16" fill="#ffdca8">
     <path d="M330 470 l-24 86 h20 l24 -86 Z"/>
     <path d="M300 470 l-24 86 h20 l24 -86 Z"/>
@@ -409,46 +347,36 @@
     <path d="M240 470 l-24 86 h20 l24 -86 Z"/>
   </g>
 
-  <!-- a placa esmaltada, aparafusada no batente -->
+  
   <rect x="238" y="120" width="112" height="30" rx="3" fill="#1d2523"
         stroke="#4e5f5c" stroke-width="2"/>
   <text x="294" y="141" text-anchor="middle" font-family="monospace"
         font-size="14" letter-spacing="2.5" fill="#7f9a92">CELA 1</text>
 </g>
 
-<!-- ══════════ as LUMINARIAS pendentes ══════════ -->
+
 <g id="rm-lamps">
-  <!-- cone de luz de cada uma, por tras das cupulas -->
+  
   <ellipse cx="300" cy="292" rx="230" ry="330" fill="url(#rm-glow)"/>
   <ellipse cx="900" cy="292" rx="230" ry="330" fill="url(#rm-glow)"/>
-  <!-- AS CUPULAS DESCERAM 62px. A janela e um ARCO, e o topo dela e estreito:
-       penduradas a 104 as duas cupulas caiam justamente na curva da pedra e
-       apareciam cortadas ao meio. O fio ficou mais comprido, que e o que
-       acontece de verdade num pe-direito alto de deposito, e as cupulas
-       passaram a cair dentro do vao. -->
-  <!-- AS PENDENTES GANHARAM CORPO. Eram um trapezio chapado de 76 de boca com
-       um risco de luz embaixo: nao tinham cupula, nao tinham bocal, nao tinham
-       filamento, e a luz nao chegava na bancada. Agora cada uma e uma peca
-       montada: a canopla no teto, o fio, o bocal de latao, a cupula esmaltada
-       (escura por fora, BRANCA por dentro, que e o que faz uma lampada parecer
-       acesa), o filamento, o aro de luz na boca e o cone volumetrico descendo
-       ate onde os lotes estao. -->
+  
+  
   <g id="rm-lampA">
     <ellipse cx="300" cy="6" rx="16" ry="5" fill="#241a10"/>
     <path d="M300 6 V150" stroke="#191108" stroke-width="3"/>
     <rect x="291" y="150" width="18" height="16" rx="3" fill="url(#rm-brass)"/>
-    <!-- a cupula: fora escura, dentro clara -->
+    
     <path d="M242 208 q58 -66 116 0 Z" fill="#20160c"/>
     <path d="M250 208 q50 -54 100 0 Z" fill="#f7cf88" opacity=".92"/>
     <path d="M242 208 q58 -66 116 0 Z" fill="none" stroke="#3a2a16"
           stroke-width="2.5"/>
     <ellipse cx="300" cy="208" rx="58" ry="8" fill="#2a1e12"/>
     <ellipse cx="300" cy="208" rx="47" ry="6" fill="#fff0cc"/>
-    <!-- o filamento -->
+    
     <path d="M292 200 q8 12 16 0" stroke="#fff8e0" stroke-width="2.4"
           fill="none"/>
     <ellipse cx="300" cy="203" rx="11" ry="13" fill="#fff6dc" opacity=".9"/>
-    <!-- o cone que desce ate a bancada -->
+    
     <path d="M254 212 L156 640 L444 640 L346 212 Z" fill="url(#rm-glow)"
           opacity=".55"/>
   </g>
@@ -470,20 +398,9 @@
   </g>
 </g>
 
-<!-- ══════════ a ESCADA encostada ══════════ -->
-<!-- A ESCADA ESTAVA QUASE INVISIVEL E MAL FEITA: dois riscos escuros com seis
-     riscos atravessados, na mesma cor da parede, sem volume nenhum. Uma escada
-     de deposito e madeira grossa e clara, gasta no meio de cada degrau por
-     onde o pe pisa, com o ferro que prende os montantes a mostra. Aqui ela
-     ganha as duas faces do montante (uma pega luz, a outra nao), degraus com
-     topo claro e sombra embaixo, e a marca do pe no centro. -->
-<!-- ══════════════════════════════════════════════════════════════════════
-     A ESCADA SAIU DO CANTO. Ela estava encostada na ponta esquerda da parede,
-     e a janela e um ARCO: a ponta esquerda e justamente o pedaco que a curva
-     da pedra come. Uma peca de cenario escondida atras da moldura e uma peca
-     que nao existe. Ela vem para dentro do campo, encostada entre duas baias,
-     onde da para ver que alguem sobe ali para alcancar a prateleira de cima.
-     ══════════════════════════════════════════════════════════════════════ -->
+
+
+
 <g id="rm-ladder">
   <path d="M414 108 L378 566 L394 566 L428 108 Z" fill="#8a7042"/>
   <path d="M428 108 L394 566 L402 566 L434 108 Z" fill="#584526"/>
@@ -517,11 +434,7 @@
 
 
 
-<!-- A CADEIRA VIROU BANQUETA. A cadeira que eu tinha feito era um monte de
-     paralelogramos sem assento legivel; do tamanho em que aparece, uma
-     banqueta le muito melhor, porque a silhueta e so o disco do assento mais
-     tres pernas, e o disco ja diz "da para sentar". A sombra no chao e o
-     que a coloca no comodo. -->
+
 <g id="rm-stool">
   <ellipse cx="252" cy="558" rx="46" ry="9" fill="#000" opacity=".5"/>
   <path d="M212 470 h80 l-6 12 h-68 Z" fill="#8a6f42"/>
@@ -534,7 +447,7 @@
         fill="none"/>
 </g>
 
-<!-- ═══════════ O CARRINHO DE ARQUIVO, no chao ═══════════ -->
+
 <g id="rm-cart">
   <ellipse cx="1096" cy="556" rx="76" ry="10" fill="#000" opacity=".5"/>
   <path d="M1030 430 h132 v112 h-132 Z" fill="#3b3126"/>

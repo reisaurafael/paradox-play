@@ -2,17 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- the tab icon, declared: without it every browser asks the site root for /favicon.ico (a 404 on Pages) -->
+  
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PARADOXO · Split-screen table</title>
-  <link href="fonts/fonts.css?202609290308" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/mesa.css?202609290308" />
+  <link href="fonts/fonts.css?202609290820" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/table.css?202609290820" />
 </head>
 <body>
-  <!-- The split-screen table: one monitor, up to four panels, one Xbox controller
-       each. Each panel is the game itself in an iframe; mesa.js pairs the
-       controllers, sets up the room and feeds each panel every frame. -->
+  
   <section id="setup" class="setup">
     <header class="setup-head">
       <h1 class="wordmark">PARADOXO</h1>
@@ -69,6 +67,6 @@
   <section id="table" class="table" hidden></section>
   <button id="btn-leave" class="leave" type="button" title="End the table" hidden>&#x2715;</button>
 
-  <script type="module" src="js/mesa.js?202609290308"></script>
+  <script type="module" src="js/table.js?202609290820"></script>
 </body>
 </html>

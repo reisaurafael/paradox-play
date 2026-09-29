@@ -29,7 +29,7 @@
   </clipPath>
 </defs>
 
-<!-- ═══ THROUGH THE WINDOW: the stall ═══ -->
+
 <g clip-path="url(#pt-opening)">
   <rect x="110" y="60" width="880" height="560" fill="url(#pt-dusk)"/>
   <g fill="#cfd8ff">
@@ -39,7 +39,7 @@
     <path d="M 508 128 h 14 M 515 121 v 14" stroke="#cfd8ff" stroke-width="1.6" opacity=".7"/>
   </g>
   <g transform="translate(0,90)">
-  <!-- broad vertical planks -->
+  
   <g fill="url(#pt-woodD)" stroke="#221708" stroke-width="3">
     <path d="M 136 208 L 232 204 L 228 452 L 132 454 Z"/>
     <path d="M 232 204 L 340 202 L 338 450 L 228 452 Z"/>
@@ -56,7 +56,7 @@
   </g>
   <ellipse cx="540" cy="330" rx="430" ry="190" fill="url(#pt-lamp)"/>
 
-  <!-- tilted shelf, chunky wares (left) -->
+  
   <g>
     <path d="M 168 300 L 400 288 L 402 305 L 170 318 Z" fill="url(#pt-wood)" stroke="#221708" stroke-width="3"/>
     <path d="M 188 300 L 184 252 Q 200 234 218 250 L 220 298 Z" fill="#3f6a58" stroke="#182a22" stroke-width="2.6"/>
@@ -66,7 +66,7 @@
     <path d="M 316 292 L 314 262 L 366 258 L 368 290 Z" fill="#5b7a8a" stroke="#16242c" stroke-width="2.6"/>
   </g>
 
-  <!-- herbs + garlic -->
+  
   <g stroke-linecap="round">
     <path d="M 452 198 L 450 240" stroke="#38291a" stroke-width="3"/>
     <path d="M 436 240 Q 450 278 466 240 Q 462 284 444 274 Q 430 256 436 240 Z" fill="#4a6a3c" stroke="#20301a" stroke-width="2.4"/>
@@ -76,7 +76,7 @@
     <circle cx="514" cy="256" r="10" fill="#e4dccc" stroke="#221708" stroke-width="2.2"/>
   </g>
 
-  <!-- nailed parchment bill -->
+  
   <g transform="rotate(2 600 330)">
     <path d="M 574 300 L 632 296 L 636 358 L 627 366 L 578 368 Z" fill="#e0d4b2" stroke="#4a3a1c" stroke-width="2.2"/>
     <circle cx="602" cy="303" r="2.8" fill="#3a3f47" stroke="#14161c" stroke-width="1.2"/>
@@ -86,7 +86,7 @@
     <circle cx="620" cy="350" r="6" fill="#8c2018" stroke="#5a120c" stroke-width="1.2"/>
   </g>
 
-  <!-- hanging lantern, lit -->
+  
   <g>
     <path d="M 668 192 L 666 234" stroke="#221708" stroke-width="3.2"/>
     <circle cx="666" cy="262" r="38" fill="#ffd68a" opacity=".18"/>
@@ -95,14 +95,14 @@
     <path d="M 652 234 L 666 224 L 680 234" fill="#2c2f35" stroke="#14161c" stroke-width="2.8"/>
   </g>
 
-  <!-- the SIGNPOST base: a worn wooden post (the arrow planks are live DOM) -->
+  
   <g>
     <path d="M 848 172 L 872 172 L 878 452 L 846 452 Z" fill="url(#pt-wood)" stroke="#221708" stroke-width="3"/>
     <path d="M 852 180 Q 856 300 854 448" stroke="#61462a" stroke-width="2" opacity=".8" fill="none"/>
     <circle cx="860" cy="188" r="3" fill="#221708"/>
   </g>
 
-  <!-- THE COUNTER -->
+  
   <g>
     <path d="M 118 428 L 982 428 L 982 462 L 118 462 Z" fill="url(#pt-wood)" stroke="#221708" stroke-width="3.2"/>
     <path d="M 118 428 L 982 428 L 982 436 L 118 436 Z" fill="#fff" opacity=".1"/>
@@ -119,7 +119,7 @@
     <circle cx="900" cy="512" r="3.2" fill="#221708"/>
   </g>
 
-  <!-- striped canopy -->
+  
   <g>
     <path d="M 116 158 L 984 158 L 984 198 Q 954 218 922 198 Q 890 218 858 198 Q 826 218 794 198 Q 762 218 730 198 Q 698 218 666 198 Q 634 218 602 198 Q 570 218 538 198 Q 506 218 474 198 Q 442 218 410 198 Q 378 218 346 198 Q 314 218 282 198 Q 250 218 218 198 Q 186 218 154 198 Q 132 212 116 198 Z"
           fill="#8a3a30" stroke="#221708" stroke-width="2.8"/>
@@ -136,7 +136,7 @@
   </g>
 </g>
 
-<!-- ═══ ENERGY hugging the mouth ═══ -->
+
 <g fill="none">
   <path d="M 138 600 L 138 424 A 412 332 0 0 1 962 424 L 962 600" stroke="#5fd08a" stroke-width="20" opacity=".16"/>
   <path d="M 133 600 L 133 422 A 417 337 0 0 1 967 422 L 967 600" stroke="#7ff0b0" stroke-width="7" opacity=".75"/>
@@ -146,7 +146,7 @@
 </g>
 
 
-<!-- ═══ THE MEGALITH ARCH: wide ellipse, 11 hewn stones ═══ -->
+
 <g stroke="#14161c" stroke-width="4">
   <path d="M 64 644 L 62 440 L 76 420 L 130 428 L 128 640 L 110 644 Z" fill="url(#pt-stone)"/>
   <path d="M 62 440 L 84 330 L 102 318 L 158 348 L 132 432 L 76 420 Z" fill="url(#pt-stoneD)"/>
@@ -161,19 +161,19 @@
   <path d="M 1010 334 L 1036 444 L 1022 462 L 970 452 L 936 368 L 1004 356 Z" fill="url(#pt-stoneD)"/>
   <path d="M 1036 444 L 1038 644 L 990 644 L 972 640 L 970 452 L 1022 462 Z" fill="url(#pt-stone)"/>
 </g>
-<!-- deep joints -->
+
 <g stroke="#14161c" stroke-width="5.5" fill="none" stroke-linecap="round">
   <path d="M 62 440 L 132 432 M 84 330 L 158 348 M 148 226 L 222 264 M 254 138 L 310 202 M 396 84 L 428 158"/>
   <path d="M 540 78 L 552 146 M 690 90 L 664 162 M 826 140 L 780 210 M 936 228 L 874 288 M 1010 334 L 936 368 M 1036 444 L 970 452"/>
 </g>
-<!-- tone variation -->
+
 <g stroke="none" opacity=".15">
   <path d="M 148 226 L 254 138 L 280 142 L 310 202 L 222 264 L 172 220 Z" fill="#0c0f14"/>
   <path d="M 396 84 L 540 78 L 552 146 L 428 158 L 416 94 Z" fill="#c8d2e0"/>
   <path d="M 826 140 L 936 228 L 938 252 L 874 288 L 780 210 L 832 162 Z" fill="#0c0f14"/>
   <path d="M 1036 444 L 1038 644 L 990 644 L 972 640 L 970 452 L 1022 462 Z" fill="#c8d2e0"/>
 </g>
-<!-- chips + top highlights -->
+
 <g stroke="#14161c" stroke-width="2.2" fill="none" opacity=".7">
   <path d="M 84 500 l 20 -8 M 116 300 l -18 12 M 190 210 l 14 16 M 330 130 l 8 22 M 470 100 l 18 8"/>
   <path d="M 620 108 l -10 18 M 760 172 l -18 8 M 900 262 l -20 6 M 990 420 l -20 -4"/>
@@ -182,7 +182,7 @@
   <path d="M 258 142 L 396 88 M 400 88 L 536 82 M 546 82 L 686 94"/>
   <path d="M 88 334 L 150 230 M 830 144 L 932 230"/>
 </g>
-<!-- brass conduit + rivets -->
+
 <path d="M 76 636 Q 60 320 210 176 Q 366 60 550 56 Q 734 60 890 176 Q 1040 320 1024 636"
       stroke="url(#pt-brass)" stroke-width="4" fill="none" opacity=".55"/>
 <g fill="#a67e3c" stroke="#3a2a12" stroke-width="1.6">
@@ -190,7 +190,7 @@
   <circle cx="410" cy="100" r="5"/><circle cx="562" cy="94" r="5"/><circle cx="716" cy="112" r="5"/>
   <circle cx="872" cy="196" r="5"/><circle cx="978" cy="310" r="5"/><circle cx="1022" cy="470" r="5"/>
 </g>
-<!-- ═══ FOOTING: sill + stylobate, the window LANDS on the desk line ═══ -->
+
 <g stroke="#14161c" stroke-width="4">
   <path d="M 120 598 L 980 598 L 986 616 L 984 642 L 116 642 L 114 616 Z" fill="url(#pt-stone)"/>
   <path d="M 40 640 L 1060 640 L 1064 700 L 36 700 Z" fill="url(#pt-stoneD)"/>
@@ -214,7 +214,7 @@
 <g fill="#7ff0b0" opacity=".4">
   <ellipse cx="140" cy="601" rx="15" ry="3.4"/><ellipse cx="960" cy="601" rx="13" ry="3"/>
 </g>
-<!-- carved runes -->
+
 <g stroke="#7ff0b0" stroke-width="3.2" fill="none" opacity=".95" stroke-linecap="round" stroke-linejoin="round">
   <path d="M 92 388 v -28 l 22 13 l -22 15 Z"/>
   <path d="M 178 274 l 13 -26 l 13 26 m -19.5 -11 h 13"/>
@@ -223,7 +223,7 @@
   <path d="M 810 190 h 26 m -13 -13 v 26 m -9 -22 l 18 18"/>
   <path d="M 962 344 h 22 l -16 18 h 20 m -16 -29 v 40"/>
 </g>
-<!-- keystone core -->
+
 <g>
   <circle cx="550" cy="102" r="21" fill="#221808" stroke="#14161c" stroke-width="3.2"/>
   <circle cx="550" cy="102" r="15" fill="none" stroke="url(#pt-brass)" stroke-width="3"/>

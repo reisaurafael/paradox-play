@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="play-shim.js?202609290308"></script>
+  <script src="play-shim.js?202609290820"></script>
   <meta charset="UTF-8" />
-  <!-- the tab icon, declared: without it every browser asks the site root for /favicon.ico (a 404 on Pages) -->
+  
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <!-- PHONES AND TABLETS (js/touch.js, styles/mobile.css): installable to the home screen,
-       where it opens with no browser bars (the iPhone's only full screen). -->
+  
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#13100C" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -15,27 +14,25 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Paradox" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
-  <script src="js/touch.js?202609290308"></script>
+  <script src="js/touch.js?202609290820"></script>
   <title>Paradox: The Last Timeline</title>
   <meta name="description" content="Paradox: The Last Timeline. After the Incursion shattered time, one timeline is left, and it is sacred. A competitive time-travel board game by Rafael Reis Garcia." />
-  <!-- Identity type: Oswald (institutional display), JetBrains Mono (terminal data),
-       Inter (humanist body). Self-host these for the offline Tauri build later. -->
-  <link href="fonts/fonts.css?202609290308" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/app.css?202609290308" />
-  <link rel="stylesheet" href="styles/tutorial.css?202609290308" />
-  <link rel="stylesheet" href="styles/menu.css?202609290308" />
-  <link rel="stylesheet" href="styles/resume.css?202609290308" />
-  <link rel="stylesheet" href="styles/access.css?202609290308" />
-  <link rel="stylesheet" href="styles/fx.css?202609290308" />
-  <link rel="stylesheet" href="styles/help.css?202609290308" />
-  <link rel="stylesheet" href="styles/chronicle.css?202609290308" />
-  <link rel="stylesheet" href="styles/theme.css?202609290308" />
-  <link rel="stylesheet" href="styles/trailer.css?202609290308" />
-  <link rel="stylesheet" href="styles/card-art.css?202609290308" />
-  <link rel="stylesheet" href="styles/mobile.css?202609290308" />
-  <script type="module" src="js/trailer.js?202609290308"></script>
-  <!-- TEXT SIZE and the ACCESSIBLE INTERFACE apply before the first paint, so the
-       menu never flashes at the wrong size (main.js wires the controls). -->
+  
+  <link href="fonts/fonts.css?202609290820" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css?202609290820" />
+  <link rel="stylesheet" href="styles/tutorial.css?202609290820" />
+  <link rel="stylesheet" href="styles/menu.css?202609290820" />
+  <link rel="stylesheet" href="styles/resume.css?202609290820" />
+  <link rel="stylesheet" href="styles/access.css?202609290820" />
+  <link rel="stylesheet" href="styles/fx.css?202609290820" />
+  <link rel="stylesheet" href="styles/help.css?202609290820" />
+  <link rel="stylesheet" href="styles/chronicle.css?202609290820" />
+  <link rel="stylesheet" href="styles/theme.css?202609290820" />
+  <link rel="stylesheet" href="styles/trailer.css?202609290820" />
+  <link rel="stylesheet" href="styles/card-art.css?202609290820" />
+  <link rel="stylesheet" href="styles/mobile.css?202609290820" />
+  <script type="module" src="js/trailer.js?202609290820"></script>
+  
   <script>
   (function(){
     var ts = 1, ax = false;
@@ -61,11 +58,7 @@
   </script>
 </head>
 <body class="boot">
-  <!-- The WORLD: AI-painted temporal environments sit behind the whole board so the
-       player feels inside the universe. The backdrop cross-fades to match the era YOUR
-       traveler stands in (body[data-era]); a scrim + haze + drifting motes keep the UI
-       readable and the depth atmospheric; a dread layer lets the world darken and warp
-       as the horror grows in silence (:root --dread). -->
+  
   <div class="world-bg" aria-hidden="true"></div>
   <div class="world-haze" aria-hidden="true"></div>
   <div class="world-motes" aria-hidden="true"></div>
@@ -73,12 +66,8 @@
   <div class="grain" aria-hidden="true"></div>
   <div class="vignette" aria-hidden="true"></div>
 
-  <!-- ============================ LANDING ============================ -->
-  <!-- THE MAIN MENU. Learn to Play is the hero (most people start there), Play
-       vs AI the second action right under it, and on the desktop build the
-       friends block (host or join a room). The
-       browser demo hides every .desktop-only control (tools/play/play-shim.js),
-       so no text here promises friends or a room code the demo does not have. -->
+  
+  
   <section id="screen-landing" class="screen is-active">
     <div class="landing-frame panel bracketed">
       <header class="landing-head">
@@ -99,7 +88,7 @@
           <button class="btn btn-ghost btn-sm" id="btn-menu-settings" type="button">
             <span class="btn-ico" data-icon="gear"></span> Settings
           </button>
-          <!-- NEWS and COMMUNITY: each opens its own panel (js/menu-panels.js). -->
+          
           <nav class="menu-extras" id="menu-extras" aria-label="News and community">
             <button class="extra-entry news-entry" id="btn-news" type="button" aria-haspopup="dialog" aria-controls="panel-news">
               <span class="xe-tag">News</span>
@@ -115,12 +104,8 @@
 
       <div class="landing-body">
         <div class="landing-main">
-          <!-- LEARN TO PLAY, the hero: most people start here. One big inked comic
-               panel (the paper, the ink and the hard shadow of the case files and
-               the captions), HELA's eye on a burst in the player's colour, and the
-               line that says what it is. The whole panel is the button. -->
-          <!-- RECONNECT: a match saved on this device (after a reload) comes back
-               from here, above everything else (js/resume.js fills it). -->
+          
+          
           <section id="resume-card" class="resume-card" hidden></section>
 
           <button id="btn-tutorial" class="hero-learn" type="button"
@@ -146,7 +131,7 @@
             </span>
           </button>
 
-          <!-- PLAY VS AI, the second action: the table size and the button on one row. -->
+          
           <section class="menu-block play-block" aria-labelledby="play-title">
             <h2 class="form-title" id="play-title">Already know the rules?</h2>
             <p class="menu-lede" id="play-lede">A match against AI opponents, on this computer.</p>
@@ -186,19 +171,15 @@
               </div>
             </div>
             <div class="extras-row">
-              <!-- The Test Room: the auction mode under construction. Same lobby,
-                   different dimension. Never touches a classic match. -->
-              <button id="btn-testroom" class="btn btn-ghost btn-sm" type="button">
-                <span class="btn-ico" data-icon="machine"></span> Test Room
-              </button>
-              <!-- The split-screen table: one monitor, up to four controllers. -->
+              
+              
               <button id="btn-table" class="btn btn-ghost btn-sm" type="button">
                 <span class="btn-ico" data-icon="play"></span> Split-screen Table
               </button>
             </div>
           </section>
 
-          <!-- The service record, kept on this machine (main.js fills it). -->
+          
           <section class="menu-block record-block profile-card" id="profile-card">
             <h2 class="form-title">Service record</h2>
             <div class="prof-stats" id="prof-stats"></div>
@@ -211,8 +192,7 @@
         </div>
 
         <aside class="landing-side">
-          <!-- The profile: fixed name, the operative's colour and the service record,
-               all kept on this machine, no account and no server. -->
+          
           <section class="menu-block you-block">
             <h2 class="form-title">You</h2>
             <div class="field">
@@ -224,9 +204,7 @@
               <div class="prof-swatches" id="prof-swatches" role="radiogroup" aria-labelledby="lbl-colour"></div>
               <p class="menu-note colour-note">Your piece on the map, your case file and HELA, your guide, all wear it.<span class="desktop-only"> If two players pick the same colour, a draw decides.</span></p>
             </div>
-            <!-- PERSONA: the arm you play with, a masculine or a feminine build and a
-                 skin tone (js/menu-persona.js). Hidden until the arm's art offers
-                 window.__pdxPersona; the pointer's hand changes at once. -->
+            
             <div class="field persona-field" id="persona-field" hidden>
               <span class="lbl" id="lbl-persona">Your arm: <b id="persona-name"></b></span>
               <div class="persona-row">
@@ -235,20 +213,19 @@
               </div>
             </div>
           </section>
-          <!-- THE CHRONICLE's place (js/chronicle.js fills it: rank, today's orders). -->
+          
           <div id="chronicle-slot" class="chronicle-slot"></div>
         </aside>
       </div>
 
       <footer class="landing-foot mono small muted">
-        CORPORAÇÃO C.R.O.N.O.S. · TEMPORAL OPERATIONS DIVISION · "Time is a contract. Honour it."
+        C.R.O.N.O.S. CORPORATION · TEMPORAL OPERATIONS DIVISION · "Time is a contract. Honour it."
       </footer>
     </div>
   </section>
 
-  <!-- ============================ LOBBY ============================ -->
-  <!-- The match setup. It says who sits where, that every empty seat gets an AI
-       opponent, and what the Start button does. Back returns to the menu. -->
+  
+  
   <section id="screen-lobby" class="screen">
     <div class="lobby-frame panel bracketed">
       <header class="lobby-head">
@@ -286,11 +263,11 @@
     </div>
   </section>
 
-  <!-- ============================ GAME ============================ -->
+  
   <section id="screen-game" class="screen">
     <div id="cam" class="cam-world" data-scene="main">
     <div class="game-grid">
-      <!-- Top bar -->
+      
       <header class="topbar" id="topbar">
         <div class="topbar-left">
           <div class="cronos-mark small" id="cronos-mark-game"></div>
@@ -306,17 +283,12 @@
         </div>
       </header>
 
-      <!-- Left + centre STAGE: the arch Timeline frames the Market; the Time
-           Machine + Causality Generators toolbar sits across the bottom. -->
+      
       <main class="stage" id="stage">
-        <!-- Arch timeline, drawn as an SVG overlay across the whole stage -->
+        
         <div class="timeline-rail" id="timeline-rail"></div>
 
-        <!-- Market (merchant stock + merchant info + secret market) inside the arch.
-             The Merchant's Wagon is drawn as one inked-noir booth: a striped
-             canopy, hanging lanterns spilling warm light, an ornate framed interior and
-             time-wheels at the base. The live stock cards are the goods on display inside;
-             an ambient layer (dust, spotlight, drifting numerals) gives it life. -->
+        
         <section class="zone market-zone" id="market-zone">
           <div class="portal-bg" aria-hidden="true"></div>
           <div class="portal-fx" aria-hidden="true">
@@ -333,15 +305,14 @@
         </section>
       </main>
 
-      <!-- Right column: Operations Log (top) + player status (below) -->
+      
       <section class="zone log-zone panel" id="log-zone">
         <h3 class="zone-title"><span class="zt-ico" data-icon="log"></span> Operations Log</h3>
         <ul class="log-list" id="log-list"></ul>
       </section>
       <aside class="zone players-zone" id="players-zone"></aside>
 
-      <!-- FULL-WIDTH bottom band: THE GAUNTLET (the operative's wrist device) + the
-           separate Rucksack backpack on the left. -->
+      
       <div class="stage-toolbar">
         <section class="zone machine-zone panel bracketed" id="machine-zone">
           <h3 class="zone-title"><span class="zt-ico" data-icon="machine"></span> Time Machine</h3>
@@ -369,11 +340,8 @@
     </div>
   </section>
 
-  <!-- ============================ NEWS and COMMUNITY ======================= -->
-  <!-- Two panels from the main menu (js/menu-panels.js): the inked comic paper of
-       the Learn to Play panel. Esc, the X and Back to menu all close them. Every
-       Community entry is a plain link that opens in a new tab only when clicked;
-       the page itself sends nothing. -->
+  
+  
   <div class="menu-sheet-back" id="panel-news" role="dialog" aria-modal="true" aria-labelledby="news-title" hidden>
     <div class="menu-sheet" tabindex="-1">
       <span class="ms-tag" aria-hidden="true">News</span>
@@ -409,7 +377,7 @@
     </div>
   </div>
 
-  <!-- Settings panel (audio + presentation) -->
+  
   <div id="settings-backdrop" class="settings-backdrop" hidden>
     <div class="settings-panel panel bracketed">
       <div class="settings-head">
@@ -417,10 +385,7 @@
         <button class="icon-btn" id="settings-close" type="button" title="Close"><span data-icon="close"></span></button>
       </div>
 
-      <!-- LEAVE THE MATCH, first in the panel while a match is on (main.js; the
-           words follow the table, js/resume.js leaveWords). Two steps: the confirm
-           is a line in place, never a pop-up, and it says the match waits for
-           Reconnect on the menu. -->
+      
       <div class="settings-group" id="set-leave" hidden>
         <div class="leave-inline leave-wide" data-leave>
           <button class="btn btn-ghost leave-ask" type="button">
@@ -436,7 +401,7 @@
         </div>
       </div>
 
-      <!-- ACCESSIBILITY first, where a player who struggles to read looks first. -->
+      
       <div class="settings-group" id="set-access">
         <p class="overline">Accessibility</p>
         <div class="set-stack">
@@ -480,7 +445,7 @@
           <button class="seg-btn" data-speed="brisk" type="button">Brisk</button>
           <button class="seg-btn" data-speed="fast" type="button">Fast</button>
         </div>
-        <!-- one line under each choice says what it does (main.js from js/fx.js PACES) -->
+        
         <p class="muted small set-note" id="speed-desc">The table as designed: each rule plays out step by step, one thing at a time.</p>
         <div class="set-stack" style="margin-top:12px">
           <span class="set-label">Comic effects</span>
@@ -530,8 +495,7 @@
         </label>
       </div>
 
-      <!-- Graphics: High is the game as designed; Medium and Low switch off the
-           effects that measurably cost frames (main.js applyGfx, app.css GRAPHICS). -->
+      
       <div class="settings-group">
         <p class="overline">Graphics</p>
         <div class="seg" id="gfx-seg">
@@ -558,15 +522,10 @@
     </div>
   </div>
 
-  <!-- Overlays: phase banners, wanted poster, modal decisions -->
+  
   <div id="overlay-root" class="overlay-root" aria-live="polite"></div>
 
-  <!-- ══ THE MOUSEMOVE PROFILER ═══════════════════════════════════════════════════════
-       A frame cost that grows with HAND SPEED is work done per mouse event, and a 165Hz
-       panel fires 165 of them a second where a 60Hz one fires 60. This times every
-       mousemove handler by file and line, and F7 names the worst one in milliseconds.
-       It must load before anything else registers a listener, so it is here and inline.
-       Its own cost: two performance.now() per event. ══════════════════════════════ -->
+  
   <script>
   (function(){
     var MM = { per: Object.create(null), t0: performance.now() };
@@ -609,10 +568,10 @@
     };
   })();
   </script>
-  <script type="module" src="js/menu-panels.js?202609290308"></script>
-  <script type="module" src="js/menu-persona.js?202609290308"></script>
-  <script type="module" src="js/main.js?202609290308"></script>
-  <script type="module" src="js/mobile-table.js?202609290308"></script>
+  <script type="module" src="js/menu-panels.js?202609290820"></script>
+  <script type="module" src="js/menu-persona.js?202609290820"></script>
+  <script type="module" src="js/main.js?202609290820"></script>
+  <script type="module" src="js/mobile-table.js?202609290820"></script>
 <div id="build-stamp" style="position:fixed;left:8px;top:calc(100vh - 16px);z-index:9999;font:10px/1.2 monospace;color:#8a8578;opacity:.45;pointer-events:none">BUILD v197</div>
 <div id="stale-banner" style="display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;background:#7a1c10;color:#ffe9b0;font:bold 12px/1 monospace;padding:9px 16px;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.5)">NEW BUILD ON THE SERVER: PRESS F5 (Ctrl+Shift+R)</div>
 <script>
@@ -630,10 +589,9 @@
   check(); setInterval(check, 45000);
 })();
 </script>
-<script src="js/board_draft.js?202609290308"></script>
-<script src="js/leilao_fase.js?202609290308"></script>
-<script src="js/board_singularity.js?202609290308"></script>
-<script src="js/board_origins.js?202609290308"></script>
-    <script src="js/cabin.js?202609290308"></script>
+<script src="js/board_draft.js?202609290820"></script>
+<script src="js/board_singularity.js?202609290820"></script>
+<script src="js/board_origins.js?202609290820"></script>
+    <script src="js/cabin.js?202609290820"></script>
 </body>
 </html>
