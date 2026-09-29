@@ -79,7 +79,9 @@ body.cam-on #market-zone .market-secret .card.has-art { padding: 0; }
    landscape window and the row stays even. */
 body.cam-on #market-zone .market-row .card, body.cam-on #market-zone .market-secret .card {
   flex: 0 0 auto; width: 132px; max-width: 132px; height: 176px; min-height: 176px; }
-body.cam-on #market-zone .market-row { justify-content: flex-start; }
+/* the stock stands evenly along his counter, centred, each card clear of the next so its coin and
+   its gem never touch a neighbour (the owner, 29/09: "cards are very poorly placed") */
+body.cam-on #market-zone .market-row { justify-content: space-evenly; gap: 20px; }
 /* closed: the CLOSED plank says "not now"; a picture only dims a little (a plain card goes to .8) */
 body.cam-on #market-zone.closed .market-row .card.has-art { opacity: .92; }
 
@@ -88,3 +90,6 @@ html.pdx-m-on .card.has-art .card-tkt, html.pdx-m-on .card.has-art.tilt .card-tk
 html.pdx-m-on .card.has-art .card-deliver, html.pdx-m-on .card.has-art.tilt .card-deliver { transform-origin: 0 100%; transform: rotate(-1.5deg) scale(1.3); }
 html.pdx-m-on .card.has-art .card-recycle, html.pdx-m-on .card.has-art.tilt .card-recycle { transform-origin: 100% 0; transform: scale(1.25); }
 html.pdx-m-on .card.has-art .card-large-tag, html.pdx-m-on .card.has-art.tilt .card-large-tag { top: 40px; transform-origin: 0 0; transform: scale(1.25); }
+/* the shelf's stock centred in the stall's window (it sat 84px left of the middle, the empty half
+   waiting for the signpost); the row still ends short of the post */
+body.cam-on #market-zone .market-main { left: calc(50% + var(--wg-dx) - 336px * var(--wg-s)); width: calc(640px * var(--wg-s)); }

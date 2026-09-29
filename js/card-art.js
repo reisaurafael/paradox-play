@@ -55,6 +55,8 @@ export const CARD_ART = new Set([
   "quantum_computer",
   "first_smartphone",
   "haralds_bluetooth",
+  "reality_simulator",
+  "object_teleporter",
 ]);
 
 // the cards whose function name is not the slug of their English name
@@ -123,6 +125,7 @@ const CROP = {
   quantum_computer: "50% 46%",
   first_smartphone: "50% 58%",
   haralds_bluetooth: "44% 54%",
+  object_teleporter: "50% 60%",
 };
 
 // the <img> for a card's illustration (lazy, async, 2x for dense screens; its box is sized by CSS,
