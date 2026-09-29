@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609282153";
-import { initials } from "./util.js?202609282153";
+import { cardArtImg } from "./card-art.js?202609282156";
+import { initials } from "./util.js?202609282156";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -445,7 +445,10 @@ function layDossier() {
   // reach its vitals or its equipment) within 80 % of the stage's height and about half its width,
   // table round it; a larger text setting lets it grow a little, never past that box
   const ts = D.classList.contains("pdx-a11y") ? 3 : (+(D.dataset.ts || 1) || 1);
-  const want = ts >= 3 ? 0.62 : ts === 2 ? 0.55 : 0.47;
+  // the phone's size, grown with the screen like everything else on the table (a tablet's bigger
+  // stage shows a bigger file, the owner 29/09); the stage's own limits below still hold
+  const grow = Math.max(1, stage.h / 380);
+  const want = (ts >= 3 ? 0.62 : ts === 2 ? 0.55 : 0.47) * grow;
   D.style.setProperty("--pdx-do-k", "1");
   // larger text lays the file out wider (shorter), so it can be shown larger in the same box
   D.style.setProperty("--pdx-do-w", (ts >= 3 ? 620 : ts === 2 ? 530 : 440) + "px");
