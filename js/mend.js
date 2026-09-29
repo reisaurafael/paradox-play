@@ -29,7 +29,7 @@
    every animation is transform or opacity on a few small nodes, removed when done.
    All text enters the page through textContent.
    ========================================================================= */
-import { roman } from "./util.js?202609282307";
+import { roman } from "./util.js?202609282320";
 
 const N = 30;
 // the drawer a century's relic is filed in (Origins I to X, Ascension XI to XIX,

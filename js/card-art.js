@@ -45,6 +45,16 @@ export const CARD_ART = new Set([
   "niepces_heliograph",
   "eyeglasses",
   "towel",
+  "automobile",
+  "prince_draculas_chalice",
+  "vending_machine",
+  "horse_collar",
+  "fishing_reel",
+  "thomas_edisons_lamp",
+  "alan_turings_machine",
+  "quantum_computer",
+  "first_smartphone",
+  "haralds_bluetooth",
 ]);
 
 // the cards whose function name is not the slug of their English name
@@ -103,6 +113,16 @@ const CROP = {
   niepces_heliograph: "50% 66%",
   eyeglasses: "50% 72%",
   towel: "50% 60%",
+  automobile: "50% 66%",
+  prince_draculas_chalice: "46% 56%",
+  vending_machine: "50% 50%",
+  horse_collar: "40% 58%",
+  fishing_reel: "46% 70%",
+  thomas_edisons_lamp: "50% 42%",
+  alan_turings_machine: "50% 50%",
+  quantum_computer: "50% 46%",
+  first_smartphone: "50% 58%",
+  haralds_bluetooth: "44% 54%",
 };
 
 // the <img> for a card's illustration (lazy, async, 2x for dense screens; its box is sized by CSS,
