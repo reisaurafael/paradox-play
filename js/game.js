@@ -11,21 +11,21 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609282350";
-import { cardArtImg, cardTicket } from "./card-art.js?202609282350";
-import { audio } from "./audio.js?202609282350";
+import { icon } from "./icons.js?202609282355";
+import { cardArtImg, cardTicket } from "./card-art.js?202609282355";
+import { audio } from "./audio.js?202609282355";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609282350";
-import { comic } from "./comic.js?202609282350";
-import { fx } from "./fx.js?202609282350";
-import { CatEngine } from "./cat.js?202609282350";
-import { tutorials } from "./tutorial.js?202609282350";
-import { profile } from "./profile.js?202609282350";
-import { Camera } from "./camera.js?202609282350";
+import { juice } from "./juice.js?202609282355";
+import { comic } from "./comic.js?202609282355";
+import { fx } from "./fx.js?202609282355";
+import { CatEngine } from "./cat.js?202609282355";
+import { tutorials } from "./tutorial.js?202609282355";
+import { profile } from "./profile.js?202609282355";
+import { Camera } from "./camera.js?202609282355";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609282350";
+} from "./util.js?202609282355";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -359,7 +359,7 @@ export class Game {
     else if (k === "capacity") {
       if (o.room) { add("Take", { take: true }); add("Decline", { take: false }); }
       else { (o.recycle_choices || []).forEach((c) => add(`Recycle ${nm(c)}`, { recycle: c.name }));
-        add("Decline", { recycle: null }); }
+        add(o.source === "lethal" ? "Recycle nothing, fall" : "Decline", { recycle: null }); }
     } else if (k === "secret_deal") { if (o.affordable !== false) add("Take", { take: true }); add("Pass", { take: false }); }
     else if (k === "travel") add("Stay", { direction: 1, distance: 0 });
     else if (k === "recycle") add("Skip", { recycle: [] });
@@ -4104,6 +4104,7 @@ export class Game {
   // recycle one held item to make room, or decline, and the card is destroyed / lost.
   promptCapacity(req) {
     const o = req.options;
+    if (o.source === "lethal") return this.promptLethal(req);
     const incoming = o.incoming || {};
     const inName = incoming.display_name || this.nameEn(incoming.name) || incoming.name;
     const destroys = o.destroy_on_decline !== false; // active steals destroy on decline
@@ -4144,6 +4145,33 @@ export class Game {
       body,
       actions: [
         { label: destroys ? "Destroy incoming card" : "Decline the new item",
+          ghost: true, onClick: () => this.respond({ recycle: null }) },
+      ],
+    });
+  }
+
+  // A killing blow (§28.1b): the same sheet as the full pack, with no incoming card.
+  // Each pick recycles one item for its energy; the driver asks again until he is
+  // back above 0. "Recycle nothing" lets him fall: every item becomes respawn energy.
+  promptLethal(req) {
+    const o = req.options;
+    const body = el("div", "capacity-body");
+    body.appendChild(el("div", "capacity-label",
+      `Energy ${o.energy ?? 0}: you need ${o.need ?? 1} more to survive. Recycle one:`));
+    const grid = el("div", "choice-grid");
+    (o.recycle_choices || []).forEach((c) => {
+      const card = this.cardEl(c); card.classList.add("is-actionable");
+      card.appendChild(el("div", "recycle-gain", `+${c.recycle_value}`+this.svgInline("energy")));
+      card.addEventListener("click", () => this.respond({ recycle: c.name }));
+      grid.appendChild(card);
+    });
+    body.appendChild(grid);
+    this.showPrompt({
+      title: "A Killing Blow",
+      sub: req.prompt || "Recycle an item to survive, or fall and turn them into energy for your return.",
+      body,
+      actions: [
+        { label: `Recycle nothing, fall (return with ${o.respawn_energy ?? 12} energy)`,
           ghost: true, onClick: () => this.respond({ recycle: null }) },
       ],
     });

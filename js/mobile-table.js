@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609282350";
-import { initials } from "./util.js?202609282350";
+import { cardArtImg } from "./card-art.js?202609282355";
+import { initials } from "./util.js?202609282355";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -891,6 +891,8 @@ function pickText() {
   if (k === "destroy_target") return `<b>Destroy one card</b>: tap a lit card on his shelf${inSecret ? " or in the Secret Market" : ""}${onFile ? ", or on a rival's file (MACHINE)" : ""}.${hold}`;
   if (k === "steal_target") return `<b>Steal one of his cards</b> (you become Wanted): tap a lit card on his shelf.${hold}`;
   if (k === "secret_deal") return o.action === "steal" ? "<b>The Secret Market</b>: tap its card to steal it (you become Wanted), or Pass." : "<b>The Secret Market</b>, shown only to you: tap its card to buy it, or Pass.";
+  if (k === "capacity" && o.source === "lethal")
+    return `<b>A killing blow!</b> Recycle an item to survive, or fall and turn them into energy for your return. On the sheet.`;
   if (k === "capacity") {
     const inc = o.incoming || {}, inName = esc(inc.display_name || inc.name || "a card");
     return o.room ? `<b>Agnes's Cauldron</b>: ${inName} was just recycled. Take it or decline it, on the sheet.`
@@ -965,7 +967,14 @@ function pickSheetFor(req) {
   psheet.className = "pdx-sheet pdx-pick";
   let head = "", row = "", keys = "";
   const answer = (data) => { const gg = game(); closePickSheet(); if (gg && gg.pendingReq === req) gg.respond(data); paintAll(); };
-  if (req.kind === "capacity") {
+  if (req.kind === "capacity" && o.source === "lethal") {
+    // a killing blow (§28.1b): the full pack's sheet, no incoming card, the same picks
+    head = `<b>A killing blow!</b> Energy ${o.energy ?? 0}: recycle an item to survive (you need ${o.need ?? 1}), or fall and return with ${o.respawn_energy ?? 12}.`;
+    row = `<span class="pp-gap" aria-hidden="true">recycle one:</span>`
+      + (o.recycle_choices || []).map((c) => cardTile(c, " pp-pick", `+${c.recycle_value} energy`)).join("");
+    keys = `<button type="button" class="ps-act" data-a="recycle" disabled>Pick one of yours</button>`
+      + `<button type="button" class="ps-close" data-a="refuse">Recycle nothing, fall</button>`;
+  } else if (req.kind === "capacity") {
     const inc = o.incoming || {};
     const inName = esc(inc.display_name || inc.name || "the card");
     if (o.room) {

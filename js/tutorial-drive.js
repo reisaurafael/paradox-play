@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609282350";
-import { Game } from "./game.js?202609282350";
-import { icon } from "./icons.js?202609282350";
-import { roman } from "./util.js?202609282350";
-import { profile } from "./profile.js?202609282350";
+import { api, Connection } from "./net.js?202609282355";
+import { Game } from "./game.js?202609282355";
+import { icon } from "./icons.js?202609282355";
+import { roman } from "./util.js?202609282355";
+import { profile } from "./profile.js?202609282355";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
@@ -1297,6 +1297,7 @@ class Coach {
       return this.atScene("main", () => this.guide("#machine-body .matrix-wrap", "<b>Pick a module</b> on your machine: from now on it reads one higher.",
         { avoid: MACHINE }));
     }
+    if (k === "capacity" && (o || {}).source === "lethal" && this.once("d-lethal")) return this.guide(null, "A killing blow! Recycle an item to survive, or fall and turn them into energy for your return.");
     if (k === "capacity" && this.once("d-cap")) return this.guide(null, "Your case holds two items. Recycle one for energy to take the new one, or let the new one go.");
     if (k === "target" && this.once("d-target")) {
       const tt = o.target_type;

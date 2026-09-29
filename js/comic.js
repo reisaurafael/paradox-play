@@ -28,8 +28,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609282350";
-import { mend } from "./mend.js?202609282350";
+import { roman } from "./util.js?202609282355";
+import { mend } from "./mend.js?202609282355";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -930,6 +930,9 @@ class Comic {
     // legend of the chart: what is free, what costs, where he holds; cabin.js mirrorCommand)
     if (req.kind === "travel" && req.options && req.options.max)
       head = `Plot your voyage: up to ${req.options.max} ${req.options.max === 1 ? "century" : "centuries"}`;
+    // a killing blow is asked on the full pack's sheet (§28.1b), in its own words
+    const lethal = req.kind === "capacity" && req.options && req.options.source === "lethal";
+    if (lethal) head = "A killing blow!";
     if (req.kind === "allocate") {
       const n = ((req.private && req.private.dice) || (req.options && req.options.dice) || []).length;
       if (n) head = `Place your ${n} dice on the machine`;
@@ -938,6 +941,7 @@ class Comic {
     // the docket at the place only names the item, so the instruction is said once
     let how = m[1];
     const o = req.options || {};
+    if (lethal) how = "recycle an item to survive, or fall and turn them into energy for your return";
     if (/target$/.test(req.kind) && typeof o.prompt === "string" && o.prompt) how = o.prompt;
     const parts = [{ b: head }];
     if (how) parts.push(", " + how);
