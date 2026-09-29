@@ -19,7 +19,7 @@
    window.__pdxHelp = { isHeld, onHold, hold, isOpen, onOpen, open, close,
      toggle, note, overload, panel, placer } (the tutorial teaches Tab through it).
    ========================================================================= */
-import { FUNCTIONS } from "./util.js?202609282320";
+import { FUNCTIONS } from "./util.js?202609282323";
 
 const HOLD_MS = 250;        // a press held this long is a hold; shorter is a tap
 const NOTES_MAX = 3;        // HELA's notes shown on the hold view, newest first

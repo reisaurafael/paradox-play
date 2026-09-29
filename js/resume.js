@@ -14,11 +14,11 @@
    older build of the game says so and offers only Discard: another game code may
    deal other dice from the same seed.
    ========================================================================= */
-import { seatColor } from "./util.js?202609282320";
-import { hydrateIcons } from "./icons.js?202609282320";
+import { seatColor } from "./util.js?202609282323";
+import { hydrateIcons } from "./icons.js?202609282323";
 // Learn to Play keeps its lesson beside the record (tutorial-drive.js): a Reconnect
 // in the middle of the lessons goes back to HELA's coach, lesson and all
-import { resumeTutorial, readLesson, dropLesson } from "./tutorial-drive.js?202609282320";
+import { resumeTutorial, readLesson, dropLesson } from "./tutorial-drive.js?202609282323";
 
 const KEY = "pdx.resume.v1";           // play-shim.js writes the same key
 const IN_MATCH = "pdx.inMatch";         // sessionStorage: a match was on screen in this tab

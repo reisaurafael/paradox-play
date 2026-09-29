@@ -964,3 +964,19 @@ html.pdx-touch :is(.cc-ord, .sea-ord, .cm-ord) { display: none !important; }
 .pdx-sheet .ps-card.ps-form { zoom: .62; }
 html[data-ts="2"] .pdx-sheet .ps-card.ps-form { zoom: .8; }
 html[data-ts="3"] .pdx-sheet .ps-card.ps-form, html.pdx-a11y .pdx-sheet .ps-card.ps-form { zoom: 1; }
+/* READABLE on a phone (the owner, 29/09: "unreadable, bigger and letters easier to read"): the slip
+   larger, its name and numbers in the display face, the effect in the plain body face; only the small
+   field labels stay typewritten */
+.pdx-sheet .ps-card.ps-form { zoom: .86; }
+html[data-ts="2"] .pdx-sheet .ps-card.ps-form { zoom: .96; }
+html[data-ts="3"] .pdx-sheet .ps-card.ps-form, html.pdx-a11y .pdx-sheet .ps-card.ps-form { zoom: 1.08; }
+.pdx-sheet .ps-card.ps-form { width: min(380px, 100%); max-width: 380px; }
+.pdx-sheet .pf-row .cp-name { font: 700 1.3rem/1.05 var(--f-display, "Oswald", sans-serif) !important; letter-spacing: .03em; text-shadow: none; }
+.pdx-sheet .pf-row .cp-kind { font: 700 .72rem/1 var(--f-display, "Oswald", sans-serif) !important; letter-spacing: .14em; }
+.pdx-sheet .pf-eff .cp-desc { font: 600 1rem/1.35 var(--f-body, "Inter", system-ui, sans-serif) !important; color: #150f06; text-shadow: none; }
+.pdx-sheet .pf-row > i, .pdx-sheet .pf-box > i { font-size: .56rem; color: #5a4524; }
+.pdx-sheet .pf-box b { font: 700 1.3rem/1 var(--f-display, "Oswald", sans-serif); }
+.pdx-sheet .pf-box small { font-size: .54rem; color: #5a4524; }
+.pdx-sheet .pf-coin, .pdx-sheet .pf-gem { width: 15px; height: 15px; }
+.pdx-sheet .pf-head { font-size: .52rem; }
+.pdx-sheet .pf-title { font-size: .68rem; }
