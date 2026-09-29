@@ -303,7 +303,6 @@
   "INSERT TICKET": "INSIRA A FICHA",
   "TIME BREACH · INSERT TICKET": "BRECHA TEMPORAL · INSIRA A FICHA",
   "C.R.O.N.O.S. TEMPORAL GAUNTLET MK II": "MANOPLA TEMPORAL C.R.O.N.O.S. MK II",
-  "LIFETHREAD": "FIO DA VIDA",
   "tips": "dicas",
   "CLASSIFIED": "CLASSIFICADO",
   "Timeless": "Atemporal",
@@ -352,6 +351,10 @@
   "Those are your rivals, sharing the table with you.": "Esses são seus rivais, dividindo a mesa com você.",
   "Their files are paper, and paper moves. Drag one anywhere on the table.": "As fichas deles são de papel, e papel se move. Arraste uma para qualquer lugar da mesa.",
   "Arrange your desk as you like. It stays where you leave it.": "Organize sua mesa como quiser. Ela fica onde você deixar.",
+  "Valve": "Válvula",
+  "Tap a file to open it: where they stand, their energy and gold, what they carry, their crimes.": "Toque em uma ficha para abri-la: onde eles estão, sua energia e ouro, o que carregam, seus crimes.",
+  "Open one whenever you like. Know who you are striking before you strike.": "Abra uma quando quiser. Saiba em quem você vai bater antes de bater.",
+  "One valve, two uses. While nothing is shut, a spare die there is charge. While a function is shut, it is a leak: the die comes out of your energy. Overload, and the next Hour's spare die costs you.": "Uma válvula, dois usos. Enquanto nada está fechado, um dado sobrando ali é carga. Enquanto uma função está fechada, ela é um vazamento: o dado sai da sua energia. Sobrecarregue, e o dado sobrando da próxima Hora te custa.",
   "That was a PARADOX. Your rival reached across the centuries and tore into you from where they stand, and there was nothing on your machine to answer with.": "Aquilo foi um PARADOXO. Seu rival alcançou através dos séculos e rasgou você de onde estava, e não havia nada na sua máquina para revidar.",
   "The Temporal Herald: the paper of the last timeline, printed by the C.R.O.N.O.S. It reports crimes across the centuries, and the clipping stays on the offender's file.": "O Arauto Temporal: o jornal da última linha do tempo, impresso pela C.R.O.N.O.S. Ele noticia crimes através dos séculos, e o recorte fica na ficha do culpado.",
   "So here is how it ends, since you have earned the question. Four ways. Fill your receptor with a relic from all three periods. Or walk all the way down to Year Zero, and I promise you nobody arrives there cheaply. Or be the only traveller still breathing. Or empty the Merchant's wagon. Whichever comes first stops the clock, and then we count points. Only points.": "Então é assim que termina, já que você ganhou o direito à pergunta. Quatro formas. Encha seu receptor com uma relíquia de cada um dos três períodos. Ou desça até o Ano Zero, e prometo que ninguém chega lá barato. Ou seja o único viajante ainda respirando. Ou esvazie a carroça do Mercador. O que vier primeiro para o relógio, e aí contamos pontos. Só pontos.",
@@ -647,6 +650,13 @@
   "A RELIC STOLEN": "UMA RELÍQUIA ROUBADA",
   "+1 MODULE": "+1 MÓDULO",
   "four 1s: +1 on a module": "quatro 1s: +1 num módulo",
+  "consolation prize": "prêmio de consolação",
+  "clap.": "plac.",
+  "...clap.": "...plac.",
+  "Four 1s. The worst roll there is, sir. Consolation prize: +1 on one module, forever. Pick it.": "Quatro 1s. A pior rolagem que existe, senhor. Prêmio de consolação: +1 num módulo, para sempre. Escolha.",
+  "Four 1s. I have seen corpses roll better. Have a consolation prize: pick a module, it reads +1 forever.": "Quatro 1s. Já vi cadáveres rolarem melhor. Tome um prêmio de consolação: escolha um módulo, ele lê +1 para sempre.",
+  "Four 1s. Magnificent. The bureau pities you: one module of your choice, +1, forever.": "Quatro 1s. Magnífico. A repartição tem pena de você: um módulo à sua escolha, +1, para sempre.",
+  "Four 1s. Nobody can say you do things by halves. Your consolation: +1, forever, on the module you pick.": "Quatro 1s. Ninguém pode dizer que você faz as coisas pela metade. Seu consolo: +1, para sempre, no módulo que escolher.",
   "The Fattest Contract": "O Contrato Mais Gordo",
   "The Heaviest Hour": "A Hora Mais Pesada",
   "The Paradox Ledger": "O Livro de Paradoxos",
@@ -830,7 +840,37 @@
   "DELIVER TO": "ENTREGAR EM",
   "THE HOUR IS DEALT": "A HORA FOI DISTRIBUÍDA",
   "» no irregularities on record": "» nenhuma irregularidade registrada",
-  "Those on his shelf are the relics: things torn out of their centuries by the Incursion. Every one of them has to go home.": "As que estão na prateleira dele são as relíquias: coisas arrancadas dos seus séculos pela Incursão. Cada uma delas precisa voltar para casa."
+  "Those on his shelf are the relics: things torn out of their centuries by the Incursion. Every one of them has to go home.": "As que estão na prateleira dele são as relíquias: coisas arrancadas dos seus séculos pela Incursão. Cada uma delas precisa voltar para casa.",
+  "LIFEFORCE": "FORÇA VITAL",
+  "ORIGINS": "ORIGENS",
+  "ASCENSION": "ASCENSÃO",
+  "SINGULARITY": "SINGULARIDADE",
+  "THE STAR CHART": "A CARTA ESTELAR",
+  "THE PARADOX SEA": "O MAR DO PARADOXO",
+  "C.R.O.N.O.S. SURVEY · THE SIX SEAS OF TIME": "LEVANTAMENTO C.R.O.N.O.S. · OS SEIS MARES DO TEMPO",
+  "C.R.O.N.O.S. CELESTIAL SURVEY · THE SEA OF STARS": "LEVANTAMENTO CELESTE C.R.O.N.O.S. · O MAR DE ESTRELAS",
+  "SAECVLORVM · THE SIX WALLED KINGDOMS": "SAECVLORVM · OS SEIS REINOS MURADOS",
+  "THE TIMELESS REACHES": "OS CONFINS ATEMPORAIS",
+  "CONTEMPORARY ISLES": "ILHAS CONTEMPORÂNEAS",
+  "MODERN ISLES": "ILHAS MODERNAS",
+  "LOW MEDIEVAL CHAIN": "CADEIA BAIXO-MEDIEVAL",
+  "HIGH MEDIEVAL CHAIN": "CADEIA ALTO-MEDIEVAL",
+  "ISLES OF ANTIQVITY": "ILHAS DA ANTIGVIDADE",
+  "ABBEYLANDS": "TERRAS DAS ABADIAS",
+  "CHARTERED MARCHES": "MARCAS DE FORAL",
+  "IRON CROWNLANDS": "TERRAS DA COROA DE FERRO",
+  "LAST DAWN": "ÚLTIMA AURORA",
+  "HIGH MARCHES": "ALTAS MARCAS",
+  "DRAGON WASTES": "ERMOS DO DRAGÃO",
+  "THE TOWER": "A TORRE",
+  "THE COMPASS": "A BÚSSOLA",
+  "THE ENGINE": "O MOTOR",
+  "THE TITAN": "O TITÃ",
+  "THE GAUNTLET": "A MANOPLA",
+  "THE SERPENT": "A SERPENTE",
+  "THE DEBRIS BELT": "O CINTURÃO DE DESTROÇOS",
+  "Deliver": "Entregar",
+  "Delivered": "Entregue"
  },
  "patterns": [
   {
@@ -879,9 +919,29 @@
    "to": "<b>$1 eliminou $2.</b> Tirar a última energia de um viajante paga um ponto de contrato, na primeira vez que aquele viajante cai, e deixa $3 Procurado: 4 de ouro para quem o eliminar."
   },
   {
-   "re": "(.+) is shut this Hour, so this (\\w+) fits nowhere\\. Drop it in the <b>escape valve</b>\\. While a function is shut, the valve drains energy: this die costs you (\\d+) energy\\.",
+   "re": "Recharge is shut this Hour, so this (\\w+) fits nowhere else\\. Same valve, other use: with a function shut, it drains\\. This die costs you (\\d+) energy and charges nothing\\.",
    "flags": "g",
-   "to": "$1 está fechada nesta Hora, então este $2 não se encaixa em lugar nenhum. Solte-o na <b>válvula de escape</b>. Enquanto uma função está fechada, a válvula drena energia: este dado custa $3 de energia."
+   "to": "Recarga está fechada nesta Hora, então este $1 não cabe em nenhum outro lugar. Mesma válvula, outro uso: com uma função fechada, ela drena. Este dado te custa $2 de energia e não carrega nada."
+  },
+  {
+   "re": "Paradox is shut this Hour, so this (\\w+) fits nowhere else\\. Same valve, other use: with a function shut, it drains\\. This die costs you (\\d+) energy and charges nothing\\.",
+   "flags": "g",
+   "to": "Paradoxo está fechado nesta Hora, então este $1 não cabe em nenhum outro lugar. Mesma válvula, outro uso: com uma função fechada, ela drena. Este dado te custa $2 de energia e não carrega nada."
+  },
+  {
+   "re": "Travel is shut this Hour, so this (\\w+) fits nowhere else\\. Same valve, other use: with a function shut, it drains\\. This die costs you (\\d+) energy and charges nothing\\.",
+   "flags": "g",
+   "to": "Viagem está fechada nesta Hora, então este $1 não cabe em nenhum outro lugar. Mesma válvula, outro uso: com uma função fechada, ela drena. Este dado te custa $2 de energia e não carrega nada."
+  },
+  {
+   "re": "Nothing is shut this Hour, so the <b>escape valve</b> is calm\\. Drop this (\\w+) in it: it costs you nothing and charges the valve instead\\. Every 10 charge buys a module \\+1 forever\\.",
+   "flags": "g",
+   "to": "Nada está fechado nesta Hora, então a <b>válvula de escape</b> está calma. Solte este $1 nela: não te custa nada e, em vez disso, carrega a válvula. Cada 10 de carga compram +1 para sempre em um módulo."
+  },
+  {
+   "re": "Hear the hiss\\? A calm vent\\. Your (\\w+) went into the valve as charge, not as a loss\\. This counter keeps it: (\\d+) of 10\\.",
+   "flags": "g",
+   "to": "Ouviu o chiado? Um alívio calmo. Seu $1 entrou na válvula como carga, não como perda. Este contador guarda: $2 de 10."
   },
   {
    "re": "That number is a PROMISE\\. Buy the relic, carry it to that century, hand it over there, and the C\\.R\\.O\\.N\\.O\\.S\\. pays you in the only currency that decides this game\\.",
@@ -1832,6 +1892,26 @@
    "re": "\\b([A-Z][a-z]+) and ([A-Z][a-z]+)\\b(?=['’]?s? |[ ,.])",
    "flags": "g",
    "to": "$1 e $2"
+  },
+  {
+   "re": "Tap the folder <b>([IVXLC]+)</b> to open it\\.",
+   "flags": "g",
+   "to": "Toque na pasta <b>$1</b> para abri-la."
+  },
+  {
+   "re": "Now tap <b>(?:Deliver|Entregar)</b> under <b>(.+)</b>\\.",
+   "flags": "g",
+   "to": "Agora toque em <b>Entregar</b> sob <b>$1</b>."
+  },
+  {
+   "re": "^(\\d+) notes$",
+   "flags": "g",
+   "to": "$1 notas"
+  },
+  {
+   "re": "^1 note$",
+   "flags": "g",
+   "to": "1 nota"
   }
  ]
 }
