@@ -21,6 +21,13 @@ export const CARD_ART = new Set([
   "ching_shihs_red_flag",
   "gunpowder_revolver",
   "laser_gun",
+  "queen_annes_revenge_cannon",
+  "gunpowder",
+  "fire_lance",
+  "ferguson_rifle",
+  "portal_gun",
+  "galileos_telescope",
+  "gerardus_mercators_map",
 ]);
 
 // the cards whose function name is not the slug of their English name
@@ -50,7 +57,6 @@ export function cardArt(name) {
 // details (the desktop hover, the phone sheets) keep their own framing.
 const CROP = {
   excalibur: "50% 36%",
-  queen_annes_revenge_cannon: "30% 62%",
   james_watts_steam_engine: "50% 46%",
   mona_lisa: "50% 38%",
   attilas_sword: "58% 52%",
@@ -61,6 +67,14 @@ const CROP = {
   joan_of_arcs_armor: "36% 66%",
   ching_shihs_red_flag: "50% 30%",
   gunpowder_revolver: "48% 60%",
+  laser_gun: "50% 70%",
+  queen_annes_revenge_cannon: "50% 64%",
+  gunpowder: "50% 72%",
+  fire_lance: "50% 50%",
+  ferguson_rifle: "50% 70%",
+  portal_gun: "50% 52%",
+  galileos_telescope: "50% 50%",
+  gerardus_mercators_map: "50% 74%",
 };
 
 // the <img> for a card's illustration (lazy, async, 2x for dense screens; its box is sized by CSS,
