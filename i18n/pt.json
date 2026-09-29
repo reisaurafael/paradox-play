@@ -438,7 +438,215 @@
   "+1 forever on one module": "+1 para sempre num módulo",
   "done": "feito",
   "note": "nota",
-  "notes": "notas"
+  "notes": "notas",
+  "<b>Ascension, centuries XI to XIX.</b> The Secret Market waits at XI and opens once someone ends an Hour there.": "<b>Ascensão, séculos XI a XIX.</b> O Mercado Secreto espera em XI e abre assim que alguém termina uma Hora lá.",
+  "<b>Origins, centuries I to X.</b> Down here every century into the past costs 2 energy, and Year Zero, past century I, ends the game.": "<b>Origens, séculos I a X.</b> Aqui embaixo cada século rumo ao passado custa 2 de energia, e o Ano Zero, além do século I, termina o jogo.",
+  "These keys on the right are the places at your table: your machine, the chart, the Merchant, your case and your records. Tap one to look there.": "Essas teclas à direita são os lugares da sua mesa: sua máquina, o mapa, o Mercador, seu caso e seus registros. Toque numa para olhar lá.",
+  "The chart: where every traveller stands in time. Now tap <b>MACHINE</b> to come back.": "O mapa: onde cada viajante está no tempo. Agora toque em <b>MÁQUINA</b> para voltar.",
+  "The <b>?</b> in my column: tap it and my notes appear beside what they explain; tap it again to hide them.": "O <b>?</b> na minha coluna: toque nele e minhas notas aparecem ao lado do que explicam; toque de novo para escondê-las.",
+  "When I need you somewhere else, that place's key pulses. Tap it and look.": "Quando eu precisar de você em outro lugar, a tecla daquele lugar pulsa. Toque nela e olhe.",
+  "Further down waits <b>X</b>, the second millennium mark: end an Hour on it for one more contract point, once. Below X lie the Origins, where every century into the past costs 2 energy, and past I, <b>YEAR ZERO</b>.": "Mais abaixo espera <b>X</b>, o segundo marco do milênio: termine uma Hora nele para mais um ponto de contrato, uma vez. Abaixo de X ficam as Origens, onde cada século rumo ao passado custa 2 de energia, e além de I, o <b>ANO ZERO</b>.",
+  "Two centuries are millennium marks, <b>XX</b> and <b>X</b>: end an Hour standing on one and it pays a contract point, once each. Below X lie the Origins, where every century into the past costs 2 energy, and past I, <b>YEAR ZERO</b>.": "Dois séculos são marcos do milênio, <b>XX</b> e <b>X</b>: termine uma Hora parado num deles e ele paga um ponto de contrato, uma vez cada. Abaixo de X ficam as Origens, onde cada século rumo ao passado custa 2 de energia, e além de I, o <b>ANO ZERO</b>.",
+  "At 0 energy you are terminated and come back at XXX. At 12 heat your motor explodes.": "Com 0 de energia você é eliminado e volta em XXX. Com 12 de calor seu motor explode.",
+  "What each end pays. <b>Year Zero:</b> 2 points to whoever reaches it. <b>A receptor with all three periods:</b> 1 point to its owner. <b>One traveller never terminated:</b> 1 point to whoever made the last termination. And at every end but the empty wagon, each traveller never terminated scores 1 more for surviving.": "O que cada final paga. <b>Ano Zero:</b> 2 pontos para quem chegar lá. <b>Um receptor com os três períodos:</b> 1 ponto para o dono. <b>Um viajante nunca eliminado:</b> 1 ponto para quem fez a última eliminação. E em todo final menos a carroça vazia, cada viajante nunca eliminado marca mais 1 por sobreviver.",
+  "The ends are checked as each Hour closes. Only the empty wagon stops the clock at once, the moment his last relic leaves the shelf.": "Os finais são checados ao fim de cada Hora. Só a carroça vazia para o relógio na hora, no momento em que a última relíquia dele sai da prateleira.",
+  "One point I have not shown you. Take a traveller's last energy and you are paid a contract point, the first time that traveller falls, and you become Wanted: 4 gold on your head for whoever terminates you. Terminate a Wanted traveller and their 4 gold is yours.": "Um ponto que eu ainda não te mostrei. Tire a última energia de um viajante e você é pago com um ponto de contrato, na primeira vez que aquele viajante cai, e você fica Procurado: 4 de ouro pela sua cabeça para quem te eliminar. Elimine um viajante Procurado e o ouro dele é seu.",
+  "<b>How to win:</b> the most contract points when time settles. A tie goes to the traveller furthest into the future, the highest century, then to the most gold, then to the most energy.": "<b>Como vencer:</b> quem tiver mais pontos de contrato quando o tempo se assenta. Um empate vai para o viajante mais adiantado no futuro, o século mais alto, depois para quem tem mais ouro, depois para quem tem mais energia.",
+  "+1 per relic returned, +1 per first termination, +1 the first time you end an Hour on XX and on X, +1 for surviving without ever being terminated.": "+1 por relíquia devolvida, +1 pela primeira eliminação, +1 na primeira vez que você termina uma Hora em XX e em X, +1 por sobreviver sem nunca ser eliminado.",
+  "Tap <b>?</b>: my notes on everything in view, beside what they explain. What your dice will do, the Hour, the Merchant.": "Toque em <b>?</b>: minhas notas sobre tudo o que está à vista, ao lado do que explicam. O que seus dados vão fazer, a Hora, o Mercador.",
+  "Tap <b>?</b> again, and it all hides.": "Toque em <b>?</b> de novo, e tudo se esconde.",
+  "From now on I speak only when you must act. Everything else waits under <b>?</b>.": "Daqui em diante eu só falo quando você precisa agir. Todo o resto espera embaixo do <b>?</b>.",
+  "Tap <kbd>Tab</kbd>: my tips, and the answers to your questions.": "Toque em <kbd>Tab</kbd>: minhas dicas, e as respostas para suas perguntas.",
+  "Tap <kbd>Tab</kbd> again to close it.": "Toque em <kbd>Tab</kbd> de novo para fechar.",
+  "Now hold <kbd>Tab</kbd>: my notes on everything in view. What your dice will do, the Hour, the Merchant, and my notes.": "Agora segure <kbd>Tab</kbd>: minhas notas sobre tudo o que está à vista. O que seus dados vão fazer, a Hora, o Mercador, e minhas notas.",
+  "Let go, and it all hides again.": "Solte, e tudo se esconde de novo.",
+  "From now on I speak only when you must act. Everything else waits under <kbd>Tab</kbd>.": "Daqui em diante eu só falo quando você precisa agir. Todo o resto espera embaixo do <kbd>Tab</kbd>.",
+  "My memory keeps every Hour. Tap my eye, <b>HOURS</b>, at the top of my column.": "Minha memória guarda cada Hora. Toque no meu olho, <b>HORAS</b>, no topo da minha coluna.",
+  "This is my memory: every mark is an Hour. Click one to open its page.": "Esta é minha memória: cada marca é uma Hora. Clique numa para abrir a página dela.",
+  "Flip back through the Hours with this arrow.": "Volte pelas Horas com esta seta.",
+  "Flip through the Hours with this arrow.": "Avance pelas Horas com esta seta.",
+  "The Herald's clipping: click it to read the edition.": "O recorte do Arauto: clique nele para ler a edição.",
+  "Close it with <kbd>Esc</kbd>. <kbd>L</kbd> opens it again. It keeps everything.": "Feche com <kbd>Esc</kbd>. <kbd>L</kbd> abre de novo. Ele guarda tudo.",
+  "The turn is here, in my column: the Hour, and four dots, one for each phase of it. The lit dot is the phase under way.": "O turno está aqui, na minha coluna: a Hora, e quatro pontos, um para cada fase dela. O ponto aceso é a fase em andamento.",
+  "That moment you filed the relic in the drawer: that was DELIVERY. Every hour opens with it: whoever stands on a relic's own century hands it in.": "Aquele momento em que você arquivou a relíquia na gaveta: aquilo foi ENTREGA. Toda hora começa com ela: quem estiver no século de uma relíquia a entrega.",
+  "Standing in the wagon's year and buying the relic: the MARKET. It comes second, and when it ends, the wagon moves.": "Ficar no ano da carroça e comprar a relíquia: o MERCADO. Ele vem em segundo, e quando termina, a carroça se move.",
+  "Every time you set your dice: the GENERATORS. Everyone places in secret, then the machines reveal and resolve, module 1 to 9.": "Toda vez que você põe seus dados: os GERADORES. Todos colocam em segredo, depois as máquinas revelam e resolvem, módulo 1 a 9.",
+  "Last, ACTIVATION: the items you carry that have a trigger fire here. That is the whole hour, in that order, every hour.": "Por último, ATIVAÇÃO: os itens que você carrega e que têm um gatilho disparam aqui. Essa é a hora inteira, nessa ordem, toda hora.",
+  "Your thread is down to one strand, sir. The Norns lean in. So do I.": "Seu fio está reduzido a um fio só, senhor. As Nornas se inclinam para ver. Eu também.",
+  "One more wound and you are paperwork. I say this with the deepest affection.": "Mais um ferimento e você vira papelada. Digo isso com o mais profundo afeto.",
+  "Steady. You are one bad hour from my ledger, and I write in ink.": "Calma. Você está a uma hora ruim do meu livro-razão, e eu escrevo a tinta.",
+  "You are WANTED, dead or alive. I have taken the liberty of preferring the former.": "Você está PROCURADO, morto ou vivo. Tomei a liberdade de preferir a primeira opção.",
+  "My ravens brought the bill. Your face, a price, and poor spelling.": "Meus corvos trouxeram a conta. Seu rosto, um preço, e ortografia péssima.",
+  "Four gold for your skull. Frankly, I would have opened at five.": "Quatro de ouro pelo seu crânio. Francamente, eu teria começado em cinco.",
+  "A rival has been posted. Shall I circle the reward in red for you?": "Um rival foi cartazeado. Devo circular a recompensa de vermelho para você?",
+  "Someone else's head has a price. How festive. Sharpen something.": "A cabeça de outra pessoa tem um preço. Que festivo. Afie alguma coisa.",
+  "They papered a rival's face across the centuries. Hunting season, sir.": "Espalharam o rosto de um rival através dos séculos. Temporada de caça, senhor.",
+  "A thread is cut. Hush, this part is mine. I comb their hours and shelve them warm.": "Um fio se corta. Silêncio, esta parte é minha. Eu penteio as horas deles e os guardo ainda quentes.",
+  "Terminated. Exquisite. I pressed their final moment flat, like a flower.": "Eliminado. Requintado. Prensei o último momento dele, como uma flor.",
+  "Hear that quiet? That was an entire lifetime being stamped RECEIVED.": "Ouviu esse silêncio? Foi uma vida inteira sendo carimbada RECEBIDO.",
+  "You have died. Everything is in order. I have been expecting you for some time.": "Você morreu. Está tudo em ordem. Eu já esperava por você há algum tempo.",
+  "The sea closes over you. Take my hand, your name was in gold before you fell.": "O mar se fecha sobre você. Pegue minha mão, seu nome já estava em dourado antes de você cair.",
+  "Welcome. Your drawer has been waiting since the day we met.": "Bem-vindo. Sua gaveta está esperando desde o dia em que nos conhecemos.",
+  "You broke causality. Causality is breaking you back. I do love symmetry.": "Você quebrou a causalidade. A causalidade está te quebrando de volta. Eu adoro simetria.",
+  "You crossed your own wake. The Norns hate knots. They cut what tangles.": "Você cruzou seu próprio rastro. As Nornas odeiam nós. Elas cortam o que emaranha.",
+  "History disagrees with your version of events. It bills accordingly.": "A história discorda da sua versão dos fatos. E cobra por isso.",
+  "Choose who suffers. Take your time, I enjoy this part either way.": "Escolha quem sofre. Não tenha pressa, eu gosto dessa parte de qualquer jeito.",
+  "Pick a throat. The rest is bookkeeping.": "Escolha uma garganta. O resto é contabilidade.",
+  "Select a target. Consider who would look best in my files.": "Selecione um alvo. Pense em quem ficaria melhor nos meus arquivos.",
+  "Payment is due to you, for once. Take the useful thing, not the shining one.": "O pagamento é seu, para variar. Pegue a coisa útil, não a brilhante.",
+  "One reward, sir. Choose what outlives you, most things will.": "Uma recompensa, senhor. Escolha o que vai sobreviver a você, a maioria das coisas vai.",
+  "Pick your prize. The bureau pays in things it stole first.": "Escolha seu prêmio. A repartição paga com coisas que roubou primeiro.",
+  "The drawer is waiting. One does not keep an antique waiting.": "A gaveta está esperando. Não se deixa uma antiguidade esperando.",
+  "Deliver the relic where it belongs. Everything belongs where it died.": "Entregue a relíquia onde ela pertence. Tudo pertence a onde morreu.",
+  "Set it down gently. It is older than every regret you own.": "Pouse com cuidado. Ela é mais velha que todo arrependimento que você tem.",
+  "Your instruments may speak now. Wake what you need.": "Seus instrumentos podem falar agora. Desperte o que precisar.",
+  "Now or never, and never is my department.": "Agora ou nunca, e nunca é o meu departamento.",
+  "The hour permits activations. Brief, like most mercies.": "A hora permite ativações. Breve, como a maioria das misericórdias.",
+  "Shall I fetch a chair? The market closes; my patience merely thins.": "Devo buscar uma cadeira? O mercado fecha; minha paciência só afina.",
+  "Take all the time you like. Cause of death: shopping. I'll write it.": "Fique à vontade. Causa da morte: compras. Eu escrevo isso.",
+  "Browsing again? Empires have fallen in less time. I counted.": "Olhando de novo? Impérios caíram em menos tempo. Eu contei.",
+  "Pressure critical. I would step back, were I capable of dying. You are.": "Pressão crítica. Eu recuaria, se fosse capaz de morrer. Você é.",
+  "That needle is past prayer. Oh, this will be a busy hour for me.": "Aquele ponteiro já passou da reza. Ah, esta vai ser uma hora movimentada para mim.",
+  "The boiler sings, sir. That pitch means shrapnel. I adore this movement.": "A caldeira canta, senhor. Esse tom significa estilhaços. Eu adoro este movimento.",
+  "You outlasted them all. I am, and I say this rarely, pleased.": "Você sobreviveu a todos eles. Estou, e digo isso raramente, satisfeita.",
+  "You have won. Even my hall will hear of it, and my hall hears everything.": "Você venceu. Até meu salão vai ouvir falar disso, e meu salão ouve tudo.",
+  "You win. The others are archived; you are merely postponed. Bravo.": "Você vence. Os outros estão arquivados; você está apenas adiado. Bravo.",
+  "You lost. I have filed you under 'valiant', between 'vain' and 'vanished'.": "Você perdeu. Te arquivei em 'valente', entre 'vaidoso' e 'desaparecido'.",
+  "You have lost, sir. Come. I file the brave ones with ribbon.": "Você perdeu, senhor. Venha. Eu arquivo os corajosos com fita.",
+  "The sea kept you. I kept a copy.": "O mar ficou com você. Eu fiquei com uma cópia.",
+  "Empty. Every archive begins this way. None of them end this way.": "Vazio. Todo arquivo começa assim. Nenhum termina assim.",
+  "No deaths yet. I confess a certain professional impatience.": "Nenhuma morte ainda. Confesso uma certa impaciência profissional.",
+  "Nothing filed. The shelves are hungry. So, frankly, am I.": "Nada arquivado. As prateleiras estão famintas. E, francamente, eu também.",
+  "This is where I keep everything. Every death, every debt, every you.": "É aqui que eu guardo tudo. Cada morte, cada dívida, cada você.",
+  "My memory, sir. Whatever happens to you happens here twice, and here it stays.": "Minha memória, senhor. O que quer que aconteça com você acontece aqui duas vezes, e fica aqui.",
+  "Touch nothing. These are the papers of the dead, and yours, in advance.": "Não toque em nada. Estes são os papéis dos mortos, e os seus, adiantados.",
+  "You are <b>atemporal</b>, the Merchant cannot see you.": "Você está <b>atemporal</b>, o Mercador não consegue te ver.",
+  "The hour is dealt, engines on the table.": "A hora foi distribuída, motores na mesa.",
+  "The <b>Temporal Herald</b>: the C.R.O.N.O.S. prints it for the last timeline. Rob the Merchant or terminate a traveler and it reports you, and the clipping stays on your file for everyone to read.": "O <b>Arauto Temporal</b>: a C.R.O.N.O.S. o imprime para a última linha do tempo. Roube o Mercador ou elimine um viajante e ele noticia você, e o recorte fica na sua ficha para todos lerem.",
+  "Take back a card from the recycled pile": "Pegue de volta uma carta da pilha de recicladas",
+  "Use the ability of a relic you filed": "Use a habilidade de uma relíquia que você arquivou",
+  "take back a card from the recycled pile": "pegue de volta uma carta da pilha de recicladas",
+  "use the ability of a relic you filed": "use a habilidade de uma relíquia que você arquivou",
+  "CHOOSE": "ESCOLHA",
+  "Contract point secured.": "Ponto de contrato garantido.",
+  "LOST RELIC COMES HOME AT LAST": "RELÍQUIA PERDIDA VOLTA PARA CASA, ENFIM",
+  "Wager houses suspend all bets pending the Bureau's verdict.": "Casas de aposta suspendem todas as apostas até o veredito da Repartição.",
+  "THE FAR CENTURY ANSWERS A KNOCK": "O SÉCULO DISTANTE ATENDE À PORTA",
+  ", DEAD OR ALIVE": ", MORTO OU VIVO",
+  "Reward payable in any century. No questions asked in most.": "Recompensa paga em qualquer século. Sem perguntas na maioria deles.",
+  "BY ORDER OF THE BUREAU: TAKE THEM OFF THE WATER": "POR ORDEM DA REPARTIÇÃO: TIREM-NOS DA ÁGUA",
+  "LOST UPON THE SEA OF TIME": "PERDIDO NO MAR DO TEMPO",
+  ", traveler, of no fixed century, unmade, and accounted for.": ", viajante, sem século fixo, desfeito, e contabilizado.",
+  "OBITUARY: A THREAD CUT SHORT": "OBITUÁRIO: UM FIO CORTADO CEDO DEMAIS",
+  "SMUGGLERS' COVE OPENS ITS SHUTTERS": "ENSEADA DOS CONTRABANDISTAS ABRE AS PORTAS",
+  "Contraband hours, unstamped relics, and no receipts asked nor given.": "Horas contrabandeadas, relíquias sem carimbo, e nenhum recibo pedido nem dado.",
+  "THE MARKET THAT ISN'T THERE IS OPEN": "O MERCADO QUE NÃO EXISTE ESTÁ ABERTO",
+  "A quiet cove, a quiet lamp, and prices best paid quietly.": "Uma enseada quieta, uma lamparina quieta, e preços melhor pagos em silêncio.",
+  "The survey office issues a bulletin to all travellers upon the sea of time.": "A repartição de vistoria emite um boletim a todos os viajantes sobre o mar do tempo.",
+  "Another relic nailed into its coffin of time. Tidy. The dead do love their paperwork.": "Mais uma relíquia pregada no caixão do tempo. Arrumadinho. Os mortos adoram papelada.",
+  "One name struck from the living ledger. I felt them go,  a small, warm snap. Carry on, traveller.": "Mais um nome riscado do livro dos vivos. Eu senti quando partiu, um estalo pequeno e morno. Continue, viajante.",
+  "The bell tolls and the Merchant scents coin. That is a fin circling, if you were wondering.": "O sino badala e o Mercador sente o cheiro de moedas. Isso é uma barbatana rondando, se você estava se perguntando.",
+  "A price on a skull,  my favourite arithmetic. Run or stand still; either amuses me.": "Um preço numa caveira, minha aritmética favorita. Corra ou fique parado; qualquer um me diverte.",
+  "A lantern where the charts refuse to look. The desperate deal there. You will fit right in.": "Uma lamparina onde os mapas se recusam a olhar. Os desesperados negociam ali. Você vai se encaixar bem.",
+  "The Bureau wired a bulletin. I pulled it before the ink was dry.": "A Repartição telegrafou um boletim. Eu o peguei antes de a tinta secar.",
+  "Whoever stands on a relic's own century may file it in its drawer: the timeline mends and they earn a contract point.": "Quem estiver no século de uma relíquia pode arquivá-la na gaveta dela: a linha do tempo se cura e ele ganha um ponto de contrato.",
+  "Travelers at the Merchant's port (and at XI once the Secret Market opens) may buy, renew his shelf or declare. Then he sails.": "Viajantes no porto do Mercador (e em XI assim que o Mercado Secreto abrir) podem comprar, renovar a prateleira dele ou declarar. Depois ele navega.",
+  "Everyone places four dice on their machine in secret. Modules 1 to 9 then resolve for everyone at once, and each traveler picks where to sail.": "Todos colocam quatro dados na máquina em segredo. Os módulos 1 a 9 então resolvem para todos de uma vez, e cada viajante escolhe para onde navegar.",
+  "Whoever holds a ready item may fire it at a target in reach.": "Quem tiver um item pronto pode disparar num alvo ao alcance.",
+  "Why did I move?": "Por que eu me movi?",
+  "Only your Travel modules move you: module 8 up to the die, module 9 up to twice it, to the century you pick on the chart. A few relics move you too; your log (L) says which.": "Só seus módulos de Viagem te movem: o módulo 8 até o valor do dado, o módulo 9 até o dobro, para o século que você escolher no mapa. Algumas relíquias também te movem; seu registro (L) diz quais.",
+  "Why did I lose energy?": "Por que eu perdi energia?",
+  "A rival's paradox (it hits everyone ahead of, beside or behind its maker), sailing to the past, a motor explosion at 12 heat (-2), the escape valve while a function is shut, or a weapon in the Activation phase.": "Um paradoxo de um rival (atinge todo mundo à frente, ao lado ou atrás de quem o causou), navegar para o passado, uma explosão do motor a 12 de calor (-2), a válvula de escape enquanto uma função está fechada, ou uma arma na fase de Ativação.",
+  "What does overload do?": "O que a sobrecarga faz?",
+  "Three dice in one function overload it: that function is shut for the whole next Hour and takes no dice. It pays first: the third Travel die sails twice its value, and the third Paradox die, the Past, hits for twice its value.": "Três dados numa função a sobrecarregam: essa função fica fechada pela próxima Hora inteira e não recebe dados. Ela paga primeiro: o terceiro dado de Viagem navega o dobro do valor, e o terceiro dado de Paradoxo, o Passado, atinge o dobro do valor.",
+  "What is a Haunt?": "O que é uma Assombração?",
+  "Once terminated, your Paradox Past haunts for the rest of the match: module 6 no longer hits everyone behind, it hits only the traveler who terminated you, wherever they are, for double. A death by your own hand leaves no one to haunt. A rival's file says HAUNTS and names their killer.": "Uma vez eliminado, seu Paradoxo Passado assombra pelo resto da partida: o módulo 6 não atinge mais todo mundo atrás, atinge só o viajante que te eliminou, onde quer que esteja, em dobro. Uma morte pela própria mão não deixa ninguém para assombrar. A ficha de um rival diz ASSOMBRA e nomeia o matador dele.",
+  "What is the escape valve?": "O que é a válvula de escape?",
+  "A slot for one spare die. While one of your functions is shut it drains your energy, equal to that die; otherwise it charges, and every 10 points buys a permanent +1 on a module.": "Uma vaga para um dado sobressalente. Enquanto uma das suas funções está fechada ela drena sua energia, igual ao valor do dado; do contrário ela carrega, e a cada 10 pontos compra um +1 permanente num módulo.",
+  "When does the Merchant move?": "Quando o Mercador se move?",
+  "At the end of every Market phase: he rolls 1 to 3 dice and sails toward the richest traveler who is not in his century. Hold TAB to see where he is headed and where he can stop.": "No fim de cada fase de Mercado: ele rola de 1 a 3 dados e navega rumo ao viajante mais rico que não está no século dele. Segure TAB para ver para onde ele está indo e onde pode parar.",
+  "How do I buy?": "Como eu compro?",
+  "Stand on the Merchant's century during the Market phase, or on XI once the Secret Market opens, and pay the relic's price in gold.": "Fique no século do Mercador durante a fase de Mercado, ou em XI assim que o Mercado Secreto abrir, e pague o preço da relíquia em ouro.",
+  "How do I deliver?": "Como eu entrego?",
+  "Stand on the century printed on your relic during a Delivery phase and file it in its drawer: the timeline mends and you earn a contract point.": "Fique no século impresso na sua relíquia durante uma fase de Entrega e arquive-a na gaveta dela: a linha do tempo se cura e você ganha um ponto de contrato.",
+  "Why can't my item fire?": "Por que meu item não dispara?",
+  "An item needs someone or something in reach. A card marked NO TARGET has nothing to aim at right now, for example nobody in your century.": "Um item precisa de alguém ou algo ao alcance. Uma carta marcada SEM ALVO não tem em quem mirar agora, por exemplo ninguém no seu século.",
+  "How does the game end?": "Como o jogo termina?",
+  "When someone reaches Year Zero, when someone has delivered into all three periods, when the Merchant runs out of relics, or when only one traveler has never been terminated. Most contract points wins.": "Quando alguém chega ao Ano Zero, quando alguém entregou nos três períodos, quando o Mercador fica sem relíquias, ou quando só um viajante nunca foi eliminado. Quem tiver mais pontos de contrato vence.",
+  "+energy": "+energia",
+  "+gold": "+ouro",
+  "+energy and gold": "+energia e ouro",
+  "hits everyone ahead": "atinge todo mundo à frente",
+  "hits your century": "atinge seu século",
+  "hits everyone behind for 2x the die": "atinge todo mundo atrás por 2x o dado",
+  "+heat (12 explodes)": "+calor (12 explode)",
+  "sail up to the die": "navegue até o valor do dado",
+  "sail up to 2x the die": "navegue até 2x o valor do dado",
+  "on a relic's own century, file it: the timeline mends, +1 point": "no século de uma relíquia, arquive-a: a linha do tempo se cura, +1 ponto",
+  "at the Merchant's port (or XI once it opens): buy, renew or pass; then he sails": "no porto do Mercador (ou em XI assim que abrir): compre, renove ou passe; depois ele navega",
+  "four dice in secret; modules 1 to 9 resolve for everyone, then you sail": "quatro dados em segredo; os módulos 1 a 9 resolvem para todos, depois você navega",
+  "a ready item may fire at a target in reach": "um item pronto pode disparar num alvo ao alcance",
+  "Tab: tips and questions; hold Tab for the table's reference": "Tab: dicas e perguntas; segure Tab para a referência da mesa",
+  "Place your dice on the machine": "Coloque seus dados na máquina",
+  "then Confirm": "depois Confirme",
+  "The Merchant is open": "O Mercador está aberto",
+  "buy, renew or pass": "compre, renove ou passe",
+  "P = pass": "P = passar",
+  "Return a relic to its century": "Devolva uma relíquia ao seu século",
+  "carry it to its drawer, and the timeline mends": "leve-a até a gaveta dela, e a linha do tempo se cura",
+  "Claim your reward": "Reivindique sua recompensa",
+  "pick one contract": "escolha um contrato",
+  "Fire an item": "Ative um item",
+  "or pass": "ou passe",
+  "Plot your voyage": "Trace sua viagem",
+  "click a port on the chart": "clique num porto no mapa",
+  "Send the Merchant": "Envie o Mercador",
+  "click a century on the chart": "clique num século no mapa",
+  "Choose a target": "Escolha um alvo",
+  "Choose a card to destroy": "Escolha uma carta para destruir",
+  "Choose a card to steal": "Escolha uma carta para roubar",
+  "Choose a module to buff": "Escolha um módulo para melhorar",
+  "+1 forever, click the module": "+1 para sempre, clique no módulo",
+  "Recycle for energy": "Recicle por energia",
+  "or skip": "ou pule",
+  "No room in the pack": "Sem espaço na mochila",
+  "keep or recycle": "guarde ou recicle",
+  "A secret deal": "Um negócio secreto",
+  "take it or pass": "aceite ou passe",
+  "AUCTION": "LEILÃO",
+  "Bid for the lots on the floor.": "Dê lances pelos lotes no chão.",
+  "A traveler standing on a relic's own century may return it there, and the timeline mends.": "Um viajante parado no século de uma relíquia pode devolvê-la ali, e a linha do tempo se cura.",
+  "Travelers at the Merchant's port may buy his relics, renew his stock or declare.": "Viajantes no porto do Mercador podem comprar suas relíquias, renovar o estoque dele ou se declarar.",
+  "Everyone places four dice on their machine, in secret, at the same time.": "Todos colocam quatro dados na máquina, em segredo, ao mesmo tempo.",
+  "Items with an active power may fire, once each.": "Itens com poder ativo podem disparar, uma vez cada.",
+  "YOUR MOVE": "SUA VEZ",
+  "WAITING": "AGUARDANDO",
+  "Your dice are sealed.": "Seus dados estão selados.",
+  "Waiting for the other travelers to seal theirs.": "Aguardando os outros viajantes selarem os deles.",
+  "SKIPPING": "PULANDO",
+  "to the present...": "para o presente...",
+  "Time settles.": "O tempo se assenta.",
+  "wins.": "vence.",
+  "win.": "vencem.",
+  "DELIVERY SKIPPED": "ENTREGA PULADA",
+  "MARKET SKIPPED": "MERCADO PULADO",
+  "GENERATORS SKIPPED": "GERADORES PULADOS",
+  "ACTIVATION SKIPPED": "ATIVAÇÃO PULADA",
+  "WANTED!": "PROCURADO!",
+  "SWIPE!": "ROUBO!",
+  "YEAR ZERO!": "ANO ZERO!",
+  "THE END": "O FIM",
+  "CHAOS!": "CAOS!",
+  "PARADOX ON ALL": "PARADOXO EM TODOS",
+  "A CARD DESTROYED": "UMA CARTA DESTRUÍDA",
+  "THE MERCHANT MOVED": "O MERCADOR SE MOVEU",
+  "SOLO HOUR VOUCHER": "VALE UMA HORA SOLO",
+  "MARKET VOUCHER": "VALE MERCADO",
+  "ITEM VOUCHER": "VALE ITEM",
+  "+3 ENERGY +3 GOLD": "+3 ENERGIA +3 OURO",
+  "A RELIC STOLEN": "UMA RELÍQUIA ROUBADA",
+  "+1 MODULE": "+1 MÓDULO",
+  "four 1s: +1 on a module": "quatro 1s: +1 num módulo"
  },
  "patterns": [
   {
@@ -1060,6 +1268,251 @@
    "re": "<b>(.+), rolled (\\w+):</b> (.+)\\.",
    "flags": "g",
    "to": "<b>$1, rolou $2:</b> $3."
+  },
+  {
+   "re": "One more lesson, and it pays\\. <b>(\\w+)</b> is a millennium mark\\. End an Hour standing on it and the C\\.R\\.O\\.N\\.O\\.S\\. pays you a contract point\\.",
+   "flags": "g",
+   "to": "Mais uma lição, e ela paga. <b>$1</b> é um marco do milênio. Termine uma Hora parado nele e a C.R.O.N.O.S. te paga um ponto de contrato."
+  },
+  {
+   "re": "This Hour your dice take you there\\. Stop on (\\w+): the point is paid only if the Hour ends with you on it\\.",
+   "flags": "g",
+   "to": "Os dados desta Hora te levam até lá. Pare em $1: o ponto só é pago se a Hora terminar com você nele."
+  },
+  {
+   "re": "Tap <b>(.+)</b>\\.",
+   "flags": "g",
+   "to": "Toque em <b>$1</b>."
+  },
+  {
+   "re": "Flip back through the Hours with this arrow: Hour (.+)\\.",
+   "flags": "g",
+   "to": "Volte pelas Horas com esta seta: Hora $1."
+  },
+  {
+   "re": "The turn is here, in my column: the Hour, and four dots, one for each phase of it\\. The lit dot is the phase under way: now <b>(.+)</b>\\.",
+   "flags": "g",
+   "to": "O turno está aqui, na minha coluna: a Hora, e quatro pontos, um para cada fase dela. O ponto aceso é a fase em andamento: agora <b>$1</b>."
+  },
+  {
+   "re": "That moment you filed the relic in the drawer in hour (\\d+): that was DELIVERY\\. Every hour opens with it: whoever stands on a relic's own century hands it in\\.",
+   "flags": "g",
+   "to": "Aquele momento em que você arquivou a relíquia na gaveta na hora $1: aquilo foi ENTREGA. Toda hora começa com ela: quem estiver no século de uma relíquia a entrega."
+  },
+  {
+   "re": "Standing in the wagon's year and buying the relic in hour (\\d+): the MARKET\\. It comes second, and when it ends, the wagon moves\\.",
+   "flags": "g",
+   "to": "Ficar no ano da carroça e comprar a relíquia na hora $1: o MERCADO. Ele vem em segundo, e quando termina, a carroça se move."
+  },
+  {
+   "re": "Receptor: <b>(\\d+) of 3</b> periods stand\\.",
+   "flags": "g",
+   "to": "Receptor: <b>$1 de 3</b> períodos presentes."
+  },
+  {
+   "re": "<b>(.+)</b>: choose an era on the chart\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: escolha uma era no mapa."
+  },
+  {
+   "re": "<b>(.+)</b>: (take back a card from the recycled pile|use the ability of a relic you filed)\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: $2."
+  },
+  {
+   "re": " found no one within reach, the act dies in the chamber\\.",
+   "flags": "g",
+   "to": " não encontrou ninguém ao alcance, o ato morre na câmara."
+  },
+  {
+   "re": "Contract point secured, <b>(\\d+)</b> on record\\.",
+   "flags": "g",
+   "to": "Ponto de contrato garantido, <b>$1</b> no registro."
+  },
+  {
+   "re": "Century (\\w+) recovers what time misplaced; bells said to ring unprompted\\.",
+   "flags": "g",
+   "to": "O Século $1 recupera o que o tempo extraviou; dizem que os sinos tocam sozinhos."
+  },
+  {
+   "re": "CENTURY (\\w+) MADE WHOLE",
+   "flags": "g",
+   "to": "SÉCULO $1 FICA COMPLETO OUTRA VEZ"
+  },
+  {
+   "re": "A stolen hour restored by the steady hand of ",
+   "flags": "g",
+   "to": "Uma hora roubada, restaurada pela mão firme de "
+  },
+  {
+   "re": "MILESTONE OR MIRAGE\\? CENTURY (\\w+) CLAIMED",
+   "flags": "g",
+   "to": "MARCO OU MIRAGEM? SÉCULO $1 REIVINDICADO"
+  },
+  {
+   "re": "Milestone claimed at Century (\\w+); the Academy demands a recount\\.",
+   "flags": "g",
+   "to": "Marco reivindicado no Século $1; a Academia exige uma recontagem."
+  },
+  {
+   "re": "^WANTED: ",
+   "flags": "g",
+   "to": "PROCURADO: "
+  },
+  {
+   "re": "^FOUR GOLD ON THE HEAD OF ",
+   "flags": "g",
+   "to": "QUATRO DE OURO PELA CABEÇA DE "
+  },
+  {
+   "re": "^The Bureau closes the file on ",
+   "flags": "g",
+   "to": "A Repartição encerra o processo de "
+  },
+  {
+   "re": " The mark pays only if the Hour ends with you on it\\.",
+   "flags": "g",
+   "to": " O marco só paga se a Hora terminar com você nele."
+  },
+  {
+   "re": " Going into the past costs 1 energy per century\\. Going into the future is free\\.",
+   "flags": "g",
+   "to": " Ir para o passado custa 1 de energia por século. Ir para o futuro é grátis."
+  },
+  {
+   "re": " Forward in time is free\\.",
+   "flags": "g",
+   "to": " Rumo ao futuro é grátis."
+  },
+  {
+   "re": "and\\ stop\\ on\\ the\\ millennium\\ mark:\\ stay\\ there\\ as\\ the\\ Hour\\ ends",
+   "flags": "g",
+   "to": "e pare no marco do milênio: fique lá quando a Hora terminar"
+  },
+  {
+   "re": "toward\\ the\\ millennium\\ mark",
+   "flags": "g",
+   "to": "rumo ao marco do milênio"
+  },
+  {
+   "re": "closer\\ to\\ your\\ rivals,\\ so\\ your\\ paradox\\ can\\ reach\\ them\\ next\\ Hour",
+   "flags": "g",
+   "to": "mais perto dos seus rivais, para que seu paradoxo possa alcançá-los na próxima Hora"
+  },
+  {
+   "re": "to\\ reach\\ the\\ Merchant",
+   "flags": "g",
+   "to": "para alcançar o Mercador"
+  },
+  {
+   "re": "to\\ reach\\ the\\ century\\ where\\ your\\ card\\ is\\ delivered",
+   "flags": "g",
+   "to": "para alcançar o século onde sua carta é entregue"
+  },
+  {
+   "re": "toward\\ the\\ Merchant",
+   "flags": "g",
+   "to": "rumo ao Mercador"
+  },
+  {
+   "re": " Taking one from the Merchant makes you Wanted\\.",
+   "flags": "g",
+   "to": " Pegar uma do Mercador te deixa Procurado."
+  },
+  {
+   "re": " Or click the lock to pass\\.",
+   "flags": "g",
+   "to": " Ou clique no cadeado para passar."
+  },
+  {
+   "re": " Pass with the <b>lock</b> on your case\\.",
+   "flags": "g",
+   "to": " Passe com o <b>cadeado</b> do seu caso."
+  },
+  {
+   "re": " The future is free\\.",
+   "flags": "g",
+   "to": " O futuro é grátis."
+  },
+  {
+   "re": "ahead\\ of\\ you,\\ in\\ a\\ later\\ century",
+   "flags": "g",
+   "to": "à sua frente, num século mais tarde"
+  },
+  {
+   "re": "in\\ your\\ own\\ century",
+   "flags": "g",
+   "to": "no seu próprio século"
+  },
+  {
+   "re": "behind\\ you,\\ in\\ an\\ earlier\\ century",
+   "flags": "g",
+   "to": "atrás de você, num século anterior"
+  },
+  {
+   "re": " The ticket waits in your case: drag it onto the machine's slot when you want it\\.",
+   "flags": "g",
+   "to": " O tíquete espera no seu caso: arraste-o para a vaga da máquina quando você quiser usá-lo."
+  },
+  {
+   "re": "every\\ other\\ traveller\\ loses\\ 3\\ energy",
+   "flags": "g",
+   "to": "todo outro viajante perde 3 de energia"
+  },
+  {
+   "re": "you\\ destroy\\ one\\ card",
+   "flags": "g",
+   "to": "você destrói uma carta"
+  },
+  {
+   "re": "you\\ move\\ the\\ Merchant\\ anywhere",
+   "flags": "g",
+   "to": "você move o Mercador para qualquer lugar"
+  },
+  {
+   "re": "a\\ solo\\ Generators\\ phase\\ ticket",
+   "flags": "g",
+   "to": "um tíquete de fase de Geradores solo"
+  },
+  {
+   "re": "a\\ Market\\ ticket:\\ trade\\ from\\ anywhere",
+   "flags": "g",
+   "to": "um tíquete de Mercado: negocie de qualquer lugar"
+  },
+  {
+   "re": "an\\ item\\ ticket:\\ an\\ extra\\ activation",
+   "flags": "g",
+   "to": "um tíquete de item: uma ativação extra"
+  },
+  {
+   "re": "\\+3\\ energy\\ and\\ \\+3\\ gold",
+   "flags": "g",
+   "to": "+3 de energia e +3 de ouro"
+  },
+  {
+   "re": "you\\ steal\\ one\\ of\\ the\\ Merchant's\\ cards\\ \\(you\\ become\\ Wanted\\)",
+   "flags": "g",
+   "to": "você rouba uma das cartas do Mercador (você fica Procurado)"
+  },
+  {
+   "re": "\\+1\\ forever\\ on\\ one\\ module",
+   "flags": "g",
+   "to": "+1 para sempre num módulo"
+  },
+  {
+   "re": "</b> done\\.",
+   "flags": "g",
+   "to": "</b> feito."
+  },
+  {
+   "re": "<b>(.+)</b>: take back a card from the recycled pile\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: pegue de volta uma carta da pilha de recicladas."
+  },
+  {
+   "re": "<b>(.+)</b>: use the ability of a relic you filed\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: use a habilidade de uma relíquia que você arquivou."
   }
  ]
 }

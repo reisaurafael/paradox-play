@@ -296,29 +296,29 @@
   <g pointer-events="none">
     <path d="M 214.6 406 L 207.8 186 Q 207 156.4 236 155.6 L 498 155.6 Q 522.6 155.6 527.6 176" fill="none" stroke="#d6dde2" stroke-width="1.6" opacity=".5"/>
     
-    <text x="372" y="167.6" text-anchor="middle" font-family="monospace" font-size="6.4" letter-spacing="2.2" fill="#b9c3ca" opacity=".32">C.R.O.N.O.S. TEMPORAL GAUNTLET MK II</text>
-    <text x="372" y="166.6" text-anchor="middle" font-family="monospace" font-size="6.4" letter-spacing="2.2" fill="#12171b" opacity=".75">C.R.O.N.O.S. TEMPORAL GAUNTLET MK II</text>
+    <rect x="289.4" y="155.4" width="166" height="10.4" rx="1.5" transform="translate(1 1.4)" fill="${INK}" opacity=".5"/>
+    <rect x="289.4" y="155.4" width="166" height="10.4" rx="1.5" fill="#e6d6ae" stroke="${INK}" stroke-width="1.1"/>
+    <path d="M 452 155.9 l 3 0 l 0 2.6 Z M 330 165.3 l 5 0 l -2.4 -1.2 Z" fill="#4d575f"/>
+    <g fill="#c29a4e" stroke="${INK}" stroke-width=".8"><circle cx="293.6" cy="160.6" r="1.6"/><circle cx="451.2" cy="160.6" r="1.6"/></g>
+    <text x="372.4" y="162.9" text-anchor="middle" font-family="monospace" font-size="5.2" font-weight="bold" letter-spacing=".7" fill="#2a2016">C.R.O.N.O.S. TEMPORAL GAUNTLET MK II</text>
   </g>
   <g pointer-events="none"><circle cx="224" cy="176" r="4.6" fill="#7b858d" stroke="${INK}" stroke-width="1.8"/><path d="M 227.3 172.7 A 4.6 4.6 0 0 1 220.7 179.3 Z" fill="#4d575f"/><path d="M 221.4 177.8 L 226.6 174.2" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/><circle cx="222.1" cy="174" r=".9" fill="#e3e9ed"/><circle cx="236" cy="426" r="4.6" fill="#7b858d" stroke="${INK}" stroke-width="1.8"/><path d="M 239.3 422.7 A 4.6 4.6 0 0 1 232.7 429.3 Z" fill="#4d575f"/><path d="M 233.0 424.9 L 239.0 427.1" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/><circle cx="234.1" cy="424" r=".9" fill="#e3e9ed"/><circle cx="522" cy="418" r="4.6" fill="#7b858d" stroke="${INK}" stroke-width="1.8"/><path d="M 525.3 414.7 A 4.6 4.6 0 0 1 518.7 421.3 Z" fill="#4d575f"/><path d="M 520.4 420.8 L 523.6 415.2" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/><circle cx="520.1" cy="416" r=".9" fill="#e3e9ed"/><circle cx="510" cy="176" r="4.6" fill="#7b858d" stroke="${INK}" stroke-width="1.8"/><path d="M 513.3 172.7 A 4.6 4.6 0 0 1 506.7 179.3 Z" fill="#4d575f"/><path d="M 507.7 173.7 L 512.3 178.3" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/><circle cx="508.1" cy="174" r=".9" fill="#e3e9ed"/></g>
+  
   <g>
-    <rect x="246" y="172" width="252" height="164" rx="13" fill="#0c1013" stroke="${INK}" stroke-width="4.2"/>
-    <rect x="243.5" y="169.5" width="257" height="169" rx="15" fill="none" stroke="#b8934c" stroke-width="1.6" opacity=".75" pointer-events="none"/>
+    <clipPath id="mnScrCut"><path d="M 256.5 168.5 H 482.5 Q 496.5 168.5 496.5 182.5 V 321.5 Q 496.5 335.5 482.5 335.5 H 256.5 Q 242.5 335.5 242.5 321.5 V 182.5 Q 242.5 168.5 256.5 168.5 Z"/></clipPath><path d="M 256.5 168.5 H 482.5 Q 496.5 168.5 496.5 182.5 V 321.5 Q 496.5 335.5 482.5 335.5 H 256.5 Q 242.5 335.5 242.5 321.5 V 182.5 Q 242.5 168.5 256.5 168.5 Z" fill="#1b2126"/><g clip-path="url(#mnScrCut)" pointer-events="none"><path d="M 498.5 166.5 L 498.5 337.5 L 240.5 337.5 L 249.5 332.5 L 494.5 175.5 Z" fill="#79838b"/><path d="M 249.5 332.5 L 494.5 175.5" stroke="#000" stroke-width=".8" opacity=".25"/></g><path d="M 256.5 168.5 H 482.5 Q 496.5 168.5 496.5 182.5 V 321.5 Q 496.5 335.5 482.5 335.5 H 256.5 Q 242.5 335.5 242.5 321.5 V 182.5 Q 242.5 168.5 256.5 168.5 Z" fill="none" stroke="${INK}" stroke-width="3"/><path d="M 256.5 337.7 H 482.5 Q 498.7 337.7 498.7 321.5" fill="none" stroke="#b9c3ca" stroke-width="1" opacity=".5" pointer-events="none"/>
+    <rect x="249.5" y="175.5" width="245" height="157" rx="11" fill="#0a0c0e" stroke="${INK}" stroke-width="1.6"/>
+    <path d="M 256 331 H 484 Q 493 331 493 322 V 186" fill="none" stroke="#3a444b" stroke-width="1.2" pointer-events="none"/>
     <rect id="gnt-screen" x="254" y="180" width="236" height="148" rx="9" fill="url(#mnScreen)" stroke="#08161f" stroke-width="2"/>
-    <rect x="257" y="183" width="230" height="142" rx="7" fill="none" stroke="#000" stroke-width="5" opacity=".28"/>
-    <rect x="258" y="184" width="228" height="140" rx="7" fill="none" stroke="#2f7a4e" stroke-width="1.4" opacity=".5"/>
-    <path d="M 252 173 L 492 173" stroke="#8b959d" stroke-width="1.5" opacity=".45"/>
+    <path d="M 254 214 V 189 Q 254 180 263 180 H 490 L 490 184.6 H 263.4 Q 258.6 184.6 258.6 189.4 V 328 H 254 Z" fill="#000" opacity=".32" pointer-events="none"/>
   </g>
   
-  <circle cx="229" cy="197.6" r="9.4" fill="${INK}" pointer-events="none"/>
-  <circle cx="228" cy="196" r="9" fill="#8f99a1" stroke="${INK}" stroke-width="2.2"/>
-  <path d="M 234.4 190.6 A 8 8 0 0 1 222.6 202.4 Z" fill="#646e76" pointer-events="none"/>
-  <line x1="228" y1="189.6" x2="228" y2="196" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M 222 192 A 7 7 0 0 1 226.6 189.2" fill="none" stroke="#eef2f4" stroke-width="1.4" stroke-linecap="round" opacity=".7" pointer-events="none"/>
-  
-  <g id="gnt-seals">${sealSVG(228,232,0)}${sealSVG(228,258,1)}${sealSVG(228,284,2)}</g>
+  <g id="gnt-seals">${sealSVG(228,196,0)}${sealSVG(228,222,1)}${sealSVG(228,248,2)}</g>
   ${valveTagSVG()}
   <g id="gnt-boomg">
-    <rect x="500" y="190" width="32" height="138" rx="6" fill="#0e1216" stroke="${INK}" stroke-width="3"/>
+    
+    <clipPath id="mnBoomCut"><path d="M 505 188.5 H 526.5 Q 532.5 188.5 532.5 194.5 V 322.5 Q 532.5 328.5 526.5 328.5 H 505 Q 499 328.5 499 322.5 V 194.5 Q 499 188.5 505 188.5 Z"/></clipPath><path d="M 505 188.5 H 526.5 Q 532.5 188.5 532.5 194.5 V 322.5 Q 532.5 328.5 526.5 328.5 H 505 Q 499 328.5 499 322.5 V 194.5 Q 499 188.5 505 188.5 Z" fill="#1b2126"/><g clip-path="url(#mnBoomCut)" pointer-events="none"><path d="M 534.5 186.5 L 534.5 330.5 L 497 330.5 L 502 325 L 530 193 Z" fill="#79838b"/><path d="M 502 325 L 530 193" stroke="#000" stroke-width=".8" opacity=".25"/></g><path d="M 505 188.5 H 526.5 Q 532.5 188.5 532.5 194.5 V 322.5 Q 532.5 328.5 526.5 328.5 H 505 Q 499 328.5 499 322.5 V 194.5 Q 499 188.5 505 188.5 Z" fill="none" stroke="${INK}" stroke-width="3"/><path d="M 505 330.7 H 526.5 Q 534.7 330.7 534.7 322.5" fill="none" stroke="#b9c3ca" stroke-width="1" opacity=".5" pointer-events="none"/>
+    <rect x="502" y="193" width="28" height="132" rx="3" fill="#353e45" stroke="${INK}" stroke-width="1.2"/>
+    <g pointer-events="none"><rect x="503" y="312.0" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 322.5 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="301.4" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 311.9 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="290.8" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 301.3 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="280.2" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 290.7 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="269.6" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 280.1 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="259.0" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 269.5 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="248.4" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 258.9 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="237.8" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 248.3 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="227.2" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 237.7 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="216.6" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 227.1 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="206.0" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 216.5 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/><rect x="503" y="195.4" width="26" height="10.8" rx="2.4" fill="#06080a"/><path d="M 504.2 205.9 H 527.6" stroke="#5e6870" stroke-width=".9" opacity=".7"/></g>
     <rect class="bseg" data-z="g" x="504" y="313.4" width="24" height="8" rx="2"/>
     <rect class="bseg" data-z="g" x="504" y="302.8" width="24" height="8" rx="2"/>
     <rect class="bseg" data-z="g" x="504" y="292.2" width="24" height="8" rx="2"/>
@@ -331,7 +331,10 @@
     <rect class="bseg" data-z="r" x="504" y="218.0" width="24" height="8" rx="2"/>
     <rect class="bseg" data-z="r" x="504" y="207.4" width="24" height="8" rx="2"/>
     <rect class="bseg" data-z="r" x="504" y="196.8" width="24" height="8" rx="2"/>
-    <circle id="boom-lamp" cx="516" cy="180" r="7" fill="#33110c" stroke="${INK}" stroke-width="2.4"/>
+    <circle cx="516" cy="180" r="8.8" fill="#1b2126" stroke="${INK}" stroke-width="2.2" pointer-events="none"/>
+    <path d="M 522.2 173.8 A 8.8 8.8 0 0 1 509.8 186.2" fill="none" stroke="#79838b" stroke-width="1.8" pointer-events="none"/>
+    <circle id="boom-lamp" cx="516" cy="180" r="6.2" fill="#33110c" stroke="${INK}" stroke-width="1.6"/>
+    <circle cx="514" cy="178" r="1.3" fill="#fff" opacity=".45" pointer-events="none"/>
     
     <rect x="502.5" y="333.2" width="27" height="10" rx="1.5" fill="#b8412c" stroke="${INK}" stroke-width="1.1" pointer-events="none"/>
     <path d="M 525.6 333.8 l 3.4 0 l 0 3.6 l -1.6 -.6 Z M 503.2 340.4 l 2.4 2.4 l -2.4 0 Z" fill="#4d575f" pointer-events="none"/>
@@ -345,7 +348,6 @@
     <line x1="467.8" y1="404.6" x2="465.8" y2="424.6"/><line x1="483.8" y1="404.6" x2="481.8" y2="424.6"/>
     <line x1="499.8" y1="403.6" x2="497.8" y2="423.6"/><line x1="515.8" y1="403.6" x2="513.8" y2="423.6"/>
   </g>
-  <line x1="506" y1="198" x2="505" y2="318" stroke="#ffffff" stroke-width="2" opacity=".1"/>
   
   <g pointer-events="none">
     <clipPath id="mnHaz"><rect x="412" y="403" width="44" height="14" rx="1.5"/></clipPath>
@@ -358,7 +360,8 @@
     <rect x="412" y="403" width="44" height="14" rx="1.5" fill="none" stroke="${INK}" stroke-width="1.2"/>
   </g>
   
-  <rect id="tray-slot" x="250" y="346" width="150" height="46" rx="8" fill="#10151a" stroke="${INK}" stroke-width="3.4"/>
+  <clipPath id="mnTrayCut"><path d="M 254 340.5 H 393 Q 403 340.5 403 350.5 V 385.0 Q 403 395.0 393 395.0 H 254 Q 244 395.0 244 385.0 V 350.5 Q 244 340.5 254 340.5 Z"/></clipPath><path d="M 254 340.5 H 393 Q 403 340.5 403 350.5 V 385.0 Q 403 395.0 393 395.0 H 254 Q 244 395.0 244 385.0 V 350.5 Q 244 340.5 254 340.5 Z" fill="#1b2126"/><g clip-path="url(#mnTrayCut)" pointer-events="none"><path d="M 405 338.5 L 405 397.0 L 242 397.0 L 250 392 L 400 346 Z" fill="#79838b"/><path d="M 250 392 L 400 346" stroke="#000" stroke-width=".8" opacity=".25"/></g><path d="M 254 340.5 H 393 Q 403 340.5 403 350.5 V 385.0 Q 403 395.0 393 395.0 H 254 Q 244 395.0 244 385.0 V 350.5 Q 244 340.5 254 340.5 Z" fill="none" stroke="${INK}" stroke-width="3"/><path d="M 254 397.2 H 393 Q 405.2 397.2 405.2 385.0" fill="none" stroke="#b9c3ca" stroke-width="1" opacity=".5" pointer-events="none"/>
+  <rect id="tray-slot" x="250" y="346" width="150" height="46" rx="8" fill="#10151a" stroke="${INK}" stroke-width="1.4"/>
   <g pointer-events="none">
     <clipPath id="mnTray"><rect x="250" y="346" width="150" height="46" rx="8"/></clipPath>
     <g clip-path="url(#mnTray)">
@@ -371,6 +374,7 @@
   <g id="gnt-keys">
     <g id="gnt-clear" class="mkey">
       <rect x="408" y="350" width="42" height="38" rx="6" fill="#15191c" stroke="${INK}" stroke-width="2.8"/>
+      <path d="M 414 386.2 H 444 Q 448.2 386.2 448.2 382 V 355" fill="none" stroke="#56606a" stroke-width="1.4" pointer-events="none"/>
       <rect x="412" y="356" width="34" height="26" rx="4" fill="#2a3136" stroke="${INK}" stroke-width="2" pointer-events="none"/>
       <g class="mkey-top">
         <rect class="mkey-cap" x="412" y="353" width="34" height="26" rx="4" fill="#7b858d" stroke="${INK}" stroke-width="2"/>
@@ -382,6 +386,7 @@
     </g>
     <g id="gnt-confirm" class="mkey">
       <rect x="458" y="350" width="74" height="38" rx="6" fill="#15191c" stroke="${INK}" stroke-width="2.8"/>
+      <path d="M 464 386.2 H 526 Q 530.2 386.2 530.2 382 V 355" fill="none" stroke="#56606a" stroke-width="1.4" pointer-events="none"/>
       <rect x="462" y="356" width="66" height="26" rx="4" fill="#6b4f1c" stroke="${INK}" stroke-width="2" pointer-events="none"/>
       <g class="mkey-top">
         <rect class="mkey-cap" x="462" y="353" width="66" height="26" rx="4" fill="#dcaa4f" stroke="${INK}" stroke-width="2"/>
