@@ -818,9 +818,46 @@
   "ARROWS": "SETAS",
   "the same as W A S D": "o mesmo que W A S D",
   "Where is the chart?": "Onde está o mapa?",
-  "Below the desk: look down with S (or the down arrow) and back up with W. From the chart A turns to your records, and from the records S turns down to the chart. When you must pick a century I turn your head there myself.": "Abaixo da mesa: olhe para baixo com S (ou a seta para baixo) e volte com W. Do mapa, A vira para os seus registros, e dos registros, S vira para baixo, para o mapa. Quando você precisar escolher um século, eu mesma viro a sua cabeça para lá."
+  "Below the desk: look down with S (or the down arrow) and back up with W. From the chart A turns to your records, and from the records S turns down to the chart. When you must pick a century I turn your head there myself.": "Abaixo da mesa: olhe para baixo com S (ou a seta para baixo) e volte com W. Do mapa, A vira para os seus registros, e dos registros, S vira para baixo, para o mapa. Quando você precisar escolher um século, eu mesma viro a sua cabeça para lá.",
+  "HOUR": "HORA",
+  "TRAVEL": "VIAGEM",
+  "gold": "ouro",
+  "century": "século",
+  "energy": "energia",
+  "FOR REQUISITION": "PARA REQUISIÇÃO",
+  "AT LARGE": "À SOLTA",
+  "EFFECT ON RECORD": "EFEITO REGISTRADO",
+  "DELIVER TO": "ENTREGAR EM",
+  "THE HOUR IS DEALT": "A HORA FOI DISTRIBUÍDA",
+  "» no irregularities on record": "» nenhuma irregularidade registrada",
+  "Those on his shelf are the relics: things torn out of their centuries by the Incursion. Every one of them has to go home.": "As que estão na prateleira dele são as relíquias: coisas arrancadas dos seus séculos pela Incursão. Cada uma delas precisa voltar para casa."
  },
  "patterns": [
+  {
+   "re": "no mesmo século que eles",
+   "flags": "g",
+   "to": "no mesmo século que eles"
+  },
+  {
+   "re": "atrás de eles",
+   "flags": "g",
+   "to": "atrás deles"
+  },
+  {
+   "re": "à frente de eles",
+   "flags": "g",
+   "to": "à frente deles"
+  },
+  {
+   "re": "Right now it would hit no one: (.+) (are|is) (atrás de|behind) you\\. Travel first\\. From where you land, you strike next Hour\\.",
+   "flags": "g",
+   "to": "Agora ele não atingiria ninguém: $1 está atrás de você. Viaje primeiro. De onde você pousar, você ataca na próxima Hora."
+  },
+  {
+   "re": "For now your machine has four cells\\. It grows\\.",
+   "flags": "g",
+   "to": "Por enquanto sua máquina tem quatro células. Ela cresce."
+  },
   {
    "re": "The MERCHANT\\. He carries relics and he trades with whoever is standing in his own year: every one of them, one after another, in priority order\\. That wagon crawls the centuries on its own business, never on yours, so do not sit there waiting on it\\. If you want what he has, you cross the years and you stand in front of him\\.",
    "flags": "g",
@@ -1790,6 +1827,11 @@
    "re": "\\bDrag a (\\w+) onto\\b",
    "flags": "g",
    "to": "Arraste um $1 para"
+  },
+  {
+   "re": "\\b([A-Z][a-z]+) and ([A-Z][a-z]+)\\b(?=['’]?s? |[ ,.])",
+   "flags": "g",
+   "to": "$1 e $2"
   }
  ]
 }
