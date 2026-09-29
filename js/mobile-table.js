@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609282213";
-import { initials } from "./util.js?202609282213";
+import { cardArtImg } from "./card-art.js?202609282218";
+import { initials } from "./util.js?202609282218";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -776,6 +776,25 @@ function actOf(node) {
   if (c.contains("can-select")) return "Take";
   return "Choose";
 }
+/* A CARD READ ON A PHONE: a C.R.O.N.O.S. requisition form, typed and stamped (the owner, 29/09:
+   "cronons bureaucracy appearance... only the information and name", no illustration) */
+function formCard(d, name, kind, where) {
+  const no = String((name || "").split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9000, 7) + 1000);
+  const stamp = where === "case" ? "IN CUSTODY" : where === "secret" ? "CLASSIFIED" : "FOR REQUISITION";
+  return `<div class="ps-card card-pop ps-form">
+      <div class="pf-head"><span>C.R.O.N.O.S. · BUREAU OF TEMPORAL ACQUISITIONS</span><span>FORM TA-${no}</span></div>
+      <div class="pf-title">ARTEFACT REQUISITION</div>
+      <div class="pf-row"><i>ITEM</i><b class="cp-name">${esc(name)}</b></div>
+      <div class="pf-row"><i>CLASS</i><span class="cp-kind">${esc(kind || "--")}</span></div>
+      <div class="pf-row pf-eff"><i>EFFECT ON RECORD</i><div class="cp-desc">${d.description || "--"}</div></div>
+      <div class="pf-boxes cp-stats">
+        <div class="pf-box cp-stat"><i>PRICE</i><b><u class="pf-coin"></u>${d.gold_cost != null ? d.gold_cost : "-"}</b><small>gold</small></div>
+        <div class="pf-box cp-stat"><i>DELIVER TO</i><b>${d.delivery_century != null ? roman(d.delivery_century) : "?"}</b><small>century</small></div>
+        <div class="pf-box pf-energy cp-stat"><i>RECYCLE</i><b><u class="pf-gem"></u>${d.recycle_value != null ? d.recycle_value : "?"}</b><small>energy</small></div>
+      </div>
+      <div class="pf-stamp">${stamp}</div>
+    </div>`;
+}
 function openSheet(node) {
   closeSheet();
   const name = node.dataset.name;
@@ -785,15 +804,7 @@ function openSheet(node) {
   sheet.className = "pdx-sheet";
   const act = actOf(node);
   const kind = (d.kind_label || (d.ability_type || "").replace(/_/g, " ")).trim();
-  const art = cardArtImg(name, "ps-art-img");
-  sheet.innerHTML = `<div class="ps-card card-pop${art ? " ps-hasart" : ""}">${art ? `<div class="ps-art">${art}</div>` : ""}<div class="ps-body">
-      <div class="cp-name">${esc(node.querySelector(".card-name") ? node.querySelector(".card-name").textContent : name)}</div>
-      <div class="cp-kind">${esc(kind)}</div>
-      <div class="cp-desc">${d.description || "--"}</div>
-      <div class="cp-stats"><span class="cp-stat">${d.gold_cost != null ? d.gold_cost + " gold" : ""}</span>
-        <span class="cp-stat">Deliver ${d.delivery_century != null ? roman(d.delivery_century) : "?"}</span>
-        <span class="cp-stat">Recycle ${d.recycle_value != null ? d.recycle_value : "?"}</span></div>
-    </div></div>
+  sheet.innerHTML = formCard(d, node.querySelector(".card-name") ? node.querySelector(".card-name").textContent : name, kind, sheetFor.secret ? "secret" : "shop") + `
     <div class="ps-keys">${act ? `<button type="button" class="ps-act">${esc(act)}</button>` : `<p class="ps-note">${game() && game().selectReq ? "Not one you can pick now." : "Not yours to take now."}</p>`}
       <button type="button" class="ps-close">Back</button></div>`;
   sheet.querySelector(".ps-close").addEventListener("click", (e) => { e.stopPropagation(); closeSheet(); });
@@ -1405,15 +1416,7 @@ function caseSheet(node) {
   sheet = document.createElement("div");
   sheet.className = "pdx-sheet pdx-casesheet";
   const kind = (d.kind_label || (d.ability_type || "").replace(/_/g, " ")).trim();
-  const art = cardArtImg(d.name, "ps-art-img");
-  sheet.innerHTML = `<div class="ps-card card-pop${art ? " ps-hasart" : ""}">${art ? `<div class="ps-art">${art}</div>` : ""}<div class="ps-body">
-      <div class="cp-name">${esc(d.display_name || d.name)}</div>
-      <div class="cp-kind">${esc(kind)}</div>
-      <div class="cp-desc">${d.description || "--"}</div>
-      <div class="cp-stats"><span class="cp-stat">Deliver at ${d.delivery_century != null ? roman(d.delivery_century) : "?"}</span>
-        <span class="cp-stat">Recycle for ${d.recycle_value != null ? d.recycle_value : "?"} energy</span>
-        <span class="cp-stat">${d.gold_cost != null ? "Worth " + d.gold_cost + " gold" : ""}</span></div>
-    </div></div>
+  sheet.innerHTML = formCard(d, d.display_name || d.name, kind, "case") + `
     <div class="ps-keys">${note ? `<p class="ps-note">${esc(note)}</p>` : ""}${keys.map(([a, l], i) => `<button type="button" class="${i === 0 ? "ps-act" : "ps-close"}" data-a="${a}">${esc(l)}</button>`).join("")}
       <button type="button" class="ps-close" data-a="back">Back</button></div>`;
   sheet.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", (e) => {

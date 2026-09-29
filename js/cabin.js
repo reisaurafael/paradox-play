@@ -241,12 +241,15 @@
     const nail=([x,y,a,l,w])=>{ const b=-l/2-3, t=l/2+2.2, h=w/2, c=t-h*1.05, n=(v)=>v.toFixed(2);
       return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M ${n(b)} ${n(-h)} L ${n(c)} ${n(-h)} C ${n(c+h*.58)} ${n(-h)} ${n(t)} ${n(-h*.55)} ${n(t)} 0 C ${n(t)} ${n(h*.55)} ${n(c+h*.58)} ${n(h)} ${n(c)} ${n(h)} L ${n(b)} ${n(h)} Q ${n(b-1.6)} 0 ${n(b)} ${n(-h)} Z" style="fill:var(--hela-seat,#6fae6a)" stroke="${LINE}" stroke-width="1.3" stroke-linejoin="round"/><path d="M ${n(b+1.2)} ${n(-h+1.4)} Q ${n(b-.4)} 0 ${n(b+1.2)} ${n(h-1.4)}" fill="none" style="stroke:${sk(3)}" stroke-width="1.2" stroke-linecap="round"/></g>`; };
     const nails=(list)=>`<g pointer-events="none">${list.map(nail).join("")}</g>`;
+    // the masculine hand's own nails (the owner, 29/09: "look more like nails, not pink balls"):
+    // short and natural, a shade of the skin with a thin ink edge, the pale free edge at the tip
+    const natNail=([x,y,a,l,w])=>{ l*=.78; w*=.92; const b=-l/2-1, t=l/2+.6, h=w/2, c=t-h*.9, n=(v)=>v.toFixed(2);
+      return `<g transform="translate(${(x-1.5).toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})"><path d="M ${n(b)} ${n(-h)} L ${n(c)} ${n(-h)} C ${n(c+h*.55)} ${n(-h)} ${n(t)} ${n(-h*.55)} ${n(t)} 0 C ${n(t)} ${n(h*.55)} ${n(c+h*.55)} ${n(h)} ${n(c)} ${n(h)} L ${n(b)} ${n(h)} Q ${n(b-2)} 0 ${n(b)} ${n(-h)} Z" style="fill:${sk(4)}" stroke="${LINE}" stroke-width="1.1" stroke-linejoin="round" opacity=".92"/><path d="M ${n(c-.5)} ${n(-h+1.2)} C ${n(c+h*.4)} ${n(-h+1.2)} ${n(t-1.3)} ${n(-h*.4)} ${n(t-1.3)} 0 C ${n(t-1.3)} ${n(h*.4)} ${n(c+h*.4)} ${n(h-1.2)} ${n(c-.5)} ${n(h-1.2)}" fill="none" stroke="#fff6e8" stroke-width="1.3" stroke-linecap="round" opacity=".7"/><path d="M ${n(b+1.3)} ${n(-h+1.5)} Q ${n(b-.3)} 0 ${n(b+1.3)} ${n(h-1.5)}" fill="none" style="stroke:${sk(2)}" stroke-width="1" stroke-linecap="round" opacity=".8"/></g>`; };
     const thumbArt=(G,n)=>{
       const f=(v)=>v.toFixed(1);
       const pad=G.pad;
       return `${flat(G.d)}
       ${inClip(n, `
-        ${warm(`M ${f(pad[0]-8)} ${f(pad[1])} a 8 7 0 1 0 16 0 a 8 7 0 1 0 -16 0`,.32)}
         ${warm(`M ${f(G.J[0]+G.nj[0]*G.out*G.w1*.5-7)} ${f(G.J[1]+G.nj[1]*G.out*G.w1*.5)} a 7 6 0 1 0 14 0 a 7 6 0 1 0 -14 0`,.28)}
         ${skinHatch(G.hatch(1)+G.hatch(2))}
         ${soft(G.shadeD)}
@@ -266,7 +269,7 @@
         ${skinHatch("M 540 346 l 6 -8 M 548 347 l 6 -8 M 556 346 l 6 -8 M 564 344 l 5 -7")}${soft("M 520 334 Q 550 330 580 328 L 580 352 L 520 352 Z")}`)}
       ${inClip("f", `
         <!-- warmth at the knuckle ends and the fingertips -->
-        ${warm("M 700 266 a 11 8 0 1 0 22 0 a 11 8 0 1 0 -22 0 M 722 293 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 726 320 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 714 342 a 11 7 0 1 0 22 0 a 11 7 0 1 0 -22 0",.3)}
+        ${m ? "" : warm("M 700 266 a 11 8 0 1 0 22 0 a 11 8 0 1 0 -22 0 M 722 293 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 726 320 a 12 9 0 1 0 24 0 a 12 9 0 1 0 -24 0 M 714 342 a 11 7 0 1 0 22 0 a 11 7 0 1 0 -22 0",.3)}
         ${warm("M 662 262 a 8 12 0 1 0 16 0 a 8 12 0 1 0 -16 0 M 664 288 a 8 12 0 1 0 16 0 a 8 12 0 1 0 -16 0 M 664 312 a 8 12 0 1 0 16 0 a 8 12 0 1 0 -16 0 M 662 334 a 8 10 0 1 0 16 0 a 8 10 0 1 0 -16 0",.25)}
         <!-- a thin shadow and an ink line between each finger, tip to knuckle -->
         ${tick("M 709 278 Q 688 276 666 277 M 733 307 Q 704 302 666 301 M 737 335 Q 704 330 664 325",2,3.4)}
@@ -280,7 +283,7 @@
         ${skinPores([[680,262],[696,266],[688,290],[716,294],[700,314],[722,318],[690,338],[712,342],[676,312]])}`)}
       ${ring}
       ${thumbArt(THUMB,"t")}
-      ${m ? "" : nails(FINGER_NAILS)}
+      ${m ? `<g pointer-events="none">${FINGER_NAILS.map(natNail).join("")}</g>` : nails(FINGER_NAILS)}
     </g>`;
     const grab=`<g class="${cls}-grab"${hide}>
       ${clip("k",H.fist)}${clip("kt",H.fistThumb)}${clip("w2",H.wrist)}
