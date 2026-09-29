@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609282144";
-import { roman } from "./util.js?202609282144";
+import { audio } from "./audio.js?202609282153";
+import { roman } from "./util.js?202609282153";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -147,7 +147,7 @@ class Fx {
   // what plays now: Low graphics caps it at Light
   level() {
     const v = this.storedLevel();
-    if (document.documentElement.classList.contains("pdx-phone")) return v;   // a phone keeps its own choice (Full by default)
+    if (document.documentElement.classList.contains("pdx-touch")) return v;   // a phone or tablet keeps its own choice (Full by default)
     if (v === "full" && document.body.classList.contains("gfx-low")) return "light";
     return v;
   }
@@ -863,7 +863,7 @@ class Fx {
         gauge.parentNode.insertBefore(front, gauge.nextSibling);
       }
       // still in Light, and under Low graphics on a desktop (a phone's saved Full choice moves it)
-      const still = lv === "light" || (document.body.classList.contains("gfx-low") && !document.documentElement.classList.contains("pdx-phone"));
+      const still = lv === "light" || (document.body.classList.contains("gfx-low") && !document.documentElement.classList.contains("pdx-touch"));
       const cls = `fx-heat fh${step}` + (still ? " fx-still" : "");
       for (const el of [back, front]) if (el.getAttribute("class") !== cls) el.setAttribute("class", cls);
       back.setAttribute("data-booms", String(b));

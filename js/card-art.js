@@ -78,15 +78,12 @@ export function cardArtImg(name, cls) {
 const TICKET = "M 22 4 H 104 Q 112 4 112 12 V 46 Q 112 54 104 54 H 22 "
   + "A 6.5 6.5 0 0 1 22 41.5 A 6.5 6.5 0 0 1 22 29 A 6.5 6.5 0 0 1 22 16.5 A 6.5 6.5 0 0 1 22 4 Z";
 export function cardTicket(cost) {
-  return `<svg class="tk-svg" viewBox="0 0 116 58" aria-hidden="true">`
-    + `<path d="${TICKET}" fill="#0b0704" opacity=".5" transform="translate(2.5 4)"/>`
-    + `<path d="${TICKET}" fill="#efe2bf" stroke="#2a1d0e" stroke-width="2.6"/>`
-    + `<path d="M 26 36 H 106 V 46 Q 106 50 102 50 H 26 Z" fill="#b89b62" opacity=".22"/>`
-    + `<g fill="none" stroke="#8a7448" opacity=".24"><circle cx="74" cy="29" r="21" stroke-width="1.4"/><circle cx="74" cy="29" r="15" stroke-width="1.1"/><circle cx="74" cy="29" r="9" stroke-width=".9"/></g>`
-    + `<path d="M 25 8 H 105" stroke="#fffaf0" stroke-width="2.2" opacity=".75"/>`
-    + `<path d="M 25 50.5 H 105" stroke="#4a3d22" stroke-width="2.4" opacity=".35"/>`
-    + `<g transform="translate(42 29)"><circle r="13" fill="#7a4a0c"/><circle r="12" fill="#e4a834" stroke="#5a3606" stroke-width="1.6" stroke-dasharray="1.6 1.4"/>`
-    + `<circle r="8.6" fill="#f3c65a" stroke="#a8701a" stroke-width="1.1"/><path d="M -5 -4.5 A 7 7 0 0 1 4 -6" stroke="#fff4c8" stroke-width="1.6" fill="none" opacity=".85"/>`
-    + `<circle r="3.2" fill="none" stroke="#a8701a" stroke-width="1"/></g>`
+  // his call 29/09: not the V2 ticket, just a gold coin with the price on it
+  return `<svg class="tk-svg" viewBox="0 0 40 40" aria-hidden="true">`
+    + `<circle cx="21" cy="22" r="18" fill="#0b0704" opacity=".5"/>`
+    + `<circle cx="20" cy="20" r="18" fill="#7a4a0c"/>`
+    + `<circle cx="20" cy="20" r="17" fill="#e4a834" stroke="#5a3606" stroke-width="2" stroke-dasharray="2.1 1.7"/>`
+    + `<circle cx="20" cy="20" r="12.6" fill="#f3c65a" stroke="#a8701a" stroke-width="1.4"/>`
+    + `<path d="M 11 14 A 11 11 0 0 1 22 8.2" stroke="#fff4c8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".85"/>`
     + `</svg><b class="tk-num">${cost}</b>`;
 }

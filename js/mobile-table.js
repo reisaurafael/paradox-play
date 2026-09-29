@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609282144";
-import { initials } from "./util.js?202609282144";
+import { cardArtImg } from "./card-art.js?202609282153";
+import { initials } from "./util.js?202609282153";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -260,8 +260,8 @@ function frame(v, animate) {
   const f = frameRect(v);
   S = Math.min(stage.w / f.w, stage.h / f.h);
   O.x = stage.x + (stage.w - f.w * S) / 2 - f.x * S;
-  // on a phone the machine sits on the bottom edge, under the thumbs; a tablet centres every page
-  O.y = f.bottom && D.classList.contains("pdx-phone") ? stage.y + stage.h - (f.y + f.h) * S : stage.y + (stage.h - f.h * S) / 2 - f.y * S;
+  // the machine sits on the bottom edge, under the thumbs (a tablet exactly like a phone, his call 29/09)
+  O.y = f.bottom ? stage.y + stage.h - (f.y + f.h) * S : stage.y + (stage.h - f.h * S) / 2 - f.y * S;
   // EVERY VIEW IS ITS OWN PAGE: nothing of the table round its frame shows (the stage's own
   // backdrop does); the frame is widened to the stage's shape so no strip is cut off inside it
   const vw = stage.w / S, vh = stage.h / S;
