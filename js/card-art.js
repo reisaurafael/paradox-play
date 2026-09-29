@@ -32,6 +32,9 @@ export const CARD_ART = new Set([
   "seismograph",
   "astrolabe",
   "navigation_compass",
+  "da_vincis_flying_machine",
+  "teslas_ac_motor",
+  "super_motor",
 ]);
 
 // the cards whose function name is not the slug of their English name
@@ -79,6 +82,8 @@ const CROP = {
   portal_gun: "50% 52%",
   galileos_telescope: "50% 50%",
   gerardus_mercators_map: "50% 74%",
+  da_vincis_flying_machine: "50% 40%",
+  super_motor: "50% 54%",
 };
 
 // the <img> for a card's illustration (lazy, async, 2x for dense screens; its box is sized by CSS,
