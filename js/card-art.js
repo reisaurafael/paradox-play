@@ -20,6 +20,7 @@ export const CARD_ART = new Set([
   "joan_of_arcs_armor",
   "ching_shihs_red_flag",
   "gunpowder_revolver",
+  "laser_gun",
 ]);
 
 // the cards whose function name is not the slug of their English name

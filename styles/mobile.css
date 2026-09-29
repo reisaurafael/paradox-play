@@ -900,3 +900,7 @@ html.pdx-tablet #pdx-mcol .mc-order .mo-t { height: 22px; min-width: 24px; font-
 /* filing is the Records' alone on a phone: the case never calls a relic to be filed there */
 html.pdx-m-on #rucksack-zone .ruck-card.deliver-ready { animation: none !important; }
 html.pdx-m-on #rucksack-zone .ruck-card.deliver-ready::after { content: none !important; }
+
+/* the turn order lives in HELA's column on a phone or a tablet (.mc-order): the charts' order
+   slates are not drawn there (the owner, 29/09: "it should not be there, specially in mobile") */
+html.pdx-touch :is(.cc-ord, .sea-ord, .cm-ord) { display: none !important; }
