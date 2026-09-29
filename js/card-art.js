@@ -61,6 +61,8 @@ export const CARD_ART = new Set([
   "window_of_time",
   "woodblock_print",
   "relative_dimensions_operative",
+  "trinity",
+  "divine_comedy",
 ]);
 
 // the cards whose function name is not the slug of their English name
