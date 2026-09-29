@@ -19,7 +19,7 @@
    window.__pdxHelp = { isHeld, onHold, hold, isOpen, onOpen, open, close,
      toggle, note, overload, panel, placer } (the tutorial teaches Tab through it).
    ========================================================================= */
-import { FUNCTIONS } from "./util.js?202609281737";
+import { FUNCTIONS } from "./util.js?202609282144";
 
 const HOLD_MS = 250;        // a press held this long is a hold; shorter is a tap
 const NOTES_MAX = 3;        // HELA's notes shown on the hold view, newest first
@@ -35,6 +35,7 @@ const TIPS = [
   ["Why did I move?", "Only your Travel modules move you: module 8 up to the die, module 9 up to twice it, to the century you pick on the chart. A few relics move you too; your log (L) says which."],
   ["Why did I lose energy?", "A rival's paradox (it hits everyone ahead of, beside or behind its maker), sailing to the past, a motor explosion at 12 heat (-2), the escape valve while a function is shut, or a weapon in the Activation phase."],
   ["What does overload do?", "Three dice in one function overload it: that function is shut for the whole next Hour and takes no dice. It pays first: the third Travel die sails twice its value, and the third Paradox die, the Past, hits for twice its value."],
+  ["Why does my Paradox Past do nothing?", "A traveler terminated even once loses the Past for the rest of the match: a die can still go on module 6, and it still counts toward the overload, but it hits no one. A rival's file says PAST GONE when theirs is dead."],
   ["What is the escape valve?", "A slot for one spare die. While one of your functions is shut it drains your energy, equal to that die; otherwise it charges, and every 10 points buys a permanent +1 on a module."],
   ["When does the Merchant move?", "At the end of every Market phase: he rolls 1 to 3 dice and sails toward the richest traveler who is not in his century. Hold TAB to see where he is headed and where he can stop."],
   ["How do I buy?", "Stand on the Merchant's century during the Market phase, or on XI once the Secret Market opens, and pay the relic's price in gold."],
@@ -200,7 +201,10 @@ function annotations(g) {
     return cols.map((c) => {
       const sw = g && g._modSwap && g._modSwap[row + "," + c];
       const [glyph] = sw || fn.mods[c] || [""];
-      return `<span class="ha-mod"><b>${row * 3 + c + 1}</b> ${MOD_SHORT[glyph] || ""}</span>`;
+      // terminated at least once: module 6 still takes a die, but it does nothing (§18.2b)
+      const me = g && g._self ? g._self() : null;
+      const txt = row === 1 && c === 2 && me && me.past_dead ? "dead: you were terminated, it does nothing" : (MOD_SHORT[glyph] || "");
+      return `<span class="ha-mod"><b>${row * 3 + c + 1}</b> ${txt}</span>`;
     }).join("");
   };
   // by each row of the machine: what it does, and (dice placed) what it will do

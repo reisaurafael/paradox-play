@@ -886,3 +886,17 @@ html.pdx-m-on .panel-detail.dossier { left: var(--pdx-do-left, calc(var(--pdx-co
 .pdx-pick .pp-tile .pp-art { position: relative; flex: 0 0 auto; height: 96px; margin: -10px -11px 8px; overflow: hidden; border-bottom: 1px solid rgba(60, 48, 24, .4); background: #2a2116; }
 .pdx-pick .pp-tile .pp-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; display: block; }
 .pdx-pick .pp-tile .pp-tag { z-index: 2; }
+
+/* ══ THE TURN ORDER in her column (mobile-table.js paintOrder): who acts first this Hour ══ */
+#pdx-mcol .mc-order { flex: 0 0 auto; display: flex; align-items: center; gap: 3px; min-height: 20px; flex-wrap: nowrap; overflow: hidden; }
+#pdx-mcol .mc-order:empty { display: none; }
+#pdx-mcol .mc-order .mo-h { margin-right: 3px; font: 700 .56rem/1 var(--f-mono, monospace); letter-spacing: .14em; color: #8fbfb0; }
+#pdx-mcol .mc-order .mo-t { min-width: 20px; height: 18px; padding: 0 3px; box-sizing: border-box; display: grid; place-items: center; border-radius: 3px;
+  background: var(--c, #888); color: #15100a; border: 1.5px solid var(--cx-ink, #15100a); font: 700 .58rem/1 var(--f-display, "Oswald", sans-serif); font-style: normal; letter-spacing: .04em; }
+#pdx-mcol .mc-order .mo-t.mo-me { box-shadow: 0 0 0 2px #fffbe8; }
+#pdx-mcol .mc-order .mo-t.mo-out { opacity: .35; text-decoration: line-through; }
+#pdx-mcol .mc-order .mo-sep { color: #5f8a80; font-size: .7rem; line-height: 1; }
+html.pdx-tablet #pdx-mcol .mc-order .mo-t { height: 22px; min-width: 24px; font-size: .7rem; }
+/* filing is the Records' alone on a phone: the case never calls a relic to be filed there */
+html.pdx-m-on #rucksack-zone .ruck-card.deliver-ready { animation: none !important; }
+html.pdx-m-on #rucksack-zone .ruck-card.deliver-ready::after { content: none !important; }

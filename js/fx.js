@@ -34,8 +34,8 @@
    bought; the chart scripts call landed; comic.js impact
    asks route before it draws.
    ========================================================================= */
-import { audio } from "./audio.js?202609281737";
-import { roman } from "./util.js?202609281737";
+import { audio } from "./audio.js?202609282144";
+import { roman } from "./util.js?202609282144";
 
 const PACE_KEY = "paradoxo.speed";   // the key main.js has always used
 const LEVEL_KEY = "pdx-fx-level";
@@ -208,6 +208,23 @@ class Fx {
     if (!pt) pt = { x: s.left + Math.min(200, (s.right - s.left) * .3), y: 34 };
     return { r: { left: pt.x, right: pt.x, top: pt.y, bottom: pt.y, width: 0, height: 0 }, box: null, at: true };
   }
+  // HELA's column on a phone shows my ENERGY (#pdx-mcol .mc-life): a paradox hit on me and
+  // every -N / +N of my energy land THERE, on a small layer of their own just above the
+  // column (the column sits far above the table's layers)
+  _energy() {
+    if (!this._phone()) return null;
+    const e = document.querySelector("#pdx-mcol .mc-life");
+    const r = e && e.getBoundingClientRect();
+    return r && r.width > 2 && r.height > 2 ? r : null;
+  }
+  _colRoot() {
+    let c = this._colEl;
+    if (!c || !c.isConnected) {
+      c = document.createElement("div"); c.id = "fx-colroot"; c.setAttribute("aria-hidden", "true");
+      document.body.appendChild(c); this._colEl = c;
+    }
+    return c;
+  }
   // beside the life thread's tick (its -N lands on _life itself)
   _lifeBeside() { const L = this._life(); const x = L.r.left + 104; return { r: { left: x, right: x, top: L.r.top + 4, bottom: L.r.top + 4, width: 0, height: 0 }, box: null, at: true }; }
   // what nothing may cover on a phone: the CRT with its cells, the dice tray and its keys
@@ -260,18 +277,22 @@ class Fx {
   // the phone's life thread takes its comic tick: -N red with a crackle, +N quietly green
   lifeTick(seat, delta) {
     if (!delta || seat !== this._me() || !this._phone() || this._quiet() || this.level() === "off") return;
-    try { if (window.__pdxLifeHit) { window.__pdxLifeHit(delta); return; } } catch (e) {}   // the life thread draws its own
-    const a = this._life(), x = a.r.left, y = a.r.top, dur = Math.max(1500, this.ms(1900));
+    const en = this._energy();
+    if (!en) { try { if (window.__pdxLifeHit) { window.__pdxLifeHit(delta); return; } } catch (e) {} }   // the life thread draws its own
+    const a = this._life(), dur = Math.max(1500, this.ms(1900));
+    // on the ENERGY block in HELA's column: at its right end, beside the number
+    const x = en ? en.right - 26 : a.r.left, y = en ? en.top + en.height / 2 : a.r.top;
     const n = document.createElement("div");
     n.className = "fx-lifetick " + (delta < 0 ? "fx-lt-loss" : "fx-lt-gain");
     n.style.left = Math.round(x) + "px"; n.style.top = Math.round(y) + "px";
     const b = document.createElement("b"); b.textContent = (delta > 0 ? "+" : "\u2212") + Math.abs(delta); n.appendChild(b);
+    if (en) n.classList.add("fx-lt-col");
     if (delta < 0) {                                  // the crackle along the border above it
       n.insertAdjacentHTML("afterbegin", '<svg class="fx-crackle" viewBox="0 0 120 12" width="120" height="12" aria-hidden="true">'
         + '<polyline class="ck-ink" points="0,6 12,2 22,9 34,3 46,10 58,2 70,9 82,3 94,10 106,4 120,7"/>'
         + '<polyline class="ck-col" points="0,6 12,2 22,9 34,3 46,10 58,2 70,9 82,3 94,10 106,4 120,7"/></svg>');
     }
-    this.root.appendChild(n);
+    (en ? this._colRoot() : this.root).appendChild(n);
     try { n.animate(this._calm()
       ? [{ opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: 1, offset: .7 }, { opacity: 0 }]
       : [{ opacity: 0, transform: "translate(-50%,-50%) scale(1.4)" }, { opacity: 1, transform: "translate(-50%,-50%) scale(1)", offset: .12 },
@@ -410,8 +431,8 @@ class Fx {
     if (opts.color) n.classList.add("fx-seat");   // in the causer's colour
     const b = document.createElement("b"); b.textContent = word; n.appendChild(b);
     if (opts.sub) { const s = document.createElement("span"); s.textContent = opts.sub; n.appendChild(s); }
-    this.root.appendChild(n);
-    if (this._phone()) {                              // inside the stage, off the CRT, the dice and the keys
+    (opts.col ? this._colRoot() : this.root).appendChild(n);
+    if (this._phone() && !opts.col) {                 // inside the stage, off the CRT, the dice and the keys
       const w = n.offsetWidth, h = n.offsetHeight;
       const f = this._fit(p.x + (parseFloat(p.tx) / 100) * w, p.y + (parseFloat(p.ty) / 100) * h, w, h);
       p.x += f.dx; p.y += f.dy;
@@ -697,7 +718,12 @@ class Fx {
       if (this._quiet()) return;
       if (i) { try { audio.play("paradox", { power: .6 }); } catch (e) {} }   // each later distance on its own beat
       if (this.level() === "light") {                // Light: a stamp per zap, in the causer's colour
-        beat.forEach((q) => this.stamp("ZZAP!", "paradox", () => (this._phone() && q.victim === me ? this._lifeBeside() : this._seat(q.victim, "life")), { sound: false, color: q.causer ? this._col(q.causer) : null }));
+        beat.forEach((q) => {
+          const en = this._phone() && q.victim === me ? this._energy() : null;
+          this.stamp("ZZAP!", "paradox", () => (en ? { r: { left: en.left + en.width / 2, right: en.left + en.width / 2, top: en.top + 10, bottom: en.top + 10, width: 0, height: 0 }, box: null, at: true }
+            : this._phone() && q.victim === me ? this._lifeBeside() : this._seat(q.victim, "life")),
+            { sound: false, color: q.causer ? this._col(q.causer) : null, col: !!en });
+        });
         return;
       }
       this._zaps(beat, beatMs, me);
@@ -710,7 +736,11 @@ class Fx {
     const pts = beat.map((q) => {
       let r = null;
       if (phone) {
-        if (q.victim === me) { const L = this._lifeBeside(); return { q, x: L.r.left, y: L.r.top }; }   // beside my life thread's tick
+        if (q.victim === me) {                          // on my ENERGY in HELA's column (else beside the thread)
+          const en = this._energy();
+          if (en) return { q, x: en.left + en.width / 2, y: en.top + en.height / 2, col: true };
+          const L = this._lifeBeside(); return { q, x: L.r.left, y: L.r.top };
+        }
         this._off = null;
         r = this._rect(this._pcard(q.victim));
         if (!r) { if (this._off) this._edge("ZZAP!", "paradox", this._off.r, { color: q.causer ? this._col(q.causer) : null }); return null; }
@@ -728,6 +758,7 @@ class Fx {
     for (let pass = 0; pass < 6; pass++) {
       let moved = false;
       for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) {
+        if (pts[a].col || pts[b].col) continue;         // the column's own stack is laid out below
         const dx = pts[b].x - pts[a].x, dy = pts[b].y - pts[a].y, d = Math.hypot(dx, dy);
         if (d >= min) continue;
         const push = (min - d) / 2 + 1, ux = d > 1 ? dx / d : 1, uy = d > 1 ? dy / d : .25;
@@ -736,7 +767,15 @@ class Fx {
       }
       if (!moved) break;
     }
+    // several hits on my energy at once: stacked down the column, never on one point
+    const mine = pts.filter((pt) => pt.col);
+    const en = mine.length && this._energy();
+    mine.forEach((pt, j) => {
+      pt.y += (j - (mine.length - 1) / 2) * 46; pt.x += (j % 2 ? 12 : -12) * (mine.length > 1 ? 1 : 0);
+      if (en) pt.x = Math.max(en.left + 44, Math.min(en.right - 44, pt.x));   // inside the column
+    });
     if (phone) for (const pt of pts) {                // on the stage, off the CRT, the dice and the keys
+      if (pt.col) continue;
       const hw = (pt.q.victim === me ? 66 : 50) * k, hh = (pt.q.victim === me ? 62 : 46) * k;
       const f = this._fit(pt.x - hw, pt.y - hh, 2 * hw, 2 * hh); pt.x += f.dx; pt.y += f.dy;
     }
@@ -754,13 +793,13 @@ class Fx {
     h.className = "cx-hit fx-zap" + (big ? " cx-hit-big" : "") + " cx-g-" + gfx + (col ? " cx-seat" : "");
     h.style.left = Math.round(x) + "px"; h.style.top = Math.round(y) + "px";
     if (k !== 1) h.style.transform = `scale(${k})`;
-    h.style.setProperty("--cx-c", col || "#b98cff"); h.style.setProperty("--cx-ink", "#1a0f2e");
+    h.style.setProperty("--cx-c", pt.c || col || "#b98cff"); h.style.setProperty("--cx-ink", "#1a0f2e");
     const lines = (!this._calm() && gfx !== "low" && big) ? document.createElement("i") : null;
     if (lines) { lines.className = "cx-lines"; h.appendChild(lines); }
     const burst = document.createElement("i"); burst.className = "cx-burst"; h.appendChild(burst);
-    const word = document.createElement("b"); word.className = "cx-word"; word.textContent = "ZZAP!"; h.appendChild(word);
+    const word = document.createElement("b"); word.className = "cx-word"; word.textContent = pt.word || "ZZAP!"; h.appendChild(word);
     if (q.sub) { const sub = document.createElement("span"); sub.className = "cx-sub"; sub.textContent = q.sub; h.appendChild(sub); }
-    this.root.appendChild(h);
+    (pt.col ? this._colRoot() : this.root).appendChild(h);
     const rot = (Math.random() * 8 - 4).toFixed(1);
     const fin = { duration: dur, easing: "linear", fill: "both" };
     const pop = Math.min(.12, 150 / dur);
@@ -977,7 +1016,25 @@ class Fx {
     try { audio.play("heat", { power: .5 }); } catch (e) {}   // the hiss
     if (vent && this.level() === "full" && !this._calm()) this._steam(vent);
     if (vent) this.stamp("VALVE!", "danger", { r: vent, box: vent, above: true }, { sound: false });
+    this._valveHit(seat);
     if (!this._phone()) this.pop("-" + n, "danger", () => this._seat(seat, "life"), { big: true });
+  }
+  // the damage itself, a comic panel like the paradox's ZZAP: a steam-teal PSSSHT! on my
+  // energy (HELA's ENERGY block on a phone, my file on the desk), the -N stays the number's
+  _valveHit(seat) {
+    const q = { victim: seat, sub: "escape valve" }, dur = Math.max(1300, this.ms(1700));
+    let pt = null;
+    if (this._phone()) {
+      const en = this._energy();
+      if (en) pt = { q, x: en.left + en.width / 2, y: en.top + en.height / 2, col: true };
+    } else {
+      let r = null; try { r = this.comic && this.comic._seatRect(seat); } catch (e) {}
+      if (r) { const x = r.width != null ? r.left + r.width / 2 : r.x, y = r.width != null ? r.top + r.height / 2 : r.y;
+        pt = { q, x, y: y - 40 }; }
+    }
+    if (!pt) return;
+    pt.word = "PSSSHT!"; pt.c = TONE.valve;
+    this._zap(pt, this._phone() ? .8 : 1, dur, true);
   }
   _steam(r) {
     const x = r.left + r.width / 2, y = r.top + r.height * .3, dur = Math.max(1100, this.ms(1500));

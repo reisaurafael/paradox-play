@@ -15,11 +15,11 @@
    back and the match plays on to its real end.
    ========================================================================= */
 
-import { api, Connection } from "./net.js?202609281737";
-import { Game } from "./game.js?202609281737";
-import { icon } from "./icons.js?202609281737";
-import { roman } from "./util.js?202609281737";
-import { profile } from "./profile.js?202609281737";
+import { api, Connection } from "./net.js?202609282144";
+import { Game } from "./game.js?202609282144";
+import { icon } from "./icons.js?202609282144";
+import { roman } from "./util.js?202609282144";
+import { profile } from "./profile.js?202609282144";
 
 const R = (v) => roman(v);
 // ON A PHONE OR A TABLET her lines name what a finger touches, not keys (js/touch.js
@@ -52,6 +52,7 @@ const VIEW_LABEL = { machine: "MACHINE", chart: "CHART", merchant: "MERCHANT", c
 const VIEW_SCENE = { machine: "main", chart: "timeline", merchant: "market", records: "drawer" };
 const SCENE_VIEW = { main: "machine", market: "merchant", drawer: "records" };
 const railKey = (v) => `#pdx-mrail button[data-view="${v}"]`;
+const LIFE = "#pdx-mcol .mc-life";                  // his ENERGY in her column (mobile-table.js)
 
 // What a reward does, by category and roll (the engine's table, §23.3).
 const REWARD_TEXT = {
@@ -92,7 +93,7 @@ const L = {
   paradoxAim: "Your paradox has its third module now, and that one is the PAST: it strikes whoever is standing behind you, for DOUBLE the die. First ahead of you, second right on top of you, third behind you. A die only reaches the third after the first two, and three dice overload the function, so the Past hits twice as hard to pay for the shut Hour. Pick the module they are standing in.",
   // FIXED: the century is wherever the real wagon rolls in
   merchantArrives: "Something new on your chart, traveller. A wagon has rolled into {c}, at the far end of the only era you can see.",
-  merchantWho: "The MERCHANT. He carries relics and he trades with one man only: whoever is standing in his own year. That wagon crawls the centuries on its own business, never on yours, so do not sit there waiting on it. If you want what he has, you cross the years and you stand in front of him.",
+  merchantWho: "The MERCHANT. He carries relics and he trades with whoever is standing in his own year: every one of them, one after another, in priority order. That wagon crawls the centuries on its own business, never on yours, so do not sit there waiting on it. If you want what he has, you cross the years and you stand in front of him.",
   // FIXED (minimally): "wooden", so it is not taken for his marker on the chart
   merchantSign: "That wooden sign over his booth answers one question and only one: whether HE will trade with YOU today. It reads CLOSED from everywhere except his century.",
   marketScene: "This is his wagon, up close. The shelf is what he is willing to sell this hour.",
@@ -879,6 +880,9 @@ class Coach {
       // a line about an earlier paradox never lingers over one that is not about him
       if (!text && this._causeText && this.stage && this.stage.callout.classList.contains("on") && !this.stage._next
         && this.stage.callout.querySelector(".tc-text").innerHTML === pdxWords(this._causeText)) this.stage.hide();
+    } else if (k === "module_resolved" && p.kind === "escape_valve") {
+      const e = (p.effects || []).find((x) => x.seat === self && x.energy < 0);
+      if (e) { text = `${e.energy} energy: the <b>escape valve</b> drains energy while a function is shut.`; key = "valve"; }
     } else if (k === "traveled") {
       if (p.seat === self && p.from !== p.to) {
         const col = this._travelCol || 1;
@@ -891,8 +895,33 @@ class Coach {
     }
     if (!cells.length && !text) return null;
     cells.forEach((n) => n.classList.add("tut-cause"));
-    if (text) { this.toast(null, text); this._causeText = text; }
-    return { cells, text, key };
+    // what the line changed on HIM: energy (recharge, the past's toll, a paradox, the valve), gold
+    const mineE = k === "recharged" ? ((p.effects || []).find((x) => x.seat === self) || {}) : {};
+    const energy = !!text && ((k === "recharged" && mineE.energy > 0) || key === "hit" || key === "valve"
+      || (key === "move" && p.to < p.from));
+    const gold = !!text && k === "recharged" && mineE.gold > 0;
+    const lifeRing = phone() && energy ? { rings: [LIFE] } : {};
+    if (text) { this.toast(null, text, lifeRing); this._causeText = text; }
+    // the table's numbers arrive just after this event: the new totals, from the change itself
+    const me0 = this.me() || {};
+    let dE = 0;
+    if (k === "recharged") dE = mineE.energy || 0;
+    else if (key === "valve") dE = ((p.effects || []).find((x) => x.seat === self) || {}).energy || 0;
+    else if (key === "hit") dE = -(((p.hits || []).find((h) => h.seat === self) || {}).damage || 0);
+    else if (key === "move" && p.to < p.from) dE = -(Math.max(0, Math.min(p.from, 30) - Math.max(p.to, 10)) + 2 * Math.max(0, Math.min(p.from, 10) - p.to));
+    const eNow = me0.energy != null ? me0.energy + dE : null;
+    const gNow = me0.gold != null ? me0.gold + (gold ? mineE.gold : 0) : null;
+    return { cells, text, key, energy, gold, eNow, gNow };
+  }
+  // ON A PHONE: where his gold lies (the coins in his case) and why it grew
+  async showGold(why, now) {
+    const coins = () => { const c = document.querySelector("#mala-coins"); const b = c && c.getBoundingClientRect();
+      return b && b.width ? c : document.querySelector("#mala-extra"); };
+    await this.lookAt("case", "your gold");
+    await new Promise((r) => setTimeout(r, 900));           // the minted coins land on the felt
+    const g = (this.me() || {}).gold != null ? this.me().gold : now;
+    await this.say(coins, `${why ? why.replace(/<[^>]+>/g, "") + " " : ""}Your gold lies here, in your case${g != null ? `: ${g} now` : ""}. Recharge's second and third modules mint it; the Merchant's relics cost it.`,
+      { rings: [coins], view: "case" });
   }
   // whether `from`'s paradox die in this column reaches `to` (positions as the dice were
   // set: paradoxes resolve before anyone travels), with the cards that bend it
@@ -908,8 +937,17 @@ class Coach {
     return b < a;
   }
   async causeDone(w) {
-    if (w.key === "hit" && this.once("why-hit")) await this.say(null, L.paradoxHit, { sub: w.text });
-    else if (w.text && this.once("why-" + w.key)) await this.say(null, w.text);
+    // ON A PHONE his energy and his gold have their own places: the first time each moves he
+    // is shown where it is kept and why it moved
+    const ring = phone() && w.energy ? { rings: [LIFE] } : {};
+    if (phone() && w.energy && this.once("phone-energy")) {
+      const n = w.eNow;
+      await this.say(LIFE, `${w.text} Your energy is here, at the top of my column${n != null ? `: ${n} now` : ""}. Recharge feeds it; the past, paradoxes and the valve cost it. At 0 you are terminated.`, { rings: [LIFE] });
+      this.said.add("why-" + w.key);
+    } else if (w.key === "hit" && this.once("why-hit")) await this.say(null, L.paradoxHit, { sub: w.text, ...ring });
+    else if (w.text && this.once("why-" + w.key)) await this.say(null, w.text, ring);
+    // (his coins land in the case only once the table's numbers arrive: shown at the next event)
+    if (phone() && w.gold && this.once("phone-gold")) this._goldDue = { why: w.text, now: w.gNow };
     if (/^p\d$/.test(w.key || "")) this.learn("paradox");
     w.cells.forEach((n) => n.classList.remove("tut-cause"));
     document.querySelectorAll(".tut-cause").forEach((n) => { if (!n.closest || !n.closest("#machine-body") || !this.req) n.classList.remove("tut-cause"); });
@@ -917,6 +955,7 @@ class Coach {
 
   async before(msg) {
     const k = msg.kind, p = msg.payload || {};
+    if (this._goldDue && ((this.me() || {}).gold || 0) > 0) { const d = this._goldDue; this._goldDue = null; await this.showGold(d.why, d.now); }
     if (k === "allocations_revealed" && this.scripted && this.once("rivals")) await this.rivalsLesson();
     if (k === "hour_started") {
       this.hourNo = p.hour;
@@ -1394,7 +1433,8 @@ class Coach {
       } else if (s.r === 1) {
         text = [`Drag a ${R(v)} onto <b>Paradox 1</b>: everyone ahead of you loses ${v} energy.`,
           `Drag a ${R(v)} onto <b>Paradox 2</b>: everyone in your own century loses ${v}.`,
-          `Drag a ${R(v)} onto <b>Paradox 3</b>: everyone behind you loses ${v * 2}, double.`][s.c];
+          ((this.me() || {}).past_dead ? `A ${R(v)} on <b>Paradox 3</b> does nothing: you were terminated, your Past is gone.`
+            : `Drag a ${R(v)} onto <b>Paradox 3</b>: everyone behind you loses ${v * 2}, double.`)][s.c];
         if (s.c === 0) sub = "Ahead means a higher century.";
         if (s.c === 0 && lesson === "valve" && !this.reach().ahead.length) sub = `No one stands ahead of you, so it hits no one: it goes here because ${FN[((this.me() || {}).overloaded_functions || [0])[0]] || "Recharge"} is shut and Travel holds the pair.`;
         if (lesson === "strike" && s.c < 2) {
@@ -1430,7 +1470,8 @@ class Coach {
         text = h === 1 ? L.t1prompt : L.prompt;
       }
       void fn; void n;
-      this.guide(cell, text, { sub, rings: [cell, die(v)], avoid: MACHINE });
+      const extra = phone() && s.r === 0 && (s.c === 0 || s.c === 2) && h <= 2 ? [LIFE] : [];
+      this.guide(cell, text, { sub, rings: [cell, die(v), ...extra], avoid: MACHINE });
       return;
     }
     if (s.kind === "valve") {
@@ -1721,7 +1762,7 @@ class Coach {
       await this.untilView("machine", 90000);
       await new Promise((r) => setTimeout(r, 600));
       const q = "#pdx-mcol .pdx-helpkey, #pdx-tabkey";
-      await this.say(q, "The <b>?</b> in my column: tap it for my tips, hold it to see what everything on the table does.", { rings: [q] });
+      await this.say(q, "The <b>?</b> in my column: tap it and my notes appear beside what they explain; tap it again to hide them.", { rings: [q] });
       await this.say("#pdx-mrail", "When I need you somewhere else, that place's key pulses. Tap it and look.", { rings: ["#pdx-mrail"] });
       this.clear();
     } finally { this._beat--; this.persist(); }
@@ -1788,6 +1829,17 @@ class Coach {
     if (!H || !H.isOpen || !H.isHeld) return;
     const key = "#pdx-tabkey";
     const until = (fn, ms) => new Promise((resolve) => { const t0 = Date.now(); const iv = setInterval(() => { if (fn() || Date.now() - t0 > ms) { clearInterval(iv); resolve(fn()); } }, 120); });
+    // on a phone "?" is her notes in place (a tap shows them, a tap hides them); no tips list
+    if (phone()) {
+      this.guide(key, "Tap <b>?</b>: my notes on everything in view, beside what they explain. What your dice will do, the Hour, the Merchant.", { rings: [key] });
+      if (await until(() => H.isHeld(), 40000)) {
+        this.guide(null, "Tap <b>?</b> again, and it all hides.", {});
+        await until(() => !H.isHeld(), 40000);
+      }
+      this.clear();
+      await this.say(null, "From now on I speak only when you must act. Everything else waits under <b>?</b>.");
+      return;
+    }
     this.guide(key, "Tap <kbd>Tab</kbd>: my tips, and the answers to your questions.", { rings: [key] });
     if (await until(() => H.isOpen(), 40000)) {
       this.guide(null, "Tap <kbd>Tab</kbd> again to close it.", {});

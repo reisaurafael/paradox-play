@@ -28,8 +28,8 @@
    opacity, each removed when it ends. Server-sent text only via textContent.
    game.js calls: init, onEvent, onDecision, onRespond, emanata, preview.
    ========================================================================= */
-import { roman } from "./util.js?202609281737";
-import { mend } from "./mend.js?202609281737";
+import { roman } from "./util.js?202609282144";
+import { mend } from "./mend.js?202609282144";
 
 const NOTES_KEY = "pdx-cx-notes";                 // Settings: HELA's footnotes on/off
 const SLOW = { slow: 2, normal: 1, brisk: 1, fast: 1 };   // Brisk and Fast never shorten a reading time
@@ -619,7 +619,7 @@ class Comic {
     else if (kind === "heated" && p.seat === me && (p.booms || 0) >= 9)
       this.note("heat", "At 12 heat the motor explodes: -2 energy and no actions for the rest of that Hour.");
     else if (kind === "respawned" && p.seat === me)
-      this.note("immune", "Back in the Timeless centuries (XXIV to XXX) you cannot lose energy until you first reach XXIII.");
+      this.note("immune", "Back in the Timeless centuries (XXIV to XXX) you cannot lose energy until you first reach XXIII. And your Paradox Past is gone for the rest of the match: a die there does nothing.");
     else if (kind === "secret_market_opened" || (kind === "phase_started" && p.phase === "delivery" && (this.game && this.game.view && this.game.view.hour) >= 3))
       this.note("memory", "Everything that happened is kept in my memory, the comic book on your paperwork desk. Press L to read it.");
   }
@@ -642,6 +642,8 @@ class Comic {
       const v = m[1][c]; if (!v) continue;
       const hit = others.filter(PX[c][1]);
       const parts = [{ b: "PARADOX " + PX[c][0] + ": " }];
+      // terminated at least once: the Past takes the die (it still counts for the overload) and does nothing (§18.2b)
+      if (c === 2 && me.past_dead) { parts.push("does nothing: you were terminated"); rows.push({ row: 1, tone: "danger", parts }); continue; }
       if (!hit.length) parts.push("no one in reach");
       // the Past (module 6) takes a die only when the row is overloaded, and it hits for DOUBLE
       else { hit.forEach((t, i) => parts.push(i ? ", " : "", { name: t.name })); parts.push(c === 2 ? ` lose ${v * 2} (double: the third die)` : ` lose ${v}`); }
@@ -665,7 +667,7 @@ class Comic {
     }
     // three dice in one function: say it BEFORE Confirm, not after
     m.forEach((row, r) => { if (row.length && row.every((v) => v)) rows.push({ row: r, tone: "danger",
-      parts: [{ b: "OVERLOAD: " }, `${["Recharge", "Paradox", "Travel"][r]} gets three dice, so it will be shut for the next Hour.${r === 1 ? " Its Past die hits for double first." : ""}`] }); });
+      parts: [{ b: "OVERLOAD: " }, `${["Recharge", "Paradox", "Travel"][r]} gets three dice, so it will be shut for the next Hour.${r === 1 ? (me.past_dead ? " Its Past die does nothing: you were terminated." : " Its Past die hits for double first.") : ""}`] }); });
     if (dist || heat || gain) {
       if (after <= 0) rows.push({ row: 2, tone: "danger", parts: [{ b: "! " }, "The full trip back costs more energy than you have: you would stop short."] });
       else if (after <= 6) rows.push({ row: 2, tone: "danger", parts: [{ b: "! " }, `This plan can leave you at ${after} energy: critical.`] });

@@ -223,3 +223,9 @@ html.pdx-m-on .fx-steam { width: 11px; height: 11px; }
 .fx-crackle .ck-ink { fill: none; stroke: #15100a; stroke-width: 4; stroke-linejoin: round; }
 .fx-crackle .ck-col { fill: none; stroke: #ff7a55; stroke-width: 1.8; stroke-linejoin: round; }
 html.pdx-m-on .cx-hit.fx-ovl { scale: .8; }
+/* my ENERGY in HELA's phone column takes my paradox hits and my -N / +N (fx.js _energy):
+   a layer of its own just above the column (#pdx-mcol z 60200), under the life thread */
+#fx-colroot { position: fixed; inset: 0; pointer-events: none; z-index: 60210; overflow: hidden; }
+body.cx-skipping #fx-colroot { display: none; }
+html:not(.pdx-m-on) #fx-colroot { display: none; }
+.fx-lifetick.fx-lt-col b { font-size: 1.45rem; }

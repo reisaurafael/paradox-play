@@ -7381,26 +7381,26 @@ body:not(.pdx-help-hold) #timeline-rail .pdx-ref { opacity: 0; visibility: hidde
   transition: opacity .18s ease, visibility 0s linear .18s; }
 
 /* ═══ THE CHART IN ONE LOOK ON A PHONE (board_draft.js window.__pdxPhoneChart) ════════════
-   On a touch phone each chart is recomposed for the landscape chart page: its box takes the
+   On a touch phone or tablet (html.pdx-touch) each chart is recomposed for the landscape chart page: its box takes the
    stage's own aspect (--pdx-chart-ar, set by the boards), so mobile-table.js fits the whole
    chart at once, with no pan and no zoom. The sheet does not run on past it (the page is
    clipped to the chart), and a century's tap area is the board's own (r 40 in the chart's
    units, over 50 CSS px on a phone), not the desk's enlarged one. */
-html.pdx-phone #timeline-rail > :is(.cplot, .cplot-sing, .cplot-ori) { bottom: auto !important; height: auto !important;
+html.pdx-touch #timeline-rail > :is(.cplot, .cplot-sing, .cplot-ori) { bottom: auto !important; height: auto !important;
   aspect-ratio: var(--pdx-chart-ar, 1.6); }
-html.pdx-phone #timeline-rail .sheet-ext { display: none !important; }
-html.pdx-phone #timeline-rail :is(.cplot, .cplot-sing, .cplot-ori) :is(.cm-hit, .cc-hit, .sea-hit) { r: 40px; }
+html.pdx-touch #timeline-rail .sheet-ext { display: none !important; }
+html.pdx-touch #timeline-rail :is(.cplot, .cplot-sing, .cplot-ori) :is(.cm-hit, .cc-hit, .sea-hit) { r: 40px; }
 /* the pieces on a phone are tokens standing on their centuries (board_draft.js
    __pdxPhonePlace / __pdxPhoneToken), drawn above everything on the chart; a finger on a
    token still lands on the century under it (the chart's own tap areas answer) */
-html.pdx-phone #timeline-rail .pc-ph { pointer-events: none; }
+html.pdx-touch #timeline-rail .pc-ph { pointer-events: none; }
 /* the Merchant's plate in his century's numeral place: a finger on it lands on the century */
-html.pdx-phone #timeline-rail .pc-mplate-g { pointer-events: none; }
+html.pdx-touch #timeline-rail .pc-mplate-g { pointer-events: none; }
 /* ...and the chart's decoration steps back a little under them (the Itinerarium's walls,
    trees and dragon; the Sea's waves, sharks and foam; the sky's nebulae, dust and belt
    rocks), never the centuries, the road, the lit ports, the names or the Merchant */
-html.pdx-phone #timeline-rail .ph-deco { opacity: .62; }
-html.pdx-phone #timeline-rail .ph-deco.ph-deco-soft { opacity: .78; }
+html.pdx-touch #timeline-rail .ph-deco { opacity: .62; }
+html.pdx-touch #timeline-rail .ph-deco.ph-deco-soft { opacity: .78; }
 
 /* ═══ THE ERA TURNS LIKE A COMIC PAGE (board_draft.js window.__pdxChartTurn) ════════════
    Replaces the iris shutter. A slab of ink, halftone and speed lines, edged on both sides
@@ -7977,14 +7977,12 @@ html body #hela-eye .he-caps .cx-cap:not(.on) { display: none; }
 #tl-gauge .tlg-count { font: 700 .66rem/1 var(--f-mono, monospace); letter-spacing: .06em; color: var(--vz-hot); white-space: nowrap; }
 #tl-gauge.mending { animation: tlgGlow 1.6s ease-out; }
 @keyframes tlgGlow { 0% { box-shadow: 0 0 0 2px var(--vz), 0 0 28px var(--vz); } 100% { box-shadow: 0 0 12px rgb(var(--vz-rgb) / .2); } }
-/* on the chart: a crack only beside a century whose relic is loose on the table, a ring of light
-   where mended (the owner, 28/09: the faint crack at every unravelled century "helps nothing and
-   pollutes"; it marked nothing, since every century not yet mended wore it) */
+/* on the chart: a ring of light where a century is mended, nothing else (the owner, 28/09: the
+   cracks beside the unmended centuries and beside a loose relic's century "help nothing and
+   pollute"; they are gone) */
 .tl-marks { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; z-index: 5; }
 .tl-mk, .tl-burst { position: absolute; width: calc(var(--r) * 2); height: calc(var(--r) * 2);
   margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1); border-radius: 50%; pointer-events: none; }
-.tl-mk.w.loose::after { content: ""; position: absolute; right: -10px; top: -15px; width: 17px; height: 22px; opacity: .95;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 18'%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%2315100a' stroke-width='3.6' stroke-linejoin='round'/%3E%3Cpath d='M9 0 L5 6 L9 9 L3 18' fill='none' stroke='%23ff7a55' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
 .tl-mk.w { box-shadow: 0 0 0 1px rgba(232,220,192,.12); }
 .tl-mk.m { box-shadow: 0 0 0 2.5px var(--seat), 0 0 12px 2px var(--seat); }
 /* the MEND: the broken ring closes and light returns */
@@ -8215,3 +8213,38 @@ body:not(.pdx-help-hold) #hela-brain-full .hb-hint { display: none; }
 body.cabin-on:not(.tut):not(.allocating) #hull-console .matrix-wrap .fn-shut,
 body.cabin-on:not(.tut) #hull-console .shut-idle,
 body.cabin-on:not(.tut) :is(#hull, #cursor-plane) .mano-standby .ms-shut { display: none !important; }
+/* ═══ THE HERALD AT A BLINK (the owner, 28/09: "the information lives inside the journal...
+   the name of the player in the lines of the journal coloured and bigger, and the phrase
+   that explains it more attention-grabbing"). Nothing sits outside the paper: in its own
+   lines every traveller's name (game.js _heraldName) is printed in their colour, bold and
+   a size up, darkened toward the ink so a light colour still reads on the cream, with a
+   marker stroke of the pure colour under it; the dek (the explaining phrase) is set
+   upright, bold, darker and larger. Same masthead, layout and woodcut. ═══ */
+.bn-paper .bn-name, .do-attach .bn-name { font-weight: 800; font-style: normal; font-size: 1.22em;
+  color: color-mix(in srgb, var(--seat, #c9a45c) 62%, #140d06);
+  background: linear-gradient(transparent 64%, color-mix(in srgb, var(--seat, #c9a45c) 42%, transparent) 64% 92%, transparent 92%);
+  padding: 0 .06em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.bn-head .bn-name { font-size: 1em; }
+.bn-paper .bn-deck { font-style: normal; font-weight: 700; color: #1a1206; font-size: 13px; line-height: 1.28;
+  border-left: 3px solid #241c10; padding-left: 7px; }
+.he-window.he-news .hb-newsread .bn-deck, .hb-read .bn-deck { font-size: 1.02rem; line-height: 1.3; }
+.da-sub { font-size: .66rem; }
+.da-tag { font-size: .62rem; }
+.da-mast { font-size: .6rem; }
+
+/* ── A TERMINATED traveler's Paradox PAST is dead (§18.2b, 28/09): module 6 still takes
+   a die but does nothing. On the machine the cell is crossed in ink, on a rival's file
+   the third Paradox seal is struck and the badge carries a small PAST GONE stamp. ── */
+.cell.past-dead { border-style: dashed; }
+.cell.past-dead::after { content: ""; position: absolute; inset: 3px; pointer-events: none; opacity: .8;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1.5px), #b3352b calc(50% - 1.5px), #b3352b calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+    linear-gradient(to top left, transparent calc(50% - 1.5px), #b3352b calc(50% - 1.5px), #b3352b calc(50% + 1.5px), transparent calc(50% + 1.5px)); }
+.cell.past-dead .mod-cap { color: #d9574b; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.cell.past-dead .mod-ico { opacity: .25; }
+.ba-fn b.ba-dead { position: relative; background: #efe6dc !important; border-color: #b3352b !important; box-shadow: none !important; }
+.ba-fn b.ba-dead::after { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 1.5px;
+  background: #b3352b; transform: rotate(-45deg); }
+.bd-pastgone { display: inline-block; margin: -3px 0 4px; padding: 0 5px; border: 1.5px solid #b3352b; border-radius: 2px;
+  color: #b3352b; font-family: var(--f-mono); font-size: .55rem; font-weight: 700; letter-spacing: .08em;
+  transform: rotate(-3deg); background: rgba(255,250,240,.6); }

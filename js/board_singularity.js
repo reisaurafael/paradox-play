@@ -523,8 +523,7 @@
     }
     // drift trails (voyages), faint comet wakes
     for(const t of R.trails){ const A=(t.from===0?SUN:POS[t.from]), B=(t.to===0?SUN:POS[t.to]); if(!A||!B) continue; const age=view.hour-t.hour; const op=age<=0?.9:age===1?.6:age===2?.42:Math.max(.18,.36-(age-2)*.03); const col=age<=1?seatColor(t.seat):(HUE[META[t.to]]||"#7fa0e0"); g+=`<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="${col}" stroke-width="${age<=0?2.6:age===1?1.9:1.3}" opacity="${op}" stroke-linecap="round"/>`; }
-    // paradox rifts
-    for(const c of R.monsters){ if(!POS[c]||R.restored.has(c)) continue; const [x,y]=POS[c]; g+=`<g class="cc-rift" transform="translate(${x+worldR(c)+8} ${y-6})" data-tip="${esc(`a rift tore open near ${rom(c)}, the Paradix bleeds through`)}"><path d="M0 -8 l3 6 l-4 3 l4 5" stroke="#b3402e" stroke-width="1.4" fill="none"/><path d="M0 -8 l-3 6 l4 3 l-4 5" stroke="#8f6fd6" stroke-width="1" fill="none" opacity=".7"/></g>`; }
+    // (the paradox rifts beside a hit century went, 28/09: the owner found the zigzags polluted the chart; the PARADOX float and the shake still play)
     // merchant hauler (on the gold MERCHANT plate, window.__pdxMerchPlate)
     const haulerAt=c=>haulerAt2(c);
     const mc = R.merchantShown!=null?R.merchantShown:view.merchant_century;
@@ -850,14 +849,13 @@
       ${g(`<circle cx="10" cy="10" r="6" fill="none" stroke="#e8b24a" stroke-width="1.6"/><circle cx="10" cy="10" r="2.5" fill="#e8b24a"/>`,"registered, it was always thus")}
       ${g(`<path d="M10 3 L3 10 L10 17 L17 10 Z" fill="none" stroke="#c9a45c" stroke-width="1.4"/>`,"millennium X · XX (+1 CP)")}
       ${g(`<path d="M10 4 L16 10 L10 16 L4 10 Z" fill="none" stroke="#8f6fd6" stroke-width="1.4" stroke-dasharray="2 2"/>`,"secret ghost-station (XI)")}
-      ${g(`<path d="M10 3 l3 6 l-4 3 l4 5" stroke="#b3402e" stroke-width="1.3" fill="none"/>`,"a rift, the Paradix bleeds in")}
       ${g(`<circle cx="10" cy="12" r="6" fill="#0a0714" stroke="#8f6fd6" stroke-width="1.2"/><text x="10" y="15" text-anchor="middle" font-size="8" fill="#cfc2e8">&#8734;</text>`,"YEAR ZERO: the Dead Sun (+2 CP)")}
       <div class="cc-legobj"><b>OBJECTIVE</b>, earn Contract Points (CP): deliver a relic on its century (+1), end an Hour on X/XX (+1), seal the three periods, or plunge into Year Zero (+2). Most CP wins.</div>
       <div class="cc-legfoot">- drift order left · hover a world to read it -</div></div>`;
   }
 
   let rzT=null;
-  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-sing"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()){ renderNow(); if(PHONE()) PH.remounted(); } },350); };
+  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-sing"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12&&!(PHONE()&&Math.abs(PH.dims().H-H)>=12)) return; cp.remove(); if(mount()){ renderNow(); if(PHONE()) PH.remounted(); } },350); };
   window.addEventListener("resize",railRelayout);
   if(window.ResizeObserver){ const railEl=document.getElementById("timeline-rail"); if(railEl) new ResizeObserver(railRelayout).observe(railEl); }
 

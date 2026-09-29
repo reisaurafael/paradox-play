@@ -570,8 +570,7 @@
       </g>`; }
     // drift trails (voyages), faint comet wakes
     for(const t of R.trails){ const d=roadSlice(t.from,t.to)||arcPath(t.from,t.to); if(!d) continue; const age=view.hour-t.hour; const op=age<=0?.9:age===1?.6:age===2?.42:Math.max(.18,.36-(age-2)*.03); const col=age<=1?seatColor(t.seat):(HUE[META[t.to]]||"#7fa0e0"); g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="${age<=0?2.6:age===1?1.9:1.3}" opacity="${op}" stroke-linecap="round" stroke-dasharray="4.5 4.5"/>`; }
-    // paradox rifts
-    for(const c of R.monsters){ if(!POS[c]||R.restored.has(c)) continue; const [x,y]=POS[c]; g+=`<g class="cm-rift" transform="translate(${x+worldR(c)+8} ${y-6})" data-tip="${esc(`a rift tore open near ${rom(c)}, the Paradix bleeds through`)}"><path d="M0 -8 l3 6 l-4 3 l4 5" stroke="#7a1e10" stroke-width="1.6" fill="none"/><path d="M0 -8 l-3 6 l4 3 l-4 5" stroke="#3a2c12" stroke-width="1" fill="none" opacity=".7"/></g>`; }
+    // (the paradox rifts beside a hit century went, 28/09: the owner found the zigzags polluted the chart; the PARADOX float and the shake still play)
     // the peddler's wagon (on the gold MERCHANT plate, window.__pdxMerchPlate)
     const mc = R.merchantShown!=null?R.merchantShown:view.merchant_century;
     R.mAnchor=null;
@@ -986,13 +985,12 @@
       ${g(`<circle cx="7" cy="12" r="2.6" fill="#4a3620" stroke="#241810" stroke-width=".7"/><circle cx="14" cy="12" r="2.6" fill="#4a3620" stroke="#241810" stroke-width=".7"/><rect x="4" y="6" width="12" height="5" fill="#6e4e2a" stroke="#241810" stroke-width=".7"/><path d="M4 6 Q4 1 10 1 Q16 1 16 6 Z" fill="#b0472e" stroke="#241810" stroke-width=".7"/>`,"the peddler's caravan, wanders each Hour; barter when near")}
       ${g(`<path d="M10 3 l2.4 3 l-1.4 3 l1.4 3 l-2.4 3 l-2.4 -3 l1.4 -3 l-1.4 -3 z" fill="#c9a23c" stroke="#3a2c12" stroke-width=".8"/>`,"a crowned waymark · X, XX (+1 CP)")}
       ${g(`<path d="M4 16 V8 L10 3 L16 8 V16 Z" fill="none" stroke="#6e4a12" stroke-width="1.3" stroke-dasharray="2 2"/><circle cx="10" cy="11" r="2" fill="#c9a23c"/>`,"the hidden hospice off the road (XI)")}
-      ${g(`<path d="M10 3 l3 6 l-4 3 l4 5" stroke="#7a1e10" stroke-width="1.4" fill="none"/>`,"a corruption, the Paradix bleeds in")}
       ${g(`<circle cx="10" cy="10" r="7.5" fill="#f3e2b8" stroke="#3a2c12" stroke-width="1.2"/><circle cx="10" cy="10" r="5" fill="none" stroke="#3a2c12" stroke-width=".8"/><path d="M10 6.5 v7 M7 9.2 h6" stroke="#c9a23c" stroke-width="1.5"/>`,"the SACRED CROSS: Year Zero (+2 CP)")}
       <div class="cm-legobj"><b>THE QUEST</b>, earn Contract Points (CP): deliver a relic to its century (+1), end an Hour at a crowned waymark X/XX (+1), enshrine all three periods, or ride to the sacred cross (+2). Most CP is crowned.</div>
       <div class="cm-legfoot">- the muster-roll rides at left · hover a station to read it -</div></div>`;
   }
   let rzT=null;
-  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-ori"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12) return; cp.remove(); if(mount()){ renderNow(); if(PHONE()) PH.remounted(); } },350); };
+  const railRelayout=()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ const rail=document.getElementById("timeline-rail"); const cp=rail&&rail.querySelector(".cplot-ori"); if(!cp) return; const box=cp.getBoundingClientRect(); if(!box.width||!box.height) return; const want=PHONE()?PH.dims().W:Math.max(700,Math.min(1200,Math.round(H*box.width/box.height))); if(Math.abs(want-W)<12&&!(PHONE()&&Math.abs(PH.dims().H-H)>=12)) return; cp.remove(); if(mount()){ renderNow(); if(PHONE()) PH.remounted(); } },350); };
   window.addEventListener("resize",railRelayout);
   if(window.ResizeObserver){ const railEl=document.getElementById("timeline-rail"); if(railEl) new ResizeObserver(railRelayout).observe(railEl); }
 

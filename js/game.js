@@ -11,21 +11,21 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609281737";
-import { cardArtImg } from "./card-art.js?202609281737";
-import { audio } from "./audio.js?202609281737";
+import { icon } from "./icons.js?202609282144";
+import { cardArtImg, cardTicket } from "./card-art.js?202609282144";
+import { audio } from "./audio.js?202609282144";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609281737";
-import { comic } from "./comic.js?202609281737";
-import { fx } from "./fx.js?202609281737";
-import { CatEngine } from "./cat.js?202609281737";
-import { tutorials } from "./tutorial.js?202609281737";
-import { profile } from "./profile.js?202609281737";
-import { Camera } from "./camera.js?202609281737";
+import { juice } from "./juice.js?202609282144";
+import { comic } from "./comic.js?202609282144";
+import { fx } from "./fx.js?202609282144";
+import { CatEngine } from "./cat.js?202609282144";
+import { tutorials } from "./tutorial.js?202609282144";
+import { profile } from "./profile.js?202609282144";
+import { Camera } from "./camera.js?202609282144";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609281737";
+} from "./util.js?202609282144";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -926,17 +926,27 @@ export class Game {
     const oldCards = new Map();
     this.dom.players.querySelectorAll(".cb-grid > .pcard[data-seat]").forEach((c) => oldCards.set(c.dataset.seat, c));
     const reqKey = this._reqKey(), selSig = this._selSig();
-    this.dom.players.innerHTML = "";
-    // THE CASE BOARD v2, per rival: a hanging BADGE (credential summary) with
-    // the FULL CASE FILE clipped beneath it, always open. Columns grow when
-    // there are fewer rivals; everything drawn, nothing to squint at.
-    const board = el("div", "caseboard");
-    board.innerHTML = `<div class="cb-plate"><span class="cb-agency">C.R.O.N.O.S.</span>`
-      + `<span class="cb-title">ACTIVE SUBJECTS &middot; TEMPORAL ENFORCEMENT DIVISION</span>`
-      + `<span class="cb-eyes">EYES&nbsp;ONLY</span></div>`;
-    const rack = el("div", "cb-grid");
-    board.appendChild(rack);
-    this.dom.players.appendChild(board);
+    // THE BOARD AND THE FILES THAT DID NOT CHANGE STAY WHERE THEY ARE. Emptying the zone and
+    // re-attaching every file on each render restarted every animation on them and dropped the
+    // phone's placing for a frame: the files blinked and jumped on every rival event (the
+    // owner, 29/09). Only a changed file is swapped, in place.
+    let board = this.dom.players.querySelector(":scope > .caseboard");
+    let rack = board && board.querySelector(":scope > .cb-grid");
+    if (!board || !rack) {
+      this.dom.players.innerHTML = "";
+      // THE CASE BOARD v2, per rival: a hanging BADGE (credential summary) with
+      // the FULL CASE FILE clipped beneath it, always open. Columns grow when
+      // there are fewer rivals; everything drawn, nothing to squint at.
+      board = el("div", "caseboard");
+      board.innerHTML = `<div class="cb-plate"><span class="cb-agency">C.R.O.N.O.S.</span>`
+        + `<span class="cb-title">ACTIVE SUBJECTS &middot; TEMPORAL ENFORCEMENT DIVISION</span>`
+        + `<span class="cb-eyes">EYES&nbsp;ONLY</span></div>`;
+      rack = el("div", "cb-grid");
+      board.appendChild(rack);
+      this.dom.players.appendChild(board);
+    }
+    const order = [];
+    const place = (node) => order.push(node);
     const prevAll = this._prevStats || {};
     this.view.travelers.filter((t) => !(t.is_self || t.name === this.seat)).forEach((t) => {
       const col = this.colorOf(t.name);
@@ -944,7 +954,7 @@ export class Game {
       const relS = !meS ? "" : t.century < meS.century ? "pc-past" : t.century > meS.century ? "pc-future" : "";
       const sig = JSON.stringify(t) + "|" + relS + "|" + (t.name === this.activeSeat) + "|" + selSig + "|" + reqKey + "|" + col;
       const keep = oldCards.get(t.name);
-      if (keep && keep.__pdxSig === sig) { rack.appendChild(keep); return; }
+      if (keep && keep.__pdxSig === sig) { place(keep); return; }
       const card = el("div", "pcard cfolio");
       card.__pdxSig = sig;
       card.dataset.seat = t.name;
@@ -995,7 +1005,7 @@ export class Game {
       const ALLOC_FN = [["ba-r", "#5fd08a"], ["ba-p", "#9a86c8"], ["ba-t", "#6fb4c8"]];
       let allocSlots = "";
       for (const [cls, c] of ALLOC_FN)
-        allocSlots += `<span class="ba-fn ${cls}" style="--c:${c}"><b></b><b></b><b></b></span>`;
+        allocSlots += `<span class="ba-fn ${cls}" style="--c:${c}"><b></b><b></b><b${cls === "ba-p" && t.past_dead ? ' class="ba-dead"' : ""}></b></span>`;   // a terminated traveler's Past is gone (§18.2b)
       // ── the BADGE (restored laminated credential) ──
       // ═══ THE CREDENTIAL, STRIPPED ═════════════════════════════════════════════════
       // The game had too much text, and too much tiny text.
@@ -1028,6 +1038,8 @@ export class Game {
       badge.innerHTML =
         `<div class="bd-clip"></div>`
         + `<div class="bd-band" style="--seat:${col}"></div>`
+        // TERMINATED at least once: his Paradox Past does nothing for the rest of the match
+        + (t.past_dead ? `<div class="bd-pastgone" aria-label="${t.name}'s Paradox Past is gone">PAST GONE</div>` : "")
         // THE FUSE RAIL, booms, clamped to the badge's spine like a pressure gauge on a
         // boiler. It fills from the bottom and goes hot at the top; at 12 the motor blows.
         + `<div class="bd-fuserail ${t.booms >= 9 ? "hot": ""}" title="Boom track ${t.booms}/12, at 12 the motor detonates">`
@@ -1113,8 +1125,14 @@ export class Game {
         this.showPanelDetail(t, card);
         e.stopPropagation();
       });
-      rack.appendChild(card);
+      // a rebuilt file takes its predecessor's placing on a phone (mobile-table.js pile)
+      if (keep) { for (const k of ["--pdx-fx", "--pdx-fy", "--pdx-fk", "--pdx-fz"]) { const v = keep.style.getPropertyValue(k); if (v) card.style.setProperty(k, v); }
+        if (keep.classList.contains("pdx-piled")) card.classList.add("pdx-piled"); }
+      place(card);
     });
+    // the rack follows the order, touching only what moved or changed
+    order.forEach((n, i) => { if (rack.children[i] !== n) rack.insertBefore(n, rack.children[i] || null); });
+    while (rack.children.length > order.length) rack.lastElementChild.remove();
     const nm = {};
     this.view.travelers.forEach((t) =>
       (nm[t.name] = { energy: t.energy, gold: t.gold, cp: t.contract_points, booms: t.booms }));
@@ -1173,10 +1191,10 @@ export class Game {
     if ((t.statuses || []).includes("exploded")) remarks.push("boiler burst, grounded this hour");
     if (!remarks.length) remarks.push("no irregularities on record");
     const clippings = [];
-    if (t.scored_century_x) clippings.push({ head: "MILLENNIUM MARK CLAIMED", sub: `${esc(t.name)} holds Centvry X as the Hour turns, the Division awards one contract point`, tag: "CENTVRY X" });
-    if (t.scored_century_xx) clippings.push({ head: "THE SECOND MILLENNIUM FALLS", sub: `${esc(t.name)} plants the mark at Centvry XX, historians dispute the ink`, tag: "CENTVRY XX" });
-    (t.delivered_periods || []).forEach((pk) => clippings.push({ head: `THE ${pk.toUpperCase()} STABILISED`, sub: `a relic received in its own age, the ${pk} period sealed under ${esc(t.name)}'s name`, tag: pk.toUpperCase() }));
-    if (isWanted2) clippings.push({ head: "BOUNTY DECLARED", sub: `the Division marks ${esc(t.name)}, four gold, dead or alive`, tag: "WANTED" });
+    if (t.scored_century_x) clippings.push({ head: "MILLENNIUM MARK CLAIMED", sub: `${this._heraldName(t.name)} holds Centvry X as the Hour turns, the Division awards one contract point`, tag: "CENTVRY X" });
+    if (t.scored_century_xx) clippings.push({ head: "THE SECOND MILLENNIUM FALLS", sub: `${this._heraldName(t.name)} plants the mark at Centvry XX, historians dispute the ink`, tag: "CENTVRY XX" });
+    (t.delivered_periods || []).forEach((pk) => clippings.push({ head: `THE ${pk.toUpperCase()} STABILISED`, sub: `a relic received in its own age, the ${pk} period sealed under ${this._heraldName(t.name)}'s name`, tag: pk.toUpperCase() }));
+    if (isWanted2) clippings.push({ head: "BOUNTY DECLARED", sub: `the Division marks ${this._heraldName(t.name)}, four gold, dead or alive`, tag: "WANTED" });
     this._dossierClips = clippings;
     this._dossierCP = cpn;
     let html = `<div class="do-head"><div class="do-agency">C.R.O.N.O.S. &middot; TEMPORAL ENFORCEMENT DIVISION</div>`
@@ -1309,11 +1327,12 @@ export class Game {
       const flyT = isNaN(parseFloat(fly.style.top)) ? _fr.top : parseFloat(fly.style.top);
       const rightSide = flyL + w + aw - 18 <= window.innerWidth - 8;
       const ax = rightSide ? flyL + w - 18 : Math.max(8, flyL - aw + 18);
+      let clipY = flyT + 26;                        // each slip under the last, by its real height
       clips.slice(0, 4).forEach((cl, i) => {
         const tilt = (i % 2 ? 1 : -1) * (1.4 + i * 0.5);
         const at = el("div", "do-attach" + (rightSide ? "" : " on-left"));
         at.style.left = ax + "px";
-        at.style.top = Math.min(flyT + 26 + i * 98, window.innerHeight - 160) + "px";
+        at.style.top = Math.min(clipY, window.innerHeight - 160) + "px";
         at.style.transform = `rotate(${tilt}deg)`;
         at.innerHTML = `<i class="da-clip"></i>`
           + `<div class="da-mast">THE TEMPORAL HERALD</div>`
@@ -1324,6 +1343,7 @@ export class Game {
           e.stopPropagation(); this.hidePanelDetail(); this._showEdition(cl);
         });
         document.body.appendChild(at);
+        clipY += (at.offsetHeight || 98) - 10;       // a slight overlap, like papers clipped together
         if (at.animate) at.animate(
           [{ transform: `translateX(${rightSide ? -30 : 30}px) rotate(0deg)`, opacity: 0 },
            { transform: `translateX(0) rotate(${tilt}deg)`, opacity: 1 }],
@@ -1793,12 +1813,15 @@ export class Game {
     const c = el("div", "card" + (opts.mini ? " mini" : ""));
     c.dataset.name = card.name;
     c.style.setProperty("--era", eraColor(card.delivery_century));  // era-coloured border
-    // the approved illustration, a window at the top of the face (the Merchant's cards only; a card
-    // without approved art keeps its plain face, js/card-art.js)
+    // THE ILLUSTRATED FACE (the Merchant's shelf and the Secret Market, the owner 28/09): a card with
+    // approved art is the whole picture when closed, with only its price ticket, delivery century
+    // and recycle value raised over it (the Large tag stays in its corner); the name, kind and text
+    // are read when the card is opened (the hover card, the phone sheet). The name stays in the DOM,
+    // hidden, for the sheet and for screen readers. A card without approved art keeps its plain face.
     const art = opts.art ? cardArtImg(card.name, "card-art-img") : "";
-    if (art) c.classList.add("has-art");
-    c.innerHTML = `
-      <div class="card-cost" title="Gold cost">${card.gold_cost}</div>${art ? `<div class="card-art">${art}</div>` : ""}
+    if (art) { c.classList.add("has-art"); c.setAttribute("aria-label", this.dn(card)); }
+    c.innerHTML = `${art ? `<div class="card-art">${art}</div>` : ""}
+      <div class="card-cost${art ? " card-tkt" : ""}" title="Gold cost">${art ? cardTicket(card.gold_cost) : card.gold_cost}</div>
       ${card.is_large_item ? `<div class="card-large-tag">Large</div>` : ""}
       <div class="card-name">${this.dn(card)}</div>
       <div class="card-type">${(card.ability_type || "").replace(/_/g, " ")}</div>
@@ -1988,9 +2011,13 @@ export class Game {
         // so a shortened function still reaches both ways along the years). The icon and the
         // caption move together with the behaviour, or the cell would lie about what it does.
         const sw = this._modSwap && this._modSwap[r + "," + c];
-        const [glyph, caption] = sw || mod;
+        const [glyph, caption0] = sw || mod;
+        // TERMINATED at least once: module 6 (Past) still takes a die, but it does nothing (§18.2b)
+        const deadPast = r === 1 && c === 2 && this._pastDead();
+        const caption = deadPast ? "Past: dead" : caption0;
         const cell = el("div", "cell");
         cell.dataset.r = r; cell.dataset.c = c;
+        if (deadPast) cell.classList.add("past-dead");
         const modNum = r * 3 + c + 1;
         const buff = buffs[r * 3 + c];
         if (buff) cell.classList.add("buffed");
@@ -2161,10 +2188,13 @@ export class Game {
       this._shutMark(wrap, r, rowSealed, false);
       fn.mods.forEach((mod, c) => {
         const sw = this._modSwap && this._modSwap[r + "," + c];
-        const [glyph, caption] = sw || mod;
+        const [glyph, caption0] = sw || mod;
+        const deadPast = r === 1 && c === 2 && this._pastDead();   // §18.2b, see buildMatrix
+        const caption = deadPast ? "Past: dead" : caption0;
         const cell = wrap.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
         if (!cell) return;
         cell.classList.toggle("locked", rowSealed);
+        cell.classList.toggle("past-dead", deadPast);
         const val = this.alloc.matrix[r][c];
         if (+(cell.dataset.val || 0) === val) return;   // unchanged: hands off
         cell.dataset.val = val;
@@ -2334,6 +2364,9 @@ export class Game {
      Equipped objects are real mini-cards tucked into the bag's mouth at slight,
      uneven angles (messy on purpose); consumable vouchers ride in a side pocket.
      Capacity reads as strap-loops in the header (filled loop = a tucked card). */
+  // whether MY Paradox Past module is dead (terminated at least once, §18.2b; the server says)
+  _pastDead() { const me = this._self && this._self(); return !!(me && me.past_dead); }
+
   renderRucksack() {
     const host = this.dom.ruck;
     if (!host) return;
@@ -2346,9 +2379,11 @@ export class Game {
     if (this.dom.ruckMeta) {
       this.dom.ruckMeta.innerHTML = "";
       const loops = el("div", "ruck-loops");
-      loops.title = `${items.length}/${cap} objects carried`;
+      // a Large Item fills two loops (the server's slot count), so a full pack reads full
+      const used = me && me.slots_used != null ? me.slots_used : items.length;
+      loops.title = `${used}/${cap} slots used`;
       for (let i = 0; i < cap; i++)
-        loops.appendChild(el("span", "ruck-loop" + (i < items.length ? " filled" : "")));
+        loops.appendChild(el("span", "ruck-loop" + (i < used ? " filled" : "")));
       this.dom.ruckMeta.appendChild(loops);
     }
 
@@ -4245,6 +4280,7 @@ export class Game {
           const v = a && a.matrix && a.matrix[r] ? (a.matrix[r][c2] || 0) : 0;
           cell.textContent = v >= 1 && v <= 3 ? String(v) : "";
           if (v >= 1 && v <= 3) cell.classList.add("v" + v);
+          if (r === 1 && c2 === 2 && tv && tv.past_dead) cell.classList.add("ba-dead");   // his Past is gone (§18.2b)
         });
       });
     });
@@ -5475,7 +5511,7 @@ export class Game {
             <div class="bn-kick">BY CHRONOMETRIC WIRE &middot; FILED THIS HOUR</div>
             <div class="bn-head">${headline}</div>
             ${sub ? `<div class="bn-deck">${sub}</div>` : ""}
-            <div class="bn-story"><span class="bn-drop">${body.charAt(0)}</span>${body.slice(1)}</div>
+            <div class="bn-story">${body.charAt(0) === "<" ? body : `<span class="bn-drop">${body.charAt(0)}</span>${body.slice(1)}`}</div>
           </div>
         </div>
         <div class="bn-foot">✦ &nbsp; BY WIRE FROM THE OPERATIONS DESK &nbsp; ✦</div>
@@ -5499,6 +5535,11 @@ export class Game {
       </div>`;
   }
 
+  // a traveller's name as the Herald prints it: in their colour, bold and a size up, in
+  // the paper's own lines (the owner: easy to catch at a blink, and inside the journal)
+  _heraldName(name) {
+    return `<span class="bn-name" style="--seat:${this.colorOf(name)}">${esc(name)}</span>`;
+  }
   breakingNews(headline, sub, opts) {
     opts = opts || {};
     const kind = opts.kind || "";
@@ -5534,7 +5575,7 @@ export class Game {
     this._pressRun = this._pressRun || {};
     const run = PRESS[kind];
     const fill = (t) => String(t || "")
-      .replace(/\{NAME\}/g, esc(opts.name || "the traveler"))
+      .replace(/\{NAME\}/g, opts.name ? this._heraldName(opts.name) : "the traveler")
       .replace(/\{CENTURY\}/g, opts.century != null ? roman(opts.century): "--");
     let body = "The survey office issues a bulletin to all travellers upon the sea of time.";
     if (run){
@@ -5557,12 +5598,14 @@ export class Game {
     };
     const say = HELA_LINES[kind] || "The Bureau wired a bulletin. I pulled it before the ink was dry.";
     const hour = this.view ? this.view.hour: ", ";
-    // the subject of the story, in their colour, over the page: who, and what they did
-    const WHAT = { wanted: "branded a thief: 4 gold bounty", terminated: "terminated, pulled back to XXX",
-      delivered: "returned a relic: the timeline mends", milestone: "reached a milestone",
-      secret_market_opened: "opened the sealed vault" };
-    const who = opts.name ? `<div class="bn-who" style="--seat:${this.colorOf(opts.name)}"><b>${esc(opts.name)}</b><span>${WHAT[kind] || ""}</span></div>` : "";
-    const item = { hour, kind, headline, sub, say, html: who + this._editionHtml(headline, sub, kind, body) };
+    // a wire head the print room did not rewrite still names the traveller in their ink
+    if (!run && opts.name) {
+      const nm = new RegExp(String(opts.name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      headline = esc(String(headline || "")).replace(nm, (m) => this._heraldName(m));
+      sub = esc(String(sub || "")).replace(nm, (m) => this._heraldName(m));
+    }
+    const item = { hour, kind, headline: String(headline).replace(/<[^>]*>/g, ""), sub: String(sub).replace(/<[^>]*>/g, ""), say,
+      html: this._editionHtml(headline, sub, kind, body) };
     try { window.__helaFileNews && window.__helaFileNews(item); } catch (e) {}
     audio.play("chart_stamp"); setTimeout(() => audio.play("chart_bell", { warm: true }), 160);
     if (this.shake) this.shake("sm");

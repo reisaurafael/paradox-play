@@ -531,7 +531,7 @@
     // a delivery on a phone: the case and the cabinet are two scenes; a relic tapped in the
     // case is carried while he turns to the records himself
     if (phone) out = out.replace(/Drag (.+?) from your case into the open drawer/g,
-      'In <b class="pw-key">RECORDS</b>, tap the folder of $1 (or in the <b class="pw-key">CASE</b>, tap it and File it, or drag it onto <b class="pw-key">RECORDS</b>)');
+      'In <b class="pw-key">RECORDS</b>, tap the folder of $1');
     // on touch the Merchant's card opens its sheet first, and the sheet's big key buys
     out = out.replace(/drag it into your case, or click it/g, "tap it, then its <b class=\"pw-key\">BUY</b> key");
     // the verbs of a mouse and a keyboard

@@ -31,7 +31,8 @@
   const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ── THE CHART IN ONE LOOK ON A PHONE (the owner, 27/09: "one single look", no pan, no zoom) ──
-     On a touch phone (html.pdx-phone, touch.js) each of the three charts is recomposed for
+     On a touch phone or tablet (html.pdx-touch, touch.js: the touch layout; tablets too since
+     28/09, the owner: tablets get the phone chart) each of the three charts is recomposed for
      the phone's landscape chart page instead of shrinking the tall desk chart into it. The
      same thirty centuries, the same road from XXX down to Year Zero, the same six periods,
      laid out as six bands read like a book: the Timeless on top, Antiquity at the foot, the
@@ -42,15 +43,18 @@
      box takes the stage's own aspect (--pdx-chart-ar), so mobile-table.js fits it whole. */
   window.__pdxPhoneChart = window.__pdxPhoneChart || (function () {
     const D = document.documentElement;
-    const on = () => D.classList.contains("pdx-phone");
+    const on = () => D.classList.contains("pdx-touch");
     const HP = 560;
     function ar() {
       const cs = getComputedStyle(D);
       const cw = parseFloat(cs.getPropertyValue("--pdx-colw")) || 150, rw = parseFloat(cs.getPropertyValue("--pdx-railw")) || 64;
       const w = Math.max(innerWidth, innerHeight) - cw - rw, h = Math.min(innerWidth, innerHeight);   // the table is always landscape
-      return Math.max(1.2, Math.min(2.1, w / Math.max(1, h)));
+      return Math.max(.9, Math.min(2.1, w / Math.max(1, h)));   // (a tablet's stage is near square: 1024x768 gives about 0.96)
     }
-    function dims() { const a = ar(); D.style.setProperty("--pdx-chart-ar", a.toFixed(4)); return { W: Math.round(HP * a), H: HP }; }
+    // a stage narrower than 1.3 (a tablet's is near square) keeps the chart at least 728 units
+    // wide and grows it in height instead: the seven centuries of a row keep their room, the
+    // bands get taller, and it is drawn a little smaller on the screen
+    function dims() { const a = ar(); D.style.setProperty("--pdx-chart-ar", a.toFixed(4)); const h = a < 1.3 ? Math.round(HP * 1.3 / a) : HP; return { W: Math.round(h * a), H: h }; }
     // the six bands, top to bottom, and the direction the road runs along each
     const ROWS = [
       { era: "tim", cs: [30, 29, 28, 27, 26, 25, 24], x: [.93, .2] },
@@ -1598,15 +1602,14 @@
       <text x="80" y="24" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="11" letter-spacing="2" fill="#3a2c16">CHART KEY</text>
       ${row(0, `<g transform="translate(7 -1) scale(.4)">${rigSVG(0, "#1d6b52", {})}</g>`, "a traveler's boat")}
       ${row(1, `<line x1="0" y1="0" x2="18" y2="0" stroke="#1d6b52" stroke-width="2.4"/>`, "a voyage (fades with hours)")}
-      ${row(2, `<path d="M 0 1 a 6 3 0 0 1 12 0" fill="none" stroke="#7a2a1a" stroke-width="1.4" stroke-dasharray="2.5 2.5"/>`, "troubled water, a paradox")}
-      ${row(3, `<path d="M 2 2 q -3 -5 3 -6 q 1 -4 6 -3 q 5 -3 8 1 q 5 0 4 5 z" fill="#5a5f6a"/>`, "a storm = gathering booms")}
-      ${row(4, `<path d="M 0 4 q 6 4 12 0 l -2 3 q -4 2 -8 0 z M 5 3 V -4 l 4 2 -4 2" fill="#4a3a1c"/>`, "a wreck = a termination")}
-      ${row(5, `<path d="M 0 4 Q 8 8 16 4 L 14.5 7 Q 8 10 1.5 7 Z" fill="#4a3620"/><path d="M 1.5 0 Q 8 -3 14.5 0 L 14.5 2 Q 8 -1 1.5 2 Z" fill="#8c3b2a"/><path d="M 8 -1 V -7 M 8 -7 L 13 -5.5 L 8 -4 Z" stroke="#241708" stroke-width=".8" fill="#c9a45c"/>`, "the Merchant (sails=speed)")}
-      ${row(6, `<path d="M 2 6 V -6 L 11 -3 L 2 0" fill="#a04a2a"/>`, "you deliver at this century")}
-      ${row(7, `<ellipse cx="9" cy="0" rx="9" ry="6" fill="none" stroke="#b8862a" stroke-width="2"/>`, "restored, a delivery landed")}
-      ${row(8, `<path d="M 6 6 L 7 -2 H 11 L 12 6 Z M 5 -2 L 0 -5 M 12 -2 L 17 -5" stroke="#5a4526" stroke-width="1" fill="#c9a45c"/>`, "milestone light (X · XX)")}
-      ${row(9, `<path d="M 3 4 Q 1 -3 6 -5 Q 9 -7 13 -5 Q 17 -3 15 4 Q 12 6 6 6 Z" fill="#5c566e" stroke="#2a2438" stroke-width=".8"/><ellipse cx="7" cy="-1" rx="1.6" ry="2" fill="#171226"/><ellipse cx="12" cy="-1" rx="1.6" ry="2" fill="#171226"/><path d="M 6 4 l 1.4 -2 l 1.4 2 M 10 4 l 1.4 -2 l 1.4 2" fill="#171226"/>`, "the Skull Mount, Year Zero")}
-      ${row(10, `<path d="M 4 4 Q 5 -2 9 -3.5 Q 8.2 0 10.5 4 Z M 12 3 Q 12.7 -1 15.5 -2 Q 15 .6 16.8 3 Z" fill="#2c3a46"/><path d="M 1 5.5 q 4 1.6 9 1 M 11 5.5 q 3.5 1.2 7 .6" stroke="#7a94a0" stroke-width=".8" fill="none"/>`, "shark waters, costs 2 energy")}
+      ${row(2, `<path d="M 2 2 q -3 -5 3 -6 q 1 -4 6 -3 q 5 -3 8 1 q 5 0 4 5 z" fill="#5a5f6a"/>`, "a storm = gathering booms")}
+      ${row(3, `<path d="M 0 4 q 6 4 12 0 l -2 3 q -4 2 -8 0 z M 5 3 V -4 l 4 2 -4 2" fill="#4a3a1c"/>`, "a wreck = a termination")}
+      ${row(4, `<path d="M 0 4 Q 8 8 16 4 L 14.5 7 Q 8 10 1.5 7 Z" fill="#4a3620"/><path d="M 1.5 0 Q 8 -3 14.5 0 L 14.5 2 Q 8 -1 1.5 2 Z" fill="#8c3b2a"/><path d="M 8 -1 V -7 M 8 -7 L 13 -5.5 L 8 -4 Z" stroke="#241708" stroke-width=".8" fill="#c9a45c"/>`, "the Merchant (sails=speed)")}
+      ${row(5, `<path d="M 2 6 V -6 L 11 -3 L 2 0" fill="#a04a2a"/>`, "you deliver at this century")}
+      ${row(6, `<ellipse cx="9" cy="0" rx="9" ry="6" fill="none" stroke="#b8862a" stroke-width="2"/>`, "restored, a delivery landed")}
+      ${row(7, `<path d="M 6 6 L 7 -2 H 11 L 12 6 Z M 5 -2 L 0 -5 M 12 -2 L 17 -5" stroke="#5a4526" stroke-width="1" fill="#c9a45c"/>`, "milestone light (X · XX)")}
+      ${row(8, `<path d="M 3 4 Q 1 -3 6 -5 Q 9 -7 13 -5 Q 17 -3 15 4 Q 12 6 6 6 Z" fill="#5c566e" stroke="#2a2438" stroke-width=".8"/><ellipse cx="7" cy="-1" rx="1.6" ry="2" fill="#171226"/><ellipse cx="12" cy="-1" rx="1.6" ry="2" fill="#171226"/><path d="M 6 4 l 1.4 -2 l 1.4 2 M 10 4 l 1.4 -2 l 1.4 2" fill="#171226"/>`, "the Skull Mount, Year Zero")}
+      ${row(9, `<path d="M 4 4 Q 5 -2 9 -3.5 Q 8.2 0 10.5 4 Z M 12 3 Q 12.7 -1 15.5 -2 Q 15 .6 16.8 3 Z" fill="#2c3a46"/><path d="M 1 5.5 q 4 1.6 9 1 M 11 5.5 q 3.5 1.2 7 .6" stroke="#7a94a0" stroke-width=".8" fill="none"/>`, "shark waters, costs 2 energy")}
       <text x="80" y="280" text-anchor="middle" font-family="Georgia" font-style="italic" font-size="7.5" fill="#6a5232">- in the traveler's own hand -</text>
       </g>
       <g class="sea-key-pin">
@@ -1894,13 +1897,7 @@
       g += `<path class="sea-voyage" data-k="${trailKey(t)}" data-tip="${esc(`${t.seat} sailed ${rom(t.from)} to ${rom(t.to)}, H${t.hour}`)}" d="${voyagePath(t.from, t.to, t.hour)}"
         fill="none" stroke="${col}" stroke-width="${wdt}" ${dash} opacity="${op}" stroke-linecap="round"/>`;
     }
-    for (const mo of R.monsters) {
-      const [x, y] = mo.spot, s = .7 + Math.min(.5, mo.dmg * .06);
-      // a paradox leaves TROUBLED WATER, small, still, unobtrusive (no creature)
-      g += `<g class="sea-scar" data-mc="${mo.c}" data-tip="${esc(`troubled water off ${rom(mo.c)}, ${mo.count} paradox strike${mo.count > 1 ? "s": ""} · ${mo.dmg} energy taken in all · last H${mo.hour}`)}" transform="translate(${x} ${y}) scale(${s})" opacity=".5">
-        <path d="M -9 0 a 9 5 0 0 1 18 0" fill="none" stroke="#7a2a1a" stroke-width="1.3" stroke-dasharray="3 3"/>
-        <path d="M -5 3 a 5 3 0 0 1 10 0" fill="none" stroke="#7a2a1a" stroke-width="1.1" stroke-dasharray="2 3"/></g>`;
-    }
+    // (the troubled water beside a hit island went, 28/09: the owner found the marks polluted the chart)
     for (const wk of R.wrecks) {
       const [x, y] = wk.spot;
       g += `<g class="sea-wreck" data-wc="${wk.c}" data-tip="${esc(`wreck of ${wk.seat}, terminated H${wk.hour} near ${rom(wk.c)}`)}" transform="translate(${x} ${y}) rotate(-12)" opacity=".85">
@@ -2989,7 +2986,7 @@
       const box = cp.getBoundingClientRect();
       if (!box.width || !box.height) return;
       const want = PHONE() ? PH.dims().W : Math.max(700, Math.min(1200, Math.round(H * box.width / box.height)));
-      if (Math.abs(want - W) < 12) return;   // the chart must FILL its frame, tiny drifts only
+      if (Math.abs(want - W) < 12 && !(PHONE() && Math.abs(PH.dims().H - H) >= 12)) return;   // the chart must FILL its frame, tiny drifts only
       cp.remove(); baseCache = null; liveG = null;
       if (mount()) { rehome(); renderNow(); if (PHONE()) PH.remounted(); }
     }, 350);

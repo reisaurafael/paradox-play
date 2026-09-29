@@ -25,7 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609281737";
+import { cardArtImg } from "./card-art.js?202609282144";
+import { initials } from "./util.js?202609282144";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -105,6 +106,7 @@ function build() {
       <span class="mc-id"><span class="mc-hour"></span><span class="mc-phase"></span>
         <span class="mc-phases" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
     </header>
+    <div class="mc-order" aria-label="Turn order this Hour"></div>
     <div class="mc-life" aria-live="polite"><span class="mc-life-h">ENERGY</span><b>-</b><span class="mc-cells"></span></div>
     <div class="mc-slot"><div class="mc-says" aria-live="polite"></div></div>
     <div class="mc-extra"></div>
@@ -592,8 +594,26 @@ function dockTrack(inCol) {
   if (inCol && t.parentElement !== col) col.insertBefore(t, tools);
   else if (!inCol && t.parentElement === col) document.body.appendChild(t);
 }
+// THE TURN ORDER (priority) this Hour, compact under her header: who acts first, in their
+// colours, you ringed (the owner, 29/09: "the turn-order priority could find a better place")
+let lastOrder = "";
+function paintOrder() {
+  const g = game(); if (!g || !g.view) return;
+  const me = g._self ? g._self() : null;
+  const alive = (n) => { const t = g.view.travelers.find((x) => x.name === n); return !t || !(t.is_terminated || (t.statuses || []).includes("terminated")); };
+  const order = (g.priority && g.priority.length ? g.priority : g.view.travelers.map((t) => t.name));
+  const sig = order.join("|") + "#" + (me ? me.name : "") + "#" + order.map(alive).join("");
+  if (sig === lastOrder) return;
+  lastOrder = sig;
+  const el = col.querySelector(".mc-order");
+  el.innerHTML = `<span class="mo-h">ORDER</span>` + order.map((n, i) => {
+    const mine = me && n === me.name;
+    return `<i class="mo-t${mine ? " mo-me" : ""}${alive(n) ? "" : " mo-out"}" style="--c:${g.colorOf ? g.colorOf(n) : "#888"}" title="${esc(n)}: ${i + 1}${["st", "nd", "rd"][i] || "th"}">${mine ? "YOU" : esc(initials(n))}</i>`;
+  }).join(`<b class="mo-sep" aria-hidden="true">\u203a</b>`);
+}
 function paintCol() {
   if (!col) return;
+  paintOrder();
   dockTabKey(true); dockTrack(true);
   const hh = document.getElementById("hud-hour");
   col.querySelector(".mc-hour").textContent = hh ? "Hour " + hh.textContent.trim() : "";
@@ -634,8 +654,8 @@ function paintCol() {
   } else if (turnHTML) says = turnHTML;
   else if (document.querySelector(".he-window.he-news.open")) {
     // a Herald edition lies on the stage: the paper is the Herald's, the words about it are hers
-    const who = document.querySelector(".he-window.he-news.open .bn-who");
-    says = `<div class="mc-cap"><span class="mc-tag">THE HERALD</span><span class="mc-txt">${who ? `<b>${esc((who.querySelector("b") || {}).textContent || "")}</b> ${esc((who.querySelector("span") || {}).textContent || "")}. ` : "A new edition of the Temporal Herald. "}Tap the paper to put it away.</span></div>`;
+    // the paper says who and what in its own band (INTERFACE): her line is only the how
+    says = `<div class="mc-cap"><span class="mc-txt">Tap the paper to put it away.</span></div>`;
   } else if (ev) says = capHTML(ev);
   if (says !== lastSays) {
     lastSays = says;
@@ -1104,7 +1124,8 @@ function wantedView() {
   if (k === "reward_category") return "records";               // the contracts drawer holds the three kinds
   // the full-pack choice and Agnes's Cauldron come as a card sheet over any page: no scene waits
   if (k === "capacity") return null;
-  if (k === "deliver" || k === "recycle" || k === "activation") return "case";
+  if (k === "deliver") return "records";                       // the relics are filed on the Records page
+  if (k === "recycle" || k === "activation") return "case";
   if (k === "target") {
     if (o.target_type === "century") return "chart";
     if (o.target_type === "traveler") return "machine";      // the rivals' files lie there
@@ -1185,13 +1206,13 @@ function binState() {
   const me0 = g._self && g._self();
   if (picked && !(me0 && (me0.hand || me0.equipment || []).some((x) => x.name === picked))) picked = null;
   const c = picked ? { name: picked } : null, st = g._deliverState;
-  if (c && st && st.names && st.names.has(c.name)) return { mode: "file", name: c.name };
+  // (the owner, 29/09: filing happens only in the Records; the bin only recycles)
   if (c) {
     const me = g._self && g._self();
     const card = me && (me.hand || me.equipment || []).find((x) => x.name === c.name);
     return { mode: "recycle", name: c.name, gain: card ? card.recycle_value : null };
   }
-  return { mode: st && st.names && st.names.size ? "drawer" : "idle" };
+  return { mode: "idle" };
 }
 // HER COLUMN'S TOOLS (the owner: "features we lack space for could live there"): what the page
 // on screen needs, under her line: the gold and the Secret Market's hint at the Merchant; the
@@ -1240,7 +1261,6 @@ function paintBin() {
 function binAct() {
   const g = game(); if (!g) return false;
   const b = binState();
-  if (b.mode === "file") { picked = null; g._fileDeliver(b.name); return true; }
   if (b.mode === "recycle") { picked = null; g.recycleCard(b.name); return true; }
   return false;
 }
@@ -1278,7 +1298,8 @@ function wireBin() {
   let dg = null;
   const recKey = () => rail && rail.querySelector('button[data-view="records"]');
   const overEl = (n, x, y, pad) => { if (!n || n.hidden) return false; const r = n.getBoundingClientRect(); return r.width > 0 && x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad; };
-  const fileable = (name) => { const st = game() && game()._deliverState; return !!(st && st.names && st.names.has(name) && !st.chosen.has(name)); };
+  // filing is the Records' alone (the owner, 29/09): the RECORDS key is never a drop target
+  const fileable = () => false;
   // held up and to the left of the finger (the bin and the keys lie on the right): what is under
   // the finger stays in sight
   const ghostAt = (d, x, y) => { d.gx = x - d.gw - 16; d.gy = y - d.gh * 0.72; d.ghost.style.transform = `translate(${d.gx.toFixed(1)}px, ${d.gy.toFixed(1)}px) rotate(-4deg)`; };
@@ -1374,7 +1395,7 @@ function caseSheet(node) {
   // the only item ready: it fires at once; with others ready it joins them and the rail's FIRE n fires all
   const others = [...document.querySelectorAll("#rucksack-zone .ruck-card.act-ready")].some((n) => n !== node);
   if (node.classList.contains("act-ready")) keys.push(["fire", others ? "Ready it (then FIRE)" : "Fire it"]);
-  if (st && st.names && st.names.has(name) && !st.chosen.has(name)) keys.push(["file", `File it (${roman(d.delivery_century)})`]);
+  // (a relic is filed in the Records, on its folder: never from the case)
   const note = node.classList.contains("act-used") ? "Fired this phase." : node.classList.contains("act-notarget") ? "Nothing in reach to use it on now." : "";
   sheet = document.createElement("div");
   sheet.className = "pdx-sheet pdx-casesheet";
@@ -1582,9 +1603,11 @@ function placeNotes(list) {
 }
 // a tap on "?" shows her notes (a tap again, or anywhere, puts them away); in the tutorial the
 // tap keeps opening the tips her lesson expects
+// ON A PHONE "?" IS ALWAYS HER NOTES IN PLACE (the owner, 29/09: "the pointed tips in place, like the
+// PC's Tab"), in the tutorial too; the long tips list never opens from it on a phone
 function wireNotesKey() {
   window.addEventListener("click", (e) => {
-    if (!on() || document.body.classList.contains("tut")) return;
+    if (!on()) return;
     const k = e.target.closest && e.target.closest("#pdx-tabkey, .pdx-helpkey");
     const H = window.__pdxHelp;
     if (!H || !H.hold) return;
@@ -1637,6 +1660,11 @@ function start() {
   wireBin(); wireTickets(); wireSecretKey(); wireNotesKey();
   const obs = new MutationObserver(sync);
   obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  // a file the game rebuilt (a rival's state changed) is placed on the table before it is painted
+  const pz = document.getElementById("players-zone");
+  if (pz) new MutationObserver((ms) => {
+    if (on() && !outFile && ms.some((m) => m.target === pz || (m.target.classList && (m.target.classList.contains("cb-grid") || m.target.classList.contains("caseboard"))))) pile();
+  }).observe(pz, { childList: true, subtree: true });
   const sg = document.getElementById("screen-game");
   if (sg) obs.observe(sg, { attributes: true, attributeFilter: ["class"] });
   const cam = document.getElementById("cam");
