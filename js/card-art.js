@@ -162,3 +162,25 @@ export function cardTicket(cost) {
     + `<path d="M 11 14 A 11 11 0 0 1 22 8.2" stroke="#fff4c8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".85"/>`
     + `</svg><b class="tk-num">${cost}</b>`;
 }
+
+const fcEsc = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fcRoman = (n) => { n = +n || 0; if (n <= 0) return String(n); const T = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]; let o = ""; for (const [v, r] of T) while (n >= v) { o += r; n -= v; } return o; };
+/* A CARD READ ON A PHONE: a C.R.O.N.O.S. requisition form, typed and stamped (the owner, 29/09:
+   "cronons bureaucracy appearance... only the information and name", no illustration) */
+export function formCard(d, name, kind, where) {
+  const no = String((name || "").split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9000, 7) + 1000);
+  const stamp = where === "case" ? "IN CUSTODY" : where === "secret" ? "CLASSIFIED" : "FOR REQUISITION";
+  return `<div class="ps-card card-pop ps-form">
+      <div class="pf-head"><span>C.R.O.N.O.S. · TEMPORAL ACQUISITIONS</span><span>TA-${no}</span></div>
+      <div class="pf-title">ARTEFACT REQUISITION</div>
+      <div class="pf-row"><i>ITEM</i><b class="cp-name">${fcEsc(name)}</b></div>
+      <div class="pf-row"><i>CLASS</i><span class="cp-kind">${fcEsc(kind || "--")}</span></div>
+      <div class="pf-row pf-eff"><i>EFFECT ON RECORD</i><div class="cp-desc">${d.description || "--"}</div></div>
+      <div class="pf-boxes cp-stats">
+        <div class="pf-box cp-stat"><i>PRICE</i><b><u class="pf-coin"></u>${d.gold_cost != null ? d.gold_cost : "-"}</b><small>gold</small></div>
+        <div class="pf-box cp-stat"><i>DELIVER TO</i><b>${d.delivery_century != null ? fcRoman(d.delivery_century) : "?"}</b><small>century</small></div>
+        <div class="pf-box pf-energy cp-stat"><i>RECYCLE</i><b><u class="pf-gem"></u>${d.recycle_value != null ? d.recycle_value : "?"}</b><small>energy</small></div>
+      </div>
+      <div class="pf-stamp">${stamp}</div>
+    </div>`;
+}

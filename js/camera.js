@@ -10,7 +10,7 @@
    (tools/dev/harness.py shot) stays at the identity "main" scene.
    ========================================================================= */
 
-import { audio } from "./audio.js?202609290303";
+import { audio } from "./audio.js?202609290305";
 
 const SCENES = new Set(["main", "market", "drawer", "timeline"]);
 const ZONE_SCENE = { market: "market", secret: "market", receptor: "drawer" };

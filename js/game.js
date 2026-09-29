@@ -11,21 +11,21 @@
    the others before all matrices reveal together. Dice support both drag-drop
    and click-to-place. Visual identity per styles/app.css.
    ========================================================================= */
-import { icon } from "./icons.js?202609290303";
-import { cardArtImg, cardTicket } from "./card-art.js?202609290303";
-import { audio } from "./audio.js?202609290303";
+import { icon } from "./icons.js?202609290305";
+import { cardArtImg, cardTicket, formCard } from "./card-art.js?202609290305";
+import { audio } from "./audio.js?202609290305";
 if (typeof window !== "undefined") window.__audio = audio;
-import { juice } from "./juice.js?202609290303";
-import { comic } from "./comic.js?202609290303";
-import { fx } from "./fx.js?202609290303";
-import { CatEngine } from "./cat.js?202609290303";
-import { tutorials } from "./tutorial.js?202609290303";
-import { profile } from "./profile.js?202609290303";
-import { Camera } from "./camera.js?202609290303";
+import { juice } from "./juice.js?202609290305";
+import { comic } from "./comic.js?202609290305";
+import { fx } from "./fx.js?202609290305";
+import { CatEngine } from "./cat.js?202609290305";
+import { tutorials } from "./tutorial.js?202609290305";
+import { profile } from "./profile.js?202609290305";
+import { Camera } from "./camera.js?202609290305";
 import {
   PALETTE, ERAS, FUNCTIONS, CENTURY_MAX, MILESTONES, SECRET_MARKET,
   roman, centuryToPct, seatColor, initials, el, eraColor, eraName, esc, setHelaColour,
-} from "./util.js?202609290303";
+} from "./util.js?202609290305";
 
 // The Auction is phase 1 of the normal turn, not a separate mode: a dimensional
 // window that comes before Delivery the way Delivery comes before Market. So it
@@ -1888,23 +1888,18 @@ export class Game {
       this._popRaf = requestAnimationFrame(watch);
     };
     if (!this._popRaf) this._popRaf = requestAnimationFrame(watch);
-    const p = el("div", "card-pop");
+    // THE CARD READ ON A PC is the same C.R.O.N.O.S. requisition slip as on a phone (the owner, 29/09:
+    // "make it easier and better to read ... just like you did for mobile"); the picture is on the card
+    const p = el("div", "card-pop card-pop-form");
     p.style.setProperty("--era", eraColor(card.delivery_century));
-    const popArt = cardArtImg(card.name, "cp-art-img");
-    if (popArt) p.classList.add("has-art");
-    p.innerHTML = (popArt ? `<div class="cp-art">${popArt}</div>` : "") + `
-      <div class="cp-name">${this.dn(card)}</div>
-      <div class="cp-kind">${card.kind_label || (card.ability_type || "").replace(/_/g, " ")} · ${eraName(card.delivery_century)}</div>
-      <div class="cp-desc">${card.description || "--"}</div>
-      <div class="cp-stats">
-        <span class="cp-stat gold">${icon("gold")} ${card.gold_cost}g</span>
-        <span class="cp-stat clock">${icon("clock")} Deliver ${roman(card.delivery_century)}</span>
-        <span class="cp-stat energy">${icon("energy")} Recycle ${card.recycle_value}</span>
-      </div>`;
+    const where = node.closest(".secret-stage, .secret-card-wrap, .market-secret") ? "secret"
+      : node.closest("#rucksack-zone") ? "case" : "shop";
+    const kind = card.kind_label || (card.ability_type || "").replace(/_/g, " ");
+    p.innerHTML = formCard(card, this.dn(card), kind, where);
     this.dom.overlay.appendChild(p);
     this.cardPop = p;
     const r = node.getBoundingClientRect();
-    this._popAnchor = { x: r.left + r.width / 2, y: r.top, cy: r.top + r.height / 2 };
+    this._popAnchor = { x: r.left + r.width / 2, y: r.top, cy: r.top + r.height / 2, w: r.width };
     this.positionCardPop();
   }
   positionCardPop(e) {
@@ -1914,7 +1909,7 @@ export class Game {
     // BESIDE the card, clear of the pointer (the owner, 29/09: "the cursor stays in front of their
     // text"): on a PC the cursor is the whole arm, machine and hand rising from below, so the card's
     // words open well to its side (right when there is room, else left), level with the card
-    const gap = 236;
+    const half = a.w != null ? a.w / 2 : 70, gap = half + 18;   // right against the card's edge
     let x = a.x + gap;
     if (x + w > window.innerWidth - 8) x = a.x - gap - w;
     x = Math.max(8, Math.min(window.innerWidth - w - 8, x));

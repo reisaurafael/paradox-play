@@ -13,7 +13,7 @@ const PANEL = (() => {
 })();
 const KEY = "paradoxo.profile.v1" + (PANEL > 1 ? ".panel" + PANEL : "");
 const MAX_HISTORY = 40;
-import { seatColor, setHelaColour } from "./util.js?202609290303";
+import { seatColor, setHelaColour } from "./util.js?202609290305";
 // HELA wears the chosen colour from the menu on; in a match game.js hands her the
 // seat colour the server settled (the same one the piece wears on the map).
 function tintHela(i) { try { setHelaColour(seatColor(i)); } catch (e) {} }
