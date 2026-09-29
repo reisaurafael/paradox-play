@@ -8248,3 +8248,15 @@ body.cabin-on:not(.tut) :is(#hull, #cursor-plane) .mano-standby .ms-shut { displ
 .bd-pastgone { display: inline-block; margin: -3px 0 4px; padding: 0 5px; border: 1.5px solid #b3352b; border-radius: 2px;
   color: #b3352b; font-family: var(--f-mono); font-size: .55rem; font-weight: 700; letter-spacing: .08em;
   transform: rotate(-3deg); background: rgba(255,250,240,.6); }
+
+/* THE CARD'S WORDS, READABLE (the owner, 29/09: "cards are unreadable"): wider and larger */
+.card-pop { width: 312px; padding: 14px 16px; }
+.card-pop .cp-name { font-size: 1.22rem; }
+.card-pop .cp-kind { font-size: .66rem; }
+.card-pop .cp-desc { font-size: .98rem; line-height: 1.42; color: #231b0e; }
+.card-pop .cp-stat { font-size: .74rem; }
+.card-pop .cp-stat svg { width: 14px; height: 14px; }
+
+/* the arm, its machine and the hands 15% bigger on a PC (the owner, 29/09); a phone keeps its own */
+html:not(.pdx-touch) { --mano-scale: 1.32; }
+html:not(.pdx-touch) body.cabin-on #cursor-plane .hand-right { width: 276px; height: 244.7px; margin-left: -106px; margin-top: -75.6px; }
