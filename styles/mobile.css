@@ -913,40 +913,50 @@ html.pdx-touch :is(.cc-ord, .sea-ord, .cm-ord) { display: none !important; }
 #pdx-mcol .mc-gold-h { font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: #d8c48a; }
 #pdx-mcol .mc-gold b { font: 700 1.35rem/1 var(--f-display, "Oswald", sans-serif); color: #f7c65a; }
 
-/* ══ THE CARD READ ON A PHONE: a C.R.O.N.O.S. requisition form (the owner, 29/09), typed on
-   ruled paper with punch holes, three boxed fields and a rubber stamp; no illustration ══ */
-.pdx-sheet .ps-card.ps-form { position: relative; padding: 10px 16px 12px 34px !important; overflow: hidden auto;
-  color: #231a0c; border: 2px solid var(--cx-ink, #15100a) !important; border-radius: 3px !important;
-  background: repeating-linear-gradient(180deg, transparent 0 25px, rgba(70, 110, 150, .13) 25px 26px),
-    linear-gradient(90deg, transparent 22px, rgba(200, 60, 50, .35) 22px 23.5px, transparent 23.5px),
-    linear-gradient(180deg, #f6ecd2, #ecdfbd) !important;
-  box-shadow: 4px 5px 0 rgba(0, 0, 0, .55) !important; transform: rotate(-.4deg); }
-.pdx-sheet .ps-form::before { content: ""; position: absolute; left: 7px; top: 14px; bottom: 14px; width: 9px;
-  background: radial-gradient(circle, #2a2116 3.2px, transparent 3.8px) 0 0 / 9px 44px repeat-y; opacity: .75; }
-.pdx-sheet .pf-head { display: flex; justify-content: space-between; gap: 10px; font: 700 .56rem/1.2 var(--f-mono, monospace);
-  letter-spacing: .14em; color: #6a5530; border-bottom: 1.5px solid #3a2c14; padding-bottom: 4px; }
-.pdx-sheet .pf-title { margin: 5px 0 6px; font: 800 .8rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .32em; color: #8a2a1e; }
-.pdx-sheet .pf-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: baseline; gap: 8px; padding: 3px 0;
-  border-bottom: 1px dashed rgba(58, 44, 20, .35); }
-.pdx-sheet .pf-row > i, .pdx-sheet .pf-box > i { font: 700 .56rem/1.1 var(--f-mono, monospace); font-style: normal; letter-spacing: .14em; color: #6a5530; }
-.pdx-sheet .pf-row .cp-name { font: 800 1.3rem/1.05 var(--f-display, "Oswald", sans-serif) !important; letter-spacing: .03em; color: #15100a; text-transform: uppercase; }
-.pdx-sheet .pf-row .cp-kind { font: 700 .74rem/1 var(--f-mono, monospace) !important; letter-spacing: .16em; text-transform: uppercase;
-  justify-self: start; padding: 2px 6px; border: 1.5px solid #3a2c14; border-radius: 2px; }
-.pdx-sheet .pf-eff { grid-template-columns: 1fr; gap: 2px; }
-.pdx-sheet .pf-eff .cp-desc { margin: 0 !important; font: 500 .95rem/1.35 "Courier New", var(--f-mono, monospace) !important; color: #1d160a; }
-.pdx-sheet .pf-boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
-.pdx-sheet .pf-box { display: grid; justify-items: center; gap: 2px; padding: 4px 4px 5px; border: 1.5px solid #3a2c14; border-radius: 2px;
-  background: rgba(255, 250, 235, .55); font-size: inherit !important; }
-.pdx-sheet .pf-box b { display: flex; align-items: center; gap: 5px; font: 800 1.35rem/1 var(--f-display, "Oswald", sans-serif); color: #15100a; }
-.pdx-sheet .pf-box small { font: 600 .56rem/1 var(--f-mono, monospace); letter-spacing: .12em; color: #6a5530; text-transform: uppercase; }
-.pdx-sheet .pf-coin { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #15100a;
+/* ══ THE CARD READ ON A PHONE: a C.R.O.N.O.S. requisition slip (the owner, 29/09): small, and
+   handled to death like the police files; yellowed, a coffee ring, a torn edge, a paper clip,
+   typewriter ink and a tired rubber stamp. No illustration. ══ */
+.pdx-sheet .ps-card.ps-form { position: relative; justify-self: center; width: min(340px, 100%); max-width: 340px;
+  padding: 9px 13px 10px 26px !important; overflow: visible !important; color: #2a1f0e;
+  border: 1.5px solid #3b2c14 !important; border-radius: 2px !important;
+  background:
+    radial-gradient(circle at 84% 80%, transparent 0 15px, rgba(105, 62, 22, .26) 16px 18px, transparent 20px),
+    radial-gradient(circle at 12% 18%, rgba(140, 95, 40, .16), transparent 26%),
+    radial-gradient(ellipse at 50% 45%, transparent 52%, rgba(120, 78, 22, .3) 100%),
+    repeating-linear-gradient(180deg, transparent 0 19px, rgba(70, 100, 130, .1) 19px 20px),
+    linear-gradient(170deg, #eadcb4, #dccb9c) !important;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(255, 245, 215, .35) !important; transform: rotate(-1.8deg);
+  clip-path: polygon(0 0, 100% 0, 100% 18%, 98.6% 24%, 100% 31%, 99% 44%, 100% 52%, 98.8% 67%, 100% 74%, 100% 100%, 3% 100%, 0 97%); }
+.pdx-sheet .ps-form::before { content: ""; position: absolute; left: 6px; top: 12px; bottom: 12px; width: 7px;
+  background: radial-gradient(circle, #231a0e 2.4px, transparent 3px) 0 0 / 7px 30px repeat-y; opacity: .7; }
+.pdx-sheet .pf-head { display: flex; justify-content: space-between; gap: 8px; font: 700 .46rem/1.2 "Courier New", var(--f-mono, monospace);
+  letter-spacing: .1em; color: #6d5733; border-bottom: 1px solid rgba(59, 44, 20, .6); padding-bottom: 3px; white-space: nowrap; }
+.pdx-sheet .pf-title { margin: 4px 0 3px; font: 800 .62rem/1 "Courier New", var(--f-mono, monospace); letter-spacing: .26em; color: #8c2c1f; opacity: .85; }
+.pdx-sheet .pf-row { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: baseline; gap: 6px; padding: 2px 0;
+  border-bottom: 1px dashed rgba(59, 44, 20, .28); }
+.pdx-sheet .pf-row > i, .pdx-sheet .pf-box > i { font: 700 .46rem/1.1 "Courier New", var(--f-mono, monospace); font-style: normal; letter-spacing: .1em; color: #6d5733; }
+.pdx-sheet .pf-row .cp-name { font: 800 1rem/1.05 "Courier New", var(--f-mono, monospace) !important; letter-spacing: .02em; color: #1a130a;
+  text-transform: uppercase; text-shadow: .4px .3px 0 rgba(26, 19, 10, .45); }
+.pdx-sheet .pf-row .cp-kind { font: 700 .6rem/1 "Courier New", var(--f-mono, monospace) !important; letter-spacing: .12em; text-transform: uppercase;
+  justify-self: start; padding: 1px 4px; border: 1px solid rgba(59, 44, 20, .7); }
+.pdx-sheet .pf-eff { grid-template-columns: 1fr; gap: 1px; }
+.pdx-sheet .pf-eff .cp-desc { margin: 0 !important; font: 600 .78rem/1.3 "Courier New", var(--f-mono, monospace) !important; color: #241a0c;
+  text-shadow: .3px .2px 0 rgba(36, 26, 12, .35); }
+.pdx-sheet .pf-boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+.pdx-sheet .pf-box { display: grid; justify-items: center; gap: 1px; padding: 3px 2px 4px; border: 1px solid rgba(59, 44, 20, .75);
+  background: rgba(250, 240, 210, .35); font-size: inherit !important; }
+.pdx-sheet .pf-box b { display: flex; align-items: center; gap: 4px; font: 800 1rem/1 "Courier New", var(--f-mono, monospace); color: #1a130a; }
+.pdx-sheet .pf-box small { font: 700 .44rem/1 "Courier New", var(--f-mono, monospace); letter-spacing: .1em; color: #6d5733; text-transform: uppercase; }
+.pdx-sheet .pf-coin { width: 12px; height: 12px; border-radius: 50%; border: 1.2px solid #15100a;
   background: radial-gradient(circle at 35% 30%, #fff1b8, #e2b23c 55%, #9a6d17); }
-.pdx-sheet .pf-stamp { position: absolute; right: 14px; top: 22px; padding: 3px 8px; border: 3px double rgba(170, 40, 30, .7); border-radius: 4px;
-  font: 800 .78rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .2em; color: rgba(170, 40, 30, .72);
-  transform: rotate(-9deg); pointer-events: none; mix-blend-mode: multiply; }
-/* the energy it recycles for: green enamel, like the gem on the closed card (the owner: "too plain") */
-.pdx-sheet .pf-box.pf-energy { border-color: #1f4a24; background: linear-gradient(180deg, rgba(124, 192, 112, .28), rgba(60, 127, 62, .18)); }
+.pdx-sheet .pf-stamp { position: absolute; right: 12px; top: 24px; padding: 2px 6px; border: 2.5px double rgba(160, 38, 28, .55); border-radius: 3px;
+  font: 800 .6rem/1 var(--f-display, "Oswald", sans-serif); letter-spacing: .18em; color: rgba(160, 38, 28, .55);
+  transform: rotate(-11deg); pointer-events: none; mix-blend-mode: multiply;
+  -webkit-mask-image: repeating-linear-gradient(115deg, #000 0 5px, rgba(0, 0, 0, .55) 5px 7px, #000 7px 11px);
+          mask-image: repeating-linear-gradient(115deg, #000 0 5px, rgba(0, 0, 0, .55) 5px 7px, #000 7px 11px); }
+/* the energy it recycles for, in green ink, as clerks mark energy */
+.pdx-sheet .pf-box.pf-energy { border-color: rgba(31, 74, 36, .8); background: rgba(124, 192, 112, .22); }
 .pdx-sheet .pf-energy b { color: #1d5a22; }
 .pdx-sheet .pf-energy i, .pdx-sheet .pf-energy small { color: #2c5e2a; }
-.pdx-sheet .pf-gem { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #10200e;
+.pdx-sheet .pf-gem { width: 12px; height: 12px; border-radius: 50%; border: 1.2px solid #10200e;
   background: radial-gradient(circle at 35% 28%, #d4f5bc, #7cc070 30%, #3c7f3e 66%, #1f4a24); box-shadow: inset 0 1px 1px rgba(255, 255, 255, .6); }

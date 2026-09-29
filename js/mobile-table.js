@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609282218";
-import { initials } from "./util.js?202609282218";
+import { cardArtImg } from "./card-art.js?202609282221";
+import { initials } from "./util.js?202609282221";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -782,7 +782,7 @@ function formCard(d, name, kind, where) {
   const no = String((name || "").split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9000, 7) + 1000);
   const stamp = where === "case" ? "IN CUSTODY" : where === "secret" ? "CLASSIFIED" : "FOR REQUISITION";
   return `<div class="ps-card card-pop ps-form">
-      <div class="pf-head"><span>C.R.O.N.O.S. · BUREAU OF TEMPORAL ACQUISITIONS</span><span>FORM TA-${no}</span></div>
+      <div class="pf-head"><span>C.R.O.N.O.S. · TEMPORAL ACQUISITIONS</span><span>TA-${no}</span></div>
       <div class="pf-title">ARTEFACT REQUISITION</div>
       <div class="pf-row"><i>ITEM</i><b class="cp-name">${esc(name)}</b></div>
       <div class="pf-row"><i>CLASS</i><span class="cp-kind">${esc(kind || "--")}</span></div>
