@@ -93,3 +93,11 @@ html.pdx-m-on .card.has-art .card-large-tag, html.pdx-m-on .card.has-art.tilt .c
 /* the shelf's stock centred in the stall's window (it sat 84px left of the middle, the empty half
    waiting for the signpost); the row still ends short of the post */
 body.cam-on #market-zone .market-main { left: calc(50% + var(--wg-dx) - 336px * var(--wg-s)); width: calc(640px * var(--wg-s)); }
+/* IN THE CASE too (the owner, 29/09): an owned card with approved art is its picture, upright 3:4,
+   with the same coin, century label and energy gem, a touch smaller for the case's pockets */
+#rucksack-zone .ruck-card.card.has-art { aspect-ratio: 3 / 4; height: auto; min-height: 0; padding: 0; }
+#rucksack-zone .ruck-card.has-art .card-cost.card-tkt { width: 26px; height: 26px; top: -7px; left: -7px; }
+#rucksack-zone .ruck-card.has-art .card-tkt .tk-num { font-size: .82rem; }
+#rucksack-zone .ruck-card.has-art .card-recycle { width: 24px; height: 24px; top: -7px; right: -7px; font-size: .78rem; }
+#rucksack-zone .ruck-card.has-art .card-deliver { padding: 2px 5px 2px 3px; bottom: -7px; }
+#rucksack-zone .ruck-card.has-art .card-deliver .cd-cent { font-size: .7rem; }
