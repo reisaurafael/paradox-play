@@ -28,6 +28,8 @@ export const CARD_ART = new Set([
   "portal_gun",
   "galileos_telescope",
   "gerardus_mercators_map",
+  "mechanical_clock",
+  "seismograph",
 ]);
 
 // the cards whose function name is not the slug of their English name
