@@ -165,7 +165,10 @@
     <g fill="#c29a4e" stroke="${INK}" stroke-width="1.1"><circle cx="171.6" cy="263.4" r="2.5"/><circle cx="171.6" cy="344.6" r="2.5"/></g>
     <g fill="#fff6dc" opacity=".75"><circle cx="170.8" cy="262.6" r=".7"/><circle cx="170.8" cy="343.8" r=".7"/></g>
   </g>
-  </g>`}function armSVG(){return`<svg class="gnt-svg" viewBox="-800 0 1580 900" width="1580" height="900" preserveAspectRatio="xMidYMax meet">
+  </g>`}function castSVG(){const band=(t,u)=>`M 172 ${t} Q 192 ${t-3} 212 ${t} Q 220 ${(t+u)/2} 214 ${u} Q 192 ${u+4} 170 ${u} L 174 348 A 44 44 0 0 1 174 260 L 172 ${t} Z`,limb=b=>{const F=FOREARM[b],dx=b==="m"?100:110,[t,u]=b==="m"?[240,376]:[258,356];return`<g class="pb-${b}"${b==="m"?"":' display="none"'}><path d="${F.arm}"/><g transform="translate(${dx} 0)"><path d="${F.sleeve}"/><path d="${F.roll}"/></g><path d="${band(t,u)}"/></g>`},sil=`${limb("m")}${limb("f")}<path d="M 236 150 L 500 150 Q 530 150 534 182 L 548 402 Q 550 434 520 438 L 250 446 Q 220 447 216 414 L 204 182 Q 202 150 236 150 Z"/><g transform="translate(-36 0)">${handShadow("hand")}</g>`;return`<g class="gnt-shadow gnt-cast" opacity=".5" pointer-events="none">
+  <g transform="translate(21 28)" fill="url(#mnCastDots)">${sil}</g>
+  <g transform="translate(13 18)" fill="#2a1608">${sil}</g>
+</g>`}function armSVG(){return`<svg class="gnt-svg" viewBox="-800 0 1580 900" width="1580" height="900" preserveAspectRatio="xMidYMax meet">
 <defs>
   <linearGradient id="mnSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b959d"/><stop offset=".42" stop-color="#5e6870"/><stop offset="1" stop-color="#3a4249"/></linearGradient>
   <linearGradient id="mnSteelD" x1="0" y1="0" x2=".18" y2="1"><stop offset="0" stop-color="#58626a"/><stop offset=".55" stop-color="#3a434a"/><stop offset="1" stop-color="#262d33"/></linearGradient>
@@ -175,9 +178,9 @@
   <linearGradient id="mnAmber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c078"/><stop offset="1" stop-color="#8a6a2c"/></linearGradient>
   <linearGradient id="mnValve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0573c"/><stop offset=".55" stop-color="#b3321f"/><stop offset="1" stop-color="#6e1a10"/></linearGradient>
   ${handDefs("mn")}
+  <pattern id="mnCastDots" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="2.5" cy="2.5" r="1.25" fill="#2a1608"/></pattern>
 </defs>
-<ellipse class="gnt-shadow" cx="360" cy="440" rx="380" ry="44" fill="#000" opacity=".33"/>
-<path class="gnt-shadow" d="M -800 364 L 110 352 Q 140 356 150 372 Q 60 392 -800 398 Z" fill="#000" opacity=".22" pointer-events="none"/>
+${castSVG()}
 
 
 <g id="arm-limb">
@@ -256,7 +259,6 @@
 
 <g>
   <clipPath id="mnCase"><path d="M 236 150 L 500 150 Q 530 150 534 182 L 548 402 Q 550 434 520 438 L 250 446 Q 220 447 216 414 L 204 182 Q 202 150 236 150 Z"/></clipPath>
-  <path d="M 236 150 L 500 150 Q 530 150 534 182 L 548 402 Q 550 434 520 438 L 250 446 Q 220 447 216 414 L 204 182 Q 202 150 236 150 Z" transform="translate(14 18)" fill="#000" opacity=".26" pointer-events="none"/>
   
   <path d="M 236 150 L 500 150 Q 530 150 534 182 L 548 402 Q 550 434 520 438 L 250 446 Q 220 447 216 414 L 204 182 Q 202 150 236 150 Z" transform="translate(8 10)" fill="#1e252a" stroke="${INK}" stroke-width="4.4"/>
   <path d="M 542 196 L 556 410 Q 557 440 530 446" fill="none" stroke="#5e6870" stroke-width="1.6" opacity=".45" pointer-events="none"/>
@@ -475,7 +477,11 @@
     <div class="hand-right" id="hand-right" data-grab="0">${rightHandSVG()}</div>
     <div class="hela-radar" id="hela-radar">${helaRadarSVG()}</div>`,hull2}function rightHandSVG(){return`<svg class="rh-svg" viewBox="250 90 700 620" xmlns="http://www.w3.org/2000/svg">
   <defs>${handDefs("rh")}</defs>
-  <g transform="translate(6 16)" fill="#140b05" opacity=".38" pointer-events="none"><g transform="rotate(38 538 300) translate(1280 0) scale(-1 1)">${handShadow("rh")}</g></g>
+  <defs><pattern id="rhCastDots" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="2.5" cy="2.5" r="1.25" fill="#2a1608"/></pattern></defs>
+  <g opacity=".48" pointer-events="none">
+    <g transform="translate(36 58)" fill="url(#rhCastDots)"><g transform="rotate(38 538 300) translate(1280 0) scale(-1 1)">${handShadow("rh")}</g></g>
+    <g transform="translate(26 44)" fill="#2a1608"><g transform="rotate(38 538 300) translate(1280 0) scale(-1 1)">${handShadow("rh")}</g></g>
+  </g>
   <g transform="rotate(38 538 300) translate(1280 0) scale(-1 1)">${handArtSVG("rh","rh",!1)}
   </g></svg>`}function helaRadarSVG(){return`<svg viewBox="0 0 120 120" fill="none">
   <g class="hr-a"><circle cx="60" cy="60" r="47" stroke="currentColor" stroke-width="1.3" opacity=".5" stroke-dasharray="5 11"/>
