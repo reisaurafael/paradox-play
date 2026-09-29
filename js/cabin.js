@@ -3382,6 +3382,7 @@
         else openPage(inst, p.hour); });
     }
     el2.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) scale(${p.sc.toFixed(3)})`;
+    if (p.sat == null && inst.pinnedHour === p.hour) pageBeside(inst, p);
     el2.style.opacity = p.op.toFixed(3);
     el2.style.zIndex = p.z;
     el2.style.color = p.col;
@@ -3392,6 +3393,21 @@
       if (!lb){ lb = document.createElement("span"); lb.className = "hb-lbl"; el2.appendChild(lb); }
       if (lb.textContent !== p.label) lb.textContent = p.label;
     }
+  }
+
+  // the open Hour's page opens toward its ball, on the side away from the core, and follows it
+  // as the orbit is turned (the owner, 29/09: "follow the direction of the ball he is pointing")
+  function pageBeside(inst, p){
+    const pg = inst.page, box = pg && pg.parentElement;
+    if (!box || !pg.closest("#hela-brain-full")) return;
+    const W = box.clientWidth, H = box.clientHeight, pw = pg.offsetWidth, ph = pg.offsetHeight;
+    if (!W || !pw) return;
+    const nx = W / 2 + p.x, ny = H / 2 + p.y;
+    const left = p.x >= 0 ? nx + 34 : nx - 34 - pw;
+    const top = Math.max(-H * .15, Math.min(H * 1.15 - ph, ny - ph * .3));
+    const l = Math.round(left) + "px", t = Math.round(top) + "px";
+    if (pg._l !== l){ pg._l = l; pg.style.left = l; pg.style.right = "auto"; }
+    if (pg._t !== t){ pg._t = t; pg.style.top = t; }
   }
 
   // ONE law for everything the core opens: the NEXT click anywhere closes it

@@ -904,3 +904,11 @@ html.pdx-m-on #rucksack-zone .ruck-card.deliver-ready::after { content: none !im
 /* the turn order lives in HELA's column on a phone or a tablet (.mc-order): the charts' order
    slates are not drawn there (the owner, 29/09: "it should not be there, specially in mobile") */
 html.pdx-touch :is(.cc-ord, .sea-ord, .cm-ord) { display: none !important; }
+
+/* ══ GOLD in HELA's column, under the energy, on every page (the owner, 29/09) ══ */
+#pdx-mcol .mc-gold { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 7px; justify-self: stretch;
+  padding: 4px 8px; border: 2px solid rgba(242, 200, 90, .35); border-radius: 4px; background: rgba(0, 0, 0, .25); }
+#pdx-mcol .mc-gold i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--cx-ink, #15100a);
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #e2b23c 55%, #9a6d17); }
+#pdx-mcol .mc-gold-h { font: 700 .6rem/1 var(--f-mono, monospace); letter-spacing: .2em; color: #d8c48a; }
+#pdx-mcol .mc-gold b { font: 700 1.35rem/1 var(--f-display, "Oswald", sans-serif); color: #f7c65a; }

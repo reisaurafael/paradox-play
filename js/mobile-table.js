@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609282203";
-import { initials } from "./util.js?202609282203";
+import { cardArtImg } from "./card-art.js?202609282213";
+import { initials } from "./util.js?202609282213";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -108,6 +108,7 @@ function build() {
     </header>
     <div class="mc-order" aria-label="Turn order this Hour"></div>
     <div class="mc-life" aria-live="polite"><span class="mc-life-h">ENERGY</span><b>-</b><span class="mc-cells"></span></div>
+    <div class="mc-gold" aria-live="polite"><i></i><span class="mc-gold-h">GOLD</span><b>-</b></div>
     <div class="mc-slot"><div class="mc-says" aria-live="polite"></div></div>
     <div class="mc-extra"></div>
     <div class="mc-log"><p class="mc-log-h">LOG <span>tap to open</span></p><ol class="mc-log-l"></ol></div>
@@ -206,7 +207,9 @@ function frameRect(v) {
   if (v === "case") return CASE;
   if (v === "brain") {
     const r = planeRectOf(document.getElementById("hela-brain-full"));
-    return r ? { x: r.x - 40, y: r.y - 20, w: r.w + 80, h: r.h + 40 } : { x: -930, y: 560, w: 670, h: 630 };
+    // framed wide (the owner, 29/09: "too big for mobile"): the orbit smaller, with room round
+    // it for an Hour's page to open whole beside any node
+    return r ? { x: r.x - r.w * 0.45, y: r.y - r.h * 0.3, w: r.w * 1.9, h: r.h * 1.6 } : { x: -1230, y: 370, w: 1270, h: 1010 };
   }
   if (v === "chart") {
     const rail0 = document.getElementById("timeline-rail");
@@ -1227,8 +1230,7 @@ function paintExtra() {
   const g = game(), me = g && g._self ? g._self() : null;
   let sig = view, html = "";
   if (view === "merchant" && me) {
-    html = `<div class="mx-gold"><i></i><span>YOUR GOLD</span><b>${me.gold}</b></div>`
-      + (pickText() && !needsSecret() ? "" : `<p class="mx-hint">${secretOn ? "Tap <b>SHELF</b> on the right for his shelf alone." : "Tap <b>SECRET</b> on the right: his shelf and the Secret Market together."}</p>`);
+    html = (pickText() && !needsSecret() ? "" : `<p class="mx-hint">${secretOn ? "Tap <b>SHELF</b> on the right for his shelf alone." : "Tap <b>SECRET</b> on the right: his shelf and the Secret Market together."}</p>`);
     sig += me.gold + ":" + secretOn + ":" + !!pickText();
   } else if (view === "case") {
     const n = ownedTickets().reduce((a, t) => a + t.count, 0);
@@ -1567,7 +1569,11 @@ function paintGold() {
     document.body.appendChild(goldEl);
   }
   const g = game(), me = g && g._self ? g._self() : null;
-  goldEl.hidden = !(on() && view === "merchant" && me);
+  // my gold lives in HELA's column, under the energy, on every page (the owner, 29/09); the
+  // old gold sign on the Merchant's page is not drawn any more
+  const cg = col && col.querySelector(".mc-gold b");
+  if (cg && me && cg.textContent !== String(me.gold)) cg.textContent = String(me.gold);
+  goldEl.hidden = true;
   if (goldEl.hidden) return;
   const t = String(me.gold);
   if (goldEl.querySelector("b").textContent !== t) goldEl.querySelector("b").textContent = t;
