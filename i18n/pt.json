@@ -328,7 +328,117 @@
   "MACHINE": "MÁQUINA",
   "CHART": "MAPA",
   "CASE": "FICHA",
-  "RECORDS": "REGISTROS"
+  "RECORDS": "REGISTROS",
+  "Place all four dice, then Confirm. One value per function, filled left to right.": "Coloque os quatro dados e depois Confirme. Um valor por função, preenchendo da esquerda para a direita.",
+  "The Time Machine": "A Máquina do Tempo",
+  "Place all 4 causality generators on your Time Machine. <b>Drag</b> a die, or <b>click</b> a die, then a glowing cell. Green = legal, dim = illegal. A function fills left-to-right and holds one value. Confirm when all are placed.": "Coloque os 4 geradores de causalidade na sua Máquina do Tempo. <b>Arraste</b> um dado, ou <b>clique</b> em um dado e depois em uma célula brilhando. Verde = permitido, apagado = não permitido. Uma função se preenche da esquerda para a direita e guarda um valor. Confirme quando todos estiverem colocados.",
+  "Buy when you stand on the Merchant's century. Deliver the card at its century for 1 point.": "Compre quando estiver no século do Mercador. Entregue a carta no século dela para ganhar 1 ponto.",
+  "The Market": "O Mercado",
+  "Buy items with gold while synchronic with the Merchant. Items deliver to your Temporal Receptor at their return century for Contract Points. You can also Renew the stock or, if Wanted, Declare to clear it.": "Compre itens com ouro enquanto estiver síncrono com o Mercador. Os itens se entregam no seu Receptor Temporal no século de retorno deles para ganhar Pontos de Contrato. Você também pode Renovar o estoque ou, se estiver Procurado, Declarar para se livrar disso.",
+  "Travel up to your die's value. The past costs 1 energy per century; the future is free.": "Viaje até o valor do seu dado. O passado custa 1 de energia por século; o futuro é grátis.",
+  "Time Travel": "Viagem no Tempo",
+  "Travel up to the value you generated. Moving toward the past (Year Zero) costs energy; toward the future is free. Reaching Year Zero ends the game; the most points wins.": "Viaje até o valor que você gerou. Mover-se rumo ao passado (Ano Zero) custa energia; rumo ao futuro é grátis. Chegar ao Ano Zero termina o jogo; quem tiver mais pontos vence.",
+  "Paradox 1 hits travellers ahead of you, 2 your century, 3 those behind. At 0 energy you are terminated.": "Paradoxo 1 atinge viajantes à sua frente, 2 no seu século, 3 os que estão atrás. Com 0 de energia você é eliminado.",
+  "Paradoxes": "Paradoxos",
+  "Paradoxes drain energy from travelers across time. A traveler reduced to 0 energy is Terminated. Future paradoxes hit those ahead of you; past paradoxes hit those behind.": "Paradoxos drenam a energia de viajantes através do tempo. Um viajante reduzido a 0 de energia é Eliminado. Paradoxos de futuro atingem quem está à sua frente; paradoxos de passado atingem quem está atrás.",
+  "Click an item to use it, or the lock to pass. Each item works once per phase.": "Clique em um item para usá-lo, ou no cadeado para passar. Cada item funciona uma vez por fase.",
+  "Item Activation": "Ativação de Item",
+  "Activate your equipped items, each may be used once this phase. Weapons and effects ask you to choose a target. Select any number, then confirm.": "Ative seus itens equipados; cada um pode ser usado uma vez nesta fase. Armas e efeitos pedem que você escolha um alvo. Selecione quantos quiser, depois confirme.",
+  "Recycle any item for energy, almost any time.": "Recicle qualquer item por energia, quase a qualquer momento.",
+  "Recycling": "Reciclagem",
+  "Hover your panel and press <b>Recycle</b> on any equipped item to convert it into energy instantly, an action you can take almost any time, even between Market buys.": "Passe o mouse sobre seu painel e aperte <b>Reciclar</b> em qualquer item equipado para convertê-lo em energia na hora, uma ação que você pode fazer quase a qualquer momento, até entre compras no Mercado.",
+  "Terminate a rival and you are Wanted, a 4-gold bounty. Declare in the Market to clear it.": "Elimine um rival e você fica Procurado, uma recompensa de 4 de ouro. Declare no Mercado para se livrar disso.",
+  "Terminating another traveler makes you Wanted and worth a 4-gold bounty. Pay it off by Declaring in the Market, or lie low.": "Eliminar outro viajante te deixa Procurado e vale uma recompensa de 4 de ouro. Pague a dívida Declarando no Mercado, ou fique na sua.",
+  "Those are your rivals, sharing the table with you.": "Esses são seus rivais, dividindo a mesa com você.",
+  "Their files are paper, and paper moves. Drag one anywhere on the table.": "As fichas deles são de papel, e papel se move. Arraste uma para qualquer lugar da mesa.",
+  "Arrange your desk as you like. It stays where you leave it.": "Organize sua mesa como quiser. Ela fica onde você deixar.",
+  "That was a PARADOX. Your rival reached across the centuries and tore into you from where they stand, and there was nothing on your machine to answer with.": "Aquilo foi um PARADOXO. Seu rival alcançou através dos séculos e rasgou você de onde estava, e não havia nada na sua máquina para revidar.",
+  "The Temporal Herald: the paper of the last timeline, printed by the C.R.O.N.O.S. It reports crimes across the centuries, and the clipping stays on the offender's file.": "O Arauto Temporal: o jornal da última linha do tempo, impresso pela C.R.O.N.O.S. Ele noticia crimes através dos séculos, e o recorte fica na ficha do culpado.",
+  "So here is how it ends, since you have earned the question. Four ways. Fill your receptor with a relic from all three periods. Or walk all the way down to Year Zero, and I promise you nobody arrives there cheaply. Or be the only traveller still breathing. Or empty the Merchant's wagon. Whichever comes first stops the clock, and then we count points. Only points.": "Então é assim que termina, já que você ganhou o direito à pergunta. Quatro formas. Encha seu receptor com uma relíquia de cada um dos três períodos. Ou desça até o Ano Zero, e prometo que ninguém chega lá barato. Ou seja o único viajante ainda respirando. Ou esvazie a carroça do Mercador. O que vier primeiro para o relógio, e aí contamos pontos. Só pontos.",
+  "So I have nothing left to teach you, which means the only thing left is to see how long you last. Play the hours out, traveller. I will be watching, and I am patient. I always get my table back.": "Então não tenho mais nada para te ensinar, o que quer dizer que só resta ver quanto tempo você aguenta. Jogue as horas até o fim, viajante. Estarei observando, e sou paciente. Sempre recupero minha mesa.",
+  "For now your machine has four cells. It grows.": "Por enquanto sua máquina tem quatro células. Ela cresce.",
+  "New dice. Place both in the machine.": "Novos dados. Coloque os dois na máquina.",
+  "So I am giving you the function. PARADOX reaches across the years and tears into another traveller. Ahead of you with the first module, in your own century with the second. A third function earns a third generator too, and yours read as high as III from here on. I want you armed when you answer.": "Então vou te dar a função. PARADOXO alcança através dos anos e rasga outro viajante. À sua frente com o primeiro módulo, no seu próprio século com o segundo. Uma terceira função também ganha um terceiro gerador, e os seus passam a ler até III daqui em diante. Quero você armado quando for responder.",
+  "Your machine grows again. A third module on every function, and a fourth generator to feed them. That is the whole machine, traveller. Everything a real rival brings to a table, you are now holding.": "Sua máquina cresce de novo. Um terceiro módulo em cada função, e um quarto gerador para alimentá-los. Essa é a máquina inteira, viajante. Tudo que um rival de verdade traz para uma mesa, você agora tem em mãos.",
+  "Your paradox has its third module now, and that one is the PAST: it strikes whoever is standing behind you, for DOUBLE the die. First ahead of you, second right on top of you, third behind you. A die only reaches the third after the first two, and three dice overload the function, so the Past hits twice as hard to pay for the shut Hour. Pick the module they are standing in.": "Seu paradoxo agora tem o terceiro módulo, e esse é o PASSADO: ele atinge quem estiver atrás de você, em DOBRO no dado. Primeiro à sua frente, segundo bem em cima de você, terceiro atrás de você. Um dado só alcança o terceiro depois dos dois primeiros, e três dados sobrecarregam a função, então o Passado bate duas vezes mais forte para pagar pela Hora fechada. Escolha o módulo em que eles estão.",
+  "This is his wagon, up close. The shelf is what he is willing to sell this hour.": "Esta é a carroça dele, de perto. A prateleira é o que ele está disposto a vender nesta Hora.",
+  "At 0 energy you are terminated.": "Com 0 de energia você é eliminado.",
+  "Gold buys the Merchant's cards.": "Ouro compra as cartas do Mercador.",
+  "A third die in one function OVERLOADS it: it pays now, and shuts for the next Hour.": "Um terceiro dado numa função SOBRECARREGA ela: ela paga agora, e fica fechada na próxima Hora.",
+  "A third die OVERLOADS Paradox: the Past hits for double now, and the function shuts for the next Hour.": "Um terceiro dado SOBRECARREGA o Paradoxo: o Passado bate em dobro agora, e a função fica fechada na próxima Hora.",
+  "Ahead means a higher century.": "À frente significa um século mais alto.",
+  "No one stands ahead of you, so this die hits no one. It opens the way to the second module: they fill left to right.": "Ninguém está à sua frente, então este dado não atinge ninguém. Ele abre caminho para o segundo módulo: eles se preenchem da esquerda para a direita.",
+  "Travel must heat before it moves.": "A Viagem precisa esquentar antes de se mover.",
+  "12 heat makes your motor explode.": "12 de calor faz seu motor explodir.",
+  "The past costs energy: this pays for the trip before anyone travels.": "O passado custa energia: isso paga a viagem antes de qualquer um viajar.",
+  "All your dice are placed. Click <b>Confirm</b>.": "Todos os seus dados estão colocados. Clique em <b>Confirmar</b>.",
+  "All your dice are placed. Click <b>Confirm</b>. Everyone chooses in secret, then the machines resolve.": "Todos os seus dados estão colocados. Clique em <b>Confirmar</b>. Todos escolhem em segredo, depois as máquinas resolvem.",
+  "A function": "Uma função",
+  " The mark pays only if the Hour ends with you on it.": " O marco só paga se a Hora terminar com você nele.",
+  " Going into the past costs 1 energy per century. Going into the future is free.": " Ir para o passado custa 1 de energia por século. Ir para o futuro é grátis.",
+  " Forward in time is free.": " Rumo ao futuro é grátis.",
+  "and stop on the millennium mark: stay there as the Hour ends": "e pare no marco do milênio: fique lá quando a Hora terminar",
+  "toward the millennium mark": "rumo ao marco do milênio",
+  "closer to your rivals, so your paradox can reach them next Hour": "mais perto dos seus rivais, para que seu paradoxo possa alcançá-los na próxima Hora",
+  "to reach the Merchant": "para alcançar o Mercador",
+  "to reach the century where your card is delivered": "para alcançar o século onde sua carta é entregue",
+  "toward the Merchant": "rumo ao Mercador",
+  "<b>His shelf refilled:</b> the Merchant always shows four cards. Buy again, or click <b>Pass</b> to leave the Market.": "<b>A prateleira dele reabasteceu:</b> o Mercador sempre mostra quatro cartas. Compre de novo, ou clique em <b>Passar</b> para sair do Mercado.",
+  "The Market is open. Press <kbd>W</kbd> to face the Merchant: buy, renew his shelf, or pass.": "O Mercado está aberto. Aperte <kbd>W</kbd> para encarar o Mercador: compre, renove a prateleira dele, ou passe.",
+  "Nothing here you can afford yet. Click <b>Pass</b>.": "Nada aqui que você possa pagar ainda. Clique em <b>Passar</b>.",
+  "You stand with the Merchant. Press <kbd>W</kbd> to face his wagon.": "Você está com o Mercador. Aperte <kbd>W</kbd> para encarar a carroça dele.",
+  "Click the glowing drawer to open it.": "Clique na gaveta brilhando para abri-la.",
+  "Now click the <b>lock</b> on your case to file it.": "Agora clique no <b>cadeado</b> do seu caso para arquivá-la.",
+  "Stamp it to sign this contract.": "Carimbe para assinar este contrato.",
+  "Each point earns a contract. Click the <b>Contracts</b> drawer.": "Cada ponto ganha um contrato. Clique na gaveta de <b>Contratos</b>.",
+  "Three kinds of contract. <b>Chaos</b> hurts rivals, <b>Time</b> gives you extra turns, <b>Resource</b> pays you. Your choice. A die then picks one of its three results, and never the same kind twice in a row.": "Três tipos de contrato. <b>Caos</b> prejudica rivais, <b>Tempo</b> te dá turnos extras, <b>Recurso</b> te paga. Sua escolha. Um dado então escolhe um dos três resultados, e nunca o mesmo tipo duas vezes seguidas.",
+  "Your point earned a contract. Press <kbd>A</kbd> to open your records.": "Seu ponto ganhou um contrato. Aperte <kbd>A</kbd> para abrir seus registros.",
+  "Press <kbd>W</kbd> to face the Merchant's shelf.": "Aperte <kbd>W</kbd> para encarar a prateleira do Mercador.",
+  "<b>Move the Merchant:</b> click any lit century to send him there.": "<b>Mova o Mercador:</b> clique em qualquer século aceso para enviá-lo até lá.",
+  "<b>Pick a module</b> on your machine: from now on it reads one higher.": "<b>Escolha um módulo</b> na sua máquina: a partir de agora ele lê um valor a mais.",
+  "A killing blow! Recycle an item to survive, or fall and turn them into energy for your return.": "Um golpe fatal! Recicle um item para sobreviver, ou caia e transforme-o em energia para seu retorno.",
+  "Your case holds two items. Recycle one for energy to take the new one, or let the new one go.": "Seu caso guarda dois itens. Recicle um por energia para pegar o novo, ou deixe o novo passar.",
+  "The Secret Market offers its card: take it or pass.": "O Mercado Secreto oferece sua carta: aceite ou passe.",
+  "<b>Steal a card:</b> click the one you want, it goes into your case.": "<b>Roube uma carta:</b> clique na que você quer, ela vai para o seu caso.",
+  " Taking one from the Merchant makes you Wanted.": " Pegar uma do Mercador te deixa Procurado.",
+  "<b>Destroy a card:</b> click the one you want gone.": "<b>Destrua uma carta:</b> clique na que você quer eliminar.",
+  "Your dice are yours now. Place all four, then Confirm.": "Seus dados são seus agora. Coloque os quatro, depois Confirme.",
+  "No one is in your era, so it has no target this Hour. Travel closer to a rival first.": "Ninguém está na sua era, então ele não tem alvo nesta Hora. Viaje mais perto de um rival primeiro.",
+  "There is nothing for it to work on this Hour.": "Não há nada para ele funcionar nesta Hora.",
+  "<b>Activation.</b>": "<b>Ativação.</b>",
+  " Or click the lock to pass.": " Ou clique no cadeado para passar.",
+  " Pass with the <b>lock</b> on your case.": " Passe com o <b>cadeado</b> do seu caso.",
+  " The future is free.": " O futuro é grátis.",
+  "A rival's": "De um rival",
+  "ahead of": "à frente de",
+  "in the same century as": "no mesmo século que",
+  "behind": "atrás de",
+  "ahead of you, in a later century": "à sua frente, num século mais tarde",
+  "in your own century": "no seu próprio século",
+  "behind you, in an earlier century": "atrás de você, num século anterior",
+  "Your gold lies here, in your case. Recharge's second and third modules mint it; the Merchant's relics cost it.": "Seu ouro fica aqui, no seu caso. O segundo e o terceiro módulos de Recarga o cunham; as relíquias do Mercador o custam.",
+  "Your first gold. It needs somewhere to live: your <b>case</b>. The Merchant's relics are paid from it, and carried in it.": "Seu primeiro ouro. Ele precisa de um lugar para morar: seu <b>caso</b>. As relíquias do Mercador são pagas dele, e carregadas nele.",
+  "Your energy is here, at the top of my column. Recharge feeds it; the past, paradoxes and the valve cost it. At 0 you are terminated.": "Sua energia está aqui, no topo da minha coluna. A Recarga a alimenta; o passado, os paradoxos e a válvula a custam. Em 0 você é eliminado.",
+  "Everyone's dice are revealed at once, then the modules resolve from 1 to 9.": "Os dados de todos são revelados de uma vez, depois os módulos resolvem de 1 a 9.",
+  "That function": "Essa função",
+  "<b>Your motor exploded</b> at 12 heat: you lost 2 energy and sit out the rest of this Hour.": "<b>Seu motor explodiu</b> a 12 de calor: você perdeu 2 de energia e fica de fora pelo resto desta Hora.",
+  "<b>You were terminated</b> at 0 energy. Next Hour you return at XXX with 12 energy plus your items' recycle value.": "<b>Você foi eliminado</b> com 0 de energia. Na próxima Hora você volta em XXX com 12 de energia mais o valor de reciclagem dos seus itens.",
+  "Each mark pays once in the whole match, to each traveller who holds it as an Hour ends. And like every point, it earns you a contract.": "Cada marco paga uma vez na partida inteira, a cada viajante que o segura quando uma Hora termina. E como todo ponto, ele te ganha um contrato.",
+  "<b>Delivered: +1 contract point.</b> Points decide the winner, and every point also earns you a contract.": "<b>Entregue: +1 ponto de contrato.</b> Pontos decidem o vencedor, e todo ponto também te ganha um contrato.",
+  " The ticket waits in your case: drag it onto the machine's slot when you want it.": " O tíquete espera no seu caso: arraste-o para a vaga da máquina quando você quiser usá-lo.",
+  "<b>The Secret Market at XI is open.</b> It sells one card at a time to whoever stands there.": "<b>O Mercado Secreto em XI está aberto.</b> Ele vende uma carta de cada vez para quem estiver lá.",
+  "every other traveller loses 3 energy": "todo outro viajante perde 3 de energia",
+  "you destroy one card": "você destrói uma carta",
+  "you move the Merchant anywhere": "você move o Mercador para qualquer lugar",
+  "a solo Generators phase ticket": "um tíquete de fase de Geradores solo",
+  "a Market ticket: trade from anywhere": "um tíquete de Mercado: negocie de qualquer lugar",
+  "an item ticket: an extra activation": "um tíquete de item: uma ativação extra",
+  "+3 energy and +3 gold": "+3 de energia e +3 de ouro",
+  "you steal one of the Merchant's cards (you become Wanted)": "você rouba uma das cartas do Mercador (você fica Procurado)",
+  "+1 forever on one module": "+1 para sempre num módulo",
+  "done": "feito",
+  "note": "nota",
+  "notes": "notas"
  },
  "patterns": [
   {
@@ -495,6 +605,461 @@
    "re": "\\bTimeless\\b",
    "flags": "g",
    "to": "Atemporal"
+  },
+  {
+   "re": "Look at the chart\\. That piece in your colour, at (\\w+), is you\\. Where it stands is where you are in time\\.",
+   "flags": "g",
+   "to": "Olhe o mapa. Aquela peça na sua cor, em $1, é você. Onde ela está é onde você está no tempo."
+  },
+  {
+   "re": "The timeline mends at (\\w+)\\. One relic home, one tear closed\\.",
+   "flags": "g",
+   "to": "A linha do tempo se cura em $1. Uma relíquia em casa, uma fenda fechada."
+  },
+  {
+   "re": "Something new on your chart, traveller\\. A wagon has rolled into (\\w+), at the far end of the only era you can see\\.",
+   "flags": "g",
+   "to": "Algo novo no seu mapa, viajante. Uma carroça chegou em $1, no fim da única era que você consegue ver."
+  },
+  {
+   "re": "The MERCHANT\\. He carries relics and he trades with whoever is standing in his own year: every one of them, one after another, in priority order\\. That wagon crawls the centuries on its own business, never on yours, so do not sit there waiting on it\\. If you want what he has, you cross the years and you stand in front of him\\.",
+   "flags": "g",
+   "to": "O MERCADOR. Ele carrega relíquias e negocia com quem estiver no ano dele: todo mundo, um depois do outro, em ordem de prioridade. Aquela carroça percorre os séculos por conta própria, nunca pela sua, então não fique sentado esperando por ela. Se você quer o que ele tem, você cruza os anos e se planta na frente dele."
+  },
+  {
+   "re": "That wooden sign over his booth answers one question and only one: whether HE will trade with YOU today\\. It reads CLOSED from everywhere except his century\\.",
+   "flags": "g",
+   "to": "Aquela placa de madeira sobre a barraca dele responde uma pergunta e só uma: se ELE vai negociar com VOCÊ hoje. Ela lê FECHADO de qualquer lugar, exceto do século dele."
+  },
+  {
+   "re": "One relic on it you can afford\\. (\\d+) gold, which you have\\. Look at the century stamped on its face\\.",
+   "flags": "g",
+   "to": "Uma relíquia nela você pode pagar. $1 de ouro, que você tem. Olhe o século estampado na face dela."
+  },
+  {
+   "re": "That number is a PROMISE\\. Buy the relic, carry it to that century, hand it over there, and the C\\.R\\.O\\.N\\.O\\.S\\. pays you in the only currency that decides this game\\.",
+   "flags": "g",
+   "to": "Aquele número é uma PROMESSA. Compre a relíquia, carregue-a até aquele século, entregue-a lá, e a C.R.O.N.O.S. te paga na única moeda que decide este jogo."
+  },
+  {
+   "re": "Look up\\. You kept a promise, so the roll comes off the chart and you get the rest of the years\\. Thirty centuries, all of them yours to cross, and the last thing down there at the end is YEAR ZERO\\.",
+   "flags": "g",
+   "to": "Olhe para cima. Você cumpriu uma promessa, então o rolo sai do mapa e você ganha o resto dos anos. Trinta séculos, todos seus para cruzar, e a última coisa lá no fundo é o ANO ZERO."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Recharge 1</b>: \\+(\\d+) energy\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Recarga 1</b>: +$2 de energia."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Recharge 2</b>: \\+(\\d+) gold\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Recarga 2</b>: +$2 de ouro."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Recharge 3</b>: \\+(\\d+) energy and gold\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Recarga 3</b>: +$2 de energia e ouro."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Paradox 1</b>: everyone ahead of you loses (\\d+) energy\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Paradoxo 1</b>: todos à sua frente perdem $2 de energia."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Paradox 2</b>: everyone in your own century loses (\\d+)\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Paradoxo 2</b>: todos no seu século perdem $2."
+  },
+  {
+   "re": "A (\\w+) on <b>Paradox 3</b> HAUNTS: only ([^,]+), who terminated you, loses (\\d+), wherever they are\\.",
+   "flags": "g",
+   "to": "Um $1 em <b>Paradoxo 3</b> ASSOMBRA: só $2, que te eliminou, perde $3, onde quer que esteja."
+  },
+  {
+   "re": "A (\\w+) on <b>Paradox 3</b> does nothing: no one terminated you, so there is no one to haunt\\.",
+   "flags": "g",
+   "to": "Um $1 em <b>Paradoxo 3</b> não faz nada: ninguém te eliminou, então não há quem assombrar."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Paradox 3</b>: everyone behind you loses (\\d+), double\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Paradoxo 3</b>: todos atrás de você perdem $2, em dobro."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Travel 1</b>: \\+(\\d+) heat\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Viagem 1</b>: +$2 de calor."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Travel 2</b>: move up to (\\d+) (century|centuries)\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Viagem 2</b>: mova até $2 séculos."
+  },
+  {
+   "re": "Drag a (\\w+) onto <b>Travel 3</b>: move up to (\\d+) more\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Viagem 3</b>: mova até $2 a mais."
+  },
+  {
+   "re": "No one stands ahead of you, so it hits no one: it goes here because (.+) is shut and Travel holds the pair\\.",
+   "flags": "g",
+   "to": "Ninguém está à sua frente, então isso não atinge ninguém: vai aqui porque $1 está fechada e a Viagem segura o par."
+  },
+  {
+   "re": "([^,.]+) (stand|stands) in (\\w+)(, with you)?\\. It lands this Hour, before anyone travels\\.",
+   "flags": "g",
+   "to": "$1 está em $3$4. Isso acontece nesta Hora, antes de qualquer viagem."
+  },
+  {
+   "re": "This Hour's dice are for the trip to (\\w+)\\.",
+   "flags": "g",
+   "to": "Os dados desta Hora são para a viagem até $1."
+  },
+  {
+   "re": "This Hour's dice take you to (\\w+), the millennium mark\\.",
+   "flags": "g",
+   "to": "Os dados desta Hora te levam até $1, o marco do milênio."
+  },
+  {
+   "re": "(.+) is shut this Hour, so this (\\w+) fits nowhere\\. Drop it in the <b>escape valve</b>\\. While a function is shut, the valve drains energy: this die costs you (\\d+) energy\\.",
+   "flags": "g",
+   "to": "$1 está fechada nesta Hora, então este $2 não se encaixa em lugar nenhum. Solte-o na <b>válvula de escape</b>. Enquanto uma função está fechada, a válvula drena energia: este dado custa $3 de energia."
+  },
+  {
+   "re": "Click a lit century to travel up to (\\d+), or HOLD to stay\\. Into the past costs energy; into the future is free\\.",
+   "flags": "g",
+   "to": "Clique num século aceso para viajar até $1, ou SEGURE para ficar. Rumo ao passado custa energia; rumo ao futuro é grátis."
+  },
+  {
+   "re": "You are where you need to be\\. Click <b>HOLD</b> to stay\\.",
+   "flags": "g",
+   "to": "Você está onde precisa estar. Clique em <b>SEGURAR</b> para ficar."
+  },
+  {
+   "re": "Click <b>(\\w+)</b> to move (\\d+) (century|centuries) (.+)\\.",
+   "flags": "g",
+   "to": "Clique em <b>$1</b> para mover $2 séculos $4."
+  },
+  {
+   "re": "toward (\\w+), where your card is delivered",
+   "flags": "g",
+   "to": "rumo a $1, onde sua carta é entregue"
+  },
+  {
+   "re": "(to stand with|toward) (.+), so your paradox reaches them next Hour",
+   "flags": "g",
+   "to": "rumo a $2, para que seu paradoxo os alcance na próxima Hora"
+  },
+  {
+   "re": "Buy <b>(.+)</b> for (\\d+) gold: drag it into your case, or click it\\. Deliver it at (\\w+) for 1 contract point\\.",
+   "flags": "g",
+   "to": "Compre <b>$1</b> por $2 de ouro: arraste para o seu caso, ou clique nela. Entregue em $3 para ganhar 1 ponto de contrato."
+  },
+  {
+   "re": "Drag <b>(.+)</b> from your case into the open drawer\\.",
+   "flags": "g",
+   "to": "Arraste <b>$1</b> do seu caso para a gaveta aberta."
+  },
+  {
+   "re": "You stand on (\\w+), the century printed on (.+)\\. Press <kbd>A</kbd> to open your records\\.",
+   "flags": "g",
+   "to": "Você está em $1, o século impresso em $2. Aperte <kbd>A</kbd> para abrir seus registros."
+  },
+  {
+   "re": "<b>(.+)</b>: click the rival's file to target them\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: clique na ficha do rival para mirar nele."
+  },
+  {
+   "re": "<b>(.+)</b>: click a lit century\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: clique num século aceso."
+  },
+  {
+   "re": "<b>(.+)</b>: click the card you want to target\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: clique na carta que você quer mirar."
+  },
+  {
+   "re": "Click (.+) to use it now\\.",
+   "flags": "g",
+   "to": "Clique em $1 para usá-lo agora."
+  },
+  {
+   "re": "Click (.+) to use it now: it ",
+   "flags": "g",
+   "to": "Clique em $1 para usá-lo agora: ele "
+  },
+  {
+   "re": "\\bhits a traveller in your own century\\b",
+   "flags": "g",
+   "to": "atinge um viajante no seu próprio século"
+  },
+  {
+   "re": "\\bhits a traveller in your own era\\b",
+   "flags": "g",
+   "to": "atinge um viajante na sua própria era"
+  },
+  {
+   "re": "\\bworks on a century in your era\\b",
+   "flags": "g",
+   "to": "funciona num século da sua era"
+  },
+  {
+   "re": "\\bfires an active relic in your receptor\\b",
+   "flags": "g",
+   "to": "dispara uma relíquia ativa no seu receptor"
+  },
+  {
+   "re": "\\bworks on a card on the Merchant's shelf\\b",
+   "flags": "g",
+   "to": "funciona numa carta na prateleira do Mercador"
+  },
+  {
+   "re": "\\btakes a recycled card\\b",
+   "flags": "g",
+   "to": "pega uma carta reciclada"
+  },
+  {
+   "re": "\\btakes a rival's equipped item\\b",
+   "flags": "g",
+   "to": "pega um item equipado de um rival"
+  },
+  {
+   "re": "\\bsteals a shelf card that costs no more than its roll\\b",
+   "flags": "g",
+   "to": "rouba uma carta da prateleira que custe no máximo o valor rolado"
+  },
+  {
+   "re": "\\bneeds a target\\b",
+   "flags": "g",
+   "to": "precisa de um alvo"
+  },
+  {
+   "re": "Your (.+) hits a traveller in your own century\\.",
+   "flags": "g",
+   "to": "Seu $1 atinge um viajante no seu próprio século."
+  },
+  {
+   "re": "Your (.+) hits a traveller in your own era\\.",
+   "flags": "g",
+   "to": "Seu $1 atinge um viajante na sua própria era."
+  },
+  {
+   "re": "Your (.+) works on a century in your era\\.",
+   "flags": "g",
+   "to": "Seu $1 funciona num século da sua era."
+  },
+  {
+   "re": "Your (.+) fires an active relic in your receptor\\.",
+   "flags": "g",
+   "to": "Seu $1 dispara uma relíquia ativa no seu receptor."
+  },
+  {
+   "re": "Your (.+) works on a card on the Merchant's shelf\\.",
+   "flags": "g",
+   "to": "Seu $1 funciona numa carta na prateleira do Mercador."
+  },
+  {
+   "re": "Your (.+) takes a recycled card\\.",
+   "flags": "g",
+   "to": "Seu $1 pega uma carta reciclada."
+  },
+  {
+   "re": "Your (.+) takes a rival's equipped item\\.",
+   "flags": "g",
+   "to": "Seu $1 pega um item equipado de um rival."
+  },
+  {
+   "re": "Your (.+) steals a shelf card that costs no more than its roll\\.",
+   "flags": "g",
+   "to": "Seu $1 rouba uma carta da prateleira que custe no máximo o valor rolado."
+  },
+  {
+   "re": "Your (.+) needs a target\\.",
+   "flags": "g",
+   "to": "Seu $1 precisa de um alvo."
+  },
+  {
+   "re": "No one is in (\\w+) with you, so it has no target this Hour\\. Travel to a rival's century first\\.",
+   "flags": "g",
+   "to": "Ninguém está em $1 com você, então ele não tem alvo nesta Hora. Viaje até o século de um rival primeiro."
+  },
+  {
+   "re": "(.+) are in your century: click (.+), then (.+)\\.",
+   "flags": "g",
+   "to": "$1 estão no seu século: clique em $2, depois $3."
+  },
+  {
+   "re": "(.+) are in your era: click (.+), then (.+)\\.",
+   "flags": "g",
+   "to": "$1 estão na sua era: clique em $2, depois $3."
+  },
+  {
+   "re": "(.+) is in your century: click (.+), then (.+)\\.",
+   "flags": "g",
+   "to": "$1 está no seu século: clique em $2, depois $3."
+  },
+  {
+   "re": "(.+) is in your era: click (.+), then (.+)\\.",
+   "flags": "g",
+   "to": "$1 está na sua era: clique em $2, depois $3."
+  },
+  {
+   "re": "\\+(\\d+) energy: your <b>Recharge 1</b> die fed your energy\\.",
+   "flags": "g",
+   "to": "+$1 de energia: seu dado de <b>Recarga 1</b> alimentou sua energia."
+  },
+  {
+   "re": "\\+(\\d+) gold: your <b>Recharge 2</b> die minted it\\.",
+   "flags": "g",
+   "to": "+$1 de ouro: seu dado de <b>Recarga 2</b> o cunhou."
+  },
+  {
+   "re": "\\+(\\d+) energy and \\+(\\d+) gold: your <b>Recharge 3</b> die\\.",
+   "flags": "g",
+   "to": "+$1 de energia e +$2 de ouro: seu dado de <b>Recarga 3</b>."
+  },
+  {
+   "re": "Heat (\\d+)/12: your <b>first Travel die</b> only heats the motor\\. It moves you nothing\\.",
+   "flags": "g",
+   "to": "Calor $1/12: seu <b>primeiro dado de Viagem</b> só esquenta o motor. Não te move nada."
+  },
+  {
+   "re": "-(\\d+) energy: the <b>escape valve</b> drains energy while a function is shut\\.",
+   "flags": "g",
+   "to": "-$1 de energia: a <b>válvula de escape</b> drena energia enquanto uma função está fechada."
+  },
+  {
+   "re": "Moved (\\d+): your <b>(second|third) Travel die</b> carried you\\.",
+   "flags": "g",
+   "to": "Moveu $1: seu <b>$2 dado de Viagem</b> te carregou."
+  },
+  {
+   "re": " The past cost (\\d+) energy\\.",
+   "flags": "g",
+   "to": " O passado custou $1 de energia."
+  },
+  {
+   "re": "-(\\d+) energy for you: (.+)'s (.+) dice hit you for double\\. You stood (.+) them\\.",
+   "flags": "g",
+   "to": "-$1 de energia para você: os dados $3 de $2 te acertaram em dobro. Você estava $4 eles."
+  },
+  {
+   "re": "-(\\d+) energy for you: (.+)'s (.+) die hit you for double\\. You stood (.+) them\\.",
+   "flags": "g",
+   "to": "-$1 de energia para você: o dado $3 de $2 te acertou em dobro. Você estava $4 ele."
+  },
+  {
+   "re": "-(\\d+) energy for you: (.+)'s (.+) dice hit you\\. You stood (.+) them\\.",
+   "flags": "g",
+   "to": "-$1 de energia para você: os dados $3 de $2 te acertaram. Você estava $4 eles."
+  },
+  {
+   "re": "-(\\d+) energy for you: (.+)'s (.+) die hit you\\. You stood (.+) them\\.",
+   "flags": "g",
+   "to": "-$1 de energia para você: o dado $3 de $2 te acertou. Você estava $4 ele."
+  },
+  {
+   "re": "\\bahead of\\b",
+   "flags": "g",
+   "to": "à frente de"
+  },
+  {
+   "re": "\\bin the same century as\\b",
+   "flags": "g",
+   "to": "no mesmo século que"
+  },
+  {
+   "re": "\\bbehind\\b",
+   "flags": "g",
+   "to": "atrás de"
+  },
+  {
+   "re": "-(\\d+) energy for you: (.+)'s Laser Sword threw your paradox back at you\\.",
+   "flags": "g",
+   "to": "-$1 de energia para você: a Laser Sword de $2 devolveu seu paradoxo em você."
+  },
+  {
+   "re": "-(\\d+) energy for you from this paradox\\.",
+   "flags": "g",
+   "to": "-$1 de energia para você por causa deste paradoxo."
+  },
+  {
+   "re": "Your paradox landed: (.+) stood (.+), so your (.+) die hit them( for double)?\\.",
+   "flags": "g",
+   "to": "Seu paradoxo acertou: $1 estava $2, então seu dado $3 os atingiu$4."
+  },
+  {
+   "re": "(.+) hit (.+)\\. Not yours: your (.+) die reached no one\\.",
+   "flags": "g",
+   "to": "$1 acertaram $2. Não o seu: seu dado $3 não alcançou ninguém."
+  },
+  {
+   "re": "(.+) hit (.+)\\. Not yours: you have no Paradox yet\\.",
+   "flags": "g",
+   "to": "$1 acertaram $2. Não o seu: você ainda não tem Paradoxo."
+  },
+  {
+   "re": "(.+) hit (.+)\\. Not yours: you had no die there\\.",
+   "flags": "g",
+   "to": "$1 acertaram $2. Não o seu: você não tinha dado lá."
+  },
+  {
+   "re": "in (\\w+), your own century",
+   "flags": "g",
+   "to": "em $1, seu próprio século"
+  },
+  {
+   "re": "Your gold lies here, in your case: (\\d+) now\\. Recharge's second and third modules mint it; the Merchant's relics cost it\\.",
+   "flags": "g",
+   "to": "Seu ouro fica aqui, no seu caso: $1 agora. O segundo e o terceiro módulos de Recarga o cunham; as relíquias do Mercador o custam."
+  },
+  {
+   "re": "Your first gold: (\\d+)\\. It needs somewhere to live: your <b>case</b>\\. The Merchant's relics are paid from it, and carried in it\\.",
+   "flags": "g",
+   "to": "Seu primeiro ouro: $1. Ele precisa de um lugar para morar: seu <b>caso</b>. As relíquias do Mercador são pagas dele, e carregadas nele."
+  },
+  {
+   "re": "Your energy is here, at the top of my column: (\\d+) now\\. Recharge feeds it; the past, paradoxes and the valve cost it\\. At 0 you are terminated\\.",
+   "flags": "g",
+   "to": "Sua energia está aqui, no topo da minha coluna: $1 agora. A Recarga a alimenta; o passado, os paradoxos e a válvula a custam. Em 0 você é eliminado."
+  },
+  {
+   "re": "He moved because the Market phase ended: he always does, toward the richest traveller he is not with\\. Now he is at (\\w+)\\.",
+   "flags": "g",
+   "to": "Ele se moveu porque a fase de Mercado terminou: ele sempre se move, rumo ao viajante mais rico com quem não está. Agora ele está em $1."
+  },
+  {
+   "re": "<b>(.+) overloaded:</b> three dice in one function\\. It stays shut for the whole next Hour\\.",
+   "flags": "g",
+   "to": "<b>$1 sobrecarregou:</b> três dados numa função. Ela fica fechada pela próxima Hora inteira."
+  },
+  {
+   "re": "<b>You terminated (.+)\\.</b> Taking a traveller's last energy pays you a contract point, the first time that traveller falls, and makes you Wanted: a 4 gold bounty on you, paid to whoever terminates you\\. Pay 4 gold with Declare at a Market to clear it\\.",
+   "flags": "g",
+   "to": "<b>Você eliminou $1.</b> Tirar a última energia de um viajante te paga um ponto de contrato, na primeira vez que aquele viajante cai, e te deixa Procurado: uma recompensa de 4 de ouro sobre você, paga a quem te eliminar. Pague 4 de ouro com Declarar num Mercado para se livrar disso."
+  },
+  {
+   "re": "<b>(.+) terminated (.+)\\.</b> Taking a traveller's last energy pays a contract point, the first time that traveller falls, and makes (.+) Wanted: 4 gold to whoever terminates them\\.",
+   "flags": "g",
+   "to": "<b>$1 eliminou $2.</b> Tirar a última energia de um viajante paga um ponto de contrato, na primeira vez que aquele viajante cai, e deixa $3 Procurado: 4 de ouro para quem o eliminar."
+  },
+  {
+   "re": "<b>\\+1 contract point\\.</b> The Hour turned with you standing on (\\w+): a millennium mark claimed\\. The Herald prints it for the whole table\\.",
+   "flags": "g",
+   "to": "<b>+1 ponto de contrato.</b> A Hora virou com você parado em $1: um marco do milênio reivindicado. O Arauto imprime para a mesa toda."
+  },
+  {
+   "re": "<b>\\+1 point:</b> the first time you end an Hour on (\\w+)\\.",
+   "flags": "g",
+   "to": "<b>+1 ponto:</b> na primeira vez que você termina uma Hora em $1."
+  },
+  {
+   "re": "<b>(.+), rolled (\\w+):</b> (.+)\\.",
+   "flags": "g",
+   "to": "<b>$1, rolou $2:</b> $3."
   }
  ]
 }
