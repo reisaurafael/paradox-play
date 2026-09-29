@@ -490,6 +490,11 @@
    "re": "CENTVRY (\\w+)",
    "flags": "g",
    "to": "SÉCVLO $1"
+  },
+  {
+   "re": "\\bTimeless\\b",
+   "flags": "g",
+   "to": "Atemporal"
   }
  ]
 }
