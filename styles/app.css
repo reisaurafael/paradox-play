@@ -8260,3 +8260,6 @@ body.cabin-on:not(.tut) :is(#hull, #cursor-plane) .mano-standby .ms-shut { displ
 /* the arm, its machine and the hands 15% bigger on a PC (the owner, 29/09); a phone keeps its own */
 html:not(.pdx-touch) { --mano-scale: 1.32; }
 html:not(.pdx-touch) body.cabin-on #cursor-plane .hand-right { width: 276px; height: 244.7px; margin-left: -106px; margin-top: -75.6px; }
+/* no "MEANWHILE, EVERY MACHINE AT ONCE" grid on a PC either (the owner, 29/09: "a second revealer
+   from nowhere"; the phones lost it on 28/09) */
+.cx-grid { display: none !important; }

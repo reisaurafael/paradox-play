@@ -626,8 +626,8 @@ const UX = 2133 / 100, UY = 1200 / 100;
 // Her size: her drawing box is this many plane units wide (the sitting cat is about a
 // third of it): a real cat's scale against the briefcase and the files. setSize()
 // changes it; SIZES.phone is the size for the phone's case scene.
-const SIZE = 24;
-export const SIZES = { desk: 24, phone: 22, visit: 15 };
+const SIZE = 27.6;   // 15% bigger on a PC, her bed with her (the owner, 29/09)
+export const SIZES = { desk: 27.6, phone: 22, visit: 15 };   // desk 15% bigger, her bed with her (the owner, 29/09)
 
 /* Her places (plane units, feet point). The paperwork desk is left of the plane's
    origin: HELA's core owns its left half and the cabinet its top, so she keeps to the
