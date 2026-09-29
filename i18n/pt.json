@@ -298,7 +298,37 @@
   "Common": "Comum",
   "Rare": "Rara",
   "Epic": "Épica",
-  "Legendary": "Lendária"
+  "Legendary": "Lendária",
+  "GENERATORS": "GERADORES",
+  "INSERT TICKET": "INSIRA A FICHA",
+  "TIME BREACH · INSERT TICKET": "BRECHA TEMPORAL · INSIRA A FICHA",
+  "C.R.O.N.O.S. TEMPORAL GAUNTLET MK II": "MANOPLA TEMPORAL C.R.O.N.O.S. MK II",
+  "LIFETHREAD": "FIO DA VIDA",
+  "tips": "dicas",
+  "CLASSIFIED": "CLASSIFICADO",
+  "Timeless": "Atemporal",
+  "Machine": "Máquina",
+  "Chart": "Mapa",
+  "Case": "Ficha",
+  "Records": "Registros",
+  "ENERGY": "ENERGIA",
+  "GOLD": "OURO",
+  "HOURS": "HORAS",
+  "ORDER": "ORDEM",
+  "YOU": "VOCÊ",
+  "DELIVERY": "ENTREGA",
+  "Full screen": "Tela cheia",
+  "Play full screen": "Jogar em tela cheia",
+  "Add to Home Screen": "Adicionar à Tela de Início",
+  "Add to Home screen": "Adicionar à tela de início",
+  "Got it": "Entendi",
+  "Safari cannot hide its bars for a page, but Paradox can live on your Home Screen and open with the whole screen to itself.": "O Safari não consegue esconder as barras de uma página, mas o Paradox pode viver na sua Tela de Início e abrir ocupando a tela inteira.",
+  "This browser cannot hide its bars for a page, but Paradox can live on your Home Screen and open with the whole screen to itself.": "Este navegador não consegue esconder as barras de uma página, mas o Paradox pode viver na sua Tela de Início e abrir ocupando a tela inteira.",
+  "Paradox can live on your Home Screen like an app and open with the whole screen to itself.": "O Paradox pode viver na sua Tela de Início como um aplicativo e abrir ocupando a tela inteira.",
+  "MACHINE": "MÁQUINA",
+  "CHART": "MAPA",
+  "CASE": "FICHA",
+  "RECORDS": "REGISTROS"
  },
  "patterns": [
   {
@@ -435,6 +465,31 @@
    "re": "^(\\w+), starting colour$",
    "flags": "g",
    "to": "$1, cor inicial"
+  },
+  {
+   "re": "\\bSINGULARITY\\b",
+   "flags": "g",
+   "to": "SINGULARIDADE"
+  },
+  {
+   "re": "^LEARN (\\d+)/(\\d+)$",
+   "flags": "g",
+   "to": "APRENDER $1/$2"
+  },
+  {
+   "re": "^CASE (TX-\\d+)$",
+   "flags": "g",
+   "to": "FICHA $1"
+  },
+  {
+   "re": "^LAST KNOWN ·",
+   "flags": "g",
+   "to": "ÚLTIMA LOCALIZAÇÃO ·"
+  },
+  {
+   "re": "CENTVRY (\\w+)",
+   "flags": "g",
+   "to": "SÉCVLO $1"
   }
  ]
 }
