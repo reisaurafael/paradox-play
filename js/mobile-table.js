@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609282243";
-import { initials } from "./util.js?202609282243";
+import { cardArtImg } from "./card-art.js?202609282307";
+import { initials } from "./util.js?202609282307";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;

@@ -35,6 +35,16 @@ export const CARD_ART = new Set([
   "da_vincis_flying_machine",
   "teslas_ac_motor",
   "super_motor",
+  "al_jazaris_automaton",
+  "refrigerator",
+  "holy_grail",
+  "agnes_cauldron",
+  "book_of_mysteries_of_alexandria",
+  "porcelain",
+  "movable_type_press",
+  "niepces_heliograph",
+  "eyeglasses",
+  "towel",
 ]);
 
 // the cards whose function name is not the slug of their English name
@@ -84,6 +94,15 @@ const CROP = {
   gerardus_mercators_map: "50% 74%",
   da_vincis_flying_machine: "50% 40%",
   super_motor: "50% 54%",
+  al_jazaris_automaton: "50% 56%",
+  refrigerator: "54% 62%",
+  holy_grail: "50% 56%",
+  agnes_cauldron: "50% 60%",
+  porcelain: "50% 50%",
+  movable_type_press: "50% 56%",
+  niepces_heliograph: "50% 66%",
+  eyeglasses: "50% 72%",
+  towel: "50% 60%",
 };
 
 // the <img> for a card's illustration (lazy, async, 2x for dense screens; its box is sized by CSS,
