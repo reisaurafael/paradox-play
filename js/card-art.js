@@ -57,6 +57,10 @@ export const CARD_ART = new Set([
   "haralds_bluetooth",
   "reality_simulator",
   "object_teleporter",
+  "first_time_machine",
+  "window_of_time",
+  "woodblock_print",
+  "relative_dimensions_operative",
 ]);
 
 // the cards whose function name is not the slug of their English name
@@ -124,8 +128,11 @@ const CROP = {
   alan_turings_machine: "50% 50%",
   quantum_computer: "50% 46%",
   first_smartphone: "50% 58%",
-  haralds_bluetooth: "44% 54%",
+  haralds_bluetooth: "50% 48%",
   object_teleporter: "50% 60%",
+  first_time_machine: "50% 56%",
+  woodblock_print: "50% 70%",
+  relative_dimensions_operative: "50% 62%",
 };
 
 // the <img> for a card's illustration (lazy, async, 2x for dense screens; its box is sized by CSS,
