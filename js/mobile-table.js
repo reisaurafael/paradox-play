@@ -25,8 +25,8 @@
    #hud-hour, #vz-phases, #hela-eye .he-caps.
    ========================================================================= */
 
-import { cardArtImg } from "./card-art.js?202609290017";
-import { initials } from "./util.js?202609290017";
+import { cardArtImg } from "./card-art.js?202609290252";
+import { initials } from "./util.js?202609290252";
 
 const D = document.documentElement;
 const PLANE_W = 2133, PLANE_H = 1200;
@@ -332,22 +332,46 @@ function swapTo(v) {
   swapEl.style.top = stage.y + "px"; swapEl.style.height = stage.h + "px"; swapEl.style.bottom = "auto";
   swapEl.classList.add("on");
   // the page he is on lies on the stage (a comic page with its caption); the next scene is set
-  // under it at once, then the page turns over on its left edge and lies back off the stage
-  const dur = 440, settle = 90;
-  setTimeout(() => land(v), settle);                     // the cut, under the page once it lies there
-  try {
-    [leaf, shade, cast].forEach((n) => n.getAnimations().forEach((an) => an.cancel()));
-    const ease = "cubic-bezier(.45,.05,.55,.95)";
-    // it inks in over the scene (the scene becomes a page), lifts a little, and turns over
-    leaf.animate([{ transform: "rotateY(0deg)", opacity: 0 }, { transform: "rotateY(0deg)", opacity: 1, offset: settle / dur },
-      { transform: "rotateY(-22deg)", opacity: 1, offset: .4 }, { transform: "rotateY(-180deg)", opacity: 1 }], { duration: dur, easing: ease, fill: "both" });
-    shade.animate([{ opacity: 0 }, { opacity: 1, offset: .5 }, { opacity: 0 }], { duration: dur, easing: ease, fill: "both" });
-    cast.animate([{ opacity: 0, transform: "scaleX(1)" }, { opacity: 1, transform: "scaleX(.55)", offset: .5 }, { opacity: 0, transform: "scaleX(0)" }], { duration: dur, easing: ease, fill: "both" });
-  } catch (e) {}
-  setTimeout(() => {
+  // under it, then the page turns over on its left edge and lies back off the stage.
+  // THE TURN WAITS FOR THE NEW PAGE TO BE DRAWN (the owner, 29/09: black blinks, black
+  // patches and a stutter on the chart): the cut (land: the scenes shown and hidden, the chart
+  // laid out, the camera framed) is heavy on a phone. Cut halfway through the turn, it stalled
+  // the turn's first frames and the page lifted off a scene whose tiles were not painted yet
+  // (the dark backdrop showing through as black patches). Now the page lies still and opaque
+  // while the cut is done and painted, and only then turns: same look, one continuous motion.
+  const settle = 90, turn = 350, ease = "cubic-bezier(.45,.05,.55,.95)";
+  const done = () => {
     swapEl.classList.remove("on"); swapping = false;
     if (swapNext && swapNext !== view) { const n = swapNext; swapNext = null; swapTo(n); } else swapNext = null;
-  }, dur + 30);
+  };
+  try {
+    [leaf, shade, cast].forEach((n) => n.getAnimations().forEach((an) => an.cancel()));
+    // it inks in over the scene (the scene becomes a page)
+    // (.999, never 1: a page counted as opaque hides what lies under it from the painter, and
+    // the scene under it would be revealed with its tiles still unpainted)
+    leaf.animate([{ transform: "rotateY(0deg)", opacity: 0 }, { transform: "rotateY(0deg)", opacity: .999 }], { duration: settle, easing: "ease-out", fill: "both" });
+    shade.animate([{ opacity: 0 }, { opacity: .35 }], { duration: settle, fill: "both" });
+    cast.animate([{ opacity: 0, transform: "scaleX(1)" }, { opacity: .35, transform: "scaleX(.85)" }], { duration: settle, fill: "both" });
+  } catch (e) {}
+  let turned = false;
+  const turnOver = () => {
+    if (turned) return; turned = true;
+    try {
+      // it lifts a little and turns over, off the new page
+      const an = leaf.animate([{ transform: "rotateY(0deg)", opacity: .999 }, { transform: "rotateY(-22deg)", opacity: .999, offset: .25 },
+        { transform: "rotateY(-180deg)", opacity: .999 }], { duration: turn, easing: ease, fill: "both" });
+      shade.animate([{ opacity: .35 }, { opacity: 1, offset: .37 }, { opacity: 0 }], { duration: turn, easing: ease, fill: "both" });
+      cast.animate([{ opacity: .35, transform: "scaleX(.85)" }, { opacity: 1, transform: "scaleX(.55)", offset: .37 }, { opacity: 0, transform: "scaleX(0)" }], { duration: turn, easing: ease, fill: "both" });
+      let fin = false; const end = () => { if (!fin) { fin = true; done(); } };
+      an.finished.then(end, end); setTimeout(end, turn + 200);
+    } catch (e) { setTimeout(done, turn); }
+  };
+  setTimeout(() => {
+    land(v);                                             // the cut, under the page once it lies there
+    // two frames: the new page is styled, laid out and painted under the still page
+    requestAnimationFrame(() => requestAnimationFrame(turnOver));
+    setTimeout(turnOver, 250);                           // (a frame that never comes never strands the page)
+  }, settle);
 }
 let secretNext = false;
 function land(v) {
@@ -366,6 +390,9 @@ function land(v) {
       cam._manualUntil = (cam._now ? cam._now() : performance.now()) + 6000;
       g.updateBeacon && g.updateBeacon();
       g._onSceneArrive && g._onSceneArrive(want);
+      // the desk's pose follows the scene NOW, at the cut: left to its own 400 ms tick, its
+      // hand and screen classes on the body landed mid-turn and re-styled the whole page there
+      window.__cabinPulse && window.__cabinPulse();
     } catch (e) {}
   }
   // the page is still when it lands: the chart's roll and the arm's slide settle at once
@@ -1701,6 +1728,9 @@ function start() {
   paintAll = soon;
   setInterval(() => {
     if (!on()) { if (life) life.style.display = "none"; return; }
+    // never while a page turns: this pass re-styles the column and the rail, and mid-turn it
+    // was a stall right as the new page was being revealed (the cut paints them already)
+    if (swapping) return;
     // the tutorial starting or ending moves the stage's top edge
     if (D.classList.contains("pdx-m-tut") !== document.body.classList.contains("tut")) { layout(); frame(view, true); }
     soon(); if (!outFile) pile();

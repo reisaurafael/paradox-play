@@ -373,7 +373,23 @@ class AudioEngine {
     this.ctx = new AC();
     this.master = this.ctx.createGain();
     this.master.gain.value = (this.muted || this.quiet) ? 0 : this.vol.master;
-    this.master.connect(this.ctx.destination);
+    // THE SPEAKER'S GUARD (the owner, 29/09: "it's burning the sound box", above all on a phone):
+    // everything passes a brick-wall limiter before the speaker, so stacked sounds can never clip;
+    // on a phone or tablet the bass a small speaker cannot play (it only rattles) is cut, and the
+    // whole mix sits lower
+    const touch = document.documentElement.classList.contains("pdx-touch")
+      || (window.matchMedia && matchMedia("(pointer: coarse)").matches);
+    this.guard = this.ctx.createDynamicsCompressor();
+    this.guard.threshold.value = touch ? -16 : -10; this.guard.knee.value = 2; this.guard.ratio.value = 20;
+    this.guard.attack.value = 0.002; this.guard.release.value = 0.22;
+    this.trim = this.ctx.createGain(); this.trim.gain.value = touch ? 0.62 : 0.9;
+    let head = this.guard;
+    if (touch) {
+      this.lowCut = this.ctx.createBiquadFilter(); this.lowCut.type = "highpass";
+      this.lowCut.frequency.value = 170; this.lowCut.Q.value = 0.6;
+      this.master.connect(this.lowCut); this.lowCut.connect(this.guard);
+    } else this.master.connect(this.guard);
+    head.connect(this.trim); this.trim.connect(this.ctx.destination);
 
     this.musicBus = this.ctx.createGain();
     this.musicBus.gain.value = this.vol.music;
@@ -733,6 +749,13 @@ class AudioEngine {
     if (!this.ready || this.muted || this.quiet) return;
     if (this.ctx.state === "suspended") return;
     const t = this.ctx.currentTime;
+    // never a pile-up: the same sound again within 60 ms is dropped, and no more than 6 sounds
+    // start in any 150 ms (a burst of events becomes one clean hit, not a wall of noise)
+    const nowMs = t * 1000, last = (this._lastAt || (this._lastAt = {}))[name];
+    if (last != null && nowMs - last < 60) return;
+    const recent = (this._recent || (this._recent = [])).filter((x) => nowMs - x < 150);
+    if (recent.length >= 6) { this._recent = recent; return; }
+    recent.push(nowMs); this._recent = recent; this._lastAt[name] = nowMs;
     // HORROR STATE, the whole audio identity changes. Every UI sound is reinterpreted
     // through an unnatural, dread aesthetic (see _horrorSfx). If it handles the name,
     // we return; anything it doesn't override still passes through the muffled bus.

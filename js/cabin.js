@@ -1576,7 +1576,7 @@
         activeHand=want; freeCursor=(activeHand==="left");
         document.body.classList.toggle("hand-right-on", activeHand==="right");
         if(activeHand==="left"){ document.body.classList.add("mano-away","hand-cursor-on"); hcAway=true; hcEngageAt=performance.now()+240; }
-        else { hcSettling=performance.now()+420; }
+        else { hcSettling=document.documentElement.classList.contains("pdx-m-on")?0:performance.now()+420; }   // a phone: no arm glides home, the page lights at the cut (under the turning page), never 420 ms later mid-turn
       }
     }
     // the device is a FIXED bench instrument: it rests on the desk scene and
