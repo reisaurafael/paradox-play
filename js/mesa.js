@@ -15,9 +15,9 @@
    The server rule that shapes this: a seat with no connection is played by
    the bot at once. So the table only starts once EVERY panel is connected.
    ========================================================================= */
-import { readPad } from "./controle.js?202609282221";
-import { api } from "./net.js?202609282221";
-import { PALETTE } from "./util.js?202609282221";
+import { readPad } from "./controle.js?202609282223";
+import { api } from "./net.js?202609282223";
+import { PALETTE } from "./util.js?202609282223";
 
 const MAX_PANELS = 4;
 const LS_KEY = "paradoxo.table.v1";
