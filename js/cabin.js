@@ -480,7 +480,15 @@ ${castSVG()}
     </g>
   </g>
 </g>
-</svg>`}function build(){const hull2=document.createElement("div");return hull2.id="hull",hull2.innerHTML=`
+</svg>`}function vzKit(c){const fx=c[1]==="r",fy=c[0]==="b",X=x=>+(fx?400-x:x).toFixed(1),Y=y=>+(fy?320-y:y).toFixed(1),pl=pts=>"M "+pts.map(([x,y])=>X(x)+" "+Y(y)).join(" L "),ta=fx?"end":"start",txt=(x,y,s)=>`<text class="k-t" x="${X(x)}" y="${(fy?320-y+7:y).toFixed(1)}" text-anchor="${ta}">${s}</text>`,rulerH=(x0,x1,y)=>{let d=pl([[x0,y],[x1,y]]);for(let x=x0,i=0;x<=x1;x+=6,i++)d+=" "+pl([[x,y],[x,y+(i%5?4:8)]]);return d},rulerV=(y0,y1,x)=>{let d=pl([[x,y0],[x,y1]]);for(let y=y0,i=0;y<=y1;y+=6,i++)d+=" "+pl([[x,y],[x+(i%5?4:8),y]]);return d},hex=(cx,cy,r)=>pl([0,1,2,3,4,5].map(k=>[cx+r*Math.cos(k*Math.PI/3),cy+r*Math.sin(k*Math.PI/3)]))+" Z",bars=(x,y,hs)=>hs.map((h,i)=>{const xx=x+i*4;return`<rect x="${Math.min(X(xx),X(xx+2))}" y="${fy?Y(y):Y(y)-h}" width="2" height="${h}"/>`}).join(""),K={tl:{ex:16,ey:16,ax:176,ay:156,tailX:1,tailY:1,hex:[54,60],rH:[256,376,12],rV:[228,300,12],g:[[192,48,"07.24 : 31"],[34,226,"T+00"]],bars:[192,58,[5,8,3,9,6]]},tr:{ex:12,ey:10,ax:88,ay:214,tailX:0,tailY:1,hex:null,rH:null,rV:[292,372,10],g:[[26,248,"48.6"]],bars:[26,262,[4,7,9,5]]},bl:{ex:16,ey:16,ax:118,ay:150,tailX:0,tailY:1,hex:null,rH:null,rV:[222,282,12],g:[],bars:null},br:{ex:16,ey:16,ax:172,ay:172,tailX:1,tailY:1,hex:[54,60],rH:[248,340,12],rV:[244,304,12],g:[[190,48,"0x3F  12"],[34,244,"N 04"]],bars:[190,58,[7,4,8,5]]}}[c],e=K.ex,t=K.ey;let br=pl([[e,K.ay],[e,t+22],[e+22,t],[K.ax,t]]),thin="",x2="",hx="";if(K.tailX&&(thin+=pl([[K.ax,t],[K.ax+10,t+10],[K.ax+58,t+10]])+" "),K.tailY&&(thin+=pl([[e,K.ay],[e+10,K.ay+10],[e+10,K.ay+54]])+" "),thin+=pl([[e+14,t+82],[e+14,t+36],[e+36,t+14],[e+82,t+14]]),K.rH&&(x2+=rulerH(K.rH[0],K.rH[1],K.rH[2])+" "),K.rV&&(x2+=rulerV(K.rV[0],K.rV[1],K.rV[2])),K.hex){const[hx0,hy0]=K.hex,r=7.5,dx=r*1.5,dy=r*Math.sqrt(3)/2;hx=`<path class="k-b" d="${hex(hx0,hy0,r)} ${hex(hx0+dx,hy0-dy,r)} ${hex(hx0+dx,hy0+dy,r)} ${hex(hx0+2*dx,hy0-2*dy,r)}"/><path class="k-bf" d="${hex(hx0+2*dx,hy0,r)}"/>`}const caps=[];return K.tailX&&caps.push([K.ax+58,t+10]),K.tailY&&caps.push([e+10,K.ay+54]),`<svg class="vz-kit" viewBox="0 0 400 320" width="400" height="320" aria-hidden="true">
+      <path class="k-ink" d="${br}"/><path class="k-off" d="${br}" transform="translate(3 3)"/><path class="k-c" d="${br}"/>
+      ${caps.map(([x,y])=>`<rect class="k-cap" x="${X(x)-2.5}" y="${Y(y)-2.5}" width="5" height="5"/>`).join("")}
+      <g class="k-x"><path class="k-thin" d="${thin}"/><path class="k-rule" d="${x2}"/>${hx}
+        ${K.g.map(([x,y,s])=>txt(x,y,s)).join("")}${K.bars?`<g class="k-bars">${bars(K.bars[0],K.bars[1]+10,K.bars[2])}</g>`:""}</g>
+    </svg>`+(K.hex?`<svg class="vz-arc" viewBox="-40 -40 80 80" width="80" height="80" style="left:${X(K.hex[0]+11)-40}px;top:${Y(K.hex[1])-40}px" aria-hidden="true">
+      <path d="M 34 0 A 34 34 0 0 1 17 29.4 M -17 29.4 A 34 34 0 0 1 -34 0 M -17 -29.4 A 34 34 0 0 1 0 -34"/>
+      <circle r="1.6" cx="34" cy="0"/><circle r="1.6" cx="-34" cy="0"/></svg>`:"")}function vzEdge(side){let d="M 6 0 L 6 180";for(let y=0,i=0;y<=180;y+=6,i++)d+=` M 6 ${y} L ${6+(i%5?4:9)} ${y}`;return`<svg class="vz-edge ${side}" viewBox="0 0 24 180" width="24" height="180" aria-hidden="true">
+      <path class="k-rule" d="${d}"/><path class="k-c k-chev" d="M 14 84 L 19 90 L 14 96 L 9 90 Z"/></svg>`}function build(){const hull2=document.createElement("div");return hull2.id="hull",hull2.innerHTML=`
     <svg width="0" height="0" style="position:absolute"><defs>
       <linearGradient id="cbSteel" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#2b2e32"/><stop offset=".5" stop-color="#1b1e21"/><stop offset="1" stop-color="#131518"/>
@@ -497,8 +505,9 @@ ${castSVG()}
     </div>
     
     <div class="vz-frame" aria-hidden="true">
-      <span class="vz-cnr tl"></span><span class="vz-cnr tr"></span><span class="vz-cnr bl"></span><span class="vz-cnr br"></span>
-      <span class="vz-scan"></span>
+      <span class="vz-scan"></span><span class="vz-dots"></span><span class="vz-sweep"><i></i></span>
+      ${vzEdge("l")}${vzEdge("r")}
+      ${["tl","tr","bl","br"].map(c=>`<span class="vz-cnr ${c}">${vzKit(c)}</span>`).join("")}
     </div>
     <div class="hull-visor" aria-hidden="true"></div>
     
