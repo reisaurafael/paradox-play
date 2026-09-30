@@ -1014,11 +1014,6 @@
    "to": "Nenhum rival está à sua frente ou no seu século, então o Paradoxo não acertaria ninguém. Seus dois {d3} vão para <b>Viagem</b>."
   },
   {
-   "re": "(.+) costs (\\d+) \\{gold\\}\\. You have (\\d+)\\. Recharge's second module pays \\{gold\\}: fill it and the Merchant is in reach\\.",
-   "flags": "g",
-   "to": "$1 custa $2 {gold}. Você tem $3. O segundo módulo da Recarga paga {gold}: preencha-o e o Mercador fica ao seu alcance."
-  },
-  {
    "re": "He sails after every Market: 1 die, \\{d1\\} to \\{d3\\} each\\.",
    "flags": "g",
    "to": "Ele navega depois de cada Mercado: 1 dado, de {d1} a {d3}."
@@ -1209,9 +1204,9 @@
    "to": " Ele precisa de um lugar para morar: seu <b>caso</b>. As relíquias do Mercador são pagas dele, e carregadas nele."
   },
   {
-   "re": "One relic on it you can afford\\. (\\d+) \\{gold\\}, which you have\\. Look at the century stamped on its face\\.",
+   "re": "One relic on it you can afford: <b>(.+?)</b>, (\\d+) \\{gold\\}, and you have (\\d+)\\. Recharge's second module pays \\{gold\\}\\. Look at the century stamped on its face\\.",
    "flags": "g",
-   "to": "Uma relíquia nela você pode pagar. $1 {gold}, que você tem. Olhe o século estampado na face dela."
+   "to": "Uma relíquia nela você pode pagar: <b>$1</b>, $2 {gold}, e você tem $3. O segundo módulo da Recarga paga {gold}. Olhe o século estampado na face dela."
   },
   {
    "re": "A (\\{d\\d\\}) on <b>Paradox 3</b> HAUNTS: only ([^,]+), who terminated you, loses (\\d+) \\{energy\\}, wherever they are\\.",
