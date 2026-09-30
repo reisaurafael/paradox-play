@@ -75,16 +75,16 @@
         <path d="M 640 258 Q 654 276 652 300 Q 650 318 640 334" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
         <path d="M 596 262 Q 612 290 606 322" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
         <path d="${H.glove}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="7" opacity=".55"/>
-        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.6" stroke-dasharray="4 3"/>
-        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" stroke="${LINE}" stroke-width="1.5" stroke-dasharray="0 7" stroke-dashoffset="-5.5" stroke-linecap="round" opacity=".7"/>
-        <path d="M 590 257 Q 616 251 640 255" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.4" stroke-dasharray="4 3"/>
-        <path d="M 590 257 Q 616 251 640 255" fill="none" stroke="${LINE}" stroke-width="1.4" stroke-dasharray="0 7" stroke-dashoffset="-5.5" stroke-linecap="round" opacity=".7"/>`)}
+        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.3" stroke-linecap="round" opacity=".8"/>
+        <path d="M 656 262 Q 664 272 666 284 Q 668 300 666 314 Q 664 328 656 336" fill="none" stroke="${LINE}" stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+        <path d="M 590 257 Q 616 251 640 255" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="1.2" stroke-linecap="round" opacity=".8"/>
+        <path d="M 590 257 Q 616 251 640 255" fill="none" stroke="${LINE}" stroke-width="1.4" stroke-linecap="round" opacity="0"/>`)}
       <path d="${H.cuff}" style="fill:var(--glove-trim,#d8c8a0)"/>
       ${inClip("c",`
         <path d="M 560 324 Q 574 330 586 326 Q 594 324 600 320 L 600 350 L 560 350 Z" style="fill:var(--glove-dk,#2c4166)" opacity=".45"/>
         <path d="M 572 256 Q 578 296 574 338" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".45"/>
         <path d="${H.cuff}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="5" opacity=".4"/>
-        <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-dasharray="3 3"/>`)}
+        <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-linecap="round"/>`)}
       <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}>${open}${grab}${glove}</g></g>`}function celInk(ds){const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;return g("2.4 3.4",5.4)+g("-.3 .5",4.4)}function handArtSVG(p,cls){return`${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`}function handShadow(cls){const H=HAND_PATHS,sil=(...ds)=>ds.map(d=>`<path d="${d}"/>`).join("");return["m","f"].map(b=>{const m=b==="m";return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}><g class="${cls}-open">${sil(H.wrist,H.back,H.fingers,H.thumb,H.glove,H.cuff)}</g><g class="${cls}-grab">${sil(H.wrist,H.fist,H.fistThumb,H.glove,H.cuff)}</g></g></g>`}).join("")}const ERA_SEALS=[["Origins","O","#b98a45"],["Ascension","A","#3f9c7c"],["Singularity","S","#7d68c2"]];function valveTagSVG(){const pt=(window.__pdxLang||document.documentElement.lang)==="pt",lines=pt?["VÁLVULA","DE","ESCAPE"]:["ESCAPE","VALVE"],fs=pt?7:8.2,lh=pt?7.8:9.2,top=299.4,h=lines.length*lh+3.4,mid=top+5.6,b=(top+h).toFixed(1),tag=`M 211.6 ${top} L 242.2 ${top-.3} L 243.8 ${top+.9} L 244.4 ${top+.6} L 245.6 ${top+3.4} L 245.4 ${b} L 229 ${(top+h+.4).toFixed(1)} L 211.6 ${b} L 211.8 ${mid+4.6} L 205.8 ${mid} L 211.6 ${mid-4.6} Z`;return`<g class="gnt-vtag" pointer-events="none" transform="rotate(-1.6 228 ${(top+h/2).toFixed(1)})">
     <path d="${tag}" transform="translate(1.2 1.6)" fill="${INK}" opacity=".6"/>
     <path d="${tag}" fill="#f4e8c8"/>
@@ -166,7 +166,7 @@
     <g fill="#c29a4e" stroke="${INK}" stroke-width="1.1"><circle cx="171.6" cy="263.4" r="2.5"/><circle cx="171.6" cy="344.6" r="2.5"/></g>
     <g fill="#fff6dc" opacity=".75"><circle cx="170.8" cy="262.6" r=".7"/><circle cx="170.8" cy="343.8" r=".7"/></g>
   </g>
-  </g>`}function castSVG(){const band=(t,u)=>`M 172 ${t} Q 192 ${t-3} 212 ${t} Q 220 ${(t+u)/2} 214 ${u} Q 192 ${u+4} 170 ${u} L 174 348 A 44 44 0 0 1 174 260 L 172 ${t} Z`,limb=b=>{const F=FOREARM[b],dx=b==="m"?100:110,[t,u]=b==="m"?[240,376]:[258,356];return`<g class="pb-${b}"${b==="m"?"":' display="none"'}><path d="${F.arm}"/><g transform="translate(${dx} 0)"><path d="${F.sleeve}"/><path d="${F.roll}"/></g><path d="${band(t,u)}"/></g>`},sil=`${limb("m")}${limb("f")}<path d="${CASE}"/><path d="${CASE}" transform="translate(13 14)"/><g transform="translate(-36 0)">${handShadow("hand")}</g>`;return`<g class="gnt-shadow gnt-cast" opacity=".5" pointer-events="none">
+  </g>`}function castSVG(){const band=(t,u)=>`M 172 ${t} Q 192 ${t-3} 212 ${t} Q 220 ${(t+u)/2} 214 ${u} Q 192 ${u+4} 170 ${u} L 174 348 A 44 44 0 0 1 174 260 L 172 ${t} Z`,limb=b=>{const F=FOREARM[b],dx=b==="m"?100:110,[t,u]=b==="m"?[244,372]:[260,354];return`<g class="pb-${b}"${b==="m"?"":' display="none"'}><g transform="translate(200 309) scale(1.05) translate(-200 -309)"><path d="${F.arm}"/><g transform="translate(${dx} 0)"><path d="${F.sleeve}"/><path d="${F.roll}"/></g></g><path d="${band(t,u)}"/></g>`},sil=`${limb("m")}${limb("f")}<path d="${CASE}"/><path d="${CASE}" transform="translate(13 14)"/><g transform="translate(-36 0)"><g transform="translate(560 305) scale(1.05) translate(-560 -305)">${handShadow("hand")}</g></g>`;return`<g class="gnt-shadow gnt-cast" opacity=".5" pointer-events="none">
   <g transform="translate(21 28)" fill="url(#mnCastDots)">${sil}</g>
   <g transform="translate(13 18)" fill="#2a1608">${sil}</g>
 </g>`}const CASE="M 236 150 L 500 150 Q 530 150 534 182 L 548 402 Q 550 434 520 438 L 250 446 Q 220 447 216 414 L 204 182 Q 202 150 236 150 Z",FACE="M 240 157.5 L 498 157.5 Q 523 157.5 527 184 L 541 401 Q 542 427 519 431 L 251 439 Q 227 440 223 413 L 211.5 183 Q 210.5 157.5 240 157.5 Z",EXT=[...Array(9)].map((_,i)=>`${(13*i/8).toFixed(2)} ${(14*i/8).toFixed(2)}`),rrp=(x0,y0,x1,y1,r)=>`M ${x0+r} ${y0} H ${x1-r} Q ${x1} ${y0} ${x1} ${y0+r} V ${y1-r} Q ${x1} ${y1} ${x1-r} ${y1} H ${x0+r} Q ${x0} ${y1} ${x0} ${y1-r} V ${y0+r} Q ${x0} ${y0} ${x0+r} ${y0} Z`,WELL_FLOOR="M 262 353 H 391 L 397 393 H 256 Z",WELL_UP="M 256 393 L 259.3 351.6 Q 260.4 350.3 263.2 350.4 H 389.8 Q 392.6 350.3 393.7 351.6 L 397 393 Z";function wornPaper(x,y,w,h,o={}){const f=v=>+v.toFixed(2),torn=o.torn||[],J=o.jag||.35,corner=(k,cx,cy,dx,dy)=>torn.includes(k)?[[cx+dx*3.4,cy],[cx+dx*1.9,cy+dy*.9],[cx+dx*1.2,cy+dy*.5],[cx,cy+dy*2.8]]:[[cx,cy]],d="M "+[...corner("tl",x,y,1,1).reverse(),[x+w*.37,y-J],[x+w*.71,y+J*.6],...corner("tr",x+w,y,-1,1),[x+w+J*.8,y+h*.55],...corner("br",x+w,y+h,-1,-1).reverse(),[x+w*.62,y+h+J],[x+w*.28,y+h-J*.5],...corner("bl",x,y+h,1,-1),[x-J*.8,y+h*.42]].map(([a,b])=>`${f(a)} ${f(b)}`).join(" L ")+" Z",id="mnWp"+(wornPaper.n=(wornPaper.n||0)+1);let g=`<path d="${d}" transform="translate(1.3 1.7)" fill="${INK}" opacity=".6"/>
@@ -196,10 +196,10 @@ ${castSVG()}
 
 <g id="arm-limb">
   
-  <g class="limb-rest">${forearmSVG("m")}${forearmSVG("f")}
+  <g class="limb-rest" transform="translate(200 309) scale(1.05) translate(-200 -309)">${forearmSVG("m")}${forearmSVG("f")}
   </g>
   
-  ${strapSVG("m",240,376)}${strapSVG("f",258,356)}
+  ${strapSVG("m",244,372)}${strapSVG("f",260,354)}
   
   <g id="gnt-vctr">
     <g pointer-events="none"><g class="vc-halo" data-i="0"><circle cx="182.9" cy="335.7" r="6.6" opacity=".38"/><circle cx="182.9" cy="335.7" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="1"><circle cx="174.3" cy="331.8" r="6.6" opacity=".38"/><circle cx="174.3" cy="331.8" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="2"><circle cx="167.1" cy="325.7" r="6.6" opacity=".38"/><circle cx="167.1" cy="325.7" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="3"><circle cx="162.0" cy="317.8" r="6.6" opacity=".38"/><circle cx="162.0" cy="317.8" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="4"><circle cx="159.3" cy="308.7" r="6.6" opacity=".38"/><circle cx="159.3" cy="308.7" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="5"><circle cx="159.3" cy="299.3" r="6.6" opacity=".38"/><circle cx="159.3" cy="299.3" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="6"><circle cx="162.0" cy="290.2" r="6.6" opacity=".38"/><circle cx="162.0" cy="290.2" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="7"><circle cx="167.1" cy="282.3" r="6.6" opacity=".38"/><circle cx="167.1" cy="282.3" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="8"><circle cx="174.3" cy="276.2" r="6.6" opacity=".38"/><circle cx="174.3" cy="276.2" r="5.1" opacity=".62"/></g><g class="vc-halo" data-i="9"><circle cx="182.9" cy="272.3" r="6.6" opacity=".38"/><circle cx="182.9" cy="272.3" r="5.1" opacity=".62"/></g></g>
@@ -260,9 +260,19 @@ ${castSVG()}
   </g>
 </g>
 
-
-<g id="arm-hand" transform="translate(-36 0)">${handArtSVG("mn","hand",!0)}
+<g>
+  <g stroke="${INK}" stroke-width="15" stroke-linejoin="round" fill="${INK}">${EXT.map(t=>`<path d="${CASE}" transform="translate(${t})"/>`).join("")}</g>
+  <g fill="#262e34">${EXT.map(t=>`<path d="${CASE}" transform="translate(${t})"/>`).join("")}</g>
+  
+  <g pointer-events="none"><path class="pb-m" d="M 547 234 Q 570 242 566 304 Q 570 368 550 378 Q 557 304 547 234 Z" fill="#07090b" stroke="${INK}" stroke-width="2.4"/>
+  <path class="pb-f" display="none" d="M 547 250 Q 568 258 564 304 Q 568 352 550 362 Q 556 304 547 250 Z" fill="#07090b" stroke="${INK}" stroke-width="2.4"/></g>
 </g>
+
+<g id="arm-hand" transform="translate(-36 0)"><g transform="translate(560 305) scale(1.05) translate(-560 -305)">${handArtSVG("mn","hand",!0)}</g>
+</g>
+
+<g pointer-events="none" fill="none" stroke-linecap="round"><g class="pb-m"><path d="M 549 236 Q 571 304 551 376" stroke="${INK}" stroke-width="4"/><path d="M 553 244 Q 570 304 554 368" stroke="#262e34" stroke-width="2.2"/></g>
+<g class="pb-f" display="none"><path d="M 549 252 Q 568 304 551 360" stroke="${INK}" stroke-width="4"/><path d="M 553 259 Q 567 304 554 353" stroke="#262e34" stroke-width="2.2"/></g></g>
 
 <path d="M 549 250 Q 565 252 575 260 L 581 364 Q 569 376 553 378 Z" fill="${INK}" opacity=".3" pointer-events="none"/>
 
@@ -271,17 +281,17 @@ ${castSVG()}
 <g>
   <clipPath id="mnCase"><path d="${CASE}"/></clipPath>
   
-  <g stroke="${INK}" stroke-width="9" stroke-linejoin="round" fill="${INK}">${EXT.map(t=>`<path d="${CASE}" transform="translate(${t})"/>`).join("")}</g>
-  <g fill="#262e34">${EXT.map(t=>`<path d="${CASE}" transform="translate(${t})"/>`).join("")}</g>
   
   <path d="${CASE}" fill="#353e45"/>
   <path clip-path="url(#mnCase)" d="M 560 126 L 180 479 L 180 126 Z" fill="#6d777f" pointer-events="none"/>
   <path d="${FACE}" fill="#4d575f" stroke="${INK}" stroke-width="1.6"/>
   
-  <path d="${CASE}" fill="none" stroke="${INK}" stroke-width="5.6"/>
+  <path d="${CASE}" fill="none" stroke="${INK}" stroke-width="7"/>
   <path d="M 534.6 186 L 548.6 402 Q 550.4 435 520 438.8 L 250 446.8 Q 229 447.4 220.6 432" fill="none" stroke="${INK}" stroke-width="7.4" stroke-linecap="round" pointer-events="none"/>
   <path d="M 214.6 406 L 207.8 186 Q 207 156.4 236 155.6 L 498 155.6 Q 522.6 155.6 527.6 176" fill="none" stroke="#dfe5e9" stroke-width="1.8" opacity=".6" pointer-events="none"/>
 
+  
+  <g pointer-events="none" fill="none" stroke-linecap="round"><path class="pb-m" d="M 210 245 Q 204.5 308 210.6 371" stroke="#07090b" stroke-width="4.2"/><path class="pb-f" display="none" d="M 210.4 261 Q 205.4 308 210.8 353" stroke="#07090b" stroke-width="4.2"/></g>
   
   <g class="gnt-lip" transform="rotate(-.8 372 163)">
     ${wornPaper(298,150.6,148,24.4,{torn:["tr","bl"],rivets:[303.4,440.6],stain:[310.6,155.2,3.8],crease:[432,429.6]})}
@@ -399,6 +409,17 @@ ${castSVG()}
         <text class="mkey-txt" x="495" y="371" text-anchor="middle" style="font-family:var(--f-display)" font-size="11" font-weight="bold" letter-spacing=".9" fill="#1a1206" pointer-events="none">CONFIRM</text>
       </g>
     </g>
+  </g>
+  <g pointer-events="none">
+    <clipPath id="mnHaz"><rect x="406" y="399.6" width="46" height="6.4" rx="1"/></clipPath>
+    <rect x="406" y="399.6" width="46" height="6.4" rx="1" fill="#f2c230"/>
+    <g clip-path="url(#mnHaz)" fill="#15110a">${[0,1,2,3,4,5,6,7].map(i=>`<path d="M ${402+i*7} 406 l 3.4 0 l 6.4 -6.4 l -3.4 0 Z"/>`).join("")}</g>
+    <rect x="406" y="399.6" width="46" height="6.4" rx="1" fill="none" stroke="${INK}" stroke-width="1.3"/>
+    <path d="M 448.6 399.6 l 3.4 0 l 0 3.2 Z" fill="#4d575f"/>
+    <g transform="rotate(-4 519 418)"><path d="M 519 409 L 528.4 425.4 L 509.6 425.4 Z" fill="#f2c230" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M 519 414 V 420" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><circle cx="519" cy="422.8" r="1.05" fill="${INK}"/></g>
+    <path d="M 226 378 l 9 -3 M 229 382 l 6 -2 M 470 424 l 11 -2.4 M 474 428 l 6 -1.2" stroke="#9aa3aa" stroke-width="1" stroke-linecap="round" opacity=".75"/>
+    <path d="M 226.4 379 l 9 -3 M 470.4 425 l 11 -2.4" stroke="#1f252a" stroke-width=".8" stroke-linecap="round" opacity=".7"/>
   </g>
   
   <circle cx="496" cy="396.4" r="7.4" fill="${INK}" pointer-events="none"/>
