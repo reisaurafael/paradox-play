@@ -890,19 +890,123 @@
   "THE GAUNTLET": "A MANOPLA",
   "THE SERPENT": "A SERPENTE",
   "THE DEBRIS BELT": "O CINTURÃO DE DESTROÇOS",
+  "THE DEBRIS BELT: the wreck of time, orbiting the Dead Sun. The deep past, I to IX, lies in its drift: every century there costs 2 energy.": "O CINTURÃO DE DESTROÇOS: os destroços do tempo, em órbita do Sol Morto. O passado profundo, de I a IX, está à deriva nele: cada século ali custa 2 de energia.",
+  "I – IX · 2 ENERGY / CENTURY": "I – IX · 2 DE ENERGIA / SÉCULO",
+  "YEAR ZERO: the maelstrom; the last voyage sails into it and ends the game (+2 CP)": "ANO ZERO: o redemoinho; a última viagem entra nele e termina o jogo (+2 CP)",
+  "YEAR ZERO: the stone cross at the root of time, in the beast's keeping; the last pilgrimage ends the game (+2 CP)": "ANO ZERO: a cruz de pedra na raiz do tempo, sob a guarda da fera; a última peregrinação termina o jogo (+2 CP)",
+  "THE WORLD-DRAGON: coiled round the Origins lands; there every league costs 2; the paradox is his fire": "O DRAGÃO DO MUNDO: enrolado em volta das terras das Origens; ali cada légua custa 2; o paradoxo é o seu fogo",
+  "the wild leagues, no road dares the woods between the kingdoms": "as léguas selvagens, nenhuma estrada ousa os bosques entre os reinos",
   "Deliver": "Entregar",
   "Delivered": "Entregue",
   "Look down at the chart when it's time to travel": "Olhar para a carta quando for hora de viajar",
   "A die with nowhere else to go can take the <b>escape valve</b>, but while a function is shut the valve <b>drains your energy</b>: a {d3} there costs 3 {energy}.": "Um dado sem outro lugar para ir pode ir para a <b>válvula de escape</b>, mas enquanto uma função está fechada a válvula <b>drena sua energia</b>: um {d3} ali custa 3 {energy}.",
   "Sailing to the past costs 1 {energy} per century, 2 per century below X. The future is free.": "Navegar para o passado custa 1 {energy} por século, 2 por século abaixo de X. O futuro é grátis.",
   "A Wanted traveler carries a 4 {gold} bounty. Paying 4 {gold} at a Market (Declare) clears it.": "Um viajante Procurado carrega uma recompensa de 4 {gold}. Pagar 4 {gold} num Mercado (Declarar) limpa isso.",
-  "At 12 {heat} the motor explodes: -2 {energy} and no actions for the rest of that Hour.": "Com 12 {heat} o motor explode: -2 {energy} e nenhuma ação pelo resto daquela Hora."
+  "At 12 {heat} the motor explodes: -2 {energy} and no actions for the rest of that Hour.": "Com 12 {heat} o motor explode: -2 {energy} e nenhuma ação pelo resto daquela Hora.",
+  "Bid for the lots.": "Dê lances pelos lotes.",
+  "Bring relics home.": "Leve as relíquias para casa.",
+  "The Merchant is open.": "O Mercador está aberto.",
+  "Place your four dice.": "Posicione seus quatro dados.",
+  "Fire your items.": "Acione seus itens.",
+  "Skipped": "Puladas",
+  "Activation": "Ativação",
+  "Auction": "Leilão",
+  "Your Records. One drawer for each period of time, and the last one for your contracts. Every relic you return is filed here, in its century's folder.": "Seus Registros. Uma gaveta para cada período do tempo, e a última para os seus contratos. Cada relíquia que você devolve é arquivada aqui, na pasta do século dela.",
+  "Time to travel, so your eyes went down to the chart on their own. They do it every time you must travel.": "Hora de viajar, então seus olhos desceram para o mapa sozinhos. Eles fazem isso toda vez que você precisa viajar.",
+  "If you would rather look down yourself, switch it off in Settings: <b>Look down at the chart when it's time to travel</b>.": "Se preferir olhar para baixo por conta própria, desligue em Configurações: <b>Olhar para a carta quando for hora de viajar</b>.",
+  "Your eyes can go down to the chart on their own whenever you must travel: Settings, <b>Look down at the chart when it's time to travel</b>.": "Seus olhos podem descer para o mapa sozinhos sempre que você precisar viajar: Configurações, <b>Olhar para a carta quando for hora de viajar</b>.",
+  "You kept a promise, so the roll comes off the chart and you get the rest of the years. Thirty centuries, all of them yours to cross, and the last thing down there at the end is YEAR ZERO.": "Você cumpriu uma promessa, então o rolo sai do mapa e você ganha o resto dos anos. Trinta séculos, todos seus para cruzar, e a última coisa lá no fundo é o ANO ZERO."
  },
  "patterns": [
   {
-   "re": "(.+) (stands|stand) ahead of you: a \\{d2\\} in Paradox 1 reaches them this Hour\\. Your two \\{d3\\} go to <b>Travel</b>, toward them\\.",
+   "re": "You stand on (\\w+), the century printed on (.+?)\\. Press <kbd>",
    "flags": "g",
-   "to": "$1 à sua frente: um {d2} no Paradoxo 1 os alcança nesta Hora. Seus dois {d3} vão para <b>Viagem</b>, na direção deles."
+   "to": "Você está em $1, o século impresso em $2. Press <kbd>"
+  },
+  {
+   "re": "Your chart lies below the desk, where your legs are\\. ",
+   "flags": "g",
+   "to": "Seu mapa fica abaixo da mesa, onde estão as suas pernas. "
+  },
+  {
+   "re": "The rest of the room is a turn of your head away\\. Your Records are to the left\\. ",
+   "flags": "g",
+   "to": "O resto da sala está a um virar de cabeça. Seus Registros ficam à esquerda. "
+  },
+  {
+   "re": "My memory lies on your Records desk\\. ",
+   "flags": "g",
+   "to": "Minha memória fica na mesa dos seus Registros. "
+  },
+  {
+   "re": "When something waits in another place, this arrow at the edge of your view points to it, with its key\\. ",
+   "flags": "g",
+   "to": "Quando algo espera em outro lugar, esta seta na borda da sua visão aponta para lá, com a tecla. "
+  },
+  {
+   "re": "You stand with the Merchant\\. Press",
+   "flags": "g",
+   "to": "Você está com o Mercador. Press"
+  },
+  {
+   "re": "Your point earned a contract\\. Press",
+   "flags": "g",
+   "to": "Seu ponto ganhou um contrato. Press"
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to look down at your chart\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para olhar para baixo, para o seu mapa."
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to look back up at your desk\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para voltar a olhar para a sua mesa."
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to look up at the Merchant's wagon\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para olhar para cima, para a carroça do Mercador."
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to look back down at your desk\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para voltar a olhar para baixo, para a sua mesa."
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to look left, at your Records\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para olhar para a esquerda, para os seus Registros."
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to turn back to your desk\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para voltar para a sua mesa."
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to look at your Records\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para olhar para os seus Registros."
+  },
+  {
+   "re": "Press <kbd>(\\w)</kbd> to turn your head\\.",
+   "flags": "g",
+   "to": "Aperte <kbd>$1</kbd> para virar a cabeça."
+  },
+  {
+   "re": "Bought\\. It rides in your case, under <b>EQUIPMENT</b>, until you hand it over at (\\w+)\\.",
+   "flags": "g",
+   "to": "Comprada. Ela viaja na sua maleta, em <b>EQUIPMENT</b>, até você entregá-la em $1."
+  },
+  {
+   "re": "(.+) stands ahead of you: a \\{d2\\} in Paradox 1 reaches them this Hour\\. Your two \\{d3\\} go to <b>Travel</b>, toward them\\.",
+   "flags": "g",
+   "to": "$1 está à sua frente: um {d2} no Paradoxo 1 os alcança nesta Hora. Seus dois {d3} vão para <b>Viagem</b>, na direção deles."
+  },
+  {
+   "re": "(.+) stand ahead of you: a \\{d2\\} in Paradox 1 reaches them this Hour\\. Your two \\{d3\\} go to <b>Travel</b>, toward them\\.",
+   "flags": "g",
+   "to": "$1 estão à sua frente: um {d2} no Paradoxo 1 os alcança nesta Hora. Seus dois {d3} vão para <b>Viagem</b>, na direção deles."
   },
   {
    "re": "No rival stands ahead of you or in your century, so Paradox would hit no one\\. Your two \\{d3\\} go to <b>Travel</b>\\.",
