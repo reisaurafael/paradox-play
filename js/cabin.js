@@ -87,13 +87,9 @@
         <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-linecap="round"/>`)}
       <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}>${open}${grab}${glove}</g></g>`}function celInk(ds){const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;return g("2.4 3.4",5.4)+g("-.3 .5",4.4)}function handArtSVG(p,cls){return`${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`}function handShadow(cls){const H=HAND_PATHS,sil=(...ds)=>ds.map(d=>`<path d="${d}"/>`).join("");return["m","f"].map(b=>{const m=b==="m";return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}><g class="${cls}-open">${sil(H.wrist,H.back,H.fingers,H.thumb,H.glove,H.cuff)}</g><g class="${cls}-grab">${sil(H.wrist,H.fist,H.fistThumb,H.glove,H.cuff)}</g></g></g>`}).join("")}const ERA_SEALS=[["Origins","O","#b98a45"],["Ascension","A","#3f9c7c"],["Singularity","S","#7d68c2"]],VALVE_SEAT={m:[607,291,.8],f:[593.4,291,.66]};function valveSVG(){const C=[192,304],R=Math.PI/180,f=v=>v.toFixed(2),at=(r,a)=>[C[0]+r*Math.cos(a*R),C[1]+r*Math.sin(a*R)],arc=(r,a0,a1)=>{const p=at(r,a0),q=at(r,a1);return`M ${f(p[0])} ${f(p[1])} A ${r} ${r} 0 0 1 ${f(q[0])} ${f(q[1])}`},studs=[...Array(10)].map((_,i)=>{const[x,y]=at(30.1,-90+36*i);return[+x.toFixed(2),+y.toFixed(2)]}),halos=studs.map(([x,y],i)=>`<g class="vc-halo" data-i="${i}"><circle cx="${x}" cy="${y}" r="6.6" opacity=".38"/><circle cx="${x}" cy="${y}" r="5.1" opacity=".62"/></g>`).join(""),pips=studs.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="3.9" fill="#c29a4e" stroke="${INK}" stroke-width="1.1"/><circle class="vc-pip" data-i="${i}" cx="${x}" cy="${y}" r="2.9"/><circle class="vc-core" cx="${f(x-.35)}" cy="${f(y-.35)}" r="1.55"/><path class="vc-dome" d="M ${f(x+2.2)} ${f(y-1.2)} A 2.5 2.5 0 0 1 ${f(x-1.2)} ${f(y+2.2)} A 3.2 3.2 0 0 0 ${f(x+2.2)} ${f(y-1.2)} Z"/><circle class="vc-glint" cx="${f(x-1.05)}" cy="${f(y-1.1)}" r=".7"/>`).join(""),np='style="pointer-events:none"',rivets=[45,135,225,315].map(a=>{const[x,y]=at(30.1,a);return`<circle cx="${f(x)}" cy="${f(y)}" r="1.6"/>`}).join(""),sp=[90,150,210].map(a=>{const p=at(13,a),q=at(13,a+180);return`<line x1="${f(p[0])}" y1="${f(p[1])}" x2="${f(q[0])}" y2="${f(q[1])}"/>`}).join(""),[mx,my,ms]=VALVE_SEAT.m;return`<g class="gnt-vseat" transform="translate(${mx} ${my}) scale(${ms}) translate(${-C[0]} ${-C[1]})">
   
-  <circle cx="${C[0]+1.8}" cy="${C[1]+2.8}" r="35.6" fill="${INK}" opacity=".5" ${np}/>
-  
   <g id="gnt-vctr">
-    <circle cx="${C[0]}" cy="${C[1]}" r="30.1" fill="none" style="stroke:color-mix(in srgb, var(--glove,#4a6fa8) 72%, #120c06)" stroke-width="9.6"/>
-    <path d="${arc(30.1,150,280)}" fill="none" style="stroke:color-mix(in srgb, var(--glove,#4a6fa8) 60%, #fff6dc);pointer-events:none" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
-    <circle cx="${C[0]}" cy="${C[1]}" r="34.9" fill="none" stroke="${INK}" stroke-width="2.6" ${np}/>
-    <circle cx="${C[0]}" cy="${C[1]}" r="25.3" fill="none" stroke="${INK}" stroke-width="1.6" ${np}/>
+    
+    <circle cx="${C[0]}" cy="${C[1]}" r="30.1" fill="none" stroke="#000" stroke-opacity="0" stroke-width="9.6"/>
     <g ${np}>${halos}</g>
     <g ${np}>${pips}</g>
     <g class="vc-shutter" ${np}>
@@ -149,15 +145,33 @@
     <path d="${arc(3.4,-20,110)}" fill="none" stroke="#7a1d10" stroke-width="1.8" ${np}/>
     <path d="${arc(3.2,200,250)}" fill="none" stroke="#ffc2a8" stroke-width="1" stroke-linecap="round" ${np}/>
     <circle cx="${C[0]}" cy="${C[1]}" r="1.4" fill="${INK}" ${np}/>
+    
+    <circle cx="${C[0]}" cy="${C[1]}" r="17.8" fill="#cfefff" opacity=".3" ${np}/>
+    <path d="${arc(13.2,196,254)}" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" ${np}/>
     </g>
     </g>
   </g>
-</g>`}function valveTagSVG(){const pt=(window.__pdxLang||document.documentElement.lang)==="pt",lines=pt?["VÁLVULA","DE ESCAPE"]:["ESCAPE","VALVE"],fs=pt?7.4:8.2,lh=pt?8.6:9.2,w=pt?22:18.2,top=6.4,h=lines.length*lh+3.6,b=+(top+h).toFixed(1),tag=`M 0 0 L ${w} ${top} L ${w+.2} ${b-3.2} L ${w-1.6} ${b-1.4} L ${w-3.4} ${b+.2} L 2 ${b+.5} L ${-w} ${b} L ${-w} ${top} Z`,[mx,my]=VALVE_SEAT.m;return`<g class="gnt-vtag" style="pointer-events:none" transform="translate(${mx} ${my+26.4}) rotate(-2.4)">
-    <path d="${tag}" transform="translate(1.2 1.6)" fill="${INK}" opacity=".6"/>
-    <path d="${tag}" fill="#f4e8c8"/>
-    <path d="${tag}" fill="none" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
-    <circle cx="0" cy="4.2" r="1.5" fill="#c29a4e" stroke="${INK}" stroke-width=".8"/>
-    <text x="0" y="${(top+fs+1.4).toFixed(1)}" text-anchor="middle" style="font-family:var(--f-display)" font-size="${fs}" font-weight="700" letter-spacing=".2" fill="#120c06">${lines.map((l,i)=>`<tspan x="0" dy="${i?lh:0}">${l}</tspan>`).join("")}</text>
+</g>`}const VALVE_SOCKET=[527,321],VALVE_CABLE={m:{plug:[591.7,302.1,585,307],d:"M 585 307 C 575 314.6 562 326.4 548 325.2 C 540.4 324.6 536.6 321.6 533 321"},f:{plug:[579.4,306.7,573.9,310.7],d:"M 573.9 310.7 C 566 316.4 556 325.6 546.6 324.8 C 539.8 324.2 536.4 321.6 533 321"}};function valveTagSVG(){const pt=(window.__pdxLang||document.documentElement.lang)==="pt",lines=pt?["VÁLVULA","DE ESCAPE"]:["ESCAPE","VALVE"],fs=pt?6.6:8.2,lh=pt?7.6:8.8,P=7,hh=10.6,L=44,tag=`M 0 0 L ${-P} ${-hh} L ${-L} ${-hh+.3} L ${-L-.3} ${hh-3.2} L ${-L+1.6} ${hh-1.3} L ${-L+3.4} ${hh+.2} L ${-P} ${hh} Z`,tx=-(L+P)/2+.6,ty=-(lines.length-1)*lh/2+fs*.36,[sx,sy]=VALVE_SOCKET,R=Math.PI/180,f=v=>+v.toFixed(2),cable=b=>{const C=VALVE_CABLE[b],[x0,y0,x1,y1]=C.plug;return`<g class="pb-${b}"${b==="m"?"":' display="none"'}>
+    <path d="${C.d}" transform="translate(1.2 1.8)" fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round" opacity=".45"/>
+    <path d="${C.d}" fill="none" stroke="${INK}" stroke-width="4.4" stroke-linecap="round"/>
+    <path d="${C.d}" fill="none" stroke="#a8321f" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="${C.d}" transform="translate(-.4 -.6)" fill="none" stroke="#f08a6c" stroke-width=".7" stroke-linecap="round" opacity=".85"/>
+    <path d="M ${x0} ${y0} L ${x1} ${y1}" stroke="${INK}" stroke-width="5.4" stroke-linecap="round"/>
+    <path d="M ${x0} ${y0} L ${x1} ${y1}" stroke="#aab4bb" stroke-width="3" stroke-linecap="round"/>
+  </g>`},ring=`M ${sx-6.4} ${sy} A 6.4 6.4 0 1 0 ${sx+6.4} ${sy} A 6.4 6.4 0 1 0 ${sx-6.4} ${sy} Z M ${sx-3.2} ${sy} A 3.2 3.2 0 1 1 ${sx+3.2} ${sy} A 3.2 3.2 0 1 1 ${sx-3.2} ${sy} Z`;return`<g class="gnt-vplug" style="pointer-events:none">
+    <circle cx="${sx+1}" cy="${sy+1.5}" r="6.6" fill="${INK}" opacity=".5"/>
+    <circle cx="${sx}" cy="${sy}" r="3.6" fill="#07090b"/>
+    ${cable("m")}${cable("f")}
+    <path d="M ${sx} ${sy} L ${sx+8.6} ${sy}" stroke="${INK}" stroke-width="5.8" stroke-linecap="round"/>
+    <path d="M ${sx} ${sy} L ${sx+8.6} ${sy}" stroke="#aab4bb" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M ${sx+2} ${sy-.9} L ${sx+8} ${sy-.9}" stroke="#e4eaee" stroke-width=".9" stroke-linecap="round"/>
+    <path d="${ring}" fill-rule="evenodd" fill="#8b959d" stroke="${INK}" stroke-width="1.6"/>
+    <path d="M ${f(sx-4.8*Math.cos(30*R))} ${f(sy-4.8*Math.sin(30*R))} A 4.8 4.8 0 0 1 ${f(sx+4.8*Math.cos(60*R))} ${f(sy-4.8*Math.sin(60*R))}" fill="none" stroke="#e4eaee" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+  <g class="gnt-vtag" style="pointer-events:none" transform="translate(551.5 276) rotate(11)">
+    <path d="${tag}" transform="translate(.9 1.2)" fill="${INK}" opacity=".45"/>
+    <path d="${tag}" fill="#f4e8c8" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
+    <text x="${f(tx)}" y="${f(ty)}" text-anchor="middle" style="font-family:var(--f-display)" font-size="${fs}" font-weight="700" letter-spacing=".2" fill="#120c06">${lines.map((l,i)=>`<tspan x="${f(tx)}" dy="${i?lh:0}">${l}</tspan>`).join("")}</text>
   </g>`}function sealSVG(cx,cy,i){const[key,g,col]=ERA_SEALS[i],arc=(r,a0,a1)=>{const P=t=>`${(cx+r*Math.cos(t*Math.PI/180)).toFixed(2)} ${(cy+r*Math.sin(t*Math.PI/180)).toFixed(2)}`;return`M ${P(a0)} A ${r} ${r} 0 0 1 ${P(a1)}`};return`<g class="gnt-seal" data-period="${key}">
     <circle cx="${cx+1.2}" cy="${cy+1.8}" r="11.2" fill="${INK}" pointer-events="none"/>
     <g class="seal-press">
@@ -207,50 +221,29 @@
       ${hatch(`M -96 ${y1-2} l 8 -10 M -84 ${y1} l 8 -10 M -72 ${y1+1} l 8 -10`)}`)}
     ${m?"":`<circle cx="-40" cy="${mid}" r="5" fill="#fbf7ef" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`}
     </g>
-  </g>`}const BAND_L=134,BAND_R=214,bandD=(t,u)=>{const mid=(t+u)/2;return`M ${BAND_L} ${t-1} Q 174 ${t-4.5} ${BAND_R} ${t} Q ${BAND_R+10} ${mid} ${BAND_R} ${u} Q 174 ${u+5} ${BAND_L} ${u+1} Q ${BAND_L+14} ${mid} ${BAND_L} ${t-1} Z`};function strapSVG(b,t,u){const d=bandD(t,u),mid=(t+u)/2,f=v=>+v.toFixed(1),L=BAND_L-10,R=BAND_R+12,sh=f(u-(u-t)*.27),ht=f(sh-9);return`<g class="pb-${b}"${b==="m"?"":' display="none"'}>
+  </g>`}const CUFF={m:{L:174,t:244,u:372},f:{L:181,t:260,u:354}},CUFF_R=218,CUFF_BOW=6,cuffD=b=>{const{L,t,u}=CUFF[b],mid=(t+u)/2,c=(L+CUFF_R)/2;return`M ${CUFF_R} ${t} Q ${c} ${t-2.6} ${L+3} ${t+.6} Q ${L} ${t+1.2} ${L} ${t+5} Q ${L+2*CUFF_BOW} ${mid} ${L} ${u-5} Q ${L} ${u-1.2} ${L+3} ${u-.6} Q ${c} ${u+2.6} ${CUFF_R} ${u} Z`};function strapSVG(b){const{L,t,u}=CUFF[b],d=cuffD(b),mid=(t+u)/2,f=v=>+v.toFixed(1),R=CUFF_R+4,c=(L+CUFF_R)/2,sh=f(u-(u-t)*.27),ht=f(sh-9),ex=y=>{const s=(y-t-5)/(u-t-10);return L+4*CUFF_BOW*s*(1-s)},rivet=(x,y)=>`<circle cx="${f(x+.8)}" cy="${f(y+1.2)}" r="2.6" fill="${INK}" opacity=".5"/><circle cx="${f(x)}" cy="${f(y)}" r="2.5" fill="#8b959d" stroke="${INK}" stroke-width="1.2"/><circle cx="${f(x-.8)}" cy="${f(y-.8)}" r=".8" fill="#e4eaee"/>`,ry=[f(t+18),f(u-18)];return`<g class="pb-${b}"${b==="m"?"":' display="none"'}>
   
-  <path d="${d}" transform="translate(-1.4 3.4)" style="fill:#000;pointer-events:none" opacity=".2"/>
   <path d="${d}" transform="translate(1.6 2.4)" style="fill:${INK};pointer-events:none"/>
-  
-  <path d="${d}" transform="translate(1.8 3)" style="fill:var(--glove-dk,#2c4166);pointer-events:none" stroke="${INK}" stroke-width="2.2"/>
   <path d="${d}" style="fill:var(--glove,#4a6fa8)" stroke="${INK}" stroke-width="2.8"/>
   <g style="pointer-events:none">
     <clipPath id="mnStrap${b}"><path d="${d}"/></clipPath>
     <g clip-path="url(#mnStrap${b})">
-      <rect x="${L}" y="${t-6}" width="${R-L}" height="${u-t+14}" fill="url(#mnGrain)" opacity=".55"/>
+      <rect x="${L-4}" y="${t-6}" width="${R-L+4}" height="${u-t+14}" fill="url(#mnGrain)" opacity=".55"/>
       
-      <path d="M ${BAND_L+1.8} ${t+1} Q ${BAND_L+15.8} ${mid} ${BAND_L+1.8} ${u}" fill="none" style="stroke:color-mix(in srgb, var(--glove,#4a6fa8) 55%, #fff6dc)" stroke-width="3.2"/>
+      <path d="M ${L-4} ${t-8} H ${R} V ${t+9} Q ${c} ${t+12.6} ${L-4} ${t+10} Z" fill="#fff6dc" opacity=".26"/>
       
-      <path d="M ${L} ${t-8} H ${R} V ${t+9} Q 174 ${t+13.6} ${L} ${t+10} Z" fill="#fff6dc" opacity=".26"/>
+      <path d="M ${L-4} ${ht} Q ${c} ${ht+5} ${R} ${ht+1} V ${sh+2} Q ${c} ${sh+6} ${L-4} ${sh} Z" fill="url(#mnBandDots)" opacity=".5"/>
+      <path d="M ${L-4} ${sh} Q ${c} ${sh+6} ${R} ${sh+2} V ${u+8} H ${L-4} Z" style="fill:var(--glove-dk,#2c4166)" opacity=".9"/>
+      <path d="M ${L-4} ${u-5} Q ${c} ${u-1} ${R} ${u-4} V ${u+8} H ${L-4} Z" fill="${INK}" opacity=".35"/>
       
-      <path d="M ${L} ${ht} Q 174 ${ht+7} ${R} ${ht+1} V ${sh+2} Q 174 ${sh+8} ${L} ${sh} Z" fill="url(#mnBandDots)" opacity=".5"/>
-      <path d="M ${L} ${sh} Q 174 ${sh+8} ${R} ${sh+2} V ${u+8} H ${L} Z" style="fill:var(--glove-dk,#2c4166)" opacity=".9"/>
-      <path d="M ${L} ${u-5} Q 174 ${u+1} ${R} ${u-4} V ${u+8} H ${L} Z" fill="${INK}" opacity=".35"/>
-      
-      <path d="M 146 ${f(sh-2.2)} Q 170 ${f(sh+3.4)} 194 ${f(sh-.6)}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M 147 ${f(sh-.8)} Q 170 ${f(sh+4.8)} 193 ${f(sh+.8)}" fill="none" stroke="#fff6dc" stroke-width=".8" stroke-linecap="round" opacity=".35"/>
-      <g fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.2" stroke-linecap="round" opacity=".85">
-        <path d="M 156 ${t+13} q 5 1.6 10 .6"/><path d="M 162 ${t+19} q 4 1 8 .2"/>
-        <path d="M 150 ${f(mid+2)} q 6 1.2 12 .2"/>
-      </g>
-      
-      <path d="${d}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="7.4"/>
+      <path d="M ${f(ex(t+6)+2)} ${t+6} Q ${L+2*CUFF_BOW+2} ${mid} ${f(ex(u-6)+2)} ${u-6}" fill="none" style="stroke:color-mix(in srgb, var(--glove,#4a6fa8) 50%, #fff6dc)" stroke-width="3"/>
       <path d="${d}" fill="none" stroke="${INK}" stroke-width="3.4"/>
     </g>
     
-    <path d="M ${BAND_L+7} ${t+2.6} Q 174 ${t-.8} ${BAND_R-8} ${t+3}" fill="none" stroke="#fff6dc" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+    <path d="M ${L+6} ${t+2.6} Q ${c} ${t-.4} ${CUFF_R-6} ${t+2.2}" fill="none" stroke="#fff6dc" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+    ${rivet(ex(ry[0])+9,ry[0])}${rivet(ex(ry[1])+9,ry[1])}
   </g>
-  </g>`}function entrySVG(part,b,y0,y1){const xs=y=>204+12*(y-182)/232-6.4,f=v=>+v.toFixed(1),g=s=>Math.pow(Math.max(0,1-Math.pow(Math.abs(2*s-1),3)),.3333333333333333),curve=off=>[...Array(29)].map((_,i)=>{const s=i/28,y=y0+(y1-y0)*s;return[f(xs(y)-off*g(s)),f(y)]}),pl=pts=>pts.map(([x,y])=>`${x} ${y}`).join(" L "),outer=curve(13),inner=curve(13-7.4),mouth=`M ${pl(inner)} L ${f(xs(y1)+9)} ${y1} L ${f(xs(y0)+9)} ${y0} Z`,rim=`M ${pl(outer)} L ${pl([...inner].reverse())} Z`,vis=`class="pb-${b}"${b==="m"?"":' display="none"'}`,np=h=>h.replace(/<(path|rect) /g,'<$1 style="pointer-events:none" ');if(part==="mouth")return np(`<path ${vis} d="${mouth}" fill="#07090b" stroke="${INK}" stroke-width="2.4"/>`);const ym=(y0+y1)/2,k=Math.round(28*.36);return np(`<g ${vis} pointer-events="none">
-    <path d="${mouth}" fill="#07090b" opacity=".55"/>
-    <clipPath id="mnEntry${b}"><path d="${rim}"/></clipPath>
-    <path d="${rim}" fill="#8b959d"/>
-    <rect clip-path="url(#mnEntry${b})" x="170" y="${f(ym+4)}" width="50" height="${f(y1-ym)}" fill="#4d575f"/>
-    <path clip-path="url(#mnEntry${b})" d="M ${pl(inner)}" fill="none" stroke="#262e34" stroke-width="4"/>
-    <path d="M ${pl(outer.slice(2,k))}" fill="none" stroke="#e4eaee" stroke-width="1.8" stroke-linecap="round" transform="translate(2.2 0)"/>
-    <path d="M ${pl(inner)}" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M ${pl(outer)}" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"/>
-    <path d="M ${pl(outer.slice(Math.round(28*.55)))}" fill="none" stroke="${INK}" stroke-width="4.6" stroke-linecap="round"/>
-  </g>`)}function castSVG(){const band=bandD,limb=b=>{const F=FOREARM[b],dx=b==="m"?100:110,[t,u]=b==="m"?[244,372]:[260,354];return`<g class="pb-${b}"${b==="m"?"":' display="none"'}><g transform="translate(200 309) scale(1.05) translate(-200 -309)"><path d="${F.arm}"/><g transform="translate(${dx} 0)"><path d="${F.sleeve}"/><path d="${F.roll}"/></g></g><path d="${band(t,u)}"/></g>`},sil=`${limb("m")}${limb("f")}<path d="${CASE}"/><path d="${CASE}" transform="translate(13 14)"/><g transform="translate(-36 0)"><g transform="translate(560 305) scale(1.05) translate(-560 -305)">${handShadow("hand")}</g></g>`;return`<g class="gnt-shadow gnt-cast" opacity=".5" pointer-events="none">
+  </g>`}function castSVG(){const limb=b=>{const F=FOREARM[b],dx=b==="m"?100:110;return`<g class="pb-${b}"${b==="m"?"":' display="none"'}><g transform="translate(200 309) scale(1.05) translate(-200 -309)"><path d="${F.arm}"/><g transform="translate(${dx} 0)"><path d="${F.sleeve}"/><path d="${F.roll}"/></g></g><path d="${cuffD(b)}"/></g>`},sil=`${limb("m")}${limb("f")}<path d="${CASE}"/><path d="${CASE}" transform="translate(13 14)"/><g transform="translate(-36 0)"><g transform="translate(560 305) scale(1.05) translate(-560 -305)">${handShadow("hand")}</g></g>`;return`<g class="gnt-shadow gnt-cast" opacity=".5" pointer-events="none">
   <g transform="translate(21 28)" fill="url(#mnCastDots)">${sil}</g>
   <g transform="translate(13 18)" fill="#2a1608">${sil}</g>
 </g>`}const CASE="M 236 150 L 500 150 Q 530 150 534 182 L 548 402 Q 550 434 520 438 L 250 446 Q 220 447 216 414 L 204 182 Q 202 150 236 150 Z",FACE="M 240 157.5 L 498 157.5 Q 523 157.5 527 184 L 541 401 Q 542 427 519 431 L 251 439 Q 227 440 223 413 L 211.5 183 Q 210.5 157.5 240 157.5 Z",EXT=[...Array(9)].map((_,i)=>`${(13*i/8).toFixed(2)} ${(14*i/8).toFixed(2)}`),rrp=(x0,y0,x1,y1,r)=>`M ${x0+r} ${y0} H ${x1-r} Q ${x1} ${y0} ${x1} ${y0+r} V ${y1-r} Q ${x1} ${y1} ${x1-r} ${y1} H ${x0+r} Q ${x0} ${y1} ${x0} ${y1-r} V ${y0+r} Q ${x0} ${y0} ${x0+r} ${y0} Z`,WELL_FLOOR="M 262 353 H 391 L 397 393 H 256 Z",WELL_UP="M 256 393 L 259.3 351.6 Q 260.4 350.3 263.2 350.4 H 389.8 Q 392.6 350.3 393.7 351.6 L 397 393 Z";function wornPaper(x,y,w,h,o={}){const f=v=>+v.toFixed(2),torn=o.torn||[],J=o.jag||.35,corner=(k,cx,cy,dx,dy)=>torn.includes(k)?[[cx+dx*3.4,cy],[cx+dx*1.9,cy+dy*.9],[cx+dx*1.2,cy+dy*.5],[cx,cy+dy*2.8]]:[[cx,cy]],d="M "+[...corner("tl",x,y,1,1).reverse(),[x+w*.37,y-J],[x+w*.71,y+J*.6],...corner("tr",x+w,y,-1,1),[x+w+J*.8,y+h*.55],...corner("br",x+w,y+h,-1,-1).reverse(),[x+w*.62,y+h+J],[x+w*.28,y+h-J*.5],...corner("bl",x,y+h,1,-1),[x-J*.8,y+h*.42]].map(([a,b])=>`${f(a)} ${f(b)}`).join(" L ")+" Z",id="mnWp"+(wornPaper.n=(wornPaper.n||0)+1);let g=`<path d="${d}" transform="translate(1.3 1.7)" fill="${INK}" opacity=".6"/>
@@ -281,14 +274,10 @@ ${castSVG()}
 
 <g id="arm-limb">
   
-  
-  ${entrySVG("mouth","m",232,384)}${entrySVG("mouth","f",250,364)}
   <g class="limb-rest" transform="translate(200 309) scale(1.05) translate(-200 -309)">${forearmSVG("m")}${forearmSVG("f")}
   </g>
   
-  ${strapSVG("m",244,372)}${strapSVG("f",260,354)}
-  
-  ${entrySVG("lip","m",232,384)}${entrySVG("lip","f",250,364)}
+  ${strapSVG("m")}${strapSVG("f")}
 </g>
 
 <g>
@@ -308,7 +297,6 @@ ${castSVG()}
 <path d="M 549 250 Q 565 252 575 260 L 581 364 Q 569 376 553 378 Z" fill="${INK}" opacity=".3" pointer-events="none"/>
 
 ${valveSVG()}
-${valveTagSVG()}
 
 
 
@@ -324,8 +312,6 @@ ${valveTagSVG()}
   <path d="M 534.6 186 L 548.6 402 Q 550.4 435 520 438.8 L 250 446.8 Q 229 447.4 220.6 432" fill="none" stroke="${INK}" stroke-width="7.4" stroke-linecap="round" pointer-events="none"/>
   <path d="M 214.6 406 L 207.8 186 Q 207 156.4 236 155.6 L 498 155.6 Q 522.6 155.6 527.6 176" fill="none" stroke="#dfe5e9" stroke-width="1.8" opacity=".6" pointer-events="none"/>
 
-  
-  <g pointer-events="none" fill="none" stroke-linecap="round"><path class="pb-m" d="M 210 245 Q 204.5 308 210.6 371" stroke="#07090b" stroke-width="4.2"/><path class="pb-f" display="none" d="M 210.4 261 Q 205.4 308 210.8 353" stroke="#07090b" stroke-width="4.2"/></g>
   
   <g class="gnt-lip" transform="rotate(-.8 372 163)">
     ${wornPaper(298,150.6,148,24.4,{torn:["tr","bl"],rivets:[303.4,440.6],stain:[310.6,155.2,3.8],crease:[432,429.6]})}
@@ -353,40 +339,32 @@ ${valveTagSVG()}
 
   
   <g id="gnt-boomg">
-    <rect x="222" y="289" width="16" height="94" fill="#07090b"/>
-    <g class="gnt-lip">
-      <rect x="226.6" y="289" width="6.8" height="94" fill="#56606a" stroke="${INK}" stroke-width="1"/>
-      <path d="M 223.4 289 C 221.6 314 225.4 330 223.2 352 S 224.4 372 223.4 383" fill="none" stroke="${INK}" stroke-width="2.8"/>
-      <path d="M 223.4 289 C 221.6 314 225.4 330 223.2 352 S 224.4 372 223.4 383" fill="none" stroke="#d8402a" stroke-width="1.4"/>
-      <path d="M 236.6 289 C 238.6 310 235 336 236.8 356 S 235.6 374 236.6 383" fill="none" stroke="${INK}" stroke-width="2.8"/>
-      <path d="M 236.6 289 C 238.6 310 235 336 236.8 356 S 235.6 374 236.6 383" fill="none" stroke="#3aa0e0" stroke-width="1.4"/>
-    </g>
-    <rect class="bseg" data-z="g" x="223.5" y="374.8" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="g" x="223.5" y="367.2" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="g" x="223.5" y="359.6" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="g" x="223.5" y="352.0" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="g" x="223.5" y="344.4" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="g" x="223.5" y="336.8" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="a" x="223.5" y="329.2" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="a" x="223.5" y="321.6" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="a" x="223.5" y="314.0" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="r" x="223.5" y="306.4" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="r" x="223.5" y="298.8" width="13" height="5.8" rx="1.4"/>
-    <rect class="bseg" data-z="r" x="223.5" y="291.2" width="13" height="5.8" rx="1.4"/>
-    <circle cx="230" cy="275.6" r="8" fill="#1b2126" stroke="${INK}" stroke-width="2.6" pointer-events="none"/>
-    <path d="M 235.66 269.94 A 8 8 0 0 1 224.34 281.26" fill="none" stroke="#79838b" stroke-width="1.8" pointer-events="none"/>
-    <circle id="boom-lamp" cx="230" cy="275.6" r="5.4" fill="#33110c" stroke="${INK}" stroke-width="1.6"/>
-    <circle cx="228.3" cy="273.9" r="1.1" fill="#fff" opacity=".45" pointer-events="none"/>
+    <rect x="221" y="267.4" width="17.2" height="118" rx="4.6" transform="translate(1.2 1.8)" fill="${INK}" opacity=".5" pointer-events="none"/>
+    <rect x="221" y="267.4" width="17.2" height="118" rx="4.6" fill="#6d777f" stroke="${INK}" stroke-width="2"/>
+    <path d="M 222.8 382 V 272 Q 222.8 269.2 225.6 269.2 H 233.6" fill="none" stroke="#c7d0d6" stroke-width="1.3" stroke-linecap="round" pointer-events="none"/>
+    <circle cx="229.6" cy="278.2" r="6.2" fill="#1b2126" stroke="${INK}" stroke-width="1.8" pointer-events="none"/>
+    <circle id="boom-lamp" cx="229.6" cy="278.2" r="4.6" fill="#33110c" stroke="${INK}" stroke-width="1.2"/>
+    <circle cx="228.2" cy="276.8" r="1" fill="#fff" opacity=".55" pointer-events="none"/>
+    <rect x="224.2" y="287.4" width="10.8" height="88.2" rx="1.8" fill="#07090b" stroke="${INK}" stroke-width="1.4" pointer-events="none"/>
+    <rect class="bseg" data-z="g" x="225.4" y="368.2" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="g" x="225.4" y="361.0" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="g" x="225.4" y="353.8" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="g" x="225.4" y="346.6" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="g" x="225.4" y="339.4" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="g" x="225.4" y="332.2" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="a" x="225.4" y="325.0" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="a" x="225.4" y="317.8" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="a" x="225.4" y="310.6" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="r" x="225.4" y="303.4" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="r" x="225.4" y="296.2" width="8.4" height="5.6" rx="1.2"/>
+    <rect class="bseg" data-z="r" x="225.4" y="289.0" width="8.4" height="5.6" rx="1.2"/>
     
-    <g pointer-events="none" transform="rotate(-1.4 230.6 397.4)">
-      <rect x="215.4" y="390.4" width="30.4" height="14" rx="2" fill="#c2361f" stroke="${INK}" stroke-width="1.8"/>
-      <path d="M 242.4 390.9 L 245.3 390.9 L 245.3 394.4 L 243.9 393.5 Z M 215.9 400.2 L 218.6 403.9 L 215.9 403.9 Z" fill="#4d575f"/>
-      <path d="M 241.8 400.6 l 2.4 -1.1 M 217.4 392.6 l 3.2 .6" stroke="#f0a898" stroke-width=".8" stroke-linecap="round" opacity=".8"/>
-      <text x="230.6" y="401.2" text-anchor="middle" style="font-family:var(--f-display)" font-size="9.6" font-weight="700" letter-spacing=".8" fill="#fff4e0">BOOM</text>
+    <g pointer-events="none">
+      <rect x="219.2" y="379.6" width="21.6" height="12.4" rx="1.8" transform="translate(.9 1.3)" fill="${INK}" opacity=".5"/>
+      <rect x="219.2" y="379.6" width="21.6" height="12.4" rx="1.8" fill="#c2361f" stroke="${INK}" stroke-width="1.6"/>
+      <text x="230" y="389.2" text-anchor="middle" style="font-family:var(--f-display)" font-size="8.6" font-weight="700" letter-spacing=".2" fill="#fff4e0">BOOM</text>
     </g>
   </g>
-  <g class="gnt-lip"><path d="M 222 289 H 238 V 293 L 234 295 H 225 L 223.8 297 V 383 H 222 Z" fill="#000" opacity=".5"/></g>
-  ${LIP("B",222,289,238,383,3,4,5)}
   
   <path d="M 256 348 H 397 V 393 H 256 Z" fill="#161b20"/>
   <rect id="tray-slot" x="256" y="348" width="141" height="45" rx="6" fill="#161b20"/>
@@ -491,6 +469,8 @@ ${valveTagSVG()}
     </g>
   </g>
 </g>
+
+${valveTagSVG()}
 </svg>`}function vzKit(c){const fx=c[1]==="r",fy=c[0]==="b",X=x=>+(fx?400-x:x).toFixed(1),Y=y=>+(fy?320-y:y).toFixed(1),pl=pts=>"M "+pts.map(([x,y])=>X(x)+" "+Y(y)).join(" L "),ta=fx?"end":"start",txt=(x,y,s)=>`<text class="k-t" x="${X(x)}" y="${(fy?320-y+7:y).toFixed(1)}" text-anchor="${ta}">${s}</text>`,rulerH=(x0,x1,y)=>{let d=pl([[x0,y],[x1,y]]);for(let x=x0,i=0;x<=x1;x+=6,i++)d+=" "+pl([[x,y],[x,y+(i%5?4:8)]]);return d},rulerV=(y0,y1,x)=>{let d=pl([[x,y0],[x,y1]]);for(let y=y0,i=0;y<=y1;y+=6,i++)d+=" "+pl([[x,y],[x+(i%5?4:8),y]]);return d},hex=(cx,cy,r)=>pl([0,1,2,3,4,5].map(k=>[cx+r*Math.cos(k*Math.PI/3),cy+r*Math.sin(k*Math.PI/3)]))+" Z",bars=(x,y,hs)=>hs.map((h,i)=>{const xx=x+i*4;return`<rect x="${Math.min(X(xx),X(xx+2))}" y="${fy?Y(y):Y(y)-h}" width="2" height="${h}"/>`}).join(""),K={tl:{ex:16,ey:16,ax:176,ay:156,tailX:1,tailY:1,hex:[54,60],rH:[256,376,12],rV:[228,300,12],g:[[192,48,"07.24 : 31"],[34,226,"T+00"]],bars:[192,58,[5,8,3,9,6]]},tr:{ex:12,ey:10,ax:88,ay:214,tailX:0,tailY:1,hex:null,rH:null,rV:[292,372,10],g:[[26,248,"48.6"]],bars:[26,262,[4,7,9,5]]},bl:{ex:16,ey:16,ax:118,ay:150,tailX:0,tailY:1,hex:null,rH:null,rV:[222,282,12],g:[],bars:null},br:{ex:16,ey:16,ax:172,ay:172,tailX:1,tailY:1,hex:[54,60],rH:[248,340,12],rV:[244,304,12],g:[[190,48,"0x3F  12"],[34,244,"N 04"]],bars:[190,58,[7,4,8,5]]}}[c],e=K.ex,t=K.ey;let br=pl([[e,K.ay],[e,t+22],[e+22,t],[K.ax,t]]),thin="",x2="",hx="";if(K.tailX&&(thin+=pl([[K.ax,t],[K.ax+10,t+10],[K.ax+58,t+10]])+" "),K.tailY&&(thin+=pl([[e,K.ay],[e+10,K.ay+10],[e+10,K.ay+54]])+" "),thin+=pl([[e+14,t+82],[e+14,t+36],[e+36,t+14],[e+82,t+14]]),K.rH&&(x2+=rulerH(K.rH[0],K.rH[1],K.rH[2])+" "),K.rV&&(x2+=rulerV(K.rV[0],K.rV[1],K.rV[2])),K.hex){const[hx0,hy0]=K.hex,r=7.5,dx=r*1.5,dy=r*Math.sqrt(3)/2;hx=`<path class="k-b" d="${hex(hx0,hy0,r)} ${hex(hx0+dx,hy0-dy,r)} ${hex(hx0+dx,hy0+dy,r)} ${hex(hx0+2*dx,hy0-2*dy,r)}"/><path class="k-bf" d="${hex(hx0+2*dx,hy0,r)}"/>`}const caps=[];return K.tailX&&caps.push([K.ax+58,t+10]),K.tailY&&caps.push([e+10,K.ay+54]),`<svg class="vz-kit" viewBox="0 0 400 320" width="400" height="320" aria-hidden="true">
       <path class="k-ink" d="${br}"/><path class="k-off" d="${br}" transform="translate(3 3)"/><path class="k-c" d="${br}"/>
       ${caps.map(([x,y])=>`<rect class="k-cap" x="${X(x)-2.5}" y="${Y(y)-2.5}" width="5" height="5"/>`).join("")}
