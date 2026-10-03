@@ -1467,6 +1467,16 @@
    "to": "Arraste <b>$1</b> do seu caso para a gaveta aberta."
   },
   {
+   "re": "Drag <b>(.+)</b> from your case into the open folder\\.",
+   "flags": "g",
+   "to": "Arraste <b>$1</b> da sua maleta para a pasta aberta."
+  },
+  {
+   "re": "Click the folder <b>([IVXLC]+)</b> to open it\\.",
+   "flags": "g",
+   "to": "Clique na pasta <b>$1</b> para abri-la."
+  },
+  {
    "re": "<b>(.+)</b>: take back a card from the recycled pile\\.",
    "flags": "g",
    "to": "<b>$1</b>: pegue de volta uma carta da pilha de recicladas."
