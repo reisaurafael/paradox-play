@@ -85,7 +85,31 @@
         <path d="M 572 256 Q 578 296 574 338" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.5" stroke-linecap="round" opacity=".45"/>
         <path d="${H.cuff}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="5" opacity=".4"/>
         <path d="M 570 260 L 590 257 M 572 334 L 592 336" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-linecap="round"/>`)}
-      <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}>${open}${grab}${glove}</g></g>`}function celInk(ds){const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;return g("2.4 3.4",5.4)+g("-.3 .5",4.4)}function handArtSVG(p,cls){return`${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`}function handShadow(cls){const H=HAND_PATHS,sil=(...ds)=>ds.map(d=>`<path d="${d}"/>`).join("");return["m","f"].map(b=>{const m=b==="m";return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}><g class="${cls}-open">${sil(H.wrist,H.back,H.fingers,H.thumb,H.glove,H.cuff)}</g><g class="${cls}-grab">${sil(H.wrist,H.fist,H.fistThumb,H.glove,H.cuff)}</g></g></g>`}).join("")}const ERA_SEALS=[["Origins","O","#b98a45"],["Ascension","A","#3f9c7c"],["Singularity","S","#7d68c2"]],VALVE_SEAT={m:[607,291,.8],f:[593.4,291,.66]};function valveSVG(){const C=[192,304],R=Math.PI/180,f=v=>v.toFixed(2),at=(r,a)=>[C[0]+r*Math.cos(a*R),C[1]+r*Math.sin(a*R)],arc=(r,a0,a1)=>{const p=at(r,a0),q=at(r,a1);return`M ${f(p[0])} ${f(p[1])} A ${r} ${r} 0 0 1 ${f(q[0])} ${f(q[1])}`},studs=[...Array(10)].map((_,i)=>{const[x,y]=at(30.1,-90+36*i);return[+x.toFixed(2),+y.toFixed(2)]}),halos=studs.map(([x,y],i)=>`<g class="vc-halo" data-i="${i}"><circle cx="${x}" cy="${y}" r="6.6" opacity=".38"/><circle cx="${x}" cy="${y}" r="5.1" opacity=".62"/></g>`).join(""),pips=studs.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="3.9" fill="#c29a4e" stroke="${INK}" stroke-width="1.1"/><circle class="vc-pip" data-i="${i}" cx="${x}" cy="${y}" r="2.9"/><circle class="vc-core" cx="${f(x-.35)}" cy="${f(y-.35)}" r="1.55"/><path class="vc-dome" d="M ${f(x+2.2)} ${f(y-1.2)} A 2.5 2.5 0 0 1 ${f(x-1.2)} ${f(y+2.2)} A 3.2 3.2 0 0 0 ${f(x+2.2)} ${f(y-1.2)} Z"/><circle class="vc-glint" cx="${f(x-1.05)}" cy="${f(y-1.1)}" r=".7"/>`).join(""),np='style="pointer-events:none"',rivets=[45,135,225,315].map(a=>{const[x,y]=at(30.1,a);return`<circle cx="${f(x)}" cy="${f(y)}" r="1.6"/>`}).join(""),sp=[90,150,210].map(a=>{const p=at(13,a),q=at(13,a+180);return`<line x1="${f(p[0])}" y1="${f(p[1])}" x2="${f(q[0])}" y2="${f(q[1])}"/>`}).join(""),[mx,my,ms]=VALVE_SEAT.m;return`<g class="gnt-vseat" transform="translate(${mx} ${my}) scale(${ms}) translate(${-C[0]} ${-C[1]})">
+      <circle cx="581" cy="296" r="5.4" fill="#c9a04e" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`;return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}>${open}${grab}${glove}</g></g>`}function celInk(ds){const g=(t,w)=>`<g fill="${LINE}" stroke="${LINE}" stroke-width="${w}" stroke-linejoin="round" transform="translate(${t})" pointer-events="none">${ds.map(d=>`<path d="${d}"/>`).join("")}</g>`;return g("2.4 3.4",5.4)+g("-.3 .5",4.4)}function handArtSVG(p,cls){return`${handBuild(p,cls,"m")}${handBuild(p,cls,"f")}`}function handShadow(cls){const H=HAND_PATHS,sil=(...ds)=>ds.map(d=>`<path d="${d}"/>`).join("");return["m","f"].map(b=>{const m=b==="m";return`<g class="pb-${b}"${m?"":' display="none"'}><g${m?' transform="translate(560 300) scale(1.05) translate(-560 -300)"':' transform="translate(560 300) scale(.88 .76) translate(-560 -300)"'}><g class="${cls}-open">${sil(H.wrist,H.back,H.fingers,H.thumb,H.glove,H.cuff)}</g><g class="${cls}-grab">${sil(H.wrist,H.fist,H.fistThumb,H.glove,H.cuff)}</g></g></g>`}).join("")}const ERA_SEALS=[["Origins","O","#b98a45"],["Ascension","A","#3f9c7c"],["Singularity","S","#7d68c2"]],SEAL_X=231,SEAL_Y=[354.4,378.8,403.2],f1=v=>+v.toFixed(1),VALVE_SEAT={m:[601,297.5,.8],f:[591,298,.66]},VALVE_PLUG={a:144,r0:35.6,r1:49};function valveSVG(){const C=[192,304],R=Math.PI/180,f=v=>v.toFixed(2),at=(r,a)=>[C[0]+r*Math.cos(a*R),C[1]+r*Math.sin(a*R)],arc=(r,a0,a1)=>{const p=at(r,a0),q=at(r,a1);return`M ${f(p[0])} ${f(p[1])} A ${r} ${r} 0 0 1 ${f(q[0])} ${f(q[1])}`},studs=[...Array(10)].map((_,i)=>{const[x,y]=at(30.1,-90+36*i);return[+x.toFixed(2),+y.toFixed(2)]}),halos=studs.map(([x,y],i)=>`<g class="vc-halo" data-i="${i}"><circle cx="${x}" cy="${y}" r="6.6" opacity=".38"/><circle cx="${x}" cy="${y}" r="5.1" opacity=".62"/></g>`).join(""),pips=studs.map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="3.9" fill="#c29a4e" stroke="${INK}" stroke-width="1.1"/><circle class="vc-pip" data-i="${i}" cx="${x}" cy="${y}" r="2.9"/><circle class="vc-core" cx="${f(x-.35)}" cy="${f(y-.35)}" r="1.55"/><path class="vc-dome" d="M ${f(x+2.2)} ${f(y-1.2)} A 2.5 2.5 0 0 1 ${f(x-1.2)} ${f(y+2.2)} A 3.2 3.2 0 0 0 ${f(x+2.2)} ${f(y-1.2)} Z"/><circle class="vc-glint" cx="${f(x-1.05)}" cy="${f(y-1.1)}" r=".7"/>`).join(""),np='style="pointer-events:none"',rivets=[45,135,225,315].map(a=>{const[x,y]=at(30.1,a);return`<circle cx="${f(x)}" cy="${f(y)}" r="1.6"/>`}).join(""),sp=[90,150,210].map(a=>{const p=at(13,a),q=at(13,a+180);return`<line x1="${f(p[0])}" y1="${f(p[1])}" x2="${f(q[0])}" y2="${f(q[1])}"/>`}).join(""),[mx,my,ms]=VALVE_SEAT.m,crease=[200,240,290,330,20,70,110,165].map((a,i)=>{const p=at(46.4,a),q=at(i%2?51:49.8,a+(i%2?-5:4));return`M ${f(p[0])} ${f(p[1])} L ${f(q[0])} ${f(q[1])}`}).join(" "),P=VALVE_PLUG,p0=at(P.r0,P.a),p1=at(P.r1,P.a);return`<g class="gnt-vseat" transform="translate(${mx} ${my}) scale(${ms}) translate(${-C[0]} ${-C[1]})">
+  
+  <g class="gnt-lip">
+    <circle cx="${C[0]+2.4}" cy="${C[1]+3.4}" r="44.2" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="5.6"/>
+    <circle cx="${C[0]}" cy="${C[1]}" r="40" fill="#7b858d"/>
+    <path d="${arc(30.6,-15,105)}" fill="none" stroke="#626c74" stroke-width="11"/>
+    <path d="${arc(38.2,150,300)}" fill="none" stroke="#c7d0d6" stroke-width="3.2"/>
+    <path d="${arc(38.2,-30,120)}" fill="none" stroke="#3f484f" stroke-width="3.2"/>
+    <circle cx="${C[0]}" cy="${C[1]}" r="36.4" fill="none" stroke="${INK}" stroke-width="1.3"/>
+    <circle cx="${C[0]}" cy="${C[1]}" r="24.4" fill="none" stroke="${INK}" stroke-width="1.3"/>
+    
+    <circle cx="${C[0]}" cy="${C[1]}" r="41" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="2.2"/>
+    <circle cx="${C[0]}" cy="${C[1]}" r="43.6" fill="none" style="stroke:var(--glove,#4a6fa8)" stroke-width="4"/>
+    <path d="${arc(43.4,140,315)}" fill="none" style="stroke:color-mix(in srgb, var(--glove,#4a6fa8) 45%, #fff6dc)" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="${arc(43.2,190,250)}" fill="none" stroke="#fff6dc" stroke-width="1.1" stroke-linecap="round" opacity=".85"/>
+    <path d="${arc(44.2,-40,130)}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="${crease}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
+    <circle cx="${C[0]}" cy="${C[1]}" r="40" fill="none" stroke="${INK}" stroke-width="1.8"/>
+    <path d="${arc(45.8,-50,140)}" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="${arc(45.8,140,310)}" fill="none" style="stroke:var(--glove-dk,#2c4166)" stroke-width="1.3" stroke-linecap="round" opacity=".8"/>
+    
+    <path d="M ${f(p0[0])} ${f(p0[1])} L ${f(p1[0])} ${f(p1[1])}" stroke="${INK}" stroke-width="8.6" stroke-linecap="round"/>
+    <path d="M ${f(p0[0])} ${f(p0[1])} L ${f(p1[0])} ${f(p1[1])}" stroke="#aab4bb" stroke-width="5" stroke-linecap="round"/>
+    <path d="M ${f(p0[0]+1)} ${f(p0[1]-1.4)} L ${f(p1[0])} ${f(p1[1]-1.4)}" stroke="#eef2f4" stroke-width="1.1" stroke-linecap="round"/>
+  </g>
   
   <g id="gnt-vctr">
     
@@ -107,9 +131,12 @@
   </g>
   <g id="gnt-vent">
     <circle cx="${C[0]}" cy="${C[1]}" r="23.6" fill="#c29a4e" stroke="${INK}" stroke-width="3"/>
-    <path d="${arc(20.8,-24,112)}" fill="none" stroke="#8a6a2c" stroke-width="3.6" ${np}/>
-    <path d="${arc(20.6,192,262)}" fill="none" stroke="#f6e2a8" stroke-width="2" stroke-linecap="round" ${np}/>
-    <circle cx="${C[0]}" cy="${C[1]}" r="17.8" fill="#1b130c" stroke="${INK}" stroke-width="1.8"/>
+    <path d="${arc(22,-24,112)}" fill="none" stroke="#8a6a2c" stroke-width="2.4" ${np}/>
+    <path d="${arc(22,192,262)}" fill="none" stroke="#f6e2a8" stroke-width="1.4" stroke-linecap="round" ${np}/>
+    
+    <circle cx="${C[0]}" cy="${C[1]}" r="20.2" style="fill:var(--stud,#ffb347)" stroke="${INK}" stroke-width="1.8"/>
+    <circle cx="${C[0]}" cy="${C[1]}" r="15.2" style="fill:var(--stud-hot,#fff3d6)" ${np}/>
+    <circle cx="${C[0]}" cy="${C[1]}" r="18" fill="none" stroke="${INK}" stroke-width=".8" opacity=".35" ${np}/>
     
     <g class="vent-cabin" ${np}>
       <rect x="179.5" y="291.5" width="25" height="25" rx="3" fill="#07090b" stroke="${INK}" stroke-width="2"/>
@@ -145,20 +172,15 @@
     <path d="${arc(3.4,-20,110)}" fill="none" stroke="#7a1d10" stroke-width="1.8" ${np}/>
     <path d="${arc(3.2,200,250)}" fill="none" stroke="#ffc2a8" stroke-width="1" stroke-linecap="round" ${np}/>
     <circle cx="${C[0]}" cy="${C[1]}" r="1.4" fill="${INK}" ${np}/>
-    
-    <circle cx="${C[0]}" cy="${C[1]}" r="17.8" fill="#cfefff" opacity=".3" ${np}/>
-    <path d="${arc(13.2,196,254)}" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" ${np}/>
     </g>
     </g>
   </g>
-</g>`}const VALVE_SOCKET=[527,321],VALVE_CABLE={m:{plug:[591.7,302.1,585,307],d:"M 585 307 C 575 314.6 562 326.4 548 325.2 C 540.4 324.6 536.6 321.6 533 321"},f:{plug:[579.4,306.7,573.9,310.7],d:"M 573.9 310.7 C 566 316.4 556 325.6 546.6 324.8 C 539.8 324.2 536.4 321.6 533 321"}};function valveTagSVG(){const pt=(window.__pdxLang||document.documentElement.lang)==="pt",lines=pt?["VÁLVULA","DE ESCAPE"]:["ESCAPE","VALVE"],fs=pt?6.6:8.2,lh=pt?7.6:8.8,P=7,hh=10.6,L=44,tag=`M 0 0 L ${-P} ${-hh} L ${-L} ${-hh+.3} L ${-L-.3} ${hh-3.2} L ${-L+1.6} ${hh-1.3} L ${-L+3.4} ${hh+.2} L ${-P} ${hh} Z`,tx=-(L+P)/2+.6,ty=-(lines.length-1)*lh/2+fs*.36,[sx,sy]=VALVE_SOCKET,R=Math.PI/180,f=v=>+v.toFixed(2),cable=b=>{const C=VALVE_CABLE[b],[x0,y0,x1,y1]=C.plug;return`<g class="pb-${b}"${b==="m"?"":' display="none"'}>
-    <path d="${C.d}" transform="translate(1.2 1.8)" fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round" opacity=".45"/>
-    <path d="${C.d}" fill="none" stroke="${INK}" stroke-width="4.4" stroke-linecap="round"/>
-    <path d="${C.d}" fill="none" stroke="#a8321f" stroke-width="2.2" stroke-linecap="round"/>
-    <path d="${C.d}" transform="translate(-.4 -.6)" fill="none" stroke="#f08a6c" stroke-width=".7" stroke-linecap="round" opacity=".85"/>
-    <path d="M ${x0} ${y0} L ${x1} ${y1}" stroke="${INK}" stroke-width="5.4" stroke-linecap="round"/>
-    <path d="M ${x0} ${y0} L ${x1} ${y1}" stroke="#aab4bb" stroke-width="3" stroke-linecap="round"/>
-  </g>`},ring=`M ${sx-6.4} ${sy} A 6.4 6.4 0 1 0 ${sx+6.4} ${sy} A 6.4 6.4 0 1 0 ${sx-6.4} ${sy} Z M ${sx-3.2} ${sy} A 3.2 3.2 0 1 1 ${sx+3.2} ${sy} A 3.2 3.2 0 1 1 ${sx-3.2} ${sy} Z`;return`<g class="gnt-vplug" style="pointer-events:none">
+</g>`}const VALVE_SOCKET=[527,321],VALVE_TAG=[543.6,287,11.5];function valveTagSVG(){const pt=(window.__pdxLang||document.documentElement.lang)==="pt",lines=pt?["VÁLVULA","DE ESCAPE"]:["ESCAPE","VALVE"],fs=pt?5.9:7.6,lh=pt?6.8:8,P=7,hh=9.4,L=36,tag=`M 0 0 L ${-P} ${-hh} L ${-L} ${-hh+.3} L ${-L-.3} ${hh-3} L ${-L+1.5} ${hh-1.2} L ${-L+3.2} ${hh+.2} L ${-P} ${hh} Z`,tx=-(L+P)/2+.4,ty=-(lines.length-1)*lh/2+fs*.36,[sx,sy]=VALVE_SOCKET,R=Math.PI/180,f=v=>+v.toFixed(2),cable=b=>{const[vx,vy,vs]=VALVE_SEAT[b],a=VALVE_PLUG.a*R,r=VALVE_PLUG.r1-1,x0=f(vx+vs*r*Math.cos(a)),y0=f(vy+vs*r*Math.sin(a)),ex=sx+8,d=`M ${x0} ${y0} C ${f(x0-9)} ${f(y0+3.4)} ${f(ex+10)} ${sy+.6} ${ex} ${sy}`;return`<g class="pb-${b}"${b==="m"?"":' display="none"'}>
+    <path d="${d}" transform="translate(1.2 1.8)" fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round" opacity=".45"/>
+    <path d="${d}" fill="none" stroke="${INK}" stroke-width="4.6" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="#a8321f" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="${d}" transform="translate(-.4 -.6)" fill="none" stroke="#f08a6c" stroke-width=".7" stroke-linecap="round" opacity=".85"/>
+  </g>`},ring=`M ${sx-6.4} ${sy} A 6.4 6.4 0 1 0 ${sx+6.4} ${sy} A 6.4 6.4 0 1 0 ${sx-6.4} ${sy} Z M ${sx-3.2} ${sy} A 3.2 3.2 0 1 1 ${sx+3.2} ${sy} A 3.2 3.2 0 1 1 ${sx-3.2} ${sy} Z`,[gx,gy,ga]=VALVE_TAG;return`<g class="gnt-lip gnt-vplug">
     <circle cx="${sx+1}" cy="${sy+1.5}" r="6.6" fill="${INK}" opacity=".5"/>
     <circle cx="${sx}" cy="${sy}" r="3.6" fill="#07090b"/>
     ${cable("m")}${cable("f")}
@@ -168,8 +190,8 @@
     <path d="${ring}" fill-rule="evenodd" fill="#8b959d" stroke="${INK}" stroke-width="1.6"/>
     <path d="M ${f(sx-4.8*Math.cos(30*R))} ${f(sy-4.8*Math.sin(30*R))} A 4.8 4.8 0 0 1 ${f(sx+4.8*Math.cos(60*R))} ${f(sy-4.8*Math.sin(60*R))}" fill="none" stroke="#e4eaee" stroke-width="1.2" stroke-linecap="round"/>
   </g>
-  <g class="gnt-vtag" style="pointer-events:none" transform="translate(551.5 276) rotate(11)">
-    <path d="${tag}" transform="translate(.9 1.2)" fill="${INK}" opacity=".45"/>
+  <g class="gnt-lip gnt-vtag" transform="translate(${gx} ${gy}) rotate(${ga})">
+    <path d="${tag}" transform="translate(.9 1.2)" fill="${INK}" opacity=".5"/>
     <path d="${tag}" fill="#f4e8c8" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>
     <text x="${f(tx)}" y="${f(ty)}" text-anchor="middle" style="font-family:var(--f-display)" font-size="${fs}" font-weight="700" letter-spacing=".2" fill="#120c06">${lines.map((l,i)=>`<tspan x="${f(tx)}" dy="${i?lh:0}">${l}</tspan>`).join("")}</text>
   </g>`}function sealSVG(cx,cy,i){const[key,g,col]=ERA_SEALS[i],arc=(r,a0,a1)=>{const P=t=>`${(cx+r*Math.cos(t*Math.PI/180)).toFixed(2)} ${(cy+r*Math.sin(t*Math.PI/180)).toFixed(2)}`;return`M ${P(a0)} A ${r} ${r} 0 0 1 ${P(a1)}`};return`<g class="gnt-seal" data-period="${key}">
@@ -221,7 +243,7 @@
       ${hatch(`M -96 ${y1-2} l 8 -10 M -84 ${y1} l 8 -10 M -72 ${y1+1} l 8 -10`)}`)}
     ${m?"":`<circle cx="-40" cy="${mid}" r="5" fill="#fbf7ef" stroke="${LINE}" stroke-width="1.8" pointer-events="none"/>`}
     </g>
-  </g>`}const CUFF={m:{L:174,t:244,u:372},f:{L:181,t:260,u:354}},CUFF_R=218,CUFF_BOW=6,cuffD=b=>{const{L,t,u}=CUFF[b],mid=(t+u)/2,c=(L+CUFF_R)/2;return`M ${CUFF_R} ${t} Q ${c} ${t-2.6} ${L+3} ${t+.6} Q ${L} ${t+1.2} ${L} ${t+5} Q ${L+2*CUFF_BOW} ${mid} ${L} ${u-5} Q ${L} ${u-1.2} ${L+3} ${u-.6} Q ${c} ${u+2.6} ${CUFF_R} ${u} Z`};function strapSVG(b){const{L,t,u}=CUFF[b],d=cuffD(b),mid=(t+u)/2,f=v=>+v.toFixed(1),R=CUFF_R+4,c=(L+CUFF_R)/2,sh=f(u-(u-t)*.27),ht=f(sh-9),ex=y=>{const s=(y-t-5)/(u-t-10);return L+4*CUFF_BOW*s*(1-s)},rivet=(x,y)=>`<circle cx="${f(x+.8)}" cy="${f(y+1.2)}" r="2.6" fill="${INK}" opacity=".5"/><circle cx="${f(x)}" cy="${f(y)}" r="2.5" fill="#8b959d" stroke="${INK}" stroke-width="1.2"/><circle cx="${f(x-.8)}" cy="${f(y-.8)}" r=".8" fill="#e4eaee"/>`,ry=[f(t+18),f(u-18)];return`<g class="pb-${b}"${b==="m"?"":' display="none"'}>
+  </g>`}const CUFF={m:{L:172,t:244,u:372},f:{L:179,t:260,u:354}},CUFF_R=218,CUFF_BOW=6,cuffD=b=>{const{L,t,u}=CUFF[b],mid=(t+u)/2,c=(L+CUFF_R)/2;return`M ${CUFF_R} ${t} Q ${c} ${t-2.6} ${L+3} ${t+.6} Q ${L} ${t+1.2} ${L} ${t+5} Q ${L+2*CUFF_BOW} ${mid} ${L} ${u-5} Q ${L} ${u-1.2} ${L+3} ${u-.6} Q ${c} ${u+2.6} ${CUFF_R} ${u} Z`};function strapSVG(b){const{L,t,u}=CUFF[b],d=cuffD(b),mid=(t+u)/2,f=v=>+v.toFixed(1),R=CUFF_R+4,c=(L+CUFF_R)/2,sh=f(u-(u-t)*.27),ht=f(sh-9),ex=y=>{const s=(y-t-5)/(u-t-10);return L+4*CUFF_BOW*s*(1-s)},rivet=(x,y)=>`<circle cx="${f(x+.8)}" cy="${f(y+1.2)}" r="2.6" fill="${INK}" opacity=".5"/><circle cx="${f(x)}" cy="${f(y)}" r="2.5" fill="#8b959d" stroke="${INK}" stroke-width="1.2"/><circle cx="${f(x-.8)}" cy="${f(y-.8)}" r=".8" fill="#e4eaee"/>`,ry=[f(t+18),f(u-18)];return`<g class="pb-${b}"${b==="m"?"":' display="none"'}>
   
   <path d="${d}" transform="translate(1.6 2.4)" style="fill:${INK};pointer-events:none"/>
   <path d="${d}" style="fill:var(--glove,#4a6fa8)" stroke="${INK}" stroke-width="2.8"/>
@@ -236,13 +258,25 @@
       <path d="M ${L-4} ${sh} Q ${c} ${sh+6} ${R} ${sh+2} V ${u+8} H ${L-4} Z" style="fill:var(--glove-dk,#2c4166)" opacity=".9"/>
       <path d="M ${L-4} ${u-5} Q ${c} ${u-1} ${R} ${u-4} V ${u+8} H ${L-4} Z" fill="${INK}" opacity=".35"/>
       
-      <path d="M ${f(ex(t+6)+2)} ${t+6} Q ${L+2*CUFF_BOW+2} ${mid} ${f(ex(u-6)+2)} ${u-6}" fill="none" style="stroke:color-mix(in srgb, var(--glove,#4a6fa8) 50%, #fff6dc)" stroke-width="3"/>
+      <path d="M ${f(ex(t+2)+1.6)} ${t-2} Q ${L+2*CUFF_BOW+1.6} ${mid} ${f(ex(u-2)+1.6)} ${u+2}" fill="none" style="stroke:var(--glove-trim,#d8c8a0)" stroke-width="5"/>
+      <path d="M ${f(ex(t+2)+4.2)} ${t-2} Q ${L+2*CUFF_BOW+4.2} ${mid} ${f(ex(u-2)+4.2)} ${u+2}" fill="none" stroke="${INK}" stroke-width="1.1" opacity=".7"/>
       <path d="${d}" fill="none" stroke="${INK}" stroke-width="3.4"/>
     </g>
     
     <path d="M ${L+6} ${t+2.6} Q ${c} ${t-.4} ${CUFF_R-6} ${t+2.2}" fill="none" stroke="#fff6dc" stroke-width="2" stroke-linecap="round" opacity=".85"/>
     ${rivet(ex(ry[0])+9,ry[0])}${rivet(ex(ry[1])+9,ry[1])}
   </g>
+  </g>`}function clampSVG(side,b,y0,y1){const r=side==="r",W=r?4:12,B=8.6,N=24,f=v=>+v.toFixed(1),edge=y=>r?534+14*(y-182)/220+13:204+12*(y-182)/232,g=s=>Math.pow(Math.max(0,1-Math.pow(Math.abs(2*s-1),3)),1/3),dir=r?1:-1,ys=i=>y0+(y1-y0)*i/N,out=[...Array(N+1)].map((_,i)=>{const y=ys(i),q=g(i/N);return[f(edge(y)+dir*(W*Math.sqrt(q)+B*q)),f(y)]}),inn=[...Array(N+1)].map((_,i)=>{const y=ys(i);return[f(edge(y)-dir*(r?17:5)),f(y)]}),pl=pts=>pts.map(([x,y])=>`${x} ${y}`).join(" L "),band=`M ${pl(out)} L ${pl([...inn].reverse())} Z`,k=Math.round(N*.52),k0=Math.round(N*.24),lower=`M ${pl(out.slice(k))} L ${pl([...inn.slice(k)].reverse())} Z`,upper=`M ${pl(out.slice(0,k0+1))} L ${pl([...inn.slice(0,k0+1)].reverse())} Z`,roll=out.map(([x,y])=>[f(x-dir*3.6),y]),bolt=i=>{const y=ys(i),q=g(i/N),x=f(edge(y)+dir*(W*Math.sqrt(q)+B*q-(r?0:5))/2);return`<circle cx="${x}" cy="${f(y)}" r="2.6" fill="#aab4bb" stroke="${INK}" stroke-width="1.1"/><circle cx="${f(x-.8)}" cy="${f(y-.8)}" r=".8" fill="#eef2f4"/>`};return`<g class="gnt-lip pb-${b}"${b==="m"?"":' display="none"'}>
+    <path d="M ${pl(out)}" fill="none" stroke="${INK}" stroke-width="5" opacity=".35" transform="translate(${dir*1.6} 1.2)"/>
+    ${r?`<path d="${band}" transform="translate(3 4)" fill="${INK}" opacity=".42"/>`:""}
+    <path d="${band}" fill="#8b959d"/>
+    <path d="${upper}" fill="#aab4bb"/>
+    <path d="${lower}" fill="#5e6870"/>
+    <path d="M ${pl(roll.slice(1,N))}" fill="none" stroke="${INK}" stroke-width="1.3" opacity=".75"/>
+    <path d="M ${pl(out.slice(2,k-1))}" fill="none" stroke="#eef2f4" stroke-width="1.6" stroke-linecap="round" transform="translate(${-dir*1.6} .4)"/>
+    <path d="M ${pl(out)}" fill="none" stroke="${INK}" stroke-width="3"/>
+    <path d="M ${pl(out.slice(Math.round(N*.5)))}" fill="none" stroke="${INK}" stroke-width="4.4" stroke-linecap="round"/>
+    ${bolt(3.4)}${bolt(N-3.4)}
   </g>`}function castSVG(){const limb=b=>{const F=FOREARM[b],dx=b==="m"?100:110;return`<g class="pb-${b}"${b==="m"?"":' display="none"'}><g transform="translate(200 309) scale(1.05) translate(-200 -309)"><path d="${F.arm}"/><g transform="translate(${dx} 0)"><path d="${F.sleeve}"/><path d="${F.roll}"/></g></g><path d="${cuffD(b)}"/></g>`},sil=`${limb("m")}${limb("f")}<path d="${CASE}"/><path d="${CASE}" transform="translate(13 14)"/><g transform="translate(-36 0)"><g transform="translate(560 305) scale(1.05) translate(-560 -305)">${handShadow("hand")}</g></g>`;return`<g class="gnt-shadow gnt-cast" opacity=".5" pointer-events="none">
   <g transform="translate(21 28)" fill="url(#mnCastDots)">${sil}</g>
   <g transform="translate(13 18)" fill="#2a1608">${sil}</g>
@@ -282,19 +316,15 @@ ${castSVG()}
 
 <g>
   <g stroke="${INK}" stroke-width="15" stroke-linejoin="round" fill="${INK}">${EXT.map(t=>`<path d="${CASE}" transform="translate(${t})"/>`).join("")}</g>
-  <g fill="#262e34">${EXT.map(t=>`<path d="${CASE}" transform="translate(${t})"/>`).join("")}</g>
+  <g fill="#6a747b">${EXT.map(t=>`<path d="${CASE}" transform="translate(${t})"/>`).join("")}</g>
   
-  <g pointer-events="none"><path class="pb-m" d="M 547 234 Q 570 242 566 304 Q 570 368 550 378 Q 557 304 547 234 Z" fill="#07090b" stroke="${INK}" stroke-width="2.4"/>
-  <path class="pb-f" display="none" d="M 547 250 Q 568 258 564 304 Q 568 352 550 362 Q 556 304 547 250 Z" fill="#07090b" stroke="${INK}" stroke-width="2.4"/></g>
+  ${clampSVG("l","m",232,386)}${clampSVG("l","f",251,367)}
 </g>
 
 <g id="arm-hand" transform="translate(-36 0)"><g transform="translate(560 305) scale(1.05) translate(-560 -305)">${handArtSVG("mn","hand",!0)}</g>
 </g>
 
-<g pointer-events="none" fill="none" stroke-linecap="round"><g class="pb-m"><path d="M 549 236 Q 571 304 551 376" stroke="${INK}" stroke-width="4"/><path d="M 553 244 Q 570 304 554 368" stroke="#262e34" stroke-width="2.2"/></g>
-<g class="pb-f" display="none"><path d="M 549 252 Q 568 304 551 360" stroke="${INK}" stroke-width="4"/><path d="M 553 259 Q 567 304 554 353" stroke="#262e34" stroke-width="2.2"/></g></g>
-
-<path d="M 549 250 Q 565 252 575 260 L 581 364 Q 569 376 553 378 Z" fill="${INK}" opacity=".3" pointer-events="none"/>
+${clampSVG("r","m",228,366)}${clampSVG("r","f",247,350)}
 
 ${valveSVG()}
 
@@ -320,8 +350,8 @@ ${valveSVG()}
   </g>
 
   
-  <g class="gnt-lip">${[196,222,248].map(y=>`<circle cx="228" cy="${y}" r="13.8" fill="#161b1f" stroke="${INK}" stroke-width="2.6"/><path d="M 238.2 ${y-6.4} A 12 12 0 0 1 222 ${y+11}" fill="none" stroke="#8b959d" stroke-width="1.6" stroke-linecap="round"/>`).join("")}</g>
-  <g id="gnt-seals">${sealSVG(228,196,0)}${sealSVG(228,222,1)}${sealSVG(228,248,2)}</g>
+  <g class="gnt-lip">${SEAL_Y.map(y=>`<circle cx="${SEAL_X}" cy="${y}" r="12.4" fill="#161b1f" stroke="${INK}" stroke-width="2.4"/><path d="M ${SEAL_X+9.6} ${f1(y-5.2)} A 11 11 0 0 1 ${SEAL_X-5} ${f1(y+9.8)}" fill="none" stroke="#8b959d" stroke-width="1.5" stroke-linecap="round"/>`).join("")}</g>
+  <g id="gnt-seals">${SEAL_Y.map((y,i)=>sealSVG(SEAL_X,y,i)).join("")}</g>
 
   
   <g>
@@ -339,30 +369,30 @@ ${valveSVG()}
 
   
   <g id="gnt-boomg">
-    <rect x="221" y="267.4" width="17.2" height="118" rx="4.6" transform="translate(1.2 1.8)" fill="${INK}" opacity=".5" pointer-events="none"/>
-    <rect x="221" y="267.4" width="17.2" height="118" rx="4.6" fill="#6d777f" stroke="${INK}" stroke-width="2"/>
-    <path d="M 222.8 382 V 272 Q 222.8 269.2 225.6 269.2 H 233.6" fill="none" stroke="#c7d0d6" stroke-width="1.3" stroke-linecap="round" pointer-events="none"/>
-    <circle cx="229.6" cy="278.2" r="6.2" fill="#1b2126" stroke="${INK}" stroke-width="1.8" pointer-events="none"/>
-    <circle id="boom-lamp" cx="229.6" cy="278.2" r="4.6" fill="#33110c" stroke="${INK}" stroke-width="1.2"/>
-    <circle cx="228.2" cy="276.8" r="1" fill="#fff" opacity=".55" pointer-events="none"/>
-    <rect x="224.2" y="287.4" width="10.8" height="88.2" rx="1.8" fill="#07090b" stroke="${INK}" stroke-width="1.4" pointer-events="none"/>
-    <rect class="bseg" data-z="g" x="225.4" y="368.2" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="g" x="225.4" y="361.0" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="g" x="225.4" y="353.8" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="g" x="225.4" y="346.6" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="g" x="225.4" y="339.4" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="g" x="225.4" y="332.2" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="a" x="225.4" y="325.0" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="a" x="225.4" y="317.8" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="a" x="225.4" y="310.6" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="r" x="225.4" y="303.4" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="r" x="225.4" y="296.2" width="8.4" height="5.6" rx="1.2"/>
-    <rect class="bseg" data-z="r" x="225.4" y="289.0" width="8.4" height="5.6" rx="1.2"/>
+    <rect x="221.4" y="175" width="17" height="165" rx="4.6" transform="translate(1.2 1.8)" fill="${INK}" opacity=".5" pointer-events="none"/>
+    <rect x="221.4" y="175" width="17" height="165" rx="4.6" fill="#6d777f" stroke="${INK}" stroke-width="2"/>
+    <path d="M 223.2 322 V 179.8 Q 223.2 177 226 177 H 233.8" fill="none" stroke="#c7d0d6" stroke-width="1.3" stroke-linecap="round" pointer-events="none"/>
+    <circle cx="229.9" cy="186.4" r="6.2" fill="#1b2126" stroke="${INK}" stroke-width="1.8" pointer-events="none"/>
+    <circle id="boom-lamp" cx="229.9" cy="186.4" r="4.6" fill="#33110c" stroke="${INK}" stroke-width="1.2"/>
+    <circle cx="228.5" cy="185" r="1" fill="#fff" opacity=".55" pointer-events="none"/>
+    <rect x="224.5" y="195.4" width="10.8" height="126.8" rx="1.8" fill="#07090b" stroke="${INK}" stroke-width="1.4" pointer-events="none"/>
+    <rect class="bseg" data-z="g" x="225.8" y="312.0" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="g" x="225.8" y="301.6" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="g" x="225.8" y="291.2" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="g" x="225.8" y="280.8" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="g" x="225.8" y="270.4" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="g" x="225.8" y="260.0" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="a" x="225.8" y="249.6" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="a" x="225.8" y="239.2" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="a" x="225.8" y="228.8" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="r" x="225.8" y="218.4" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="r" x="225.8" y="208.0" width="8.4" height="8" rx="1.4"/>
+    <rect class="bseg" data-z="r" x="225.8" y="197.6" width="8.4" height="8" rx="1.4"/>
     
     <g pointer-events="none">
-      <rect x="219.2" y="379.6" width="21.6" height="12.4" rx="1.8" transform="translate(.9 1.3)" fill="${INK}" opacity=".5"/>
-      <rect x="219.2" y="379.6" width="21.6" height="12.4" rx="1.8" fill="#c2361f" stroke="${INK}" stroke-width="1.6"/>
-      <text x="230" y="389.2" text-anchor="middle" style="font-family:var(--f-display)" font-size="8.6" font-weight="700" letter-spacing=".2" fill="#fff4e0">BOOM</text>
+      <rect x="220.2" y="325.6" width="19.4" height="12.4" rx="1.8" transform="translate(.9 1.3)" fill="${INK}" opacity=".5"/>
+      <rect x="220.2" y="325.6" width="19.4" height="12.4" rx="1.8" fill="#c2361f" stroke="${INK}" stroke-width="1.6"/>
+      <text x="229.9" y="335.2" text-anchor="middle" style="font-family:var(--f-display)" font-size="8.2" font-weight="700" letter-spacing=".1" fill="#fff4e0">BOOM</text>
     </g>
   </g>
   
