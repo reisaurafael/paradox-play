@@ -190,7 +190,7 @@
     
     <g fill="#c29a4e" stroke="${INK}" stroke-width="1.1"><circle cx="171.6" cy="263.4" r="2.5"/><circle cx="171.6" cy="344.6" r="2.5"/></g>
     <g fill="#fff6dc" opacity=".75"><circle cx="170.8" cy="262.6" r=".7"/><circle cx="170.8" cy="343.8" r=".7"/></g>
-    ${buckle}
+    ${b==="m"?"":buckle}
   </g>
   </g>`}function entrySVG(part,b,y0,y1){const xs=y=>204+12*(y-182)/232-6.4,f=v=>+v.toFixed(1),g=s=>Math.pow(Math.max(0,1-Math.pow(Math.abs(2*s-1),3)),.3333333333333333),curve=off=>[...Array(29)].map((_,i)=>{const s=i/28,y=y0+(y1-y0)*s;return[f(xs(y)-off*g(s)),f(y)]}),pl=pts=>pts.map(([x,y])=>`${x} ${y}`).join(" L "),outer=curve(13),inner=curve(13-7.4),mouth=`M ${pl(inner)} L ${f(xs(y1)+9)} ${y1} L ${f(xs(y0)+9)} ${y0} Z`,rim=`M ${pl(outer)} L ${pl([...inner].reverse())} Z`,vis=`class="pb-${b}"${b==="m"?"":' display="none"'}`,np=h=>h.replace(/<(path|rect) /g,'<$1 style="pointer-events:none" ');if(part==="mouth")return np(`<path ${vis} d="${mouth}" fill="#07090b" stroke="${INK}" stroke-width="2.4"/>`);const ym=(y0+y1)/2,k=Math.round(28*.36);return np(`<g ${vis} pointer-events="none">
     <path d="${mouth}" fill="#07090b" opacity=".55"/>
