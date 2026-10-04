@@ -1,0 +1,1 @@
+const firebaseConfig={apiKey:"AIzaSyA8vbMtuHmVBvQRVmHzWswOJepc-xVogko",authDomain:"paradox-last-timeline.firebaseapp.com",databaseURL:"https://paradox-last-timeline-default-rtdb.firebaseio.com",projectId:"paradox-last-timeline",appId:"1:59772661081:web:b178552469fb96121df048"};export default firebaseConfig;
