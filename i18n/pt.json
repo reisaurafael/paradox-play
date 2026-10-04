@@ -1167,7 +1167,11 @@
   "When something waits elsewhere, this arrow at the edge points to it, with its key:": "Quando algo espera em outro lugar, esta seta na borda aponta para lá, com a tecla:",
   "Look up. You kept a promise, so the whole chart is yours: thirty centuries, down to YEAR ZERO.": "Olhe para cima. Você cumpriu uma promessa, então a carta inteira é sua: trinta séculos, até o ANO ZERO.",
   "<b>Four 1s</b>, the worst roll there is, so the Bureau pays you a consolation: <b>pick a module</b> on your machine. From now on its die counts one higher, forever.": "<b>Quatro 1s</b>, a pior rolagem possível, então o Bureau paga um prêmio de consolação: <b>escolha um módulo</b> da sua máquina. A partir de agora o dado nele conta um a mais, para sempre.",
-  "<b>Pick a module</b> on your machine: from now on its die counts one higher, forever.": "<b>Escolha um módulo</b> da sua máquina: a partir de agora o dado nele conta um a mais, para sempre."
+  "<b>Pick a module</b> on your machine: from now on its die counts one higher, forever.": "<b>Escolha um módulo</b> da sua máquina: a partir de agora o dado nele conta um a mais, para sempre.",
+  "click empty space ▸": "clique num espaço vazio ▸",
+  "Your coffee is your lifeforce, and the mug is yours to place: drag it anywhere on the desk. Drop it by its holder and it seats itself.": "Seu café é a sua energia vital, e a caneca fica onde você quiser: arraste para qualquer lugar da mesa. Solte perto do suporte e ela se encaixa.",
+  "The lamp slides along its wire: drag it to light the part of the desk you want.": "A luminária desliza pelo fio: arraste para iluminar a parte da mesa que você quiser.",
+  "And your nameplate: drag it wherever you want your name to sit.": "E a sua plaquinha: arraste para onde quiser deixar o seu nome."
  },
  "patterns": [
   {
