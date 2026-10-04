@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="play-shim.js?202610031728"></script>
+  <script src="play-shim.js?202610032100"></script>
   <meta charset="UTF-8" />
   
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png" />
@@ -14,32 +14,33 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Paradox" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
-  <script src="js/touch.js?202610031728"></script>
+  <script src="js/touch.js?202610032100"></script>
   
-  <script src="js/i18n.js?202610031728"></script>
+  <script src="js/i18n.js?202610032100"></script>
   
-  <script src="js/layout.js?202610031728"></script>
+  <script src="js/layout.js?202610032100"></script>
   <title>Paradox: The Last Timeline</title>
   <meta name="description" content="Paradox: The Last Timeline. After the Incursion shattered time, one timeline is left, and it is sacred. A competitive time-travel board game by Rafael Reis Garcia." />
   
-  <link href="fonts/fonts.css?202610031728" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/app.css?202610031728" />
-  <link rel="stylesheet" href="styles/tutorial.css?202610031728" />
-  <link rel="stylesheet" href="styles/menu.css?202610031728" />
-  <link rel="stylesheet" href="styles/resume.css?202610031728" />
-  <link rel="stylesheet" href="styles/access.css?202610031728" />
-  <link rel="stylesheet" href="styles/fx.css?202610031728" />
-  <link rel="stylesheet" href="styles/help.css?202610031728" />
-  <link rel="stylesheet" href="styles/chronicle.css?202610031728" />
-  <link rel="stylesheet" href="styles/theme.css?202610031728" />
-  <link rel="stylesheet" href="styles/trailer.css?202610031728" />
-  <link rel="stylesheet" href="styles/card-art.css?202610031728" />
-  <link rel="stylesheet" href="styles/records.css?202610031728" />
-  <link rel="stylesheet" href="styles/mobile.css?202610031728" />
-  <link rel="stylesheet" href="styles/layout-down.css?202610031728" />
-  <link rel="stylesheet" href="styles/chart-down.css?202610031728" />
-  <link rel="stylesheet" href="styles/hud.css?202610031728" />
-  <script type="module" src="js/trailer.js?202610031728"></script>
+  <link href="fonts/fonts.css?202610032100" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css?202610032100" />
+  <link rel="stylesheet" href="styles/tutorial.css?202610032100" />
+  <link rel="stylesheet" href="styles/menu.css?202610032100" />
+  <link rel="stylesheet" href="styles/resume.css?202610032100" />
+  <link rel="stylesheet" href="styles/access.css?202610032100" />
+  <link rel="stylesheet" href="styles/fx.css?202610032100" />
+  <link rel="stylesheet" href="styles/help.css?202610032100" />
+  <link rel="stylesheet" href="styles/chronicle.css?202610032100" />
+  <link rel="stylesheet" href="styles/theme.css?202610032100" />
+  <link rel="stylesheet" href="styles/trailer.css?202610032100" />
+  <link rel="stylesheet" href="styles/card-art.css?202610032100" />
+  <link rel="stylesheet" href="styles/records.css?202610032100" />
+  <link rel="stylesheet" href="styles/mobile.css?202610032100" />
+  <link rel="stylesheet" href="styles/layout-down.css?202610032100" />
+  <link rel="stylesheet" href="styles/chart-down.css?202610032100" />
+  <link rel="stylesheet" href="styles/hud.css?202610032100" />
+  <link rel="stylesheet" href="styles/detective.css?202610032100" />
+  <script type="module" src="js/trailer.js?202610032100"></script>
   
   <script>
   (function(){
@@ -77,115 +78,162 @@
   
   
   <section id="screen-landing" class="screen is-active">
-    <div class="landing-frame panel bracketed">
-      <header class="landing-head">
-        <div class="cronos-mark" id="cronos-mark"></div>
-        <div class="landing-titles">
-          <h1 class="wordmark">PARADOX</h1>
-          <p class="overline wordmark-sub">The Last Timeline</p>
-        </div>
-        <div class="landing-tools">
-          <div class="ts-pick" role="group" aria-label="Text size">
-            <span class="lbl">Text size</span>
-            <div class="seg ts-seg" data-ts-seg>
-              <button class="seg-btn" data-ts="1" type="button">Normal</button>
-              <button class="seg-btn" data-ts="2" type="button">Large</button>
-              <button class="seg-btn" data-ts="3" type="button">Extra large</button>
+    <div class="mb-lamp" aria-hidden="true">
+      
+      <svg viewBox="0 0 300 120">
+        <defs><pattern id="mbl-dots" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="3" cy="3" r="1.5" fill="#0b1d13"/></pattern></defs>
+        <path d="M 112 100 C 104 82 84 76 74 62 M 188 100 C 196 82 216 76 226 62" fill="none" stroke="#140a04" stroke-width="9" stroke-linecap="round"/>
+        <path d="M 112 100 C 104 82 84 76 74 62 M 188 100 C 196 82 216 76 226 62" fill="none" stroke="#b48a3a" stroke-width="4.4" stroke-linecap="round"/>
+        <path d="M 110 98 C 102 82 84 77 75 65" fill="none" stroke="#e9cc7a" stroke-width="1.4"/>
+        <rect x="96" y="92" width="108" height="20" rx="4" fill="#b48a3a" stroke="#140a04" stroke-width="3.4"/>
+        <path d="M 102 97 H 170" stroke="#e9cc7a" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M 104 108 H 198" stroke="#7a5a26" stroke-width="2"/>
+        <circle cx="108" cy="102" r="3.4" fill="#7a5a26" stroke="#140a04" stroke-width="1.6"/><circle cx="192" cy="102" r="3.4" fill="#7a5a26" stroke="#140a04" stroke-width="1.6"/>
+        <path d="M 30 40 Q 30 22 52 22 H 248 Q 270 22 270 40 V 58 Q 270 66 260 66 H 40 Q 30 66 30 58 Z" fill="#2f6b4a"/>
+        <path d="M 40 26 H 250 Q 262 26 264 34 H 36 Q 38 26 40 26 Z" fill="#4f9a6c"/>
+        <path d="M 46 30 H 232" stroke="#a6d8b4" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 30 50 H 270 V 58 Q 270 66 260 66 H 40 Q 30 66 30 58 Z" fill="#1d4430"/>
+        <path d="M 30 50 H 270 V 58 Q 270 66 260 66 H 40 Q 30 66 30 58 Z" fill="url(#mbl-dots)" opacity=".7"/>
+        <path d="M 30 40 Q 30 22 52 22 H 248 Q 270 22 270 40 V 58 Q 270 66 260 66 H 40 Q 30 66 30 58 Z" fill="none" stroke="#140a04" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="42" y="64" width="216" height="8" rx="4" fill="#ffd77a" stroke="#140a04" stroke-width="2.6"/>
+        <rect x="96" y="66" width="108" height="4" rx="2" fill="#fff4cf"/>
+      </svg>
+    </div>
+    <div class="landing-frame mb-board">
+      <div class="mb-cone" aria-hidden="true"></div>
+      <svg class="mb-strings" id="mb-strings" aria-hidden="true"></svg>
+      
+      <span class="mb-screws" aria-hidden="true"></span>
+
+      
+      <header class="landing-head mb-head">
+        <div class="mb-clip" data-mb-key="head">
+          <span class="mb-pin" aria-hidden="true"></span>
+          <p class="mb-mast">C.R.O.N.O.S. CORPORATION · TEMPORAL OPERATIONS DIVISION · "Time is a contract. Honour it."</p>
+          <div class="mb-head-row">
+            <div class="cronos-mark" id="cronos-mark"></div>
+            <div class="landing-titles">
+              <h1 class="wordmark">PARADOX</h1>
+              <p class="overline wordmark-sub">The Last Timeline</p>
             </div>
           </div>
-          <button class="btn btn-ghost btn-sm" id="btn-menu-settings" type="button">
-            <span class="btn-ico" data-icon="gear"></span> Settings
-          </button>
-          
-          <nav class="menu-extras" id="menu-extras" aria-label="News and community">
-            <button class="extra-entry news-entry" id="btn-news" type="button" aria-haspopup="dialog" aria-controls="panel-news">
-              <span class="xe-tag">News</span>
-              <span class="xe-title">Coming soon to Steam</span>
-            </button>
-            <button class="extra-entry community-entry" id="btn-community" type="button" aria-haspopup="dialog" aria-controls="panel-community">
-              <span class="xe-tag">Community</span>
-              <span class="xe-title">Bugs, ideas, support</span>
-            </button>
-          </nav>
+          <span class="mb-stamp" aria-hidden="true">Case No. 001</span>
+          <span class="mb-hub" data-mb-hub aria-hidden="true"></span>
         </div>
       </header>
 
       <div class="landing-body">
         <div class="landing-main">
           
-          
           <section id="resume-card" class="resume-card" hidden></section>
 
-          <button id="btn-tutorial" class="hero-learn" type="button"
-                  aria-labelledby="hl-title" aria-describedby="hl-line hl-meta">
-            <span class="hl-tag" aria-hidden="true">Start here</span>
-            <span class="hl-eye" aria-hidden="true">
-              <svg viewBox="-60 -60 120 120" fill="none">
-                <path class="hl-burst" d="M0 -56 L12 -30 L40 -44 L32 -16 L58 -8 L34 8 L48 34 L18 28 L8 56 L-6 30 L-34 48 L-28 18 L-58 10 L-34 -8 L-46 -36 L-16 -28 Z"/>
-                <g class="hl-blink">
-                  <path class="hl-lid" d="M -36 0 Q 0 -27 36 0 Q 0 27 -36 0 Z"/>
-                  <g class="hl-look"><circle class="hl-iris" r="13"/><circle class="hl-pupil" r="6"/>
-                    <circle class="hl-glint" cx="-4" cy="-4" r="2.4"/></g>
-                </g>
-              </svg>
-            </span>
-            <span class="hl-words">
-              <span class="hl-title" id="hl-title">Learn to Play</span>
-              <span class="hl-line" id="hl-line">HELA wakes you and teaches the game by playing it with you.</span>
-              <span class="hl-meta" id="hl-meta">A guided match against two AI opponents</span>
-            </span>
-            <span class="hl-go" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
-            </span>
-          </button>
-
-          
-          <section class="menu-block play-block" aria-labelledby="play-title">
-            <h2 class="form-title" id="play-title">Already know the rules?</h2>
-            <p class="menu-lede" id="play-lede">A match against AI opponents, on this computer.</p>
-            <div class="play-row">
-              <div class="players-pick">
-                <span class="lbl" id="lbl-players">Players at the table</span>
-                <div class="stepper" id="players-stepper" role="group" aria-labelledby="lbl-players">
-                  <button class="step-btn" data-step="-1" type="button" aria-label="One player fewer">-</button>
-                  <output id="out-players" class="step-val" aria-live="polite">3</output>
-                  <button class="step-btn" data-step="1" type="button" aria-label="One player more">+</button>
-                </div>
-                <span class="players-note" id="players-note">You and 2 AI opponents</span>
-              </div>
-              <button id="btn-solo" class="btn btn-primary btn-ink" type="button">
-                <span class="btn-ico" data-icon="play"></span> Play vs AI
+          <div class="mb-options">
+            
+            <div class="mb-card mb-learn" data-mb-pin data-mb-key="learn">
+              <span class="mb-pin" aria-hidden="true"></span>
+              <button id="btn-tutorial" class="hero-learn" type="button"
+                      aria-labelledby="hl-title" aria-describedby="hl-line hl-meta">
+                <span class="hl-tag" aria-hidden="true">Start here</span>
+                <span class="hl-eye" aria-hidden="true">
+                  <svg viewBox="-60 -60 120 120" fill="none">
+                    <path class="hl-burst" d="M0 -56 L12 -30 L40 -44 L32 -16 L58 -8 L34 8 L48 34 L18 28 L8 56 L-6 30 L-34 48 L-28 18 L-58 10 L-34 -8 L-46 -36 L-16 -28 Z"/>
+                    <g class="hl-blink">
+                      <path class="hl-lid" d="M -36 0 Q 0 -27 36 0 Q 0 27 -36 0 Z"/>
+                      <g class="hl-look"><circle class="hl-iris" r="13"/><circle class="hl-pupil" r="6"/>
+                        <circle class="hl-glint" cx="-4" cy="-4" r="2.4"/></g>
+                    </g>
+                  </svg>
+                </span>
+                <span class="hl-words">
+                  <span class="hl-title" id="hl-title">Learn to Play</span>
+                  <span class="hl-line" id="hl-line">HELA wakes you and teaches the game by playing it with you.</span>
+                  <span class="hl-meta" id="hl-meta">A guided match against two AI opponents</span>
+                </span>
+                <span class="hl-go" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+                </span>
               </button>
             </div>
-          </section>
 
-          <section class="menu-block friends-block desktop-only">
-            <h2 class="form-title">Play with friends</h2>
-            <div class="friends-grid">
-              <div class="friends-cell">
-                <button id="btn-create" class="btn btn-ghost block" type="button">
-                  <span class="btn-ico" data-icon="seal"></span> Host a room
+            
+            <section class="menu-block play-block mb-card mb-solo" data-mb-pin data-mb-key="solo" aria-labelledby="play-title">
+              <span class="mb-pin" aria-hidden="true"></span>
+              <span class="mb-tab" aria-hidden="true">Solo</span>
+              <h2 class="form-title" id="play-title">Already know the rules?</h2>
+              <p class="menu-lede" id="play-lede">A match against AI opponents, on this computer.</p>
+              <div class="play-row">
+                <div class="players-pick">
+                  <span class="lbl" id="lbl-players">Players at the table</span>
+                  <div class="stepper" id="players-stepper" role="group" aria-labelledby="lbl-players">
+                    <button class="step-btn" data-step="-1" type="button" aria-label="One player fewer">-</button>
+                    <output id="out-players" class="step-val" aria-live="polite">3</output>
+                    <button class="step-btn" data-step="1" type="button" aria-label="One player more">+</button>
+                  </div>
+                  <span class="players-note" id="players-note">You and 2 AI opponents</span>
+                </div>
+                <button id="btn-solo" class="btn btn-primary btn-ink" type="button">
+                  <span class="btn-ico" data-icon="play"></span> Play vs AI
                 </button>
-                <p class="menu-note">You get a room code to share. Seats nobody takes are played by AI opponents.</p>
               </div>
-              <div class="friends-cell">
-                <label class="lbl" for="inp-code">Room code from a friend</label>
-                <div class="join-row">
-                  <input id="inp-code" class="inp mono code-inp" maxlength="4" placeholder="ABCD" autocomplete="off" />
-                  <button id="btn-join" class="btn btn-ghost" type="button">
-                    <span class="btn-ico" data-icon="enter"></span> Join
+            </section>
+
+            
+            <section class="menu-block friends-block desktop-only mb-card mb-multi" data-mb-pin data-mb-key="multi">
+              <span class="mb-pin" aria-hidden="true"></span>
+              <span class="mb-tab" aria-hidden="true">Multiplayer</span>
+              <h2 class="form-title">Play with friends</h2>
+              <div class="friends-grid">
+                <div class="friends-cell">
+                  <button id="btn-create" class="btn btn-ghost block" type="button">
+                    <span class="btn-ico" data-icon="seal"></span> Host a room
                   </button>
+                  <p class="menu-note">You get a room code to share. Seats nobody takes are played by AI opponents.</p>
+                </div>
+                <div class="friends-cell">
+                  <label class="lbl" for="inp-code">Room code from a friend</label>
+                  <div class="join-row">
+                    <input id="inp-code" class="inp mono code-inp" maxlength="4" placeholder="ABCD" autocomplete="off" />
+                    <button id="btn-join" class="btn btn-ghost" type="button">
+                      <span class="btn-ico" data-icon="enter"></span> Join
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="extras-row">
-              
-              
-              <button id="btn-table" class="btn btn-ghost btn-sm" type="button">
-                <span class="btn-ico" data-icon="play"></span> Split-screen Table
+              <div class="extras-row">
+                
+                
+                <button id="btn-table" class="btn btn-ghost btn-sm" type="button">
+                  <span class="btn-ico" data-icon="play"></span> Split-screen Table
+                </button>
+              </div>
+            </section>
+
+            
+            <div class="mb-card mb-set" data-mb-pin data-mb-key="set">
+              <span class="mb-pin" aria-hidden="true"></span>
+              <button class="mb-setbtn" id="btn-menu-settings" type="button">
+                <span class="mb-clipboard" aria-hidden="true">
+                  <svg viewBox="0 0 120 150">
+                    <rect x="8" y="12" width="104" height="134" rx="7" fill="#7a4a22" stroke="#140a04" stroke-width="4"/>
+                    <rect x="18" y="26" width="84" height="110" fill="#f3ead2" stroke="#140a04" stroke-width="2.6"/>
+                    <path d="M 26 44 H 92 M 26 50 H 70" stroke="#140a04" stroke-width="3" stroke-linecap="round"/>
+                    <rect x="26" y="62" width="11" height="11" fill="none" stroke="#140a04" stroke-width="2.4"/>
+                    <path d="M 27 63 L 36 72 M 36 63 L 27 72" stroke="#a3221c" stroke-width="2.6" stroke-linecap="round"/>
+                    <path d="M 44 68 H 90" stroke="#5a4a30" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="26" y="80" width="11" height="11" fill="none" stroke="#140a04" stroke-width="2.4"/>
+                    <path d="M 44 86 H 84" stroke="#5a4a30" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 26 108 H 92" stroke="#140a04" stroke-width="2.2"/>
+                    <path d="M 26 104 V 112 M 42.5 105 V 111 M 59 104 V 112 M 75.5 105 V 111 M 92 104 V 112" stroke="#140a04" stroke-width="2"/>
+                    <path d="M 66 100 L 72 108 L 60 108 Z" fill="#a3221c" stroke="#140a04" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M 40 6 H 80 V 16 Q 80 24 72 24 H 48 Q 40 24 40 16 Z" fill="#b9bcc0" stroke="#140a04" stroke-width="3.4" stroke-linejoin="round"/>
+                    <path d="M 46 11 H 74" stroke="#eef1f3" stroke-width="2.4" stroke-linecap="round"/>
+                    <circle cx="60" cy="6" r="5" fill="#8a8e94" stroke="#140a04" stroke-width="2.6"/>
+                  </svg>
+                </span>
+                <span class="mb-set-title"><span class="btn-ico" data-icon="gear"></span> Settings</span>
               </button>
             </div>
-          </section>
+          </div>
 
           
           <section class="menu-block record-block profile-card" id="profile-card">
@@ -201,7 +249,29 @@
 
         <aside class="landing-side">
           
-          <section class="menu-block you-block">
+          <div class="landing-tools">
+            <div class="ts-pick" role="group" aria-label="Text size" data-mb-key="ts">
+              <span class="lbl">Text size</span>
+              <div class="seg ts-seg" data-ts-seg>
+                <button class="seg-btn" data-ts="1" type="button">Normal</button>
+                <button class="seg-btn" data-ts="2" type="button">Large</button>
+                <button class="seg-btn" data-ts="3" type="button">Extra large</button>
+              </div>
+            </div>
+            
+            <nav class="menu-extras" id="menu-extras" aria-label="News and community">
+              <button class="extra-entry news-entry" id="btn-news" type="button" aria-haspopup="dialog" aria-controls="panel-news">
+                <span class="xe-tag">News</span>
+                <span class="xe-title">Coming soon to Steam</span>
+              </button>
+              <button class="extra-entry community-entry" id="btn-community" type="button" aria-haspopup="dialog" aria-controls="panel-community">
+                <span class="xe-tag">Community</span>
+                <span class="xe-title">Bugs, ideas, support</span>
+              </button>
+            </nav>
+          </div>
+          
+          <section class="menu-block you-block" data-mb-key="you">
             <h2 class="form-title">You</h2>
             <div class="field">
               <label class="lbl" for="inp-name">Your name</label>
@@ -225,10 +295,6 @@
           <div id="chronicle-slot" class="chronicle-slot"></div>
         </aside>
       </div>
-
-      <footer class="landing-foot mono small muted">
-        C.R.O.N.O.S. CORPORATION · TEMPORAL OPERATIONS DIVISION · "Time is a contract. Honour it."
-      </footer>
     </div>
   </section>
 
@@ -395,8 +461,11 @@
 
   
   <div id="settings-backdrop" class="settings-backdrop" hidden>
-    <div class="settings-panel panel bracketed">
+    <div class="settings-panel">
+     <span class="set-clip" aria-hidden="true"></span>
+     <div class="set-paper">
       <div class="settings-head">
+        <p class="set-form-id" aria-hidden="true"><span>C.R.O.N.O.S.</span> <span>Requisition form</span></p>
         <h3 class="settings-title"><span class="zt-ico" data-icon="gear"></span> Settings</h3>
         <button class="icon-btn" id="settings-close" type="button" title="Close"><span data-icon="close"></span></button>
       </div>
@@ -521,6 +590,8 @@
             <option value="0.8">80%</option>
           </select>
         </label>
+        
+        <button class="btn btn-ghost btn-sm" id="btn-reset-board" type="button">Reset the board layout</button>
       </div>
 
       
@@ -541,6 +612,9 @@
         <label class="set-check">
           <input type="checkbox" id="chk-visor-grid" /> <span>Helmet visor grid</span>
         </label>
+        <label class="set-check">
+          <input type="checkbox" id="chk-hela-eye" checked /> <span>Show HELA's eye (always shown in the tutorial)</span>
+        </label>
       </div>
 
       <div class="settings-group">
@@ -553,6 +627,7 @@
         </label>
         <button class="btn btn-ghost btn-sm" id="btn-reset-tutorials" type="button">Replay all tips</button>
       </div>
+     </div>
     </div>
   </div>
 
@@ -602,10 +677,10 @@
     };
   })();
   </script>
-  <script type="module" src="js/menu-panels.js?202610031728"></script>
-  <script type="module" src="js/menu-persona.js?202610031728"></script>
-  <script type="module" src="js/main.js?202610031728"></script>
-  <script type="module" src="js/mobile-table.js?202610031728"></script>
+  <script type="module" src="js/menu-panels.js?202610032100"></script>
+  <script type="module" src="js/menu-persona.js?202610032100"></script>
+  <script type="module" src="js/main.js?202610032100"></script>
+  <script type="module" src="js/mobile-table.js?202610032100"></script>
 <div id="build-stamp" style="position:fixed;left:8px;top:calc(100vh - 16px);z-index:9999;font:10px/1.2 monospace;color:#8a8578;opacity:.45;pointer-events:none">BUILD v197</div>
 <div id="stale-banner" style="display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;background:#7a1c10;color:#ffe9b0;font:bold 12px/1 monospace;padding:9px 16px;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.5)">NEW BUILD ON THE SERVER: PRESS F5 (Ctrl+Shift+R)</div>
 <script>
@@ -623,9 +698,10 @@
   check(); setInterval(check, 45000);
 })();
 </script>
-<script src="js/board_draft.js?202610031728"></script>
-<script src="js/board_singularity.js?202610031728"></script>
-<script src="js/board_origins.js?202610031728"></script>
-    <script src="js/cabin.js?202610031728"></script>
+<script src="js/board_draft.js?202610032100"></script>
+<script src="js/board_singularity.js?202610032100"></script>
+<script src="js/board_origins.js?202610032100"></script>
+    <script src="js/cabin.js?202610032100"></script>
+    <script type="module" src="js/detective.js?202610032100"></script>
 </body>
 </html>
