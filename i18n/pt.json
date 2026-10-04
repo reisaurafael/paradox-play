@@ -1109,9 +1109,112 @@
   "Noir": "Noir",
   "Your dice, your piece, HELA's eye and her words. The six basic colours are free; every other one is an achievement.": "Seus dados, sua peça, o olho da HELA e as palavras dela. As seis cores básicas são livres; todas as outras são conquistas.",
   "Your coffee is your {energy}: your life. At 0, you are terminated.": "Seu café é a sua {energy}: a sua vida. Em 0, você é eliminado.",
-  "This gauge is the motor's {heat}. Travel heats it. At 12, it explodes.": "Este medidor é o {heat} do motor. Viajar o aquece. Em 12, ele explode."
+  "This gauge is the motor's {heat}. Travel heats it. At 12, it explodes.": "Este medidor é o {heat} do motor. Viajar o aquece. Em 12, ele explode.",
+  "Wake up, traveller. Still breathing? Good.": "Acorde, viajante. Ainda respirando? Ótimo.",
+  "You travel for the C.R.O.N.O.S. That thing on your arm is a time machine.": "Você viaja pela C.R.O.N.O.S. Essa coisa no seu braço é uma máquina do tempo.",
+  "I'll teach you to use it. One piece at a time.": "Vou te ensinar a usá-la. Uma peça de cada vez.",
+  "Relics were torn out of their centuries. Carry each one home, and time mends.": "Relíquias foram arrancadas dos seus séculos. Leve cada uma de volta, e o tempo se cura.",
+  "Each relic home: +1 {cp} contract point. Most points wins.": "Cada relíquia devolvida: +1 {cp} ponto de contrato. Quem tiver mais pontos vence.",
+  "Your rivals: two travellers racing you for the same relics.": "Seus rivais: dois viajantes disputando com você as mesmas relíquias.",
+  "Click a file to open it: their century, {energy}, {gold}, gear and crimes.": "Clique numa ficha para abri-la: o século, {energy}, {gold}, equipamento e crimes.",
+  "Tap a file: their century, {energy}, {gold}, gear and crimes.": "Toque numa ficha: o século, {energy}, {gold}, equipamento e crimes.",
+  "All dice are revealed at once. Then modules fire, 1 to 9.": "Todos os dados são revelados de uma vez. Depois os módulos disparam, de 1 a 9.",
+  "The lit module takes it. A module works as hard as its die.": "O módulo aceso o recebe. Um módulo trabalha tanto quanto o seu dado.",
+  "Your {heat} heat shows on this gauge. At 12, the motor explodes.": "Seu {heat} calor aparece neste medidor. Em 12, o motor explode.",
+  "4 cells for now. Your machine grows.": "4 células por enquanto. Sua máquina cresce.",
+  "He sells relics for {gold}, only to travellers in his century.": "Ele vende relíquias por {gold}, só para viajantes no século dele.",
+  "Want his relics? Go to his century. He won't wait for you.": "Quer as relíquias dele? Vá ao século dele. Ele não vai esperar por você.",
+  "His shelf: what he sells this Hour.": "A prateleira dele: o que ele vende nesta Hora.",
+  "Relics, torn out of their centuries. Each one must go home.": "Relíquias, arrancadas dos seus séculos. Cada uma precisa voltar para casa.",
+  "Hold <kbd>Tab</kbd> any time: my notes on what you see.": "Segure <kbd>Tab</kbd> a qualquer hora: minhas notas sobre o que você vê.",
+  "When I need you elsewhere, the key shows at that edge.": "Quando eu precisar de você em outro lugar, a tecla aparece naquela borda.",
+  "New function: <b>PARADOX</b>. It tears {energy} out of rivals across time.": "Nova função: <b>PARADOXO</b>. Ela arranca {energy} dos rivais através do tempo.",
+  "A third function, a third die. Dice now roll up to {d3}.": "Uma terceira função, um terceiro dado. Agora os dados rolam até {d3}.",
+  "My memory keeps every Hour. Press <kbd>L</kbd>.": "Minha memória guarda cada Hora. Aperte <kbd>L</kbd>.",
+  "<b>X</b> is the second millennium mark: +1 {cp}, once.": "<b>X</b> é o segundo marco do milênio: +1 {cp}, uma vez.",
+  "<b>XX</b> and <b>X</b> are millennium marks: +1 {cp} each, once.": "<b>XX</b> e <b>X</b> são marcos do milênio: +1 {cp} cada, uma vez.",
+  "Ends are checked as each Hour closes. The empty wagon stops the clock at once.": "Os fins são conferidos ao fechar de cada Hora. A carroça vazia para o relógio na hora.",
+  "These keys are the places at your table. Tap one to look there.": "Estas teclas são os lugares da sua mesa. Toque numa para olhar lá.",
+  "The chart: where every traveller stands in time. Tap <b>MACHINE</b> to come back.": "O mapa: onde cada viajante está no tempo. Toque em <b>MÁQUINA</b> para voltar.",
+  "Tap <b>?</b>: my notes beside what they explain. Tap again to hide them.": "Toque em <b>?</b>: minhas notas ao lado do que explicam. Toque de novo para escondê-las.",
+  "When I need you somewhere, that place's key pulses.": "Quando eu precisar de você em algum lugar, a tecla desse lugar pulsa."
  },
  "patterns": [
+  {
+   "re": "His century: the Market is open\\.",
+   "flags": "g",
+   "to": "O século dele: o Mercado está aberto."
+  },
+  {
+   "re": " The chart is time\\.",
+   "flags": "g",
+   "to": " O mapa é o tempo."
+  },
+  {
+   "re": "Your chart lies below the desk\\.$",
+   "flags": "g",
+   "to": "Seu mapa fica abaixo da mesa."
+  },
+  {
+   "re": "Your \\{energy\\} shows on your mug: (\\d*) now\\.",
+   "flags": "g",
+   "to": "Sua {energy} aparece na sua caneca: $1 agora."
+  },
+  {
+   "re": ": \\+(\\d+) \\{energy\\} energy, your life\\. At 0, you're terminated\\.",
+   "flags": "g",
+   "to": ": +$1 {energy} energia, a sua vida. Em 0, você é eliminado."
+  },
+  {
+   "re": ": \\+(\\d+) \\{gold\\} gold\\. Gold buys relics\\.",
+   "flags": "g",
+   "to": ": +$1 {gold} ouro. Ouro compra relíquias."
+  },
+  {
+   "re": ": \\+(\\d+) \\{heat\\} heat\\. Travel heats before it moves\\.",
+   "flags": "g",
+   "to": ": +$1 {heat} calor. A Viagem aquece antes de mover."
+  },
+  {
+   "re": "A wagon rolled onto your chart at (\\w+): the MERCHANT\\.",
+   "flags": "g",
+   "to": "Uma carroça chegou ao seu mapa em $1: o MERCADOR."
+  },
+  {
+   "re": "^<b>(.+?)</b>: (\\d+) \\{gold\\}\\. You have (\\d+)\\.$",
+   "flags": "g",
+   "to": "<b>$1</b>: $2 {gold}. Você tem $3."
+  },
+  {
+   "re": "The century stamped on it is a PROMISE: deliver it at (\\w+), \\+1 \\{cp\\}\\.",
+   "flags": "g",
+   "to": "O século carimbado nela é uma PROMESSA: entregue-a em $1, +1 {cp}."
+  },
+  {
+   "re": "Market over, so he moves: toward the richest traveller not with him\\. Now (\\w+)\\.",
+   "flags": "g",
+   "to": "Fim do Mercado, então ele se move: rumo ao viajante mais rico que não está com ele. Agora em $1."
+  },
+  {
+   "re": "Your room turns with your head:",
+   "flags": "g",
+   "to": "Sua sala gira com a sua cabeça:"
+  },
+  {
+   "re": "</i>your chart</span>",
+   "flags": "g",
+   "to": "</i>seu mapa</span>"
+  },
+  {
+   "re": "</i>the Merchant</span>",
+   "flags": "g",
+   "to": "</i>o Mercador</span>"
+  },
+  {
+   "re": "</i>your Records</span>",
+   "flags": "g",
+   "to": "</i>seus Registros</span>"
+  },
   {
    "re": "^(\\d+) seats, (\\d+) taken$",
    "flags": "g",
