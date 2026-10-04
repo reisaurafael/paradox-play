@@ -233,6 +233,8 @@
   "RESOURCE": "RECURSO",
   "TIME": "TEMPO",
   "BOOM": "BOOM",
+  "SECRET MARKET": "MERCADO SECRETO",
+  "YOUR CASE": "SUA MALETA",
   "Roll at the start of each Generators phase.": "Role no início de cada fase de Geradores.",
   "Revealed dice allocation, recharge · paradox · travel": "Alocação de dados revelada, recarga · paradoxo · viagem",
   "Clear: sweep the dice back to the tray": "Limpar: varra os dados de volta para a bandeja",
@@ -1173,8 +1175,13 @@
   "And your nameplate: drag it wherever you want your name to sit.": "E a sua plaquinha: arraste para onde quiser deixar o seu nome.",
   "click empty space ▸": "clique num espaço vazio ▸",
   "One rule: a function's modules share one shaft, so they turn at one speed. Every die in a function must show the <b>same number</b>.": "Uma regra: os módulos de uma função dividem o mesmo eixo, então giram na mesma velocidade. Todo dado numa função precisa mostrar o <b>mesmo número</b>.",
+  "Their files show when they stand: old paper, your past; glass, your future.": "As fichas deles mostram quando eles estão: papel velho, seu passado; vidro, seu futuro.",
+  "<b>Paradox 1</b> hits your future, <b>2</b> your century, <b>3</b> your past.": "<b>Paradoxo 1</b> atinge seu futuro, o <b>2</b> seu século, o <b>3</b> seu passado.",
   "Your rivals travelled this Hour too: {list}. That is how they move through time.": "Seus rivais também viajaram nesta Hora: {list}. É assim que eles se movem pelo tempo.",
-  "<b>Four 1s.</b> The worst roll a traveller can throw, and even the Bureau winced. So it pays you a consolation prize: <b>pick a module</b> on your machine. From now on, every die it takes counts <b>one higher</b>. Forever. Choose one you feed every Hour.": "<b>Quatro 1s.</b> A pior rolagem que um viajante pode tirar, e até o Bureau fez careta. Então ele te paga um prêmio de consolação: <b>escolha um módulo</b> da sua máquina. De agora em diante, todo dado que ele receber conta <b>um a mais</b>. Para sempre. Escolha um que você alimenta toda Hora."
+  "<b>Four 1s.</b> The worst roll a traveller can throw, and even the Bureau winced. So it pays you a consolation prize: <b>pick a module</b> on your machine. From now on, every die it takes counts <b>one higher</b>. Forever. Choose one you feed every Hour.": "<b>Quatro 1s.</b> A pior rolagem que um viajante pode tirar, e até o Bureau fez careta. Então ele te paga um prêmio de consolação: <b>escolha um módulo</b> da sua máquina. De agora em diante, todo dado que ele receber conta <b>um a mais</b>. Para sempre. Escolha um que você alimenta toda Hora.",
+  "Your {energy} rose to {n}: the Recharge die filled your mug.": "Sua {energy} subiu para {n}: o dado de Recarga encheu sua caneca.",
+  "This mug is your {energy}: {n} now. Recharge fills it; at 0 you are terminated.": "Esta caneca é a sua {energy}: {n} agora. A Recarga enche; em 0 você é eliminado.",
+  "Watch the chart: <b>{name}</b> is travelling now. Rivals move through time just as you do.": "Olhe a carta: <b>{name}</b> está viajando agora. Os rivais se movem pelo tempo como você."
  },
  "patterns": [
   {
