@@ -1168,10 +1168,13 @@
   "Look up. You kept a promise, so the whole chart is yours: thirty centuries, down to YEAR ZERO.": "Olhe para cima. Você cumpriu uma promessa, então a carta inteira é sua: trinta séculos, até o ANO ZERO.",
   "<b>Four 1s</b>, the worst roll there is, so the Bureau pays you a consolation: <b>pick a module</b> on your machine. From now on its die counts one higher, forever.": "<b>Quatro 1s</b>, a pior rolagem possível, então o Bureau paga um prêmio de consolação: <b>escolha um módulo</b> da sua máquina. A partir de agora o dado nele conta um a mais, para sempre.",
   "<b>Pick a module</b> on your machine: from now on its die counts one higher, forever.": "<b>Escolha um módulo</b> da sua máquina: a partir de agora o dado nele conta um a mais, para sempre.",
-  "click empty space ▸": "clique num espaço vazio ▸",
   "Your coffee is your lifeforce, and the mug is yours to place: drag it anywhere on the desk. Drop it by its holder and it seats itself.": "Seu café é a sua energia vital, e a caneca fica onde você quiser: arraste para qualquer lugar da mesa. Solte perto do suporte e ela se encaixa.",
   "The lamp slides along its wire: drag it to light the part of the desk you want.": "A luminária desliza pelo fio: arraste para iluminar a parte da mesa que você quiser.",
-  "And your nameplate: drag it wherever you want your name to sit.": "E a sua plaquinha: arraste para onde quiser deixar o seu nome."
+  "And your nameplate: drag it wherever you want your name to sit.": "E a sua plaquinha: arraste para onde quiser deixar o seu nome.",
+  "click empty space ▸": "clique num espaço vazio ▸",
+  "One rule: a function's modules share one shaft, so they turn at one speed. Every die in a function must show the <b>same number</b>.": "Uma regra: os módulos de uma função dividem o mesmo eixo, então giram na mesma velocidade. Todo dado numa função precisa mostrar o <b>mesmo número</b>.",
+  "Your rivals travelled this Hour too: {list}. That is how they move through time.": "Seus rivais também viajaram nesta Hora: {list}. É assim que eles se movem pelo tempo.",
+  "<b>Four 1s.</b> The worst roll a traveller can throw, and even the Bureau winced. So it pays you a consolation prize: <b>pick a module</b> on your machine. From now on, every die it takes counts <b>one higher</b>. Forever. Choose one you feed every Hour.": "<b>Quatro 1s.</b> A pior rolagem que um viajante pode tirar, e até o Bureau fez careta. Então ele te paga um prêmio de consolação: <b>escolha um módulo</b> da sua máquina. De agora em diante, todo dado que ele receber conta <b>um a mais</b>. Para sempre. Escolha um que você alimenta toda Hora."
  },
  "patterns": [
   {
