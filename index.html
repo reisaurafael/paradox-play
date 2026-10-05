@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="play-shim.js?202610050105"></script>
+  <script src="play-shim.js?202610051223"></script>
   <meta charset="UTF-8" />
   
   <link rel="icon" type="image/png" href="assets/icons/icon-192.png" />
@@ -14,38 +14,39 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Paradox" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
-  <script src="js/touch.js?202610050105"></script>
+  <script src="js/touch.js?202610051223"></script>
   
-  <script src="js/i18n.js?202610050105"></script>
+  <script src="js/i18n.js?202610051223"></script>
   
-  <script src="js/layout.js?202610050105"></script>
-  <script src="js/shopfront.js?202610050105"></script>
+  <script src="js/layout.js?202610051223"></script>
+  <script src="js/shopfront.js?202610051223"></script>
   <title>Paradox: The Last Timeline</title>
   <meta name="description" content="Paradox: The Last Timeline. After the Incursion shattered time, one timeline is left, and it is sacred. A competitive time-travel board game by Rafael Reis Garcia." />
   
-  <link href="fonts/fonts.css?202610050105" rel="stylesheet" />
-  <link rel="stylesheet" href="styles/app.css?202610050105" />
-  <link rel="stylesheet" href="styles/tutorial.css?202610050105" />
-  <link rel="stylesheet" href="styles/menu.css?202610050105" />
-  <link rel="stylesheet" href="styles/resume.css?202610050105" />
-  <link rel="stylesheet" href="styles/access.css?202610050105" />
-  <link rel="stylesheet" href="styles/fx.css?202610050105" />
-  <link rel="stylesheet" href="styles/help.css?202610050105" />
-  <link rel="stylesheet" href="styles/chronicle.css?202610050105" />
-  <link rel="stylesheet" href="styles/theme.css?202610050105" />
-  <link rel="stylesheet" href="styles/trailer.css?202610050105" />
-  <link rel="stylesheet" href="styles/card-art.css?202610050105" />
-  <link rel="stylesheet" href="styles/records.css?202610050105" />
-  <link rel="stylesheet" href="styles/mobile.css?202610050105" />
-  <link rel="stylesheet" href="styles/layout-down.css?202610050105" />
-  <link rel="stylesheet" href="styles/chart-down.css?202610050105" />
-  <link rel="stylesheet" href="styles/hud.css?202610050105" />
-  <link rel="stylesheet" href="styles/detective.css?202610050105" />
-  <link rel="stylesheet" href="styles/card-fx.css?202610050105" />
-  <link rel="stylesheet" href="styles/wanted.css?202610050105" />
-  <link rel="stylesheet" href="styles/start.css?202610050105" />
-  <link rel="stylesheet" href="styles/shopfront.css?202610050105" />
-  <script type="module" src="js/trailer.js?202610050105"></script>
+  <link href="fonts/fonts.css?202610051223" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/app.css?202610051223" />
+  <link rel="stylesheet" href="styles/tutorial.css?202610051223" />
+  <link rel="stylesheet" href="styles/menu.css?202610051223" />
+  <link rel="stylesheet" href="styles/resume.css?202610051223" />
+  <link rel="stylesheet" href="styles/access.css?202610051223" />
+  <link rel="stylesheet" href="styles/fx.css?202610051223" />
+  <link rel="stylesheet" href="styles/help.css?202610051223" />
+  <link rel="stylesheet" href="styles/chronicle.css?202610051223" />
+  <link rel="stylesheet" href="styles/theme.css?202610051223" />
+  <link rel="stylesheet" href="styles/trailer.css?202610051223" />
+  <link rel="stylesheet" href="styles/card-art.css?202610051223" />
+  <link rel="stylesheet" href="styles/records.css?202610051223" />
+  <link rel="stylesheet" href="styles/mobile.css?202610051223" />
+  <link rel="stylesheet" href="styles/layout-down.css?202610051223" />
+  <link rel="stylesheet" href="styles/chart-down.css?202610051223" />
+  <link rel="stylesheet" href="styles/hud.css?202610051223" />
+  <link rel="stylesheet" href="styles/detective.css?202610051223" />
+  <link rel="stylesheet" href="styles/card-fx.css?202610051223" />
+  <link rel="stylesheet" href="styles/wanted.css?202610051223" />
+  <link rel="stylesheet" href="styles/start.css?202610051223" />
+  <link rel="stylesheet" href="styles/shopfront.css?202610051223" />
+  <link rel="stylesheet" href="styles/locker.css?202610051223" />
+  <script type="module" src="js/trailer.js?202610051223"></script>
   
   <script>
   (function(){
@@ -289,18 +290,22 @@
               <label class="lbl" for="inp-name">Your name</label>
               <input id="inp-name" class="inp" maxlength="24" placeholder="Your name" autocomplete="off" />
             </div>
-            <div class="field colour-field">
-              <span class="lbl" id="lbl-colour">Your colour: <b id="colour-name">Amber</b></span>
-              <div class="prof-swatches" id="prof-swatches" role="radiogroup" aria-labelledby="lbl-colour"></div>
-              <p class="menu-note colour-note">Your piece on the map, your case file and HELA, your guide, all wear it.<span class="desktop-only"> If two players pick the same colour, a draw decides.</span></p>
-            </div>
             
-            <div class="field persona-field" id="persona-field" hidden>
-              <span class="lbl" id="lbl-persona">Your arm: <b id="persona-name"></b></span>
-              <div class="persona-row">
-                <div class="persona-builds" id="persona-builds" role="radiogroup" aria-label="Arm build"></div>
-                <div class="persona-skins" id="persona-skins" role="radiogroup" aria-label="Skin tone"></div>
-              </div>
+            <div class="field you-things">
+              <p class="you-sum" id="you-sum"></p>
+              <button class="lk-fob" id="btn-locker" type="button" aria-describedby="lk-fob-line">
+                <span class="lk-fob-key" aria-hidden="true"><svg viewBox="0 0 120 70">
+                  <path d="M58 30 C 64 18 80 14 92 22 L 112 36 L 104 58 C 90 64 70 60 60 48" fill="#140a04" transform="translate(3 4)"/>
+                  <path d="M58 30 C 64 18 80 14 92 22 L 112 36 L 104 58 C 90 64 70 60 60 48 Z" fill="#e8d5a2" stroke="#140a04" stroke-width="3.4" stroke-linejoin="round"/>
+                  <circle cx="100" cy="42" r="4" fill="#5a4a30" stroke="#140a04" stroke-width="2"/>
+                  <text x="82" y="48" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="700" font-size="17" fill="#c8302a">7</text>
+                  <circle cx="44" cy="34" r="10" fill="none" stroke="#140a04" stroke-width="6"/><circle cx="44" cy="34" r="10" fill="none" stroke="#b48a3a" stroke-width="3"/>
+                  <circle cx="18" cy="34" r="12" fill="#b48a3a" stroke="#140a04" stroke-width="3.6"/><circle cx="18" cy="34" r="4.6" fill="#140a04"/>
+                  <path d="M10 27 a 10 10 0 0 1 8 -5" fill="none" stroke="#f0d08a" stroke-width="2.6" stroke-linecap="round"/>
+                  <path d="M30 31 H 36 M 30 37 H 34" stroke="#140a04" stroke-width="2.4"/>
+                </svg></span>
+                <span class="lk-fob-words"><b>Your locker</b><span id="lk-fob-line">Your arm, your colours and every thing you own</span></span>
+              </button>
             </div>
           </section>
           
@@ -745,10 +750,11 @@
     };
   })();
   </script>
-  <script type="module" src="js/menu-panels.js?202610050105"></script>
-  <script type="module" src="js/menu-persona.js?202610050105"></script>
-  <script type="module" src="js/main.js?202610050105"></script>
-  <script type="module" src="js/mobile-table.js?202610050105"></script>
+  <script type="module" src="js/menu-panels.js?202610051223"></script>
+  <script type="module" src="js/menu-persona.js?202610051223"></script>
+  <script type="module" src="js/locker.js?202610051223"></script>
+  <script type="module" src="js/main.js?202610051223"></script>
+  <script type="module" src="js/mobile-table.js?202610051223"></script>
 <div id="build-stamp" style="position:fixed;left:8px;top:calc(100vh - 16px);z-index:9999;font:10px/1.2 monospace;color:#8a8578;opacity:.45;pointer-events:none">BUILD v197</div>
 <div id="stale-banner" style="display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;background:#7a1c10;color:#ffe9b0;font:bold 12px/1 monospace;padding:9px 16px;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.5)">NEW BUILD ON THE SERVER: PRESS F5 (Ctrl+Shift+R)</div>
 <script>
@@ -766,11 +772,13 @@
   check(); setInterval(check, 45000);
 })();
 </script>
-<script src="js/board_draft.js?202610050105"></script>
-<script src="js/board_singularity.js?202610050105"></script>
-<script src="js/board_origins.js?202610050105"></script>
-    <script src="js/cabin.js?202610050105"></script>
-    <script type="module" src="js/detective.js?202610050105"></script>
-    <script type="module" src="js/card-fx.js?202610050105"></script>
+<script src="js/board_draft.js?202610051223"></script>
+<script src="js/board_singularity.js?202610051223"></script>
+<script src="js/board_origins.js?202610051223"></script>
+    <script src="js/cabin.js?202610051223"></script>
+    <script type="module" src="js/detective.js?202610051223"></script>
+    <script type="module" src="js/radio-voice.js?202610051223"></script>
+    <script type="module" src="js/wire-notes.js?202610051223"></script>
+    <script type="module" src="js/card-fx.js?202610051223"></script>
 </body>
 </html>
