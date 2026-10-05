@@ -765,6 +765,10 @@
   "The Year Zero Star": "A Estrela do Ano Zero",
   "The Mended Thread": "O Fio Curado",
   "Standard Print": "Edição Padrão",
+  "Brick Wall": "Parede de Tijolos",
+  "Wallpaper": "Papel de Parede",
+  "Merchant's wall": "Parede do Mercador",
+  "The wall behind the Merchant's stall.": "A parede atrás da banca do Mercador.",
   "Red Extra": "Extra Vermelho",
   "Night Edition": "Edição Noturna",
   "Bureau Blue": "Azul da Repartição",
@@ -866,7 +870,6 @@
   "His shelf: relics the Incursion tore from their centuries.": "A prateleira dele: relíquias que a Incursão arrancou dos seus séculos.",
   "<b>Four ends.</b> The first one stops the clock:<span class=\"tc-rows\"><span class=\"tc-row\"><i>+2 {cp}</i><b>Year Zero</b> reached</span><span class=\"tc-row\"><i>+1 {cp}</i>A receptor holding all three periods</span><span class=\"tc-row\"><i>+1 {cp}</i>One left never terminated: to the last terminator</span><span class=\"tc-row\"><i></i>The Merchant's wagon runs empty</span></span>": "<b>Quatro fins.</b> O primeiro para o relógio:<span class=\"tc-rows\"><span class=\"tc-row\"><i>+2 {cp}</i><b>Ano Zero</b> alcançado</span><span class=\"tc-row\"><i>+1 {cp}</i>Um receptor com os três períodos</span><span class=\"tc-row\"><i>+1 {cp}</i>Só um nunca eliminado: para o último eliminador</span><span class=\"tc-row\"><i></i>A carroça do Mercador fica vazia</span></span>",
   "Never terminated? +1 {cp} for surviving, at every end but the wagon.": "Nunca eliminado? +1 {cp} por sobreviver, em todo fim menos o da carroça.",
-  "These dice are your generators. Rerolled every Hour.": "Estes dados são seus geradores. Rolados de novo a cada Hora.",
   "The lit module takes it. A {d3} here gives +3 {energy}.": "O módulo aceso o recebe. Um {d3} aqui dá +3 {energy}.",
   "On <b>Recharge 1</b>, a {d3} gives +3 {energy}.": "Em <b>Recarga 1</b>, um {d3} dá +3 {energy}.",
   "Place every die, then <b>Confirm</b>.": "Coloque todos os dados, depois <b>Confirme</b>.",
@@ -1131,8 +1134,6 @@
   "Click a file to open it: their century, {energy}, {gold}, gear and crimes.": "Clique numa ficha para abri-la: o século, {energy}, {gold}, equipamento e crimes.",
   "Tap a file: their century, {energy}, {gold}, gear and crimes.": "Toque numa ficha: o século, {energy}, {gold}, equipamento e crimes.",
   "All dice are revealed at once. Then modules fire, 1 to 9.": "Todos os dados são revelados de uma vez. Depois os módulos disparam, de 1 a 9.",
-  "The lit module takes it. A module works as hard as its die.": "O módulo aceso o recebe. Um módulo trabalha tanto quanto o seu dado.",
-  "Your {heat} heat shows on this gauge. At 12, the motor explodes.": "Seu {heat} calor aparece neste medidor. Em 12, o motor explode.",
   "4 cells for now. Your machine grows.": "4 células por enquanto. Sua máquina cresce.",
   "He sells relics for {gold}, only to travellers in his century.": "Ele vende relíquias por {gold}, só para viajantes no século dele.",
   "Want his relics? Go to his century. He won't wait for you.": "Quer as relíquias dele? Vá ao século dele. Ele não vai esperar por você.",
@@ -1152,8 +1153,6 @@
   "When I need you somewhere, that place's key pulses.": "Quando eu precisar de você em algum lugar, a tecla desse lugar pulsa.",
   "<b>REVEALED</b>: everyone's dice show at once. Your rivals' sit on their files.": "<b>REVELADO</b>: os dados de todos aparecem de uma vez. Os dos seus rivais ficam nas fichas deles.",
   "Read them: you see who strikes whom, and who travels.": "Leia-os: você vê quem ataca quem, e quem viaja.",
-  "Then the modules fire <b>in order, 1 to 9</b>: Recharge, then Paradox, then Travel.": "Depois os módulos disparam <b>em ordem, de 1 a 9</b>: Recarga, depois Paradoxo, depois Viagem.",
-  "<b>TRAVEL</b> moves you through the centuries. Its price is {heat}: at 12, BOOM.": "<b>VIAGEM</b> move você pelos séculos. O preço é {heat}: em 12, BOOM.",
   "Your desk too: drag your coffee and your nameplate wherever you like.": "Sua mesa também: arraste o café e a sua plaquinha para onde quiser.",
   "Paradox 1 hits your future, 2 your century, 3 your past. 0 {energy}: terminated.": "Paradoxo 1 atinge o seu futuro, 2 o seu século, 3 o seu passado. 0 {energy}: eliminado.",
   "hits everyone in your future": "atinge todo mundo no seu futuro",
@@ -1165,11 +1164,8 @@
   "That was a PARADOX: a rival reached across the centuries and tore {energy} out of you.": "Isso foi um PARADOXO: um rival atravessou os séculos e arrancou {energy} de você.",
   "The Temporal Herald reports crimes across the centuries. The clipping sticks to the offender's file.": "O Arauto Temporal noticia crimes através dos séculos. O recorte fica preso na ficha do culpado.",
   "Those are relics: things the Incursion tore out of their centuries. Every one must go home.": "Essas são relíquias: coisas que a Incursão arrancou dos seus séculos. Cada uma precisa voltar para casa.",
-  "Each die shows {d1}, {d2} or {d3}: more pips, more work. Pick up the {v}.": "Cada dado mostra {d1}, {d2} ou {d3}: mais pontos, mais trabalho. Pegue o {v}.",
-  "New function: <b>PARADOX</b>. It tears {energy} out of rivals: in your future with the first module, in your own century with the second.": "Nova função: <b>PARADOXO</b>. Ela arranca {energy} dos rivais: no seu futuro com o primeiro módulo, no seu próprio século com o segundo.",
   "Your machine grows: a third module on every function, and a fourth die. That's the whole machine.": "Sua máquina cresce: um terceiro módulo em cada função, e um quarto dado. Essa é a máquina inteira.",
   "<b>Paradox 3</b> strikes everyone in your past, for DOUBLE the die. 1: your future. 2: your century. 3: your past.": "<b>Paradoxo 3</b> atinge todo mundo no seu passado, pelo DOBRO do dado. 1: seu futuro. 2: seu século. 3: seu passado.",
-  "The MERCHANT sells relics for {gold}, only to travellers in his own century, one by one in priority order.": "O MERCADOR vende relíquias por {gold}, só para viajantes no século dele, um por um em ordem de prioridade.",
   "His sign reads OPEN only from his own century. From anywhere else: CLOSED.": "A placa dele diz ABERTO só no século dele. De qualquer outro lugar: FECHADO.",
   "<b>{name}</b>: {g} {gold}, and you have {n}. Look at the century stamped on it.": "<b>{name}</b>: {g} {gold}, e você tem {n}. Veja o século carimbado nela.",
   "Nothing is shut this Hour, so the <b>escape valve</b> is calm: drop the spare {v} in it. It costs nothing and charges the valve.": "Nada está fechado nesta Hora, então a <b>válvula de escape</b> está calma: jogue o {v} que sobrou nela. Não custa nada e carrega a válvula.",
@@ -1184,15 +1180,11 @@
   "The lamp slides along its wire: drag it to light the part of the desk you want.": "A luminária desliza pelo fio: arraste para iluminar a parte da mesa que você quiser.",
   "And your nameplate: drag it wherever you want your name to sit.": "E a sua plaquinha: arraste para onde quiser deixar o seu nome.",
   "click empty space ▸": "clique num espaço vazio ▸",
-  "One rule: a function's modules share one shaft, so they turn at one speed. Every die in a function must show the <b>same number</b>.": "Uma regra: os módulos de uma função dividem o mesmo eixo, então giram na mesma velocidade. Todo dado numa função precisa mostrar o <b>mesmo número</b>.",
   "Their files show when they stand: old paper, your past; glass, your future.": "As fichas deles mostram quando eles estão: papel velho, seu passado; vidro, seu futuro.",
   "<b>Paradox 1</b> hits your future, <b>2</b> your century, <b>3</b> your past.": "<b>Paradoxo 1</b> atinge seu futuro, o <b>2</b> seu século, o <b>3</b> seu passado.",
   "Your rivals travelled this Hour too: {list}. That is how they move through time.": "Seus rivais também viajaram nesta Hora: {list}. É assim que eles se movem pelo tempo.",
   "<b>Four 1s.</b> The worst roll a traveller can throw, and even the Bureau winced. So it pays you a consolation prize: <b>pick a module</b> on your machine. From now on, every die it takes counts <b>one higher</b>. Forever. Choose one you feed every Hour.": "<b>Quatro 1s.</b> A pior rolagem que um viajante pode tirar, e até o Bureau fez careta. Então ele te paga um prêmio de consolação: <b>escolha um módulo</b> da sua máquina. De agora em diante, todo dado que ele receber conta <b>um a mais</b>. Para sempre. Escolha um que você alimenta toda Hora.",
-  "Your {energy} rose to {n}: the Recharge die filled your mug.": "Sua {energy} subiu para {n}: o dado de Recarga encheu sua caneca.",
-  "This mug is your {energy}: {n} now. Recharge fills it; at 0 you are terminated.": "Esta caneca é a sua {energy}: {n} agora. A Recarga enche; em 0 você é eliminado.",
   "Watch the chart: <b>{name}</b> is travelling now. Rivals move through time just as you do.": "Olhe a carta: <b>{name}</b> está viajando agora. Os rivais se movem pelo tempo como você.",
-  "Travelling into the <b>past</b> costs life: 1 {energy} for every century back. {n} centur{s} back, watch your mug drain.": "Viajar para o <b>passado</b> custa vida: 1 {energy} por século. {n} século(s) para trás, veja sua caneca esvaziar.",
   "The market is over: watch the Merchant move.": "O mercado acabou: veja o Mercador se mover.",
   "<b>Four 1s.</b> Magnificent, sir: the worst roll in the history of time travel, and I have seen all of it. The Bureau is so embarrassed it pays you to stop: <b>pick a module</b> on your machine. Every die it takes now counts <b>one higher</b>. Forever. Choose one you feed every Hour, and never roll like that again.": "<b>Quatro 1s.</b> Magnífico, senhor: a pior rolagem da história das viagens no tempo, e eu vi toda ela. O Bureau está tão envergonhado que te paga para parar: <b>escolha um módulo</b> da sua máquina. Todo dado nele agora conta <b>um a mais</b>. Para sempre. Escolha um que você alimenta toda Hora, e nunca mais role assim.",
   "{d1}{d1}{d1}{d1} Four ones. I have run the numbers, sir, and the numbers are laughing. Pick a module: +1 forever.": "{d1}{d1}{d1}{d1} Quatro uns. Fiz as contas, senhor, e as contas estão rindo. Escolha um módulo: +1 para sempre.",
@@ -1200,9 +1192,92 @@
   "{d1}{d1}{d1}{d1} I have seen corpses roll better, and I have seen a great many corpses. Pick a module: +1 forever.": "{d1}{d1}{d1}{d1} Já vi cadáveres rolarem melhor, e eu vi muitos cadáveres. Escolha um módulo: +1 para sempre.",
   "{d1}{d1}{d1}{d1} Remarkable. I shall frame this roll in the Bureau lobby, as a warning. Consolation: pick a module, +1 forever.": "{d1}{d1}{d1}{d1} Notável. Vou emoldurar esta rolagem no saguão do Bureau, como aviso. Consolação: escolha um módulo, +1 para sempre.",
   "{d1}{d1}{d1}{d1} A perfect score, sir. Perfectly awful. The Bureau pays out of pity: pick a module, +1 forever.": "{d1}{d1}{d1}{d1} Uma pontuação perfeita, senhor. Perfeitamente horrível. O Bureau paga por pena: escolha um módulo, +1 para sempre.",
-  "{d1}{d1}{d1}{d1} Do not tell the other travellers. Pick a module, +1 forever, and we shall never speak of this.": "{d1}{d1}{d1}{d1} Não conte aos outros viajantes. Escolha um módulo, +1 para sempre, e nunca mais falaremos disso."
+  "{d1}{d1}{d1}{d1} Do not tell the other travellers. Pick a module, +1 forever, and we shall never speak of this.": "{d1}{d1}{d1}{d1} Não conte aos outros viajantes. Escolha um módulo, +1 para sempre, e nunca mais falaremos disso.",
+  "XXX is the newest century. Every other one lies in your past.": "XXX é o século mais novo. Todos os outros ficam no seu passado.",
+  "These dice are your generators: they power your machine.": "Estes dados são seus geradores: eles alimentam a sua máquina.",
+  "Fresh dice every Hour. Where you put them is your whole turn.": "Dados novos a cada Hora. Onde você os coloca é o seu turno inteiro.",
+  "That lit slot is a module. It works as hard as the die you give it.": "Esse encaixe aceso é um módulo. Ele trabalha tanto quanto o dado que você der a ele.",
+  "Its modules share one shaft. One shaft, one speed. Physics, sir.": "Os módulos dela dividem um eixo. Um eixo, uma velocidade. Física, senhor.",
+  "The past drinks it. Rivals tear at it. At 0, you're terminated.": "O passado bebe dela. Os rivais arrancam dela. Em 0, você é eliminado.",
+  "At 12: BOOM. -2 {energy} life, and you travel nowhere that Hour.": "Em 12: BOOM. -2 {energy} de vida, e você não viaja naquela Hora.",
+  "New function: <b>PARADOX</b>. Now you tear {energy} life out of them.": "Nova função: <b>PARADOXO</b>. Agora é você quem arranca {energy} de vida deles.",
+  "Drain a rival to 0 and they're terminated. You score +1 {cp}, the first time.": "Esvazie um rival até 0 e ele é eliminado. Você marca +1 {cp}, na primeira vez.",
+  "<b>Paradox 1</b> hits everyone in your future. <b>Paradox 2</b>, everyone in your own century.": "<b>Paradoxo 1</b> atinge todo mundo no seu futuro. <b>Paradoxo 2</b>, todo mundo no seu próprio século.",
+  "He's the only one who sells relics. No relics, no points.": "Ele é o único que vende relíquias. Sem relíquias, sem pontos.",
+  "He sells for {gold} gold, and only to travellers in his own century.": "Ele vende por {gold} ouro, e só para viajantes no século dele.",
+  "<b>Travel 2</b> is what moves you through the centuries. Travel 1 must heat first.": "<b>Viagem 2</b> é o que te move pelos séculos. A Viagem 1 precisa aquecer antes.",
+  "Same number in both: move 2 centuries, gain 2 {heat}. Every trip brings BOOM closer.": "O mesmo número nas duas: mover 2 séculos, ganhar 2 {heat}. Cada viagem deixa o BOOM mais perto.",
+  "So far: dice power modules. Recharge fills your life; Travel heats, then moves you.": "Até aqui: dados alimentam módulos. A Recarga enche a sua vida; a Viagem aquece, depois te move.",
+  "So far: {gold} buys relics, only from the Merchant, only in his century.": "Até aqui: {gold} compra relíquias, só do Mercador, só no século dele.",
+  "So far: the past costs life, the future is free. Every trip heats the motor.": "Até aqui: o passado custa vida, o futuro é de graça. Cada viagem aquece o motor.",
+  "So far: Paradox 1 hits your future, 2 your century, 3 your past, double.": "Até aqui: Paradoxo 1 atinge o seu futuro, 2 o seu século, 3 o seu passado, em dobro.",
+  "Gold buys relics. Relics are points. You see where this goes.": "Ouro compra relíquias. Relíquias são pontos. Você já entendeu aonde isso vai.",
+  "The <b>past</b> is expensive: it drinks your life. The future is free.": "O <b>passado</b> é caro: ele bebe a sua vida. O futuro é de graça.",
+  "One rule: dice in the same function, Recharge or Travel, must show the <b>same number</b>.": "Uma regra: dados na mesma função, Recarga ou Viagem, precisam mostrar o <b>mesmo número</b>.",
+  "Then the modules fire <b>in order</b>: Recharge first, then Paradox, then Travel.": "Depois os módulos disparam <b>em ordem</b>: primeiro a Recarga, depois o Paradoxo, depois a Viagem.",
+  "Not yet: you're not in his century, so his sign says CLOSED. Getting there is next.": "Ainda não: você não está no século dele, então a placa diz FECHADO. Chegar lá é o próximo passo."
  },
  "patterns": [
+  {
+   "re": " You stood in their past\\.",
+   "flags": "g",
+   "to": " Você estava no passado deles."
+  },
+  {
+   "re": " You stood in their century\\.",
+   "flags": "g",
+   "to": " Você estava no século deles."
+  },
+  {
+   "re": " You stood in their future\\.",
+   "flags": "g",
+   "to": " Você estava no futuro deles."
+  },
+  {
+   "re": "Drag a (\\{d\\d\\}) onto <b>Recharge 1</b>: it pours \\+(\\d+) \\{energy\\} life into your mug\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Recarga 1</b>: ele despeja +$2 {energy} de vida na sua caneca."
+  },
+  {
+   "re": "Drag a (\\{d\\d\\}) onto <b>Travel 1</b>: \\+(\\d+) \\{heat\\} heat\\. It moves you nowhere yet: it only heats the motor\\.",
+   "flags": "g",
+   "to": "Arraste um $1 para <b>Viagem 1</b>: +$2 {heat} de calor. Ainda não te move: só aquece o motor."
+  },
+  {
+   "re": "Each die shows \\{d1\\}, \\{d2\\} or \\{d3\\}: more pips, more power\\. Pick up the (\\{d\\d\\})\\.",
+   "flags": "g",
+   "to": "Cada dado mostra {d1}, {d2} ou {d3}: mais pontos, mais força. Pegue o $1."
+  },
+  {
+   "re": "Watch the mug: your life rose to (\\d+) \\{energy\\}\\.",
+   "flags": "g",
+   "to": "Olhe a caneca: a sua vida subiu para $1 {energy}."
+  },
+  {
+   "re": "This mug is your life: (\\d+) \\{energy\\} energy now\\.",
+   "flags": "g",
+   "to": "Esta caneca é a sua vida: $1 {energy} de energia agora."
+  },
+  {
+   "re": "This gauge is your heat: (\\d+) of 12 \\{heat\\}\\. It never cools by itself\\.",
+   "flags": "g",
+   "to": "Este medidor é o seu calor: $1 de 12 {heat}. Ele nunca esfria sozinho."
+  },
+  {
+   "re": "Your mug: down to (\\d+) \\{energy\\}\\. That's what rivals are for\\.",
+   "flags": "g",
+   "to": "Sua caneca: caiu para $1 {energy}. Rivais servem para isso."
+  },
+  {
+   "re": "(\\d+) century back\\. Watch your mug drain\\.",
+   "flags": "g",
+   "to": "$1 século para trás. Veja a sua caneca esvaziar."
+  },
+  {
+   "re": "(\\d+) centuries back\\. Watch your mug drain\\.",
+   "flags": "g",
+   "to": "$1 séculos para trás. Veja a sua caneca esvaziar."
+  },
   {
    "re": "His century: the Market is open\\.",
    "flags": "g",
