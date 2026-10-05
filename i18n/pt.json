@@ -1323,9 +1323,289 @@
   "The Candle": "A Vela",
   "The Ace of Spades": "O Ás de Espadas",
   "The Telephone": "O Telefone",
-  "The Temporal Herald": "O Arauto Temporal"
+  "The Temporal Herald": "O Arauto Temporal",
+  "Each relic home: +1 contract point {cp}. Most points wins.": "Cada relíquia devolvida: +1 ponto de contrato {cp}. Quem tiver mais pontos vence.",
+  "That was a PARADOX: a rival reached across the centuries and drank your energy {energy}.": "Isso foi um PARADOXO: um rival atravessou os séculos e bebeu a sua energia {energy}.",
+  "+2 points {cp}": "+2 pontos {cp}",
+  "+1 point {cp}": "+1 ponto {cp}",
+  "Never terminated? +1 point {cp} for surviving, at every end but the wagon.": "Nunca eliminado? +1 ponto {cp} por sobreviver, em todo fim menos o da carroça.",
+  "At 12 heat: BOOM. You lose 2 energy {energy} and travel nowhere that Hour.": "Com 12 de calor: BOOM. Você perde 2 de energia {energy} e não viaja naquela Hora.",
+  "New function: <b>PARADOX</b>. Now you drain their energy {energy}.": "Nova função: <b>PARADOXO</b>. Agora você drena a energia {energy} deles.",
+  "A third function, a third die. Dice now roll up to 3 pips {d3}.": "Uma terceira função, um terceiro dado. Agora os dados rolam até 3 pontos {d3}.",
+  "Drain a rival to 0 and they're terminated. You score +1 point {cp}, the first time.": "Drene um rival até 0 e ele é eliminado. Você marca +1 ponto {cp}, na primeira vez.",
+  "He sells for gold {gold}, and only to travellers in his own century.": "Ele vende por ouro {gold}, e só para viajantes no século dele.",
+  "So far: one valve, two uses. Nothing shut, a spare die charges it. Something shut, it costs you energy {energy}.": "Até aqui: uma válvula, dois usos. Nada fechado, um dado sobrando a carrega. Algo fechado, ele te custa energia {energy}.",
+  "Tap a file: their century, energy, gold, gear and crimes.": "Toque num arquivo: o século deles, energia, ouro, equipamento e crimes.",
+  "Click a file to open it: their century, energy, gold, gear and crimes.": "Clique num arquivo para abri-lo: o século deles, energia, ouro, equipamento e crimes.",
+  "Same number in both: move 2 centuries, gain 2 heat {heat}. Every trip brings BOOM closer.": "Mesmo número nos dois: mova 2 séculos, ganhe 2 de calor {heat}. Cada viagem aproxima o BOOM.",
+  "So far: gold {gold} buys relics, only from the Merchant, only in his century.": "Até aqui: ouro {gold} compra relíquias, só do Mercador, só no século dele.",
+  "<b>Motor exploded</b> at 12 heat {heat}: -2 energy. You sit this Hour out.": "<b>Motor explodiu</b> com 12 de calor {heat}: -2 de energia. Você fica fora desta Hora.",
+  "<b>Terminated</b> at 0 energy {energy}. Next Hour: XXX, 12 energy plus recycled items.": "<b>Eliminado</b> com 0 de energia {energy}. Próxima Hora: XXX, 12 de energia mais os itens reciclados.",
+  "Now you're Wanted: 4 gold {gold} on your head. Declare at a Market.": "Agora você é Procurado: 4 de ouro {gold} pela sua cabeça. Declare num Mercado.",
+  "<b>Delivered: +1 point {cp}.</b> And the Bureau owes you a contract. Paperwork, the real reward.": "<b>Entregue: +1 ponto {cp}.</b> E o Bureau te deve um contrato. Papelada, a verdadeira recompensa.",
+  "So far: a relic home pays +1 point {cp}, and a contract on top.": "Até aqui: uma relíquia em casa paga +1 ponto {cp}, e ainda um contrato.",
+  "<b>Origins</b>, I to X: 2 energy {energy} a century back. Then Year Zero.": "<b>Origens</b>, I a X: 2 de energia {energy} por século para trás. Depois, o Ano Zero.",
+  "Below X, the Origins: 2 energy {energy} a century back. Then <b>YEAR ZERO</b>.": "Abaixo do X, as Origens: 2 de energia {energy} por século para trás. Depois, o <b>ANO ZERO</b>.",
+  "Case full. Recycle one for energy {energy}, or let the new one go.": "Maleta cheia. Recicle um item por energia {energy}, ou deixe o novo ir.",
+  "<b>X</b> is the second millennium mark: +1 point {cp}, once.": "<b>X</b> é o segundo marco do milênio: +1 ponto {cp}, uma vez.",
+  "<b>XX</b> and <b>X</b> are millennium marks: +1 point {cp} each, once.": "<b>XX</b> e <b>X</b> são marcos do milênio: +1 ponto {cp} cada, uma vez.",
+  "Take a traveller's last energy: +1 point {cp}. You're Wanted: 4 gold bounty.": "Tire a última energia de um viajante: +1 ponto {cp}. Você vira Procurado: 4 de ouro de recompensa.",
+  "<b>Most points {cp} win.</b> Ties: highest century, then gold, then energy.": "<b>Mais pontos {cp} vencem.</b> Empate: o século mais alto, depois ouro, depois energia.",
+  "No rival in your future or your century. Your two {d3} dice go to <b>Travel</b>.": "Nenhum rival no seu futuro ou no seu século. Seus dois dados {d3} vão para a <b>Viagem</b>.",
+  "The mug is yours to place: drag it anywhere. By its holder, it seats itself.": "A caneca é sua: arraste para onde quiser. Perto do suporte, ela se encaixa sozinha.",
+  "Your nameplate: drag it wherever your name should sit.": "Sua placa de nome: arraste para onde o seu nome deve ficar.",
+  "Her bed drags too. Move it, and she follows. Cats.": "A caminha dela também se arrasta. Mude de lugar, e ela vai atrás. Gatos.",
+  "And the radio: drag it where you like.": "E o rádio: arraste para onde quiser.",
+  "Left knob, volume. Right knob, speed. The key under the dial skips the song.": "Botão da esquerda, volume. Da direita, velocidade. A tecla sob o mostrador pula a música.",
+  "The past isn't free: each century back costs 1 energy {energy}.": "O passado não é de graça: cada século para trás custa 1 de energia {energy}.",
+  "Click his wagon on the chart: it takes you straight to his shop.": "Clique na carroça dele no mapa: ela te leva direto à loja."
  },
  "patterns": [
+  {
+   "re": "^1 century back: -(\\d+) energy \\{energy\\}\\.$",
+   "flags": "g",
+   "to": "1 século para trás: -$1 de energia {energy}."
+  },
+  {
+   "re": "^(\\d+) centuries back: -(\\d+) energy \\{energy\\}\\.$",
+   "flags": "g",
+   "to": "$1 séculos para trás: -$2 de energia {energy}."
+  },
+  {
+   "re": "every other traveller loses 3 energy \\{energy\\}",
+   "flags": "g",
+   "to": "todo outro viajante perde 3 de energia {energy}"
+  },
+  {
+   "re": "\\+3 energy and \\+3 gold",
+   "flags": "g",
+   "to": "+3 de energia e +3 de ouro"
+  },
+  {
+   "re": "Each die shows 1, 2 or 3 pips: more pips, more power\\. Pick up the (\\{d\\d\\})\\.",
+   "flags": "g",
+   "to": "Cada dado mostra 1, 2 ou 3 pontos: mais pontos, mais força. Pegue o $1."
+  },
+  {
+   "re": "Watch the mug: your life rose to (\\d+) energy \\{energy\\}\\.",
+   "flags": "g",
+   "to": "Olhe a caneca: a sua vida subiu para $1 de energia {energy}."
+  },
+  {
+   "re": "This mug is your life: (\\d+) energy \\{energy\\} now\\.",
+   "flags": "g",
+   "to": "Esta caneca é a sua vida: $1 de energia {energy} agora."
+  },
+  {
+   "re": "This gauge is your heat: (\\d+) of 12 heat \\{heat\\}\\. It never cools by itself\\.",
+   "flags": "g",
+   "to": "Este medidor é o seu calor: $1 de 12 de calor {heat}. Ele nunca esfria sozinho."
+  },
+  {
+   "re": "Your mug: down to (-?\\d+) energy \\{energy\\}\\. That's what rivals are for\\.",
+   "flags": "g",
+   "to": "Sua caneca: caiu para $1 de energia {energy}. Rivais servem para isso."
+  },
+  {
+   "re": "Home at (\\w+), it pays \\+1 point \\{cp\\}\\. One century back from here\\.",
+   "flags": "g",
+   "to": "Em $1, ela volta para casa e paga +1 ponto {cp}. Um século para trás daqui."
+  },
+  {
+   "re": "Home at (\\w+), it pays \\+1 point \\{cp\\}\\. (\\d+) centuries back from here\\.",
+   "flags": "g",
+   "to": "Em $1, ela volta para casa e paga +1 ponto {cp}. $2 séculos para trás daqui."
+  },
+  {
+   "re": "Home at (\\w+), it pays \\+1 point \\{cp\\}\\. You're standing on it\\.",
+   "flags": "g",
+   "to": "Em $1, ela volta para casa e paga +1 ponto {cp}. Você está nele."
+  },
+  {
+   "re": "Home at (\\w+), it pays \\+1 point \\{cp\\}\\.",
+   "flags": "g",
+   "to": "Em $1, ela volta para casa e paga +1 ponto {cp}."
+  },
+  {
+   "re": "\\+(\\d+) energy \\{energy\\}: your <b>Recharge 1</b> die\\.",
+   "flags": "g",
+   "to": "+$1 de energia {energy}: seu dado de <b>Recarga 1</b>."
+  },
+  {
+   "re": "\\+(\\d+) gold \\{gold\\}: your <b>Recharge 2</b> die\\.",
+   "flags": "g",
+   "to": "+$1 de ouro {gold}: seu dado de <b>Recarga 2</b>."
+  },
+  {
+   "re": "\\+(\\d+) energy and \\+(\\d+) gold: your <b>Recharge 3</b> die\\.",
+   "flags": "g",
+   "to": "+$1 de energia e +$2 de ouro: seu dado de <b>Recarga 3</b>."
+  },
+  {
+   "re": "(\\d+)/12 heat \\{heat\\}: <b>Travel 1</b> only heats\\. No move yet\\.",
+   "flags": "g",
+   "to": "$1/12 de calor {heat}: <b>Viagem 1</b> só esquenta. Nada de movimento ainda."
+  },
+  {
+   "re": "^-(\\d+) energy \\{energy\\}: the <b>valve</b> drains while a function is shut\\.",
+   "flags": "g",
+   "to": "-$1 de energia {energy}: a <b>válvula</b> drena enquanto uma função está fechada."
+  },
+  {
+   "re": "^-(\\d+) energy \\{energy\\}(:| from this paradox)",
+   "flags": "g",
+   "to": "-$1 {energy}$2"
+  },
+  {
+   "re": "^1 century back: -(\\d+) energy \\{energy\\}, straight from your mug\\.",
+   "flags": "g",
+   "to": "1 século para trás: -$1 de energia {energy}, direto da sua caneca."
+  },
+  {
+   "re": "^(\\d+) centuries back: -(\\d+) energy \\{energy\\}, straight from your mug\\.",
+   "flags": "g",
+   "to": "$1 séculos para trás: -$2 de energia {energy}, direto da sua caneca."
+  },
+  {
+   "re": "Your first gold \\{gold\\}: (\\d+)\\. It lives in your <b>case</b>, with your relics\\.",
+   "flags": "g",
+   "to": "Seu primeiro ouro {gold}: $1. Ele mora na sua <b>maleta</b>, com as suas relíquias."
+  },
+  {
+   "re": "Your gold \\{gold\\}: (\\d+) now\\. Relics cost it\\.",
+   "flags": "g",
+   "to": "Seu ouro {gold}: $1 agora. Relíquias custam ouro."
+  },
+  {
+   "re": "Your energy \\{energy\\} lives here: (-?\\d+) now\\. At 0, you are terminated\\.",
+   "flags": "g",
+   "to": "Sua energia {energy} mora aqui: $1 agora. Em 0, você é eliminado."
+  },
+  {
+   "re": "<b>You terminated (.+?):</b> \\+1 point \\{cp\\}, the first time they fall\\.",
+   "flags": "g",
+   "to": "<b>Você eliminou $1:</b> +1 ponto {cp}, na primeira vez que ele cai."
+  },
+  {
+   "re": "<b>(.+?) terminated (.+?):</b> \\+1 point \\{cp\\} to (.+?), now Wanted for 4 gold\\.",
+   "flags": "g",
+   "to": "<b>$1 eliminou $2:</b> +1 ponto {cp} para $3, agora Procurado por 4 de ouro."
+  },
+  {
+   "re": "<b>\\+1 point \\{cp\\}\\.</b> (\\w+) claimed\\. The Herald tells the whole table\\.",
+   "flags": "g",
+   "to": "<b>+1 ponto {cp}.</b> $1 conquistado. O Arauto conta para a mesa toda."
+  },
+  {
+   "re": "<b>\\+1 point \\{cp\\}:</b> the first time you end an Hour on (\\w+)\\.",
+   "flags": "g",
+   "to": "<b>+1 ponto {cp}:</b> a primeira vez que você termina uma Hora em $1."
+  },
+  {
+   "re": "<b>(\\w+)</b> is a millennium mark\\. End an Hour on it: \\+1 point \\{cp\\}\\.",
+   "flags": "g",
+   "to": "<b>$1</b> é um marco do milênio. Termine uma Hora nele: +1 ponto {cp}."
+  },
+  {
+   "re": "<b>([^<]+)</b>, (\\d+) gold \\{gold\\}: every coin you own\\. Drag it into your case, or click it\\.",
+   "flags": "g",
+   "to": "<b>$1</b>, $2 de ouro {gold}: cada moeda que você tem. Arraste para a sua maleta, ou clique nela."
+  },
+  {
+   "re": "<b>([^<]+)</b>, (\\d+) gold \\{gold\\}: you have (\\d+)\\. Drag it into your case, or click it\\.",
+   "flags": "g",
+   "to": "<b>$1</b>, $2 de ouro {gold}: você tem $3. Arraste para a sua maleta, ou clique nela."
+  },
+  {
+   "re": "<b>([^<]+)</b>, (\\d+) gold \\{gold\\}\\. Drag it into your case, or click it\\.",
+   "flags": "g",
+   "to": "<b>$1</b>, $2 de ouro {gold}. Arraste para a sua maleta, ou clique nela."
+  },
+  {
+   "re": "<b>([^<]+)</b>: (\\d+) gold \\{gold\\}, and you have (\\d+)\\. Look at the century stamped on it\\.",
+   "flags": "g",
+   "to": "<b>$1</b>: $2 de ouro {gold}, e você tem $3. Veja o século carimbado nela."
+  },
+  {
+   "re": "The century stamped on it is a PROMISE: deliver it at (\\w+), \\+1 point \\{cp\\}\\.",
+   "flags": "g",
+   "to": "O século carimbado nela é uma PROMESSA: entregue em $1, +1 ponto {cp}."
+  },
+  {
+   "re": "(.+): in your future, in reach of <b>Paradox 1</b>\\. Your two \\{d3\\} dice travel toward them\\.",
+   "flags": "g",
+   "to": "$1: no seu futuro, ao alcance do <b>Paradoxo 1</b>. Seus dois dados {d3} viajam até eles."
+  },
+  {
+   "re": "<b>(\\w+)</b> is shut, so the spare die fits nowhere\\. The valve takes it, and drains you: -(\\d+) energy \\{energy\\}\\.",
+   "flags": "g",
+   "to": "<b>$1</b> está fechada, então o dado que sobrou não cabe em lugar nenhum. A válvula o aceita, e drena você: -$2 de energia {energy}."
+  },
+  {
+   "re": "Hiss: your die became charge\\. (\\d+) of 10\\. At 10, a module you pick gets \\+1 forever\\.",
+   "flags": "g",
+   "to": "Chiado: seu dado virou carga. $1 de 10. Em 10, um módulo que você escolher ganha +1 para sempre."
+  },
+  {
+   "re": ": \\+(\\d+) energy and \\+(\\d+) gold\\.",
+   "flags": "g",
+   "to": ": +$1 de energia e +$2 de ouro."
+  },
+  {
+   "re": ": it pours \\+(\\d+) energy into your mug\\.",
+   "flags": "g",
+   "to": ": ele despeja +$1 de energia na sua caneca."
+  },
+  {
+   "re": ": \\+(\\d+) gold\\. Gold buys relics\\.",
+   "flags": "g",
+   "to": ": +$1 de ouro. Ouro compra relíquias."
+  },
+  {
+   "re": ": \\+(\\d+) energy, fuel for the past\\.",
+   "flags": "g",
+   "to": ": +$1 de energia, combustível para o passado."
+  },
+  {
+   "re": ": \\+(\\d+) energy\\.$",
+   "flags": "g",
+   "to": ": +$1 de energia."
+  },
+  {
+   "re": ": \\+(\\d+) gold\\.$",
+   "flags": "g",
+   "to": ": +$1 de ouro."
+  },
+  {
+   "re": ": \\+(\\d+) heat\\. It moves you nowhere yet: it only heats the motor\\.",
+   "flags": "g",
+   "to": ": +$1 de calor. Ainda não te move: só aquece o motor."
+  },
+  {
+   "re": ": \\+(\\d+) heat\\. At 12 heat it explodes\\.",
+   "flags": "g",
+   "to": ": +$1 de calor. Com 12 de calor ele explode."
+  },
+  {
+   "re": ": \\+(\\d+) heat\\. Heading for (\\w+), a millennium mark\\.",
+   "flags": "g",
+   "to": ": +$1 de calor. Rumo a $2, um marco do milênio."
+  },
+  {
+   "re": ": \\+(\\d+) heat\\. Heading for (\\w+)\\.",
+   "flags": "g",
+   "to": ": +$1 de calor. Rumo a $2."
+  },
+  {
+   "re": "\\b(loses|lose) (\\d+) energy\\.$",
+   "flags": "g",
+   "to": "$1 $2 {energy}."
+  },
+  {
+   "re": ", -(\\d+) energy\\.$",
+   "flags": "g",
+   "to": ", -$1 {energy}."
+  },
   {
    "re": "<b>A killing blow!</b> Energy (-?\\d+): recycle items until you are back to 1 \\(you need (\\d+) more\\), or fall and return with (\\d+)\\.",
    "flags": "g",
@@ -3315,6 +3595,16 @@
    "re": "^lose (\\d+) \\{energy\\}$",
    "flags": "g",
    "to": "perdem $1 {energy}"
+  },
+  {
+   "re": "(perde|perdem) (\\d+) \\{energy\\}\\.$",
+   "flags": "g",
+   "to": "$1 $2 de energia."
+  },
+  {
+   "re": "^-(\\d+) \\{energy\\}: ",
+   "flags": "g",
+   "to": "-$1 de energia {energy}: "
   }
  ]
 }
