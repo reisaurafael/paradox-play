@@ -1229,6 +1229,26 @@
  },
  "patterns": [
   {
+   "re": "<b>A killing blow!</b> Energy (-?\\d+): recycle items until you are back to 1 \\(you need (\\d+) more\\), or fall and return with (\\d+)\\.",
+   "flags": "g",
+   "to": "<b>Um golpe fatal!</b> Energia $1: recicle itens até voltar a 1 (faltam $2), ou caia e volte com $3."
+  },
+  {
+   "re": "A killing blow from ([^!]+)! Your energy is (-?\\d+): recycle items until it is back to 1 \\(you need (\\d+) more\\), or fall and return at XXX with (\\d+) energy\\.",
+   "flags": "g",
+   "to": "Um golpe fatal de $1! Sua energia está em $2: recicle itens até ela voltar a 1 (faltam $3), ou caia e volte no XXX com $4 de energia."
+  },
+  {
+   "re": "A killing blow! Your energy is (-?\\d+): recycle items until it is back to 1 \\(you need (\\d+) more\\), or fall and return at XXX with (\\d+) energy\\.",
+   "flags": "g",
+   "to": "Um golpe fatal! Sua energia está em $1: recicle itens até ela voltar a 1 (faltam $2), ou caia e volte no XXX com $3 de energia."
+  },
+  {
+   "re": "Energy (-?\\d+): you need (\\d+) more to survive\\. Recycle one:",
+   "flags": "g",
+   "to": "Energia $1: faltam $2 para sobreviver. Recicle um:"
+  },
+  {
    "re": " You stood in their past\\.",
    "flags": "g",
    "to": " Você estava no passado deles."
