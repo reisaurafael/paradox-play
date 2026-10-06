@@ -1,5 +1,17 @@
 {
  "dict": {
+  "Previous contracts": "Contratos anteriores",
+  "Next contracts": "Próximos contratos",
+  "Deposition Recorder": "Gravador de Depoimentos",
+  "Overview": "Visão geral",
+  "Zoom in": "Aproximar",
+  "Zoom out": "Afastar",
+  "Evidence Portfolio": "Pasta de Evidências",
+  "SERVICE RECORD": "REGISTRO DE SERVIÇO",
+  "C.R.O.N.O.S. · FIELD AUTHORIZATION": "C.R.O.N.O.S. · AUTORIZAÇÃO DE CAMPO",
+  "Your pack shrank. <b>Drag items from your case to the Market</b> until they fit.": "Sua mochila encolheu. <b>Arraste itens da sua maleta para o Mercado</b> até caberem.",
+  "A killing blow. <b>Drag an item to the Market</b> to survive, or the lock to fall.": "Um golpe fatal. <b>Arraste um item para o Mercado</b> para sobreviver, ou o cadeado para cair.",
+
   "Case file": "Arquivo do caso",
   "Field assignment": "Missão de campo",
   "Training": "Treinamento",
@@ -306,6 +318,21 @@
   "Wanted": "Procurado",
   "Terminated": "Eliminado",
   "Starting colour": "Cor inicial",
+  "GENERATOR PHASE": "FASE DE GERADORES",
+  "MARKET PHASE": "FASE DE MERCADO",
+  "ITEM PHASE": "FASE DE ITENS",
+  "solo generators phase": "fase solo de geradores",
+  "solo market phase": "fase solo de mercado",
+  "solo item phase": "fase solo de itens",
+  "Generator-phase voucher, an extra solo Generators phase.": "Voucher de geradores, uma fase solo extra de Geradores.",
+  "Generator-phase voucher, held; activate for an extra solo Generators phase.": "Voucher de geradores; use para obter uma fase solo extra de Geradores.",
+  "Drag an item from your case to the Market.": "Arraste um item da sua maleta para o Mercado.",
+  "Back to case": "Voltar à maleta",
+  "Routine": "Rotineira",
+  "Modified": "Modificada",
+  "Anomalous": "Anômala",
+  "Paradoxal": "Paradoxal",
+  "Interrogation Spotlight": "Refletor de Interrogatório",
   "Common": "Comum",
   "Rare": "Rara",
   "Epic": "Épica",
@@ -1588,6 +1615,14 @@
   "Thin grey paper, narrow columns.": "Papel cinza e fino, colunas estreitas.",
   "Yellow Press": "Imprensa Marrom",
   "Black ink on yellow stock, the masthead in red.": "Tinta preta em papel amarelo, o cabeçalho em vermelho.",
+  "Pulp Cover": "Capa de Revista Pulp",
+  "Not a newspaper: a pulp magazine cover, the headline as its cover line.": "Não é jornal: uma capa de revista pulp, a manchete como chamada de capa.",
+  "Bone China Teacup": "Xícara de Porcelana Fina",
+  "Soda Fountain Glass": "Copo de Refrigerante",
+  "Senate Marble": "Mármore do Senado",
+  "Card Sharp": "Trapaceiro de Cartas",
+  "Casino Chip": "Ficha de Cassino",
+  "Brass Clock": "Relógio de Latão",
   "PARADOX ON FILE": "PARADOXO REGISTRADO",
   "CROWNED": "COROADO",
   "DO NOT REASSIGN": "NÃO TRANSFERIR",
@@ -1708,6 +1743,17 @@
   "A new desk top. Try not to spill on it.": "Um tampo novo para a mesa. Tente não derramar nada nele."
  },
  "patterns": [
+  {
+   "re": "No room for <b>([^<]+)</b>\\. Drag one of yours to the Market, or the lock lets it be destroyed\\.",
+   "flags": "g",
+   "to": "Sem espaço para <b>$1</b>. Arraste um dos seus itens para o Mercado, ou use o cadeado para deixá-lo ser destruído."
+  },
+  {
+   "re": "No room for <b>([^<]+)</b>\\. Drag one of yours to the Market, or the lock declines it\\.",
+   "flags": "g",
+   "to": "Sem espaço para <b>$1</b>. Arraste um dos seus itens para o Mercado, ou use o cadeado para recusá-lo."
+  },
+
   {
    "re": "^1 century back: -(\\d+) energy \\{energy\\}\\.$",
    "flags": "g",

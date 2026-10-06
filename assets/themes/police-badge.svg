@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-60 -60 120 120">
+<path d="M-48 -29H48V25H-48Z" fill="#263e55" stroke="#111b23" stroke-width="3.5"/>
+<path d="M-44 -25H44V21H-44Z" fill="#87969b" stroke="#cbd0c3" stroke-width="1.2"/>
+<path d="M-40 -12H40V15H-40Z" fill="#e6e1cd" stroke="#111b23" stroke-width="2.4"/>
+<path d="M-36 -31V-39Q-34 -47 -25 -47Q-16 -47 -14 -39V-31Z" fill="#a33630" stroke="#111b23" stroke-width="2.4"/>
+<path d="M14 -31V-39Q16 -47 25 -47Q34 -47 36 -39V-31Z" fill="#456b94" stroke="#111b23" stroke-width="2.4"/>
+<path d="M-32 -38V-33M-26 -42V-33M-20 -38V-33" stroke="#df9b77" stroke-width="1.4"/>
+<path d="M20 -38V-33M26 -42V-33M32 -38V-33" stroke="#9ab6c4" stroke-width="1.4"/>
+<path d="M-10 -24H10M-10 -20H10" stroke="#263e55" stroke-width="1.4"/>
+<path d="M-30 29H30V38H-30Z" fill="#1d2b35" stroke="#111b23" stroke-width="2"/>
+<path d="M-24 33H-13M-9 33H2M6 33H17M21 33H24" stroke="#bcc6c1" stroke-width="1.4"/>
+<circle cx="-44" cy="-22" r="1.5" fill="#111b23"/><circle cx="44" cy="18" r="1.5" fill="#111b23"/>
+<path d="M-44 6l4-3M40 -18l3 2" stroke="#111b23" stroke-width="1.1"/>
+</svg>
