@@ -110,34 +110,38 @@ const INK="#140a04";export const DESK_KINDS=[{id:"dice",name:"Dice"},{id:"mug",n
       <path d="M 5 76 C 12 64 36 57 70 55.6 L 68 59 C 40 60.4 18 66 9 77 Z" fill="#fffdf7"/>
 `})(),body:"",rim:`<ellipse cx="80" cy="80" rx="75" ry="23.6" fill="none" stroke="#b08a32" stroke-width="2.4"/><ellipse cx="80" cy="81.5" rx="70" ry="21.4" fill="none" stroke="#b08a32" stroke-width="1"/>
       <path d="M 18 72 Q 30 64 46 61" fill="none" stroke="#fffdf7" stroke-width="1.8" stroke-linecap="round"/>`},dm_soda:{vars:{hd:"none",bd:"none",mw:"none",st:"none",lr:"136px",cf:"#51220e",cfl:"#8b4821",cfh:"#e4ae66",tg:"translate(17.6px, 23.4px) scale(.78)"},under:'<ellipse cx="90" cy="204" rx="54" ry="15" fill="#1e0d04" opacity=".5"/>',handle:(()=>{const out="M 24 44 L 40 192 A 40 12 0 0 0 120 192 L 136 44 Z";let bub="";const R=rng(77);for(let i=0;i<34;i++){const x=34+R()*92,y=66+R()*120,r=.8+R()*2.2;bub+=`<circle class="dk-bubble" style="--bubble-delay:${f(-i*.37)}s;--bubble-time:${f(2.4+i%5*.4)}s" cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="none" stroke="#f1dcb4" stroke-width="${f(.6+r*.25)}"/>`}let foam="";for(let i=0;i<=12;i++){const x=30+i*8.4;foam+=`<circle cx="${f(x)}" cy="${f(60+Math.sin(i*1.7)*1.6+6*Math.sqrt(Math.max(0,1-((x-80)/52)**2)))}" r="${f(4.6+i%3)}"/>`}return`<defs><clipPath id="dkm-sd"><path d="M 29 20 L 29 45 L 44 186 A 36 10 0 0 0 116 186 L 131 45 L 131 20 Z"/></clipPath></defs>
-      <path d="${out}" fill="${INK}" transform="translate(3.4 2.6)"/>
+      <path d="M 136 45 L 120 192" fill="none" stroke="${INK}" stroke-width="5" transform="translate(2 2)"/>
       <path d="M 40 190 L 41 203 A 39 11 0 0 0 119 203 L 120 190 Z" fill="${INK}" transform="translate(3 2.6)"/>
-      <path d="M 40 190 L 41 203 A 39 11 0 0 0 119 203 L 120 190 Z" fill="#a9c4bd" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
-      <path d="${out}" fill="#cfe0da"/>
+      <path d="M 40 190 L 41 203 A 39 11 0 0 0 119 203 L 120 190 Z" fill="#a9c4bd" fill-opacity=".18" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="${out}" fill="#cfe0da" fill-opacity=".08"/>
       <g clip-path="url(#dkm-sd)"><g class="dk-lv"><g class="dk-slosh">
         <rect x="20" y="56" width="120" height="240" fill="#4a1d0c"/>
         <path d="M 30 56 H 44 L 58 296 H 40 Z" fill="#7a3416"/>
         <path d="M 114 56 H 140 V 296 H 104 Z" fill="#250b04"/>
         ${bub}
         <ellipse cx="80" cy="56" rx="52" ry="16" fill="#6a2a10"/>
-        <g class="dk-foam" fill="#efe2c4" stroke="${INK}" stroke-width="1.4">${foam}</g>
+        <g class="dk-foam" fill="#efe2c4" stroke="${INK}" stroke-width="1.4">${foam}
         <ellipse cx="80" cy="54" rx="50" ry="14" fill="#efe2c4"/>
         <path d="M 40 52 Q 60 44 86 46" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="64" cy="54" r="2.2" fill="none" stroke="#c9b48c" stroke-width=".9"/><circle cx="96" cy="58" r="1.6" fill="none" stroke="#c9b48c" stroke-width=".9"/></g></g></g>
+        <circle cx="64" cy="54" r="2.2" fill="none" stroke="#c9b48c" stroke-width=".9"/><circle cx="96" cy="58" r="1.6" fill="none" stroke="#c9b48c" stroke-width=".9"/></g></g></g></g>
+      <g clip-path="url(#dkm-sd)">
+        <path d="M 83.2 183 L 109.5 40" fill="none" stroke="${INK}" stroke-width="8" stroke-linecap="round"/>
+        <path d="M 83.2 183 L 109.5 40" fill="none" stroke="#ded5bd" stroke-width="5.4"/>
+        <path d="M 83.2 183 L 109.5 40" fill="none" stroke="#934035" stroke-width="5.4" stroke-dasharray="5 5"/>
+      </g>
       <path d="M 29.4 98 A 50.6 15 0 0 0 130.6 98 L 124.2 154 A 44.2 13 0 0 1 35.8 154 Z" fill="${INK}" transform="translate(2.4 2)"/>
       <path d="M 29.4 98 A 50.6 15 0 0 0 130.6 98 L 124.2 154 A 44.2 13 0 0 1 35.8 154 Z" fill="#949ea2" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/>
       <path d="M 31 102 L 36 150 L 42 152 L 37 104 Z" fill="#d3d9da"/>`})(),body:"",rim:`<path d="M 30 50 L 34 92 L 38 92 L 35 52 Z M 34 160 L 37 186 L 40 186 L 38 160 Z" fill="#ffffff"/>
       <path d="M 44 160 L 47 190 M 58 162 L 60 194 M 102 162 L 100 194 M 116 160 L 113 190" stroke="#7d9a93" stroke-width="1.4" stroke-linecap="round"/>
       <path d="M 136 44 L 120 192" stroke="${INK}" stroke-width="4.4" stroke-linecap="round"/>
       <path d="M 24 44 L 40 192 A 40 12 0 0 0 120 192" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M 104 70 L 118 -6 Q 120 -14 128 -16 L 146 -20" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M 104 70 L 118 -6 Q 120 -14 128 -16 L 146 -20" fill="none" stroke="#f4efe4" stroke-width="6.4" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path d="M 104 70 L 118 -6 Q 120 -14 128 -16 L 146 -20" fill="none" stroke="#b3271e" stroke-width="6.4" stroke-dasharray="5 5" stroke-linejoin="round"/>
+      <path d="M 109.5 40 L 118 -6 Q 120 -14 128 -16 L 146 -20" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 109.5 40 L 118 -6 Q 120 -14 128 -16 L 146 -20" fill="none" stroke="#f4efe4" stroke-width="6.4" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path d="M 109.5 40 L 118 -6 Q 120 -14 128 -16 L 146 -20" fill="none" stroke="#b3271e" stroke-width="6.4" stroke-dasharray="5 5" stroke-linejoin="round"/>
       <ellipse cx="81.6" cy="45.4" rx="56" ry="17" fill="none" stroke="${INK}" stroke-width="2.4"/>
       <ellipse cx="80" cy="44" rx="56" ry="17" fill="none" stroke="#eaf3f0" stroke-width="2.2"/>
       <ellipse cx="80" cy="44" rx="56" ry="17" fill="none" stroke="${INK}" stroke-width="1.6"/>
-      <path d="M 28 40 A 54 15 0 0 1 72 27.6" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
-      <g fill="none" stroke="${INK}" stroke-width="1.3"><circle cx="58" cy="26" r="2.6"/><circle cx="70" cy="16" r="1.8"/><circle cx="92" cy="22" r="2.2"/><circle cx="64" cy="6" r="1.4"/></g>`}};export const mugLook=id=>MUGS[id||worn("mug")]||MUGS.dm_issue;const rivets=(n,y0,x0,x1)=>{let s="";for(let i=0;i<n;i++){const t=i/(n-1),x=x0+(x1-x0)*t,y=y0+Math.sin(t*Math.PI)*4;s+=`<circle cx="${f(x+.5)}" cy="${f(y+.6)}" r="1.9" fill="${INK}"/><circle cx="${f(x)}" cy="${f(y)}" r="1.5" fill="#e6c76e"/>`}return s},LAMPS={dl_spotlight:{vars:{sh:"none",bl:"none"},shade:"",back:`<path d="M 66 18 L 66 30 M 40 40 L 35 30 H 88 L 92 40" fill="none" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M 28 40 A 54 15 0 0 1 72 27.6" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>`}};export const mugLook=id=>MUGS[id||worn("mug")]||MUGS.dm_issue;const rivets=(n,y0,x0,x1)=>{let s="";for(let i=0;i<n;i++){const t=i/(n-1),x=x0+(x1-x0)*t,y=y0+Math.sin(t*Math.PI)*4;s+=`<circle cx="${f(x+.5)}" cy="${f(y+.6)}" r="1.9" fill="${INK}"/><circle cx="${f(x)}" cy="${f(y)}" r="1.5" fill="#e6c76e"/>`}return s},LAMPS={dl_spotlight:{vars:{sh:"none",bl:"none"},shade:"",back:`<path d="M 66 18 L 66 30 M 40 40 L 35 30 H 88 L 92 40" fill="none" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
       <path d="M 35 30 H 88" stroke="#77818a" stroke-width="2.4"/>
       <path d="M 32 40 Q 63 25 96 42 L 110 91 Q 62 115 12 89 Z" fill="#31383d" stroke="${INK}" stroke-width="3.6"/>
       <path d="M 33 42 Q 60 30 84 39 L 88 52 Q 52 44 24 71 Z" fill="#657078"/>
