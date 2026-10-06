@@ -2,8 +2,9 @@ const S=(body,vb="0 0 24 24",sw=1.7)=>`<svg viewBox="${vb}" fill="none" stroke="
     <ellipse cx="11" cy="8" rx="8" ry="4" fill="#e5bb62" stroke="#15100a" stroke-width="2.4"/>
     <path d="M8 7l3-1 3 1-1 3h-4z" fill="#15100a" stroke="#15100a" stroke-width="1"/>
     <path d="M5 13v3M8 15v2M15 15v2" stroke="#e5bb62" stroke-width="1.4"/>`),card_energy:S(`<path d="M13 2L4 13h6l-1 9 12-13h-7l2-7z" fill="currentColor" stroke="#15100a" stroke-width="2.3"/>
-    <path d="M12 6L8 11h4" stroke="#f7edcf" stroke-width="1.4"/>`),card_century:S(`<path d="M4 4h16v16H4z" stroke-width="2.6"/>
-    <path d="M8 8h8l-8 8h8" stroke-width="2.5"/><path d="M3 2v3M21 19v3" stroke-width="3"/>`),seal:S(`
+    <path d="M12 6L8 11h4" stroke="#f7edcf" stroke-width="1.4"/>`),card_century:S(`<path d="M3 8l9-5 9 5v11H3z" fill="currentColor" stroke="#15100a" stroke-width="2"/>
+    <path d="M3 8l9 5 9-5M12 13v6" stroke="#15100a" stroke-width="2"/>
+    <path d="M9 6l9 5" stroke="#15100a" stroke-width="2"/>`),seal:S(`
     <circle cx="12" cy="12" r="8.4"/>
     <path d="M12 1.6v2.2M12 20.2v2.2M1.6 12h2.2M20.2 12h2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M19.4 4.6l-1.6 1.6M6.2 17.8l-1.6 1.6"/>
     <circle cx="12" cy="12" r="2.1"/>
