@@ -1,5 +1,12 @@
 {
  "dict": {
+  "Music volume": "Volume da música",
+  "Low energy: 6 or less": "Energia baixa: 6 ou menos",
+  "Motor exploded: inactive this Hour": "Motor explodiu: inativo nesta Hora",
+  "Awaiting respawn next Hour": "Retorna na próxima Hora",
+  "Reorganize": "Reorganizar",
+  "Radio controls": "Controles do rádio",
+  "Close radio controls": "Fechar controles do rádio",
   "Pass market": "Passar mercado",
   ": drag an item from your case to RECYCLE to make room, or decline the incoming item.": ": arraste um item da maleta para RECYCLE para abrir espaço, ou recuse o novo item.",
   "Accept the fall": "Aceitar a queda",
