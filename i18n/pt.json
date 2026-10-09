@@ -4383,5 +4383,7 @@
    "flags": "g",
    "to": "PERDIDO NO MAR · $1"
   }
- ]
+ ],
+  "Drag an item to RECYCLE to survive. Accept the fall only if you choose not to recycle.": "Arraste um item para RECICLAR para sobreviver. Aceite a queda apenas se decidir não reciclar.",
+  "Drag an item to RECYCLE to make room in your case.": "Arraste um item para RECICLAR para abrir espaço na maleta."
 }
