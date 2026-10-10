@@ -1,5 +1,9 @@
 {
  "dict": {
+  "Your dice power this arm. Feed it one.": "Seus dados movem este braço. Alimente-o com um.",
+  "SOLVED": "RESOLVIDO",
+  "Next": "Próximo",
+  "Could not open the lesson.": "Não foi possível abrir a lição.",
   "Music volume": "Volume da música",
   "Low energy: 6 or less": "Energia baixa: 6 ou menos",
   "Motor exploded: inactive this Hour": "Motor explodiu: inativo nesta Hora",
@@ -282,6 +286,16 @@
   "pick up a die of that value.": "pegar um dado desse valor.",
   "delivery skipped, no traveler on a delivery century": "entrega pulada, nenhum viajante em um século de entrega",
   "market skipped, no traveler can access a market": "mercado pulado, nenhum viajante pode acessar um mercado",
+  "TEMPORAL BUREAU · FIELD DIVISION": "AGÊNCIA TEMPORAL · DIVISÃO DE CAMPO",
+  "NAME": "NOME",
+  "FIELD AGENT": "AGENTE DE CAMPO",
+  "ASSIGNED CENTURY": "SÉCULO DESIGNADO",
+  "STATUS": "ESTADO",
+  "SIGNATURE OF BEARER": "ASSINATURA DO PORTADOR",
+  "Low energy": "Energia baixa",
+  "Motor exploded": "Motor explodido",
+  "Respawning": "Voltando",
+  "Past dead": "Passado morto",
   "PAST": "PASSADO",
   "FUTURE": "FUTURO",
   "PAST · YEAR ZERO": "PASSADO · ANO ZERO",
@@ -1301,6 +1315,9 @@
   "Your locker": "Seu armário",
   "Your arm, your colours and every thing you own": "Seu braço, suas cores e tudo o que é seu",
   "The board": "O quadro",
+  "The table": "A mesa",
+  "Show the key sheet": "Mostrar a folha de atalhos",
+  "Fold the key sheet": "Dobrar a folha de atalhos",
   "Locker room": "Vestiário",
   "Arm": "Braço",
   "Colour": "Cor",
@@ -1316,6 +1333,11 @@
   "Yours. Pick it to wear it.": "É seu. Escolha para usar.",
   "Opened by": "Abre com",
   "Pick a thing to wear it. Sealed bags say what opens them.": "Escolha uma coisa para usá-la. Os sacos lacrados dizem o que os abre.",
+  "On you": "Em você",
+  "Your desk": "Sua mesa",
+  "The room": "A sala",
+  "Evidence bin": "Caixa de provas",
+  "still sealed": "ainda lacrados",
   "Masculine": "Masculino",
   "Feminine": "Feminino",
   "Your things, by kind": "Suas coisas, por tipo",
@@ -1921,7 +1943,9 @@
   "Oxblood Line": "Linha Bordô",
   "The telephone connects you to friends in an online match.": "O telefone conecta você aos amigos em uma partida online.",
   "Choose this traveler": "Escolher este viajante",
-  "PERSONAL": "PESSOAL"
+  "PERSONAL": "PESSOAL",
+  "EMPTY": "VAZIO",
+  "AGENT": "AGENTE"
  },
  "patterns": [
   {
@@ -3505,6 +3529,10 @@
    "to": " O marco só paga se a Hora terminar com você nele."
   },
   {
+   "re": "^Haunts (.+)$",
+   "to": "Assombra $1"
+  },
+  {
    "re": "Boom track (\\d+)/(\\d+), at (\\d+) the motor detonates",
    "flags": "g",
    "to": "Trilha de panes $1/$2, em $3 o motor detona"
@@ -4386,5 +4414,7 @@
   }
  ],
   "Drag an item to RECYCLE to survive. Accept the fall only if you choose not to recycle.": "Arraste um item para RECICLAR para sobreviver. Aceite a queda apenas se decidir não reciclar.",
-  "Drag an item to RECYCLE to make room in your case.": "Arraste um item para RECICLAR para abrir espaço na maleta."
+  "Drag an item to RECYCLE to make room in your case.": "Arraste um item para RECICLAR para abrir espaço na maleta.",
+  "END AN HOUR ON XI": "TERMINE UMA HORA EM XI",
+  "BUY FROM XI": "COMPRE EM XI"
 }
