@@ -2523,7 +2523,11 @@
   "Two centuries back cost two cups of coffee. And watch the map when you cross the border into the Ascension.": "Dois séculos para trás custam duas xícaras de café. E olhe o mapa quando você cruzar a fronteira para a Ascensão.",
   "Click the eighteenth century, two stars down, across the border.": "Clique no século dezoito, duas estrelas abaixo, do outro lado da fronteira.",
   "Same map, new look. You've crossed into the Ascension, so the map has dressed for it: welcome to the sea.": "O mesmo mapa, nova aparência. Você cruzou para a Ascensão, e o mapa se vestiu para ela: bem-vindo ao mar.",
-  "That's the map: six eras, three periods, three seals to fill, and two milestones that pay. Tomorrow things get dangerous, agent. Sleep with one eye open.": "Esse é o mapa: seis eras, três períodos, três selos para preencher e dois marcos que pagam. Amanhã as coisas ficam perigosas, agente. Durma com um olho aberto."
+  "That's the map: six eras, three periods, three seals to fill, and two milestones that pay. Tomorrow things get dangerous, agent. Sleep with one eye open.": "Esse é o mapa: seis eras, três períodos, três selos para preencher e dois marcos que pagam. Amanhã as coisas ficam perigosas, agente. Durma com um olho aberto.",
+  "Let's go to the Merchant. Click the arrow, or press the key on it.": "Vamos até o Mercador. Clique na seta, ou aperte a tecla que está nela.",
+  "Look down at your chart. Click the arrow, or press the key on it.": "Olhe para baixo, para o seu mapa. Clique na seta, ou aperte a tecla que está nela.",
+  "Over to your records. Click the arrow, or press the key on it.": "Agora os seus arquivos. Clique na seta, ou aperte a tecla que está nela.",
+  "Back to your desk. Click the arrow, or press the key on it.": "De volta à sua mesa. Clique na seta, ou aperte a tecla que está nela."
  },
  "patterns": [
   {
@@ -4994,5 +4998,20 @@
   "Drag an item to RECYCLE to survive. Accept the fall only if you choose not to recycle.": "Arraste um item para RECICLAR para sobreviver. Aceite a queda apenas se decidir não reciclar.",
   "Drag an item to RECYCLE to make room in your case.": "Arraste um item para RECICLAR para abrir espaço na maleta.",
   "END AN HOUR ON XI": "TERMINE UMA HORA EM XI",
-  "BUY FROM XI": "COMPRE EM XI"
+  "BUY FROM XI": "COMPRE EM XI",
+  "A new turn, and Ashworth is still two cups short from the last one. Let's open the second slot.": "Um turno novo, e o Ashworth ainda está com duas xícaras a menos do último. Vamos abrir o segundo espaço.",
+  "Mercer is two cups short as well now. One slot left, and it's the nastiest.": "Agora o Mercer também está com duas xícaras a menos. Falta um espaço, e é o mais cruel.",
+  "That's the first slot. Next turn, I'll show you the second.": "Esse é o primeiro espaço. No próximo turno, eu te mostro o segundo.",
+  "Next turn, the last slot.": "No próximo turno, o último espaço.",
+  "But look at your own mug: one cup less. That was Hale. He hit everyone in his future, and that includes you.": "Mas olhe a sua caneca: uma xícara a menos. Foi o Hale. Ele acertou todo mundo no futuro dele, e isso inclui você.",
+  "Every road in time runs both ways, agent. The others place their dice at the same moment you do, and nobody sees anybody's dice until everyone is done.": "Toda estrada no tempo tem mão dupla, agente. Os outros colocam os dados no mesmo instante que você, e ninguém vê os dados de ninguém até todos terminarem.",
+  "These files are loose papers, by the way. If one is in your way, grab it and drag it anywhere on the wall.": "Esses arquivos são papéis soltos, aliás. Se um estiver no caminho, pegue e arraste para qualquer lugar da parede.",
+  "Let's see where they stand on the map. Press S, or click this arrow, to look down at your chart.": "Vamos ver onde eles estão no mapa. Aperte S, ou clique nesta seta, para olhar para baixo, para a sua carta.",
+  "There's Ashworth, three stars ahead of you, in your future.": "Lá está o Ashworth, três estrelas à sua frente, no seu futuro.",
+  "This is you, on the twenty-fifth. Mercer stands on the very same star.": "Este é você, no vigésimo quinto. O Mercer está exatamente na mesma estrela.",
+  "And Hale, three stars behind you, in your past. The map and their papers always tell the same story.": "E o Hale, três estrelas atrás de você, no seu passado. O mapa e os papéis deles sempre contam a mesma história.",
+  "Now look back up at your desk. Press W, or click the arrow.": "Agora olhe de volta para a sua mesa. Aperte W, ou clique na seta.",
+  "Look back up at your desk first: that's where it lands. Press W, or click the arrow.": "Olhe para a sua mesa primeiro: é lá que acontece. Aperte W, ou clique na seta.",
+  "That's every die for this turn. When you're happy with where they are, press CONFIRM to send them to the machine.": "Esses são todos os dados deste turno. Quando estiver satisfeito com onde eles estão, aperte CONFIRM para mandá-los para a máquina.",
+  "Press CONFIRM when you're ready.": "Aperte CONFIRM quando estiver pronto."
 }
