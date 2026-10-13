@@ -5013,5 +5013,10 @@
   "Now look back up at your desk. Press W, or click the arrow.": "Agora olhe de volta para a sua mesa. Aperte W, ou clique na seta.",
   "Look back up at your desk first: that's where it lands. Press W, or click the arrow.": "Olhe para a sua mesa primeiro: é lá que acontece. Aperte W, ou clique na seta.",
   "That's every die for this turn. When you're happy with where they are, press CONFIRM to send them to the machine.": "Esses são todos os dados deste turno. Quando estiver satisfeito com onde eles estão, aperte CONFIRM para mandá-los para a máquina.",
-  "Press CONFIRM when you're ready.": "Aperte CONFIRM quando estiver pronto."
+  "Press CONFIRM when you're ready.": "Aperte CONFIRM quando estiver pronto.",
+  "(psst... the keys [die1] [die2] [die3] pick up a die with that many dots. You didn't hear it from me.)": "(psiu... as teclas [die1] [die2] [die3] pegam um dado com esse tanto de pontos. Você não ouviu isso de mim.)",
+  "(between us, [confirm] does the same. I never said that.)": "(cá entre nós, [confirm] faz a mesma coisa. Eu nunca disse isso.)",
+  "(the arrow keys turn your head too. Forget I mentioned it.)": "(as setas também viram a sua cabeça. Esqueça que eu falei.)",
+  "This number is where he is in time: the twenty-ninth century. You're on the twenty-fifth, so he's four centuries ahead of you. That's your future.": "Este número é onde ele está no tempo: o século vinte e nove. Você está no vinte e cinco, então ele está quatro séculos à sua frente. Esse é o seu futuro.",
+  "There's Ashworth, four stars ahead of you, in your future.": "Lá está o Ashworth, quatro estrelas à sua frente, no seu futuro."
 }
