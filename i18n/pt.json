@@ -2804,7 +2804,14 @@
   "Dice confirmed.": "Dados confirmados.",
   "Waiting for the reveal.": "Aguardando a revelação.",
   "This round opening on the left of your machine is the escape valve. It takes one leftover die per turn.": "Esta abertura redonda à esquerda da máquina é a válvula de escape. Ela recebe um dado que sobrou por turno.",
-  "Drag the three from the tray to the round opening on the left. Follow the ghost die.": "Arraste o três da bandeja até a abertura redonda à esquerda. Siga o dado fantasma."
+  "Drag the three from the tray to the round opening on the left. Follow the ghost die.": "Arraste o três da bandeja até a abertura redonda à esquerda. Siga o dado fantasma.",
+  "Tap the armour, then tap Renew this card.": "Toque na armadura e depois em Renovar esta carta.",
+  "It costs two gold. Tap the card, then tap Buy.": "Custa dois de ouro. Toque na carta e depois em Comprar.",
+  "It costs two gold. Click it to buy it.": "Custa dois de ouro. Clique nela para comprar.",
+  "This motor costs one gold and gives you coffee when your engine heats up. Tap the motor, then tap Buy.": "Este motor custa um de ouro e dá café quando sua máquina esquenta. Toque no motor e depois em Comprar.",
+  "That folder belongs to another century. Go back, then open the twenty-second's folder.": "Essa pasta pertence a outro século. Volte e abra a pasta do século vinte e dois.",
+  "Tap Deliver to file the computer in this folder.": "Toque em Entregar para arquivar o computador nesta pasta.",
+  "The motor recycles for two cups. Drag it from your case onto the Merchant button. Follow the ghost card.": "O motor rende duas xícaras ao ser reciclado. Arraste-o da maleta até o botão do Mercador. Siga a carta fantasma."
  },
  "patterns": [
   {
