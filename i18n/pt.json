@@ -2811,7 +2811,19 @@
   "This motor costs one gold and gives you coffee when your engine heats up. Tap the motor, then tap Buy.": "Este motor custa um de ouro e dá café quando sua máquina esquenta. Toque no motor e depois em Comprar.",
   "That folder belongs to another century. Go back, then open the twenty-second's folder.": "Essa pasta pertence a outro século. Volte e abra a pasta do século vinte e dois.",
   "Tap Deliver to file the computer in this folder.": "Toque em Entregar para arquivar o computador nesta pasta.",
-  "The motor recycles for two cups. Drag it from your case onto the Merchant button. Follow the ghost card.": "O motor rende duas xícaras ao ser reciclado. Arraste-o da maleta até o botão do Mercador. Siga a carta fantasma."
+  "The motor recycles for two cups. Drag it from your case onto the Merchant button. Follow the ghost card.": "O motor rende duas xícaras ao ser reciclado. Arraste-o da maleta até o botão do Mercador. Siga a carta fantasma.",
+  "This is the Activation phase. The Fishing Reel you bought can act here, after your dice.": "Esta é a fase de Ativação. A carretilha que você comprou pode agir aqui, depois dos dados.",
+  "Active items wait for your choice. You can use each one once in this phase, or pass. Passive items work on their own.": "Objetos ativos esperam sua escolha. Você pode usar cada um uma vez nesta fase ou passar. Objetos passivos funcionam sozinhos.",
+  "Tap the Fishing Reel, then tap Fire it. You can also pass.": "Toque na carretilha e depois em Disparar. Você também pode passar.",
+  "Click the Fishing Reel to ready it, or click the case lock to pass.": "Clique na carretilha para prepará-la ou no fecho da maleta para passar.",
+  "Ready. Click the case lock to fire the Reel.": "Pronta. Clique no fecho da maleta para usar a carretilha.",
+  "Choose any lit card from the shelf. It costs no gold, but taking it makes you Wanted.": "Escolha qualquer carta destacada na prateleira. Ela não custa ouro, mas pegá-la torna você Procurado.",
+  "The Reel stays in your case. It can act again in a later Activation phase.": "A carretilha fica na maleta. Ela pode agir novamente em uma próxima fase de Ativação.",
+  "You passed. The Reel stays ready for a later Activation phase.": "Você passou. A carretilha continua pronta para uma próxima fase de Ativação.",
+  "Now you know the whole Hour: Delivery, Market, Generators, Activation. Then the cycle starts again.": "Agora você conhece a Hora inteira: Entrega, Mercado, Geradores e Ativação. Depois, o ciclo recomeça.",
+  "The Reel is gone. Use the case lock to pass.": "A carretilha saiu da maleta. Use o fecho da maleta para passar.",
+  "The Reel rolls a die. It can take a shelf card whose gold price is no higher than the roll.": "A carretilha lança um dado. Ela pode pegar uma carta da prateleira cujo preço em ouro não ultrapasse o resultado.",
+  "Taking a card this way makes you Wanted. You can still choose to pass.": "Pegar uma carta assim faz de você um Procurado. Você ainda pode escolher passar."
  },
  "patterns": [
   {
