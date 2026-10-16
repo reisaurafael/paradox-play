@@ -2823,7 +2823,9 @@
   "Now you know the whole Hour: Delivery, Market, Generators, Activation. Then the cycle starts again.": "Agora você conhece a Hora inteira: Entrega, Mercado, Geradores e Ativação. Depois, o ciclo recomeça.",
   "The Reel is gone. Use the case lock to pass.": "A carretilha saiu da maleta. Use o fecho da maleta para passar.",
   "The Reel rolls a die. It can take a shelf card whose gold price is no higher than the roll.": "A carretilha lança um dado. Ela pode pegar uma carta da prateleira cujo preço em ouro não ultrapasse o resultado.",
-  "Taking a card this way makes you Wanted. You can still choose to pass.": "Pegar uma carta assim faz de você um Procurado. Você ainda pode escolher passar."
+  "Taking a card this way makes you Wanted. You can still choose to pass.": "Pegar uma carta assim faz de você um Procurado. Você ainda pode escolher passar.",
+  "HELA shows you how to play, one step at a time.": "A HELA ensina a jogar, um passo de cada vez.",
+  "Guided training. Play at your own pace.": "Treinamento guiado. Jogue no seu ritmo."
  },
  "patterns": [
   {
