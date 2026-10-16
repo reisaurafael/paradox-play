@@ -2769,7 +2769,9 @@
   "Reading between the lines": "Lendo nas entrelinhas",
   "Tracing the timeline": "Rastreando a linha do tempo",
   "Stamping it classified": "Carimbando como sigiloso",
-  "RETRIEVING RECORDS": "BUSCANDO REGISTROS"
+  "RETRIEVING RECORDS": "BUSCANDO REGISTROS",
+  "Dice confirmed.": "Dados confirmados.",
+  "Waiting for the reveal.": "Aguardando a revelação."
  },
  "patterns": [
   {
